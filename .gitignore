@@ -1,0 +1,6 @@
+/.ghc*
+/dist*
+/.stack*
+/configs*
+/source_maps*
+/stack.yaml.lock
