@@ -34,5 +34,27 @@ kmonad /path/to/config/file.kbd
 
 Note that this interface is extremely provisional and subject to change.
 
+### Uinput permissions
+Currently, the only supported operating system is Linux. KMonad uses the
+`uinput` subsystem to write events to the operating system. If you want to be
+able to run KMonad without using sudo (highly recommended to avoid sudo wherever
+possible), you will need to ensure that your user is part of the `uinput` group.
+On most linux's this can be achieved by:
+
+``` shell
+sudo usermod -aG uinput username
+```
+
+Additionally, you might need to ensure that the `uinput` drivers are loaded
+before starting KMonad, this can be achieved through:
+
+``` shell
+sudo modprobe uinput
+```
+
+This might have to be repeated whenever you restart your computer. There are
+various techniques for getting the `uinput` subsystem to load automatically, but
+I didn't manage to get any of them to work.
+
 # Known issues:
 - Trying to emit a CapsLock crashes KMonad
