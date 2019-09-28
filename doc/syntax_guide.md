@@ -206,7 +206,7 @@ LAYER colemak
 ```
 
 ### Advanced alignment
-When KMonad parser a matrix of keycodes or of buttons, is normalizes the
+When KMonad parses a matrix of keycodes or of buttons, it normalizes the
 coordinate system so that the top-left most point is set to (0, 0) (Note that
 this does not necessarily have to correspond to an existing key). This means
 that the indentation between two grids does not have to be the same, although it
@@ -317,7 +317,7 @@ events. Like this (note this is not valid syntax, buttons need to exist in a
 // Simple modded emits, defaulting to the 'Left' version of the modifier
 C-a   // Control-a
 S-b   // Shift-b
-A-c   // Alt-a
+A-c   // Alt-c
 M-d   // Meta-d (Meta is usually the Gui button)
 
 // To specifically use the right modifier, prefix with an R
