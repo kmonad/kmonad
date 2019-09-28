@@ -26,5 +26,13 @@ configuration file that describes the keyboard layout to run. For a guide to
 writing valid configuration files, [see the
 Wiki](https://github.com/david-janssen/kmonad/wiki/Configuration-Syntax)
 
+Once the compiled binary is on the PATH, running KMonad is as simple as:
+
+``` shell
+kmonad /path/to/config/file.kbd
+```
+
+Note that this interface is extremely provisional and subject to change.
+
 # Known issues:
 - Trying to emit a CapsLock crashes KMonad
