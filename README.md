@@ -8,6 +8,7 @@ will announce it in a number of places.
 
 # Installing KMonad
 
+## Compiling
 Currently KMonad is configured to be compiled by stack. After cloning the repo,
 call:
 ``` shell
@@ -18,3 +19,12 @@ to build a KMonad binary. Or call
 stack haddock --no-haddock-deps
 ```
 to build a KMonad binary and the haddock documentation.
+
+## Running
+KMonad currently requires 1, and exactly 1 input argument: a path to a
+configuration file that describes the keyboard layout to run. For a guide to
+writing valid configuration files, [see the
+Wiki](https://github.com/david-janssen/kmonad/wiki/Configuration-Syntax)
+
+# Known issues:
+- Trying to emit a CapsLock crashes KMonad
