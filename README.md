@@ -24,7 +24,7 @@ to build a KMonad binary and the haddock documentation.
 KMonad currently requires 1, and exactly 1 input argument: a path to a
 configuration file that describes the keyboard layout to run. For a guide to
 writing valid configuration files, [see the
-syntax guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.mmd).
+syntax guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md).
 
 Once the compiled binary is on the PATH, running KMonad is as simple as:
 
