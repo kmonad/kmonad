@@ -231,6 +231,7 @@ handleAppError cfg e = do
     Nothing -> print e
     Just us -> do
       threadDelay $ fromIntegral us
+      print e
       putStrLn "Encountered raw IO Exception attempting restart"
       startApp cfg
 
