@@ -34,6 +34,14 @@ kmonad /path/to/config/file.kbd
 
 Note that this interface is extremely provisional and subject to change.
 
+Any kind of internal KMonad error that indicates that something has gone
+seriously wrong with our representation of the computation will terminate KMonad
+and display the error to stdout. It is however not uncommon for KMonad to have
+to reacquire a uinput keyboard on resume from suspend. To that extent, any core
+IO exception will cause KMonad to pause for a second and attempt a restart, ad
+infinitum. This means its fine to unplug the mapped keyboard and plug it back
+in, without crashing KMonad. 
+
 ### Uinput permissions
 Currently, the only supported operating system is Linux. KMonad uses the
 `uinput` subsystem to write events to the operating system. If you want to be
