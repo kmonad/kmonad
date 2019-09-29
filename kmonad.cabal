@@ -4,10 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6c723459658e21ab501e658135c2f6c7a1169813a99520073a2137c952c20830
+-- hash: d311ae14abdf0023254bcb41d09a2cc7a0975a3b3aacf4fd958e2e8f57d1d116
 
 name:           kmonad
 version:        0.1.0
+synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
 maintainer:     janssen.dhj@gmail.com
 license:        MIT
