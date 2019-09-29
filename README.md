@@ -63,6 +63,3 @@ sudo modprobe uinput
 This might have to be repeated whenever you restart your computer. There are
 various techniques for getting the `uinput` subsystem to load automatically, but
 I didn't manage to get any of them to work.
-
-# Known issues:
-- Trying to emit a CapsLock crashes KMonad

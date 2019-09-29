@@ -75,16 +75,19 @@ sync t = LinuxKeyEvent (fi $ t^.s :: CInt, fi $ t^.ns :: CInt, n, n, n)
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (s', ns', typ, c, val))
   | typ == 1  = Just $ KeyEvent et (toEnum . fromIntegral $ c) t
-  | typ == 0  = Nothing --  Sync event
-  | typ == 4  = Nothing --  Scan event
-  | otherwise = error $ "Unparseable value"
+  | otherwise = Nothing
+    -- Unsupported events:
+    -- 0:  Sync events
+    -- 4:  Scan events
+    -- 17: FF_STATUS, occurs after engaging CapsLock for example
+    -- Perhaps others
   where
     t   = mkTime s' ns'
     et  = case val of
             0 -> Release
             1 -> Press
             2 -> Repeat
-            _ -> error $ "Unparseable value"
+            v -> error $ "Unparseable value: " <> show v
 
 -- | Translate LinuxKeyEvents to KeyEvents for reading
 toLinuxKeyEvent :: KeyEvent -> LinuxKeyEvent
