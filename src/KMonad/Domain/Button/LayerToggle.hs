@@ -31,11 +31,11 @@ import KMonad.Domain.Effect
 
 -- | Return a 'Button' that pushes a layer onto the stack when pressed, and pops
 -- it when released.
-mkLayerToggle :: MonadStackManip m => LayerId -> Button m
+mkLayerToggle :: (MonadTrace m, MonadStackManip m) => LayerId -> Button m
 mkLayerToggle lid = mkButton $ \case
-  BPress   -> pushL lid
-  BRelease -> popL lid
+  BPress   -> trace ("pushing layer: " <> lid) >> pushL lid
+  BRelease -> trace ("popping layer: " <> lid) >> popL lid
 
 -- | Return a LayerToggle from some arbitrary Monad
-mkLayerToggleM :: (MonadStackManip m, Monad n) => LayerId -> n (Button m)
+mkLayerToggleM :: (MonadTrace m, MonadStackManip m, Monad n) => LayerId -> n (Button m)
 mkLayerToggleM = return . mkLayerToggle
