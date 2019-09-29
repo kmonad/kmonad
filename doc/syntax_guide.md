@@ -81,17 +81,19 @@ to have to deal with long button definitions. Therefore, KMonad provides syntax
 to define and reference aliases, which are simply names for button definitions.
 
 ### Alias specification
-To specify an alias, assign to an `@`-prefixed name consisting of alpha-numeric
-characters. Assignment is performed using the `=` symbol. What follows the `=`
-symbol must be a valid button identifier. The name can overlap with valid button
-identifiers, like `spc`, and KMonad can tell the difference between `spc` and
-`@spc`.
+To specify an alias, assign to an `@`-prefixed name consisting of alpha-numeric,
+punctuation, or symbolic characters. Assignment is performed using the `=`
+symbol. What follows the `=` symbol must be a valid button identifier. The name
+can overlap with valid button identifiers, like `spc`, and KMonad can tell the
+difference between `spc` and `@spc`. The name ends when a space is encountered,
+and the name must be followed by an `=`
 
 For example:
 ```
 @num = LT-numpad       // A button that switches to the numpad layer
 @ca  = TH 300 a lctl   // A taphold that is either a control, or an a
 @lb  = TH % LT-symbol  // A taphold that either switches to a layer, or emits a '%'
+@:-) = || : - ) ||     // A macro that emits a smiley
 ```
 
 It is illegal to use a `transparent`, or another alias in an alias definition.
@@ -384,6 +386,25 @@ LAYER foo
   _ X q
 
 ```
+
+### Tap-macros
+KMonad provides support for macros that consist of tapping other buttons. There
+is currently no support for pressing one button, tapping another, and then
+releasing again, only consecutive taps. Tap-macro buttons trigger their output
+sequence on press, and do nothing on release.
+
+To define a tap-macro, enclose a sequence of emit or modded buttons in double
+`||`.
+
+```
+@>>= = || > > = ||
+@foo = || H e l l o spc w o r l d ||
+```
+
+Note, this might go without saying, but although it is possible to encode your
+security paswords into your keyboard driver so you can trigger them with just a
+button, this is very much not recommended, since it seriously compromises your
+security. 
 
 ### Layer-Toggle
 We currently provide 1 button that manipulates the layer-stack. The
