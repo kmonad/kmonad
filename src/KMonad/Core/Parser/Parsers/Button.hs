@@ -39,6 +39,7 @@ buttonP = choice
   , emit
   , layerToggle
   , tapHold
+  , tapMacro
   ]
 
 -- | Parse a 'ButtonSymbol' by matching either a 'ButtonToken', an 'AliasRef',
@@ -88,6 +89,14 @@ tapHold = do
   tapB <- lexemeSameLine $ emit <|> modded
   hldB <- lexeme $ emit <|> modded <|> layerToggle
   return $ BTapHold (fromIntegral t) tapB hldB
+
+-- | Parse a macro button
+tapMacro :: Parser ButtonToken
+tapMacro = do
+  _  <- symbol "||"
+  bs <- many (emit <|> modded)
+  _  <- symbol "||"
+  pure $ BTapMacro bs
 
 -- | Parse any "S-button" or "C-button" style indicator as a modded button. This
 -- is recursive, so "C-S-button" works fine too

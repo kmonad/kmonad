@@ -118,6 +118,7 @@ library
     KMonad.Domain.Button.Block
     KMonad.Domain.Button.Emit
     KMonad.Domain.Button.LayerToggle
+    KMonad.Domain.Button.Macro
     KMonad.Domain.Button.TapHold
 
   build-depends:

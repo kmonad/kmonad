@@ -114,7 +114,7 @@ symbol = L.symbol scn
 
 -- | Parse any number of sequential alpha-num chars as a name
 name :: Parser Text
-name = T.pack <$> lexeme (many alphaNumChar)
+name = T.pack <$> lexeme (many $ alphaNumChar <|> punctuationChar <|> symbolChar)
 
 -- | Run the parser IFF it is followed by a space or eof. If that is not the
 -- case, the parse state is not updated.

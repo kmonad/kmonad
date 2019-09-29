@@ -78,6 +78,7 @@ data ButtonToken
   | BModded KeyCode ButtonToken -- ^ Corresponds to "KMonad.Domain.Button.Around"
   | BLayerToggle LayerId        -- ^ Corresponds to "KMonad.Domain.Button.LayerToggle"
   | BTapHold Milliseconds ButtonToken ButtonToken
+  | BTapMacro [ButtonToken]     -- ^ Corresponds to "KMoand.Domain.Button.Macro"
     -- ^ Corresponds to "Kmonad.Domain.Button.TapHold"
   | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
   deriving (Eq, Show)

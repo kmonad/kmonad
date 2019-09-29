@@ -22,6 +22,7 @@ module KMonad.Domain.Button
   , module KMonad.Domain.Button.Block
   , module KMonad.Domain.Button.Emit
   , module KMonad.Domain.Button.LayerToggle
+  , module KMonad.Domain.Button.Macro
   , module KMonad.Domain.Button.TapHold
   )
 where
@@ -36,6 +37,7 @@ import KMonad.Domain.Button.Around
 import KMonad.Domain.Button.Block
 import KMonad.Domain.Button.Emit
 import KMonad.Domain.Button.LayerToggle
+import KMonad.Domain.Button.Macro
 import KMonad.Domain.Button.TapHold
 
 
@@ -52,3 +54,4 @@ encode (BTapHold ms bt bh) = do
   btap <- encode bt
   bhld <- encode bh
   mkTapHold ms btap bhld
+encode (BTapMacro bs) = mkMacroM =<< mapM encode bs
