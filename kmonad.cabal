@@ -1,126 +1,69 @@
-cabal-version: 2.2
-name:          kmonad
-version:       0.1.0
-synopsis:      Advanced keyboard remapping utility
-license:       MIT
-author:        David Janssen
-build-type:    Simple
+cabal-version: 1.12
 
-common shared
-  default-language: Haskell2010
-  ghc-options:
-    -Wall
-    -Wcompat
-    -Wincomplete-record-updates
-    -Wincomplete-uni-patterns
-    -Wredundant-constraints
-    -Wno-name-shadowing
-  default-extensions:
-    AutoDeriveTypeable
-    BangPatterns
-    BinaryLiterals
-    ConstraintKinds
-    DataKinds
-    DefaultSignatures
-    DeriveDataTypeable
-    DeriveFoldable
-    DeriveFunctor
-    DeriveGeneric
-    DeriveTraversable
-    DerivingStrategies
-    DoAndIfThenElse
-    EmptyDataDecls
-    ExistentialQuantification
-    FlexibleContexts
-    FlexibleInstances
-    FunctionalDependencies
-    GADTs
-    GeneralizedNewtypeDeriving
-    InstanceSigs
-    KindSignatures
-    LambdaCase
-    MonadFailDesugaring
-    MultiParamTypeClasses
-    MultiWayIf
-    NamedFieldPuns
-    OverloadedStrings
-    PartialTypeSignatures
-    PatternGuards
-    PolyKinds
-    RankNTypes
-    RecordWildCards
-    ScopedTypeVariables
-    StandaloneDeriving
-    TemplateHaskell
-    TupleSections
-    TypeApplications
-    TypeOperators
-    TypeFamilies
-    TypeSynonymInstances
-    ViewPatterns
+-- This file has been generated from package.yaml by hpack version 0.32.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 6c723459658e21ab501e658135c2f6c7a1169813a99520073a2137c952c20830
+
+name:           kmonad
+version:        0.1.0
+author:         David Janssen
+maintainer:     janssen.dhj@gmail.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
 
 library
-  import:          shared
-  c-sources:       c_src/keyio.c
-  hs-source-dirs:  src
   exposed-modules:
-    -- The entrypoint for the executable
-    KMonad
-
-    -- IO Api core modules
-    KMonad.Api.App
-    KMonad.Api.Encode
-    KMonad.Api.EventTracker
-    KMonad.Api.LayerStack
-    KMonad.Api.Sluice
-
-    -- KeyIO modules
-    KMonad.Api.KeyIO
-    KMonad.Api.KeyIO.Types
-    KMonad.Api.KeyIO.Linux.DeviceSource
-    KMonad.Api.KeyIO.Linux.Types
-    KMonad.Api.KeyIO.Linux.UinputSink
-
-    -- Core modules
-    KMonad.Core
-    KMonad.Core.Button
-    KMonad.Core.Config
-    KMonad.Core.Event
-    KMonad.Core.Keyboard
-    KMonad.Core.KeyCode
-    KMonad.Core.MapStack
-    KMonad.Core.Matrix
-    KMonad.Core.Pretty
-    KMonad.Core.Time
-
-    -- Parser modules
-    KMonad.Core.Parser
-    KMonad.Core.Parser.Token
-    KMonad.Core.Parser.Utility
-
-    -- Specific parsers
-    KMonad.Core.Parser.Parsers.Alias
-    KMonad.Core.Parser.Parsers.Button
-    KMonad.Core.Parser.Parsers.Config
-    KMonad.Core.Parser.Parsers.IO
-    KMonad.Core.Parser.Parsers.KeyCode
-    KMonad.Core.Parser.Parsers.Layer
-    KMonad.Core.Parser.Parsers.Matrix
-    KMonad.Core.Parser.Parsers.Source
-
-    -- Domain code
-    KMonad.Domain.Effect
-    KMonad.Domain.Loop
-
-    -- Button modules
-    KMonad.Domain.Button
-    KMonad.Domain.Button.Around
-    KMonad.Domain.Button.Block
-    KMonad.Domain.Button.Emit
-    KMonad.Domain.Button.LayerToggle
-    KMonad.Domain.Button.Macro
-    KMonad.Domain.Button.TapHold
-
+      KMonad
+      KMonad.Api.App
+      KMonad.Api.Encode
+      KMonad.Api.EventTracker
+      KMonad.Api.KeyIO
+      KMonad.Api.KeyIO.Linux.DeviceSource
+      KMonad.Api.KeyIO.Linux.Types
+      KMonad.Api.KeyIO.Linux.UinputSink
+      KMonad.Api.KeyIO.Types
+      KMonad.Api.LayerStack
+      KMonad.Api.Sluice
+      KMonad.Core
+      KMonad.Core.Button
+      KMonad.Core.Config
+      KMonad.Core.Event
+      KMonad.Core.Keyboard
+      KMonad.Core.KeyCode
+      KMonad.Core.MapStack
+      KMonad.Core.Matrix
+      KMonad.Core.Parser
+      KMonad.Core.Parser.Parsers.Alias
+      KMonad.Core.Parser.Parsers.Button
+      KMonad.Core.Parser.Parsers.Config
+      KMonad.Core.Parser.Parsers.IO
+      KMonad.Core.Parser.Parsers.KeyCode
+      KMonad.Core.Parser.Parsers.Layer
+      KMonad.Core.Parser.Parsers.Matrix
+      KMonad.Core.Parser.Parsers.Source
+      KMonad.Core.Parser.Token
+      KMonad.Core.Parser.Utility
+      KMonad.Core.Pretty
+      KMonad.Core.Time
+      KMonad.Domain.Button
+      KMonad.Domain.Button.Around
+      KMonad.Domain.Button.Block
+      KMonad.Domain.Button.Emit
+      KMonad.Domain.Button.LayerToggle
+      KMonad.Domain.Button.Macro
+      KMonad.Domain.Button.TapHold
+      KMonad.Domain.Effect
+      KMonad.Domain.Loop
+  other-modules:
+      Paths_kmonad
+  hs-source-dirs:
+      src
+  default-extensions: AutoDeriveTypeable BangPatterns BinaryLiterals ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DoAndIfThenElse EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MonadFailDesugaring MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeOperators TypeFamilies TypeSynonymInstances ViewPatterns
+  c-sources:
+      c_src/keyio.c
   build-depends:
       base
     , bytestring
@@ -137,9 +80,33 @@ library
     , unix
     , unliftio
     , unordered-containers
+  default-language: Haskell2010
 
 executable kmonad
-  import:         shared
-  hs-source-dirs: app
-  main-is:        Main.hs
-  build-depends:  base, kmonad
+  main-is: Main.hs
+  other-modules:
+      Paths_kmonad
+  hs-source-dirs:
+      app
+  default-extensions: AutoDeriveTypeable BangPatterns BinaryLiterals ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DoAndIfThenElse EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MonadFailDesugaring MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeOperators TypeFamilies TypeSynonymInstances ViewPatterns
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  c-sources:
+      c_src/keyio.c
+  build-depends:
+      base
+    , bytestring
+    , cereal
+    , containers
+    , exceptions
+    , hashable
+    , kmonad
+    , lens
+    , megaparsec
+    , mtl
+    , text
+    , time
+    , unagi-chan
+    , unix
+    , unliftio
+    , unordered-containers
+  default-language: Haskell2010
