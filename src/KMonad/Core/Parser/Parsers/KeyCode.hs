@@ -79,7 +79,6 @@ specialNames = concatMap (\(k, as) -> map (,k) as) $
   , (KeyDelete,         ["del"])
   , (KeyVolumeUp,       ["volu"])
   , (KeyVolumeDown,     ["voldwn", "vold"])
-  , (KeyMute,           ["mute"])
   , (KeyBrightnessUp,   ["brup", "bru"])
   , (KeyBrightnessDown, ["brdown", "brdwn", "brdn"])
   , (KeyLeftAlt,        ["lalt"])
