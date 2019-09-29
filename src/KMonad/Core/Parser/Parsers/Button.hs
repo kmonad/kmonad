@@ -87,7 +87,7 @@ tapHold = do
   _    <- symbol "TH"
   t    <- read <$> lexeme (some digitChar) :: Parser Int
   tapB <- lexemeSameLine $ emit <|> modded
-  hldB <- lexeme $ emit <|> modded <|> layerToggle
+  hldB <- emit <|> modded <|> layerToggle
   return $ BTapHold (fromIntegral t) tapB hldB
 
 -- | Parse a macro button
@@ -118,7 +118,7 @@ modded = do
 -- them". So "!" gets parsed to a shifted 1, for example. This does not include
 -- any capital letters, since those signify special characters.
 shifted :: Parser ButtonToken
-shifted = try . lexeme $ (fromNamed m <* notFollowedBy alphaNumChar)
+shifted = try $ (fromNamed m <* notFollowedBy alphaNumChar)
   where
     s = BModded KeyLeftShift . BEmit
     m = [ ( "!",  s Key1)
