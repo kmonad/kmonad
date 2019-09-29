@@ -55,11 +55,55 @@ import UnliftIO as U
 
 import KMonad.Core
 
+--------------------------------------------------------------------------------
+-- $err
+
+type SinkId = String
+
+-- | The type of things that can go wrong with KeyIO
+--
+-- TODO: rewrap basic IO errors in a KeyIO error (stuff like "file not found")
+data KeyIOError
+  = IOCtlGrabError    FilePath
+  | IOCtlReleaseError FilePath
+  | EventParseError   FilePath String
+  | SinkCreationError SinkId
+  | SinkDeletionError SinkId
+  | SinkWriteError    SinkId   KeyEvent
+  deriving Exception
+
+instance Show KeyIOError where
+  show (IOCtlGrabError pth)
+    = "Could not perform IOCTL grab on: " <> pth
+  show (IOCtlReleaseError pth)
+    = "Could not perform IOCTL release on: " <> pth
+  show (EventParseError pth s)
+    = concat [ "Error parsing event when reading from "
+             , pth
+             , ": "
+             , s ]
+  show (SinkCreationError s)
+    = "Error instantiating KeySink of type: " <> s
+  show (SinkDeletionError s)
+    = "Error deleting KeySink of type: " <> s
+  show (SinkWriteError s e)
+    = concat [ "Error writing event '"
+             , unpack $ pretty e
+             , "'to KeySink: "
+             , s ]
+
+-- | Classy Prisms to create and throw 'KeyIOError's
+makeClassyPrisms ''KeyIOError
+
+instance AsKeyIOError IOException where
+  _KeyIOError = prism' throw (const Nothing)
+
+-- | They type of things that can perform KeyIO
+type CanKeyIO e m = (AsKeyIOError e, MonadError e m, MonadIO m)
+
 
 --------------------------------------------------------------------------------
 -- $types
---
---
 
 -- | The type of functions that emit key events to the OS
 type Emitter = KeyEvent -> IO ()
@@ -87,6 +131,8 @@ data KeySource = forall a. KeySource
 withKeySink :: KeySink -> (Emitter -> IO a) ->  IO a
 withKeySink KeySink{snkOpen=open, snkClose=close, snkWrite=write} go
   = bracket open close (\a -> go $ write a)
+
+-- wrapError ::
 
 -- | Run a function that reads key events in the context of an acquired
 -- KeySource. This uses bracket functionality to make sure the cleanup is always
@@ -134,48 +180,3 @@ writeEvent :: MonadIO m => Event -> EventSource -> m ()
 writeEvent e es = liftIO . putMVar (es^.injectV) $ e
 
 
---------------------------------------------------------------------------------
--- $err
-
-type SinkId = String
-
--- | The type of things that can go wrong with KeyIO
---
--- TODO: rewrap basic IO errors in a KeyIO error (stuff like "file not found")
-data KeyIOError
-  = IOCtlGrabError FilePath
-  | IOCtlReleaseError FilePath
-  | EventParseError FilePath String
-  | SinkCreationError SinkId
-  | SinkDeletionError SinkId
-  | SinkWriteError SinkId KeyEvent
-  deriving Exception
-
-instance Show KeyIOError where
-  show (IOCtlGrabError pth)
-    = "Could not perform IOCTL grab on: " <> pth
-  show (IOCtlReleaseError pth)
-    = "Could not perform IOCTL release on: " <> pth
-  show (EventParseError pth s)
-    = concat [ "Error parsing event when reading from "
-             , pth
-             , ": "
-             , s ]
-  show (SinkCreationError s)
-    = "Error instantiating KeySink of type: " <> s
-  show (SinkDeletionError s)
-    = "Error deleting KeySink of type: " <> s
-  show (SinkWriteError s e)
-    = concat [ "Error writing event '"
-             , unpack $ pretty e
-             , "'to KeySink: "
-             , s ]
-
--- | Classy Prisms to create and throw 'KeyIOError's
-makeClassyPrisms ''KeyIOError
-
-instance AsKeyIOError IOException where
-  _KeyIOError = prism' throw (const Nothing)
-
--- | They type of things that can perform KeyIO
-type CanKeyIO e m = (AsKeyIOError e, MonadError e m, MonadIO m)

@@ -147,6 +147,32 @@ handleApp ke = do
 
 --------------------------------------------------------------------------------
 
+-- | The AppCfg environment that contains everything required to start the App
+-- monad API.
+data AppCfg = AppCfg
+  { _cfgKeySource   :: KeySource          -- ^ The 'KeySource' interface to the OS input keyboard
+  , _cfgKeySink     :: KeySink            -- ^ The 'KeySink' interface to the OS simulated output keyboard
+  , _cfgRestart     :: Maybe Microseconds -- ^ If, and how long, to wait before attempting restart
+  , _cfgLayerStack  :: LayerMap           -- ^ The nested alist of Layer, Keycode, ButtonToken correspondences
+  , _cfgEntry       :: LayerId            -- ^ The first layer we start in
+  }
+
+-- | Interpret a 'Config' as a valid 'AppCfg'
+--
+-- TODO: make '_cfgRestart' a passed value.
+interpretConfig :: Maybe Microseconds -> Config -> AppCfg
+interpretConfig us cfg = AppCfg
+  { _cfgKeySource  = pickInputIO $ cfg^.input
+  , _cfgKeySink    = pickOutputIO $ cfg^.output
+  , _cfgRestart    = us
+  , _cfgLayerStack = cfg^.mappings
+  , _cfgEntry      = cfg^.entry
+  }
+
+  -- withKeySource (pickInputIO $ cfg^.input) $ \src ->
+  --   withKeySink (pickOutputIO $ cfg^.output) $ \snk -> do
+
+
 -- | The AppEnv reader environment that all App actions have access to.
 data AppEnv = AppEnv
   { _appEmitter      :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
@@ -155,7 +181,9 @@ data AppEnv = AppEnv
   , _appSluice       :: Sluice App ()     -- ^ Sluice to enable holding processing
   , _appLayerStack   :: LayerStack App    -- ^ LayerStack to manage the layers
   }
-makeClassy 'AppEnv
+
+makeClassy ''AppCfg
+makeClassy ''AppEnv
 
 -- | Various ClassyLenses plugging in
 instance HasEventSource  AppEnv        where eventSource  = appEventSource
@@ -164,20 +192,18 @@ instance HasEventTracker AppEnv        where eventTracker = appEventTracker
 instance HasSluice       AppEnv App () where sluice       = appSluice
 instance HasLayerStack   AppEnv App    where layerStack   = appLayerStack
 
--- | Take a Config and start running the event loop, returning an error if it
--- occurs.
-startApp :: Config -> IO (Either AppError ())
-startApp cfg =
-
+-- | Run KMonad until an error occurs
+runOnce :: AppCfg -> IO ()
+runOnce cfg = do
   -- Acquire the requested IO resources
-  withKeySource (pickInputIO $ cfg^.input) $ \src ->
-    withKeySink (pickOutputIO $ cfg^.output) $ \snk -> do
+  withKeySource (cfg^.cfgKeySource) $ \src ->
+    withKeySink (cfg^.cfgKeySink) $ \snk -> do
 
       -- Initialize the AppEnv variable
       esrc <- mkEventSource src
       etrc <- mkEventTracker
       slce <- mkSluice
-      stck <- mkLayerStack (cfg^.mappings) (cfg^.entry)
+      stck <- mkLayerStack (cfg^.cfgLayerStack) (cfg^.cfgEntry)
 
       let env = AppEnv
             { _appEmitter      = snk
@@ -188,11 +214,32 @@ startApp cfg =
             }
 
       -- Start the event loop
-      runApp (loop :: App ()) env
+      runApp loop env >>= \case
+        Left e   -> throwIO e
+        Right () -> pure ()
+
+-- | Take a Config and start running the event loop, if an error occurs, handle
+-- it by either restarting, or displaying the error.
+-- FIXME - don't default delay, include in commandline interface at some point
+startApp :: AppCfg -> IO ()
+startApp cfg = catch (runOnce cfg) $ handleAppError cfg
+
+-- | Decide what to do with an error based on the error and the configuration
+handleAppError :: AppCfg -> IOException -> IO ()
+handleAppError cfg e = do
+  case cfg^.cfgRestart of
+    Nothing -> print e
+    Just us -> do
+      threadDelay $ fromIntegral us
+      putStrLn "Encountered raw IO Exception attempting restart"
+      startApp cfg
+
 
 -- | Take a Config and start running the event loop, if an error occurs, print
 -- it and exit.
 startAppIO :: Config -> IO ()
-startAppIO cfg = startApp cfg >>= \case
-  Left e  -> print e
-  Right _ -> return ()
+startAppIO = startApp . interpretConfig (Just 1000000)
+
+  -- startApp cfg >>= \case
+  -- Left e  -> print e
+  -- Right _ -> return ()
