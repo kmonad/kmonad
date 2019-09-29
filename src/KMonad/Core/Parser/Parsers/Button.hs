@@ -94,7 +94,7 @@ tapHold = do
 tapMacro :: Parser ButtonToken
 tapMacro = do
   _  <- symbol "||"
-  bs <- many (emit <|> modded)
+  bs <- lexeme $ many (emit <|> modded <|> shifted)
   _  <- symbol "||"
   pure $ BTapMacro bs
 
