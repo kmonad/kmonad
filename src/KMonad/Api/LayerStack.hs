@@ -7,6 +7,15 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : portable
 
+The 'LayerStack' object manages a stateful MapStack of layers that can be
+manipulated. Press events are dispatched based on the current state of the
+MapStack. Release events, however, are managed in such a way that it doesn't
+matter which layer-state we are in now, a release will always correspond to the
+release of the button which initiated the press. This is to prevent situations
+where you press an 'a' in a layer where that is mapped to, for example @emit q@,
+switch to a different layer, release the 'a', but catch that release with a
+different handler, resulting in a permanently pressed @q@.
+
 -}
 module KMonad.Api.LayerStack
   ( LayerStack
@@ -28,13 +37,15 @@ import KMonad.Domain.Button
 import KMonad.Domain.Effect (CanButton)
 
 import qualified KMonad.Core.MapStack as S
+import qualified Data.HashMap.Strict  as M
 
 
 --------------------------------------------------------------------------------
 
 -- | A LayerStack object that manages overlapping sets of handlers
 data LayerStack m = LayerStack
-  { mapStack :: MVar (S.MapStack LayerId KeyCode (Button m)) }
+  { mapStack   :: MVar (S.MapStack LayerId KeyCode (Button m))
+  , mapRelease :: MVar (M.HashMap KeyCode (Button m))}
 
 -- | A ClassyLens style typeclass to describe 'having a LayerStack'
 class MonadIO m => HasLayerStack r m where
@@ -42,11 +53,23 @@ class MonadIO m => HasLayerStack r m where
 
 -- | Use a LayerStack to handle a single key event
 handleWith :: MonadIO m => KeyEvent -> LayerStack m -> m ()
-handleWith e ls = withSignal e $ \x -> do
-  ms <- readMVar . mapStack $ ls
-  case S.lookup (e^.keyCode) ms of
+handleWith (KeyEvent Press kc _) ls = do
+  ms  <- readMVar . mapStack $ ls
+  case S.lookup kc ms of
     Nothing -> return ()
-    Just b  -> runButton b x
+    Just b  -> do
+      liftIO . modifyMVar_ (mapRelease ls) $ return . M.insert kc b
+      bPress b
+handleWith (KeyEvent Release kc _) ls = do
+  rels <- takeMVar (mapRelease ls)
+  case M.lookup kc rels of
+    Nothing -> putMVar (mapRelease ls) rels
+    Just b  -> do
+      putMVar (mapRelease ls) (M.delete kc rels)
+      bRelease b
+ 
+handleWith _ _ = pure ()
+
 
 -- | Push a LayerID to the top of the stack NOTE: the monads do not necessarily
 -- have to line up, maybe change this? FIXME: Add error handling and remove the
@@ -72,6 +95,6 @@ mkLayerStack ts def = do
   -- There is probably a much prettier lensy way of doing this
   bs <- mapM (mapTup (mapM (mapTup encode))) ts
   h  <- newMVar . fromJust . push def . mkMapStack $ bs
-  return $ LayerStack h
+  LayerStack h <$> newMVar (M.empty)
   where
     mapTup f (c, a) = (c,) <$> f a
