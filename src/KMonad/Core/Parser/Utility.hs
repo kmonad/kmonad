@@ -62,13 +62,13 @@ import qualified Data.Text    as T
 type Parser a = Parsec Void Text a
 
 -- | The error corresponding to our 'Parser' type
-type PError = ParseError Text Void
+type PError = ParseErrorBundle Text Void
 
 -- | 'Text.Megaparsec.parse' but specified to our 'Parser' type.
 -- TODO: Deal with errors better: rewrap into ConfigError
 parseE :: Parser a -> Text -> a
 parseE p t = case parse p "" t of
-  (Left e)  -> error $ show e
+  (Left e)  -> error $ errorBundlePretty e
   (Right x) -> x
 
 
