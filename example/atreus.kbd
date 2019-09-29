@@ -51,7 +51,7 @@ LAYER l
   X    `    ~    [    ]              X    7    8    9    /
   @ll  "    __   (    )              X    4    5    6    *
   lctl '    |    {    }              =    1    2    3    -
-  _    _    \    <    >    _    @lr  spc  _    _    _    _
+  _    _    \    <    >    _    @lr  spc  0    _    _    _
 
 // Haskell macros: to be completed when I implement macros
 LAYER ll
@@ -69,7 +69,7 @@ LAYER lr
 
 // Navigation and volume keys
 LAYER r
-  _    _    _    _    _              _    pgup up   pgdn volu
+  caps _    _    _    _              _    pgup up   pgdn volu
   _    _    _    _    _              _    left down rght vold
   _    _    _    _    _              _    _    _    _    mute
   _    _    _    _    _    _    _    _    _    _    _    _
