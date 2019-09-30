@@ -475,3 +475,31 @@ Note that when you bind a taphold to a very common key, like the spacebar, it
 might take some getting used to, because tapping it will always come with just
 the tiniest of delays, because we can only emit a tap of the spacebar upon
 *release* of the spacebar.
+
+### Tap-Next
+The tap-next button is another way to have a button do 2 different things. Since
+a Tap-Hold button works around a timed delay, if you for example have a `TH 300
+esc lctl`, then if you want to use this to press `C-t`, you are going to have to
+wait for 300 ms for that signal to register. If you release too early, you will
+get an `esc, t` instead.
+
+The tap-next button, however, simply waits to see if the next event is releasing
+itself, in which case it taps, or pressing another button, in which case it is a
+mod. Additionally, as a small extra tweak, it ignores releases of other buttons.
+So if you, for example, press `e`, press the `TapNext`, release `e`, and then
+press `t`, the release of the `e` will have no effect on anything, and the
+`TapNext` will register as holding, since the next event was a pressing of a
+`t`. This is simply to smoothe out tap-detection when typing fast, since you do
+not have to make sure you have everything released before pressing a TapNext.
+
+A tap-next is parsed as, in sequence
+1. The symbol `TN`
+2. The button to push (allows emits and modded)
+3. The button to hold (allows emits, modded, and layer-toggles)
+
+For example:
+```
+@xcp = TN esc lctl   // Esc when tapped, control when held
+@foo = TN q LT-syms  // q when tapped, goto syms when held
+```
+

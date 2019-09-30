@@ -81,7 +81,7 @@ module KMonad.Domain.Effect
     -- $var
   , MonadVar(..)
   , Var
-  , runVar, swapVar, getV, putV
+  , runVar, swapVar, getV, putV, readVar
 
     -- * MonadWait
     -- $wait
@@ -321,6 +321,10 @@ class Monad m => MonadVar m where
 -- | Swap the value in a Var and return the old one
 swapVar :: MonadVar m => a -> Var a -> m a
 swapVar a v = getVar v >>= \old -> putVar a v >> return old
+
+-- | Read the value from a Var without taking it
+readVar :: MonadVar m => Var a -> m a
+readVar v = getVar v >>= \x -> putVar x v >> pure x
 
 
 --------------------------------------------------------------------------------

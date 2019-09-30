@@ -57,13 +57,18 @@ data KeyEventType
   deriving (Eq, Show)
 makeClassyPrisms ''KeyEventType
 
+class HasEventType a where
+  eventType :: Lens' a KeyEventType
+
 -- | The KeyEvent that describes a single keyboard occurence
 data KeyEvent = KeyEvent
-  { _eventType    :: !KeyEventType -- ^ Either a 'Press', 'Release', or 'Repeat'
+  { _evEventType    :: !KeyEventType -- ^ Either a 'Press', 'Release', or 'Repeat'
   , _eventKeyCode :: !KeyCode      -- ^ The 'KeyCode' for this event
   , _eventTime    :: !Time         -- ^ The 'Time' at which this event occured
   } deriving (Eq, Show)
 makeClassy ''KeyEvent
+
+instance HasEventType KeyEvent where eventType = evEventType
 
 instance HasKeyCode KeyEvent where keyCode = eventKeyCode
 instance HasTime    KeyEvent where time    = eventTime
@@ -102,14 +107,19 @@ repeat  c = KeyEvent Repeat  c
 
 -- | The EventComparison record
 data EventComparison = EventComparison
-  { _sameCode :: Bool        -- ^ Whether or not both 'KeyEvent's share the same 'KeyCode'
-  , _since    :: Nanoseconds -- ^ The time between the two events
+  { _sameCode     :: Bool         -- ^ Whether or not both 'KeyEvent's share the same 'KeyCode'
+  , _since        :: Nanoseconds  -- ^ The time between the two events
+  , _cmpEventType :: KeyEventType -- ^ The event-type of the second event
   } deriving (Eq, Show)
 makeClassy ''EventComparison
+
+instance HasEventType EventComparison where eventType = cmpEventType
 
 -- | Return an 'EventComparison' between two events, if the first event occured
 -- before the second, the 'since' value will be positive, otherwise negative.
 compareEvent :: KeyEvent -> KeyEvent -> EventComparison
 compareEvent a b = EventComparison
-  { _sameCode = a^.keyCode == b^.keyCode
-  , _since    = (a^.time) `tminus` (b^.time) }
+  { _sameCode     = a^.keyCode == b^.keyCode
+  , _since        = (a^.time) `tminus` (b^.time)
+  , _cmpEventType = b^.eventType
+  }

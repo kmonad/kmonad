@@ -39,6 +39,7 @@ buttonP = choice
   , emit
   , layerToggle
   , tapHold
+  , tapNext
   , tapMacro
   ]
 
@@ -67,6 +68,11 @@ trans = Transparent <$ (string "transparent" <|> "trans" <|> "_")
 --------------------------------------------------------------------------------
 -- Define parsers for each of the different button types
 
+-- | Compound parser for buttons that are 'simple', i.e. that can fill the 'tap'
+-- field of any compound 'tap/hold' style button
+tapper :: Parser ButtonToken
+tapper = emit <|> modded <|> shifted
+
 -- | Parse an emit by reading the name of a keycode
 emit :: Parser ButtonToken
 emit = BEmit <$> keycodeP
@@ -86,9 +92,17 @@ tapHold :: Parser ButtonToken
 tapHold = do
   _    <- symbol "TH"
   t    <- read <$> lexeme (some digitChar) :: Parser Int
-  tapB <- lexemeSameLine $ emit <|> modded
-  hldB <- emit <|> modded <|> layerToggle
+  tapB <- lexemeSameLine tapper
+  hldB <- tapper <|> layerToggle
   return $ BTapHold (fromIntegral t) tapB hldB
+
+-- | Parse a TapNext button as "TN bTap bHold"
+tapNext :: Parser ButtonToken
+tapNext = do
+  _    <- symbol "TN"
+  tapB <- lexemeSameLine $ tapper
+  hldB <- tapper <|> layerToggle
+  return $ BTapNext tapB hldB
 
 -- | Parse a macro button
 tapMacro :: Parser ButtonToken
