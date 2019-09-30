@@ -8,12 +8,17 @@ will announce it in a number of places.
 
 # Installing KMonad
 
+You can either compile KMonad yourself using haskell. It should be very
+straighforward with stack. Alternatively, once I decide that we're ready to
+start testing at a larger scale, I will provide a release with a statically
+compiled binary, thanks to the lovely people over at
+https://github.com/nh2/static-haskell-nix. 
+
 ## Compiling
 Currently KMonad is configured to be compiled by stack. If you do not have stack
 installed, check https://docs.haskellstack.org/en/stable/README/ for
 instructions on installing it. After compilation, it can be removed again, since
-`kmomad` does not need to be recompiled upon configuration. I am currently
-looking int compiling static binaries for easier distribution.
+`kmomad` does not need to be recompiled upon configuration.
 
 After potentially installing `stack` and cloning this repo, you can build
 `kmonad` by calling:
