@@ -503,3 +503,24 @@ For example:
 @foo = TN q LT-syms  // q when tapped, goto syms when held
 ```
 
+#### TapNext vs TapHold
+This is purely a matter of personal taste, but I prefer TapHold buttons for
+buttons that I often use in quick succession when typing. If you are going to
+bind a LayerToggle to a homerow key like `s`, for example, then if you use a
+TapNext, then unless you type very carefully, you are very often going to
+trigger a Layer change when typing a word with an `s` in. Were you to use a
+TapHold, however, the only way you could accidentally trigger a layer-change
+would be to hold that button longer than your specified delay, which (depending
+on your delay) is very unlikely when typing at a decent clip.
+
+On the other hand, a TapHold button can be a bit sluggish to trigger its 'held'
+state for those button-combinations that you type very quickly. I bind an XCape
+(Control when held, escape when tapped) to my caps-lock key. If I use that to
+open a new tab in my browser with "C-t", I often 'miss' the delay because I type
+this so quickly. Here a TapNext is much better, since it does not matter how
+quickly you 'complete' your modded combination.
+
+In summary: TapHolds are nice for buttons that you want to be conservative in
+their 'becoming held' property, and TapNext's are nice for buttons that you want
+to be able to use as 'becoming held' very quickly. Of course, the delay you
+choose for your TapHold button also greatly affects this.
