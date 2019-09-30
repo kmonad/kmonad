@@ -40,6 +40,7 @@ module KMonad.Domain.Effect
     -- * MonadFuture
     -- $future
   , MonadFuture(..)
+  , waitFor
 
     -- * MonadHandler
     -- $handler
@@ -187,6 +188,21 @@ class Monad m => MonadFork m where
 -- comparing, simply request a new 'pinComparison'.
 class Monad m => MonadFuture m where
   pinComparison :: m (m EventComparison)
+
+-- | Given a predicate on EventComparisons, return () once the predicate is
+-- satisfied.
+--
+-- This is often used in conjunction with 'race' to do something in the case
+-- some condition is met within a given time.
+-- For example:
+--
+-- >>> race (wait 1000000) (waitFor (\c -> (c^.eventType == Release)) >> doThing)
+--
+
+waitFor :: MonadFuture m => (EventComparison -> Bool) -> m ()
+waitFor p = pinComparison >>= f
+  where f nxt = nxt >>= \cmp -> if p cmp then pure () else f nxt
+
 
 
 --------------------------------------------------------------------------------

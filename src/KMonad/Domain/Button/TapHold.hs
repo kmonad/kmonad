@@ -90,22 +90,12 @@ hPress :: CanButton m => TH m ()
 hPress = ask >>= \env -> lift  $ do
   hold True
   fork $ do
-    race (wait $ env^.delay) runMonitor >>= \case
+    race (wait $ env^.delay) (waitFor (view sameCode)) >>= \case
       Left _  -> bPress $ env^.holdB -- If we outwaited the delay
       Right _ -> do                  -- If we encountered a release first
         bTap $ env^.tapB
         void . swapVar Unpressed $ env^.bState
     hold False
-
--- | Pin to the current event and return () if any future event shares the same keycode
-runMonitor :: CanButton m => m ()
-runMonitor = do
-  nxt <- pinComparison
-  let f = nxt >>= \cmp -> do
-        if cmp^.sameCode
-          then return ()
-          else f
-  f
 
 -- | Release the holdB button
 hRelease :: CanButton m => TH m ()
