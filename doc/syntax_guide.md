@@ -524,3 +524,25 @@ In summary: TapHolds are nice for buttons that you want to be conservative in
 their 'becoming held' property, and TapNext's are nice for buttons that you want
 to be able to use as 'becoming held' very quickly. Of course, the delay you
 choose for your TapHold button also greatly affects this.
+
+### MultiTap
+The multi-tap button is a button that decides what to do based on how often it
+is tapped in quick succesion. Currently it only supports tapping, although I
+might implement just holding (and later catching a release) in the future.
+
+A multitap is specified by, in order
+1. The `MT` symbol
+2. 1 or more occurences of some button and some number of milliseconds to wait
+3. 1 button
+
+For example:
+```
+// q if tapped once, or esc if tapped again within 200 ms
+@qsc = MT q 200 esc 
+
+// emit various letters of the alphabet, with the window to get in another tap
+// shrinking
+@foo = MT a 500 b 400 c 300 d 200 e 100 f 50 g
+```
+
+The buttons that can exist in a multitap are either emits or modded.
