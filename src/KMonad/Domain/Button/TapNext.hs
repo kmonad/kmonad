@@ -71,14 +71,3 @@ hPress v t h = do
         | otherwise               -> f
   fork (f >> hold False)
   
-  -- hold True
-  -- pin <- pinComparison
-  -- fork $ do
-  --   nxt <- pin
-  --   if nxt^.sameCode
-  --       then bTap t >> swapVar Unpressed v >> return () -- If the next matches the press
-  --       else bPress h                                   -- Otherwise
-  --   hold False
-
--- runMonitor :: CanButton m => m ()
--- runMonitor v t h = do
