@@ -22,6 +22,7 @@ module KMonad.Core.Parser.Parsers.Button
 where
 
 import KMonad.Core.KeyCode
+import KMonad.Core.Time
 import KMonad.Core.Parser.Parsers.KeyCode
 import KMonad.Core.Parser.Utility
 
@@ -38,6 +39,7 @@ buttonP = choice
   , modded
   , emit
   , layerToggle
+  , multiTap
   , tapHold
   , tapNext
   , tapMacro
@@ -108,9 +110,24 @@ tapNext = do
 tapMacro :: Parser ButtonToken
 tapMacro = do
   _  <- symbol "||"
-  bs <- lexeme $ many (lexeme emit <|> lexeme modded <|> lexeme shifted)
+  bs <- many (lexemeSameLine tapper)
   _  <- symbol "||"
   pure $ BTapMacro bs
+
+-- | Parse a multi-tap button
+multiTap :: Parser ButtonToken
+multiTap = do
+  _  <- symbol "MT"
+  bs <- many (try $ lexemeSameLine one)
+  b  <- tapper
+  pure . BMultiTap $ bs <> [(0, b)]
+
+  where
+    one :: Parser (Microseconds, ButtonToken)
+    one = do
+      b   <- lexemeSameLine tapper
+      num <- read <$> lexemeSameLine (some digitChar) :: Parser Int
+      pure (fromIntegral $ 1000 * num, b)
 
 -- | Parse any "S-button" or "C-button" style indicator as a modded button. This
 -- is recursive, so "C-S-button" works fine too

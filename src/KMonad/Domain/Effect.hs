@@ -41,6 +41,7 @@ module KMonad.Domain.Effect
     -- $future
   , MonadFuture(..)
   , waitFor
+  , waitForWith
 
     -- * MonadHandler
     -- $handler
@@ -198,11 +199,17 @@ class Monad m => MonadFuture m where
 --
 -- >>> race (wait 1000000) (waitFor (\c -> (c^.eventType == Release)) >> doThing)
 --
-
 waitFor :: MonadFuture m => (EventComparison -> Bool) -> m ()
-waitFor p = pinComparison >>= f
-  where f nxt = nxt >>= \cmp -> if p cmp then pure () else f nxt
+waitFor p = pinComparison >>= waitForWith p
 
+-- | Like waitFor, but using an already pinned action
+--
+-- `waitFor p` is equivalent to `pinComparison >>= waitForWith p`
+waitForWith :: Monad m
+  => (a -> Bool) -- ^ The predicate to match
+  -> m a         -- ^ The action that generates comparisons
+  -> m ()
+waitForWith p nxt = nxt >>= \cmp -> if p cmp then pure () else waitForWith p nxt
 
 
 --------------------------------------------------------------------------------

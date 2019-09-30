@@ -82,6 +82,8 @@ data ButtonToken
   | BTapNext ButtonToken ButtonToken
     -- ^ Corresponds to "KMonad.Domain.Button.TapNext"
   | BTapMacro [ButtonToken]     -- ^ Corresponds to "KMoand.Domain.Button.Macro"
+  | BMultiTap [(Microseconds, ButtonToken)]
+    -- ^ Corresponds to "KMonad.Domain.Button.MultiTap"
   | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
   deriving (Eq, Show)
 

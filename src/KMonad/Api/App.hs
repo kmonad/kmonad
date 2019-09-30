@@ -143,13 +143,14 @@ runAppIO m env = runApp m env >>= \case
 -- the layerStack handling will not run.
 handleApp :: KeyEvent -> App ()
 handleApp ke = do
-  -- Send the keyevent to the event-tracker for broadcast
-  view eventTracker >>= update ke
+  -- Broadcast event and decide whether to handle
+  b <- update ke =<< view eventTracker
 
-  -- Feed the action of handling the key-event into the sluice
-  sl <- view sluice
-  lt <- view layerStack
-  feed (handleWith ke lt) sl
+  -- When handling, feed the action of handling the key-event into the sluice
+  when b $ do
+    sl <- view sluice
+    lt <- view layerStack
+    feed (handleWith ke lt) sl
 
 
 --------------------------------------------------------------------------------
