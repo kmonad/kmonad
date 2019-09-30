@@ -141,8 +141,9 @@ modded = do
                 , KeyRightCtrl  <$ string "RC-"
                 , KeyRightAlt   <$ string "RA-"
                 , KeyRightMeta  <$ string "RM-"
+                , KeyCompose    <$ string "CMP-"
                 ]
-  rest <- modded <|> emit
+  rest <- modded <|> emit <|> tapMacro
   return $ BModded mod rest
 
 -- | Parse a number of special characters as "the shifted sequence to push

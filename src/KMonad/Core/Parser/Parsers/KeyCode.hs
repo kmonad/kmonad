@@ -83,6 +83,7 @@ specialNames = concatMap (\(k, as) -> map (,k) as) $
   , (KeyBrightnessDown, ["brdown", "brdwn", "brdn"])
   , (KeyLeftAlt,        ["lalt"])
   , (KeyRightAlt,       ["ralt"])
+  , (KeyCompose,        ["comp", "cmps"])
   , (KeyLeftShift,      ["lshift", "lshft", "lsft"])
   , (KeyRightShift,     ["rshift", "rshft", "rsft"])
   , (KeyLeftCtrl,       ["lctrl", "lctl"])
