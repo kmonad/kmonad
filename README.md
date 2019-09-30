@@ -103,7 +103,9 @@ copy it to somewhere on your path.
 KMonad currently requires 1, and exactly 1 input argument: a path to a
 configuration file that describes the keyboard layout to run. For a guide to
 writing valid configuration files, [see the
-syntax guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md).
+syntax
+guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md)
+or [some of the examples](https://github.com/david-janssen/kmonad/tree/master/example).
 
 Once the compiled binary is on the PATH, running KMonad is as simple as:
 
