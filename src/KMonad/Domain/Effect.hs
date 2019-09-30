@@ -54,6 +54,10 @@ module KMonad.Domain.Effect
     -- $inject
   , MonadInject(..)
 
+    -- * MonadMaskInput
+    -- $maskinput
+  , MonadMaskInput(..)
+
     -- * MonadNext
     -- $next
   , MonadNext(..)
@@ -118,6 +122,7 @@ type CanButton m =
   , MonadFuture     m
   , MonadHold       m
   , MonadInject     m
+  , MonadMaskInput  m
   , MonadNext       m
   , MonadNow        m
   , MonadRace       m
@@ -223,6 +228,17 @@ holdDuring a = do
 class Monad m => MonadInject m where
   injectEvent :: Event -> m ()
 
+
+--------------------------------------------------------------------------------
+-- $maskinput
+
+-- | This effect allows the masking of normal handling of the current event.
+-- This is necessary for mapping multiple presses of the same button to 1 output
+-- event.
+class Monad m => MonadMaskInput m where
+  -- | Mask events with the same keycode as the current event from being
+  -- processed, and return the action to unmask processing again.
+  maskInput :: m (m ())
 
 --------------------------------------------------------------------------------
 -- $next

@@ -25,6 +25,7 @@ module KMonad.Api.EventTracker
   , eventTracker
   , mkEventTracker
   , update
+  , maskEvent
   , pin
   )
 where
@@ -36,6 +37,7 @@ import Control.Monad.Trans
 import UnliftIO.MVar
 
 import KMonad.Core
+import qualified Data.IntSet as S
 
 
 --------------------------------------------------------------------------------
@@ -44,6 +46,7 @@ import KMonad.Core
 data EventTracker = EventTracker
   { _inChan   :: InChan KeyEvent  -- ^ A Chan that, when written to, updates all requests
   , _outChan  :: OutChan KeyEvent -- ^ The output of that Chan, held on to to keep empty. NOTE: is this necessary?
+  , _masked   :: MVar S.IntSet
   , _curEvent :: MVar KeyEvent    -- ^ An MVar containing the most recent 'KeyEvent'
   }
 -- | Define a classy lens for access
@@ -51,14 +54,22 @@ makeClassy ''EventTracker
 
 -- | Return a new EventTracker object
 mkEventTracker :: MonadIO m => m EventTracker
-mkEventTracker = uncurry EventTracker <$> liftIO newChan <*> newMVar (error "unreachable")
+mkEventTracker = uncurry EventTracker <$> liftIO newChan
+                                      <*> newMVar S.empty
+                                      <*> newMVar (error "unreachable")
 
 -- | Send an 'EventComparison' to all registered trackers
-update :: MonadIO m => KeyEvent -> EventTracker -> m ()
-update ke tr = do
+update :: MonadIO m => KeyEvent -> EventTracker -> m Bool
+update ke tr = liftIO $ do
+  -- Update the internal 'current event'
   _ <- swapMVar (tr^.curEvent) ke
-  liftIO $ writeChan (tr^.inChan) ke
-  void . liftIO $ readChan (tr^.outChan) -- Make sure the original outchan gets emptied: NOTE is this necessary?
+
+  -- Transmit current-event comparisons to all active `pin`s
+  writeChan (tr^.inChan) ke
+  readChan  (tr^.outChan) -- Make sure the original outchan gets emptied: NOTE is this necessary?
+
+  -- Return whether this event should be handled
+  (not . S.member (fromEnum $ ke^.keyCode)) <$> readMVar (tr^.masked)
 
 -- | Request an action that pins the current event as e0. Then, when executed,
 -- will block until the next event, e1, occurs and returns an 'EventComparison'
@@ -69,6 +80,13 @@ pin :: MonadIO m => EventTracker -> m (m (EventComparison))
 pin tr = do
   ce <- readMVar $ tr^.curEvent
   oc <- liftIO . dupChan $ tr^.inChan
-  return $ do
+  pure $ do
     e <- liftIO $ readChan oc
-    return $ compareEvent ce e
+    pure $ compareEvent ce e
+
+-- | Add the current keycode to the mask and return the action to unmask again
+maskEvent :: MonadIO m => EventTracker -> m (m ())
+maskEvent tr = liftIO $ do
+  kc <- fromEnum . (view keyCode) <$> (readMVar $ tr^.curEvent)
+  modifyMVar_ (tr^.masked) $ pure . S.insert kc
+  pure $ liftIO . modifyMVar_ (tr^.masked) $ pure . S.delete kc

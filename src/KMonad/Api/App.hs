@@ -86,6 +86,10 @@ instance MonadHold App where
 instance MonadInject App where
   injectEvent e = writeEvent e =<< view eventSource
 
+-- | Deal with masking input through the EventTracker object
+instance MonadMaskInput App where
+  maskInput = maskEvent =<< view eventTracker
+
 -- | Await new events by polling the eventSource
 instance MonadNext App where
   nextEvent = readEvent =<< view eventSource
@@ -139,7 +143,10 @@ runAppIO m env = runApp m env >>= \case
 -- the layerStack handling will not run.
 handleApp :: KeyEvent -> App ()
 handleApp ke = do
+  -- Send the keyevent to the event-tracker for broadcast
   view eventTracker >>= update ke
+
+  -- Feed the action of handling the key-event into the sluice
   sl <- view sluice
   lt <- view layerStack
   feed (handleWith ke lt) sl
@@ -169,15 +176,12 @@ interpretConfig us cfg = AppCfg
   , _cfgEntry      = cfg^.entry
   }
 
-  -- withKeySource (pickInputIO $ cfg^.input) $ \src ->
-  --   withKeySink (pickOutputIO $ cfg^.output) $ \snk -> do
-
 
 -- | The AppEnv reader environment that all App actions have access to.
 data AppEnv = AppEnv
   { _appEmitter      :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
   , _appEventSource  :: EventSource       -- ^ The entrypoint for events
-  , _appEventTracker :: EventTracker      -- ^ Broadcast point for event-comparisons
+  , _appEventTracker :: EventTracker      -- ^ Tracking and masking events
   , _appSluice       :: Sluice App ()     -- ^ Sluice to enable holding processing
   , _appLayerStack   :: LayerStack App    -- ^ LayerStack to manage the layers
   }
