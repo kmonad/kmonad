@@ -57,7 +57,9 @@ implement this).
 
 Or more practically: do you really like the Dvorak layout, but do you also wish
 you had very simple, left-handed access to the common Control z x c v shortcuts?
-Have a look at <insert-link-here> to see an easy solution. 
+Have a look at [this dvorak
+example](https://github.com/david-janssen/kmonad/blob/master/example/dvorak_sane_zxcv.kbd)
+to see an easy solution.
 
 For more ideas, check the `example` subdirectory, or the [syntax
 guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md)
@@ -70,8 +72,9 @@ yourself using the instructions mentioned below. Alternatively, the lovely
 people over at https://github.com/nh2/static-haskell-nix have helped me figure
 how to compile a static binary that should work basically on any standard 64-bit
 linux system. Note that this is almost entirely untested, only on my own
-computer and in a virtualbox running Ubuntu. The binary for the most current
-release can be found <insert-link-here>.
+computer and in a virtualbox running Ubuntu. You can download a binary for the
+`0.1.0` release
+[here](https://github.com/david-janssen/kmonad/releases/download/0.1.0/kmonad).
 
 ### Compiling
 Probably the easiest way to compile KMonad is using `stack`. If you do not have `stack`
