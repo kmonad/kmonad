@@ -407,12 +407,14 @@ button, this is very much not recommended, since it seriously compromises your
 security. 
 
 ### Layer-Toggle
-We currently provide 1 button that manipulates the layer-stack. The
-layer-toggle. When pressed, it adds the layer it refers to to the top of the
-stack, and when released, it removes that layer from the stack again. Note that
-it is currently perfectly possible to get yourself completely stuck by mapping a
-button over your layer-toggle that you then switch to. This will be remedied in
-the future.
+The Layer-Toggle manipulates the layer-stack. When pressed, it adds the layer it
+refers to to the top of the stack, and when released, it removes that layer from
+the stack again. Note that the layer-stack determines which button handles a key
+*press*. The key release is **always** handled by the button that initiated the
+press. So if you mask a button with another button in the middle of tapping it,
+it is still the original button that will handle the release, although any
+future press will be passed to the button that has just been mapped on top. 
+
 ```
 @num = LT-numpad  // An alias is nice to keep things short, but not required
 
@@ -429,12 +431,80 @@ LAYER numpad
   1    2    3    4
   _    _    _    _
 
-// Switching to a with LT-a works, but never allows you out again, because
-// releasing `s` (LT-a) is now bound to releasing the button 6.
+// Switching to a with LT-a works as well.
 LAYER a
   _    _    _    _
   5    6    7    8
 ```
+
+### Layer-Add and Layer-Rem
+The Layer-Add button manipulates the layerstack by adding a predetermined
+layer-id to the top of the layerstack every time it is pushed. Layer-Rem does
+exactly the opposite. Note that this makes it possible to permanently alter and
+screw up your stack-state.
+
+The LA and LR buttons are provided as primitives for stack-manipulation. They
+let you do what you want, but come with less safety guarantees. More elegant
+ways of dealing with this might be implemented soon.
+
+```
+@anm = LA-num
+@rnm = LR-num
+
+SRC
+  q    w    e    r
+  a    s    d    f
+
+LAYER home
+  @anm @rnm _    _
+  _    _    _    _
+  
+LAYER numpad
+  _    _    _    _
+  1    2    3    4
+```
+
+In the above example, if you press `q` once, the bottom row will then function as
+numbers. If you press `w`, everything is back to normal again. If you press `q`
+twice, though, you will have to press `w` twice as well to restore normal
+functioning. This is the most naive way of doing this.
+
+
+```
+@anm = LA-num
+@rnm = LR-num
+
+SRC
+  q    w    e    r
+  a    s    d    f
+
+LAYER home
+  @anm _    _    _
+  _    _    _    _
+  
+LAYER numpad
+  @rnm _    _    _
+  1    2    3    4
+```
+
+The above version is a much more stable way of dealing with this. The button to
+remove the numpad exists **only in the numpad layer**. Additionally, it masks
+the 'add numpad' button, so it becomes impossible to switch to numpad more than once.
+
+```
+@rhm = LR-home
+
+SRC
+  q    w    e    r
+  a    s    d    f
+
+LAYER home
+  @rhm a    b    c
+  _    _    _    _
+```
+
+The above version is perfectly legal. Press q once and you will never handle an
+event ever again until you restart KMonad.
 
 ### Tap-Hold
 The tap-hold button allows for a button to do 2 different things, based on
