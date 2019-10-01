@@ -85,6 +85,8 @@ data ButtonToken
   | BMultiTap [(Microseconds, ButtonToken)]
     -- ^ Corresponds to "KMonad.Domain.Button.MultiTap"
   | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
+  | BLayerAdd LayerId           -- ^ Add a layer to the top of the stack
+  | BLayerRem LayerId           -- ^ Remove a layer from the stack
   deriving (Eq, Show)
 
 -- | A token describing anything that can be interpreted as a 'ButtonToken'

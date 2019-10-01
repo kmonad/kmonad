@@ -39,6 +39,8 @@ buttonP = choice
   , modded
   , emit
   , layerToggle
+  , layerAdd
+  , layerRem
   , multiTap
   , tapHold
   , tapNext
@@ -88,6 +90,19 @@ layerToggle :: Parser ButtonToken
 layerToggle = do
   tag <- (string "LT-" >> some alphaNumChar)
   return . BLayerToggle . T.pack $ tag
+
+-- | Parse a Layer-add button as "LA-layername"
+layerAdd :: Parser ButtonToken
+layerAdd = do
+  tag <- (string "LA-" >> some alphaNumChar)
+  return . BLayerAdd . T.pack $ tag
+
+-- | Parse a Layer-remove button as "LR-layername"
+layerRem :: Parser ButtonToken
+layerRem = do
+  tag <- (string "LR-" >> some alphaNumChar)
+  return . BLayerRem . T.pack $ tag
+
 
 -- | Parse a TapHold button as "TH delay bTap bHold"
 tapHold :: Parser ButtonToken

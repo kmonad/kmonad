@@ -21,6 +21,8 @@ module KMonad.Domain.Button
   , module KMonad.Domain.Button.Around
   , module KMonad.Domain.Button.Block
   , module KMonad.Domain.Button.Emit
+  , module KMonad.Domain.Button.LayerAdd
+  , module KMonad.Domain.Button.LayerRem
   , module KMonad.Domain.Button.LayerToggle
   , module KMonad.Domain.Button.Macro
   , module KMonad.Domain.Button.MultiTap
@@ -38,6 +40,8 @@ import KMonad.Domain.Effect (CanButton)
 import KMonad.Domain.Button.Around
 import KMonad.Domain.Button.Block
 import KMonad.Domain.Button.Emit
+import KMonad.Domain.Button.LayerAdd
+import KMonad.Domain.Button.LayerRem
 import KMonad.Domain.Button.LayerToggle
 import KMonad.Domain.Button.Macro
 import KMonad.Domain.Button.MultiTap
@@ -54,6 +58,8 @@ encode (BModded kc b) = do
   mkAroundM x y
 encode BBlock = mkBlockM
 encode (BLayerToggle lid) = mkLayerToggleM lid
+encode (BLayerAdd lid) = mkLayerAddM lid
+encode (BLayerRem lid) = mkLayerRemM lid
 encode (BTapHold ms bt bh) = do
   btap <- encode bt
   bhld <- encode bh
