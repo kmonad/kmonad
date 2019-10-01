@@ -127,7 +127,7 @@ end = (eof <|> void eol)
 
 -- | Parse a linux-style 'FilePath'
 linuxFP :: Parser FilePath
-linuxFP = some (alphaNumChar <|> char '/' <|> char '-' <|> char '_')
+linuxFP = some (alphaNumChar <|> char '/' <|> char '-' <|> char '_' <|> char '.')
 
 
 --------------------------------------------------------------------------------
