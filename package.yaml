@@ -59,6 +59,7 @@ dependencies:
   - lens
   - megaparsec
   - mtl
+  - optparse-applicative
   - text
   - time
   - unagi-chan

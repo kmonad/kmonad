@@ -30,10 +30,10 @@ import           Data.Time.Clock.System
 -- $types
 
 -- | Newtype wrappers to get the type-checkers assurances of using the right units
-newtype Seconds      = Seconds      Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
-newtype Milliseconds = Milliseconds Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
-newtype Microseconds = Microseconds Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
-newtype Nanoseconds  = Nanoseconds  Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
+newtype Seconds      = Seconds      Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+newtype Milliseconds = Milliseconds Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+newtype Microseconds = Microseconds Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+newtype Nanoseconds  = Nanoseconds  Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
 
 -- | The 'Time' datatype that expresses a time value in KMonad
 newtype Time = Time { unT :: SystemTime } deriving (Eq, Show)

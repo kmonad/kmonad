@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2910e6041ee5b365229ace74c7919696bb41e1152f57514f3eb78062298ec255
+-- hash: b24e6e77bdd96946d6b22dbc26d9cfc55df9497032c995ac104ab94744b6efa9
 
 name:           kmonad
 version:        0.1.0
@@ -19,6 +19,7 @@ library
   exposed-modules:
       KMonad
       KMonad.Api.App
+      KMonad.Api.Args
       KMonad.Api.Encode
       KMonad.Api.EventTracker
       KMonad.Api.KeyIO
@@ -79,6 +80,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , optparse-applicative
     , text
     , time
     , unagi-chan
@@ -108,6 +110,7 @@ executable kmonad
     , lens
     , megaparsec
     , mtl
+    , optparse-applicative
     , text
     , time
     , unagi-chan
