@@ -22,7 +22,7 @@ import KMonad.Core.Parser.Utility
 header :: Parser (LayerId, Maybe KeyCode)
 header = do
   _  <- symbol "LAYER"
-  n  <- name
+  n  <- lexeme name
   kc <- optional $ do
     _ <- symbol "~"
     _ <- symbol "anchor"

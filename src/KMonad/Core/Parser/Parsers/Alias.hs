@@ -34,7 +34,7 @@ import KMonad.Core.Parser.Utility
 aliasDefP :: Parser AliasDef
 aliasDefP = do
   _ <- char '@'
-  s <- name
+  s <- lexeme name
   _ <- lexeme $ char '='
   b <- buttonP
   return $ AliasDef s b
