@@ -43,7 +43,8 @@ them.
 For example, look at that useless CapsLock key on your keyboard. It is in a
 **great** position, but do we ever use it? Well, what if you could remap
 CapsLock to a button that behaves like a Ctrl key? That's already quite nice.
-What if it could also emit 'Esc' when you tap it? Yep: all of that is possible.
+What if it could also emit 'Esc' when you tap it? Yep: all of that is possible
+(Note: some of this is already possible through existing tools or udev rules).
 
 Do you write a lot of Haskell code and define your own operators? Do you want
 your operators to look like this: =>=->->>? That's a lot to type. Why not just
