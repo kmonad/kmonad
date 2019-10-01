@@ -151,3 +151,14 @@ this is by far the best solution, since there is no guarantee that a keyboard
 will be assigned the same numbered event-file. If this is not the case, however,
 the easiest way to figure out which event-file corresponds to your keyboard is
 probably to use the `evtest` linux utility. 
+
+# Donate
+Some people have inquired as to how to donate some money in support of my
+programming efforts. 
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick" />
+<input type="hidden" name="hosted_button_id" value="FEHTMDHQZT68L" />
+<input type="image" src="https://www.paypalobjects.com/en_US/NL/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<img alt="" border="0" src="https://www.paypal.com/en_NL/i/scr/pixel.gif" width="1" height="1" />
+</form>
