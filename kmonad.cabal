@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5e9aeb0660f82cccb59727c98f9be786ddd211ec933b2859d42b360ce6eb8903
+-- hash: 2910e6041ee5b365229ace74c7919696bb41e1152f57514f3eb78062298ec255
 
 name:           kmonad
 version:        0.1.0
@@ -53,6 +53,8 @@ library
       KMonad.Domain.Button.Around
       KMonad.Domain.Button.Block
       KMonad.Domain.Button.Emit
+      KMonad.Domain.Button.LayerAdd
+      KMonad.Domain.Button.LayerRem
       KMonad.Domain.Button.LayerToggle
       KMonad.Domain.Button.Macro
       KMonad.Domain.Button.MultiTap
