@@ -153,3 +153,32 @@ will be assigned the same numbered event-file. If this is not the case, however,
 the easiest way to figure out which event-file corresponds to your keyboard is
 probably to use the `evtest` linux utility. 
 
+## A note on compose-key behavior
+Getting your OS to emit various 'compose-key' based symbols depends on the
+configuration of your OS itself. KMonad only takes care of emitting the most
+basic of KeyEvent's. This means you are responsible for hooking up the correct
+keymap yourself. Luckily, with X11 this is quite straightforward.
+
+The single most important thing to do is to indicate to X11 which key should
+correspond to the MultiKey. An oft-used default is `AltGr` (which is just
+Right-Alt). This needs to happen *after* KMonad has started up, and if for some
+reason you unplug your keyboard and plug it back in, you will have to make this
+call again. 
+
+There might be support for post-startup initialization fed straight to KMonad,
+but at the moment this is not supported.
+
+To map Right-Alt to X11's multikey, call:
+
+```shell
+xmodmap -e "keysym Alt_R = Multi_key" 
+```
+
+Then you can start defining macros that emit various accented characters using
+the multi-key you chose. For example:
+
+``` shell
+@ë = || RA " e ||
+@é = || RA ' e ||
+@ñ = || RA ~ n ||
+```

@@ -32,6 +32,10 @@ LAYER
 @;-) = || ; - ) ||
 @:p  = || : p   ||
 
+@ë  = || ralt " e ||
+@ñ = || ralt ~ n ||
+@é = || ralt ' e ||
+
 // Example of a multi-tap
 @qsc = MT q 200 esc  // q when used once, esc when tapped twice quickly
 
@@ -58,7 +62,7 @@ LAYER l
 
 // Haskell macros: to be completed when I implement macros
 LAYER ll
-  _    @->  @>>= _    _              _    &    *    =    _
+  _    @->  @>>= _    _              ralt &    *    =    lsft
   _    @<-  @<$> _    _              _    $    %    ^    _
   _    @=>  @<*> _    _              _    !    @    #    _
   _    _    _    _    _    _    _    _    _    _    _    _
@@ -67,7 +71,7 @@ LAYER ll
 LAYER lr
   _    _    _    _    _              _    f7   f8   f9   f10
   _    @:-) @;-) @:p  _              _    f4   f5   f6   f11
-  _    _    _    _    _              _    f1   f2   f3   f12
+  _    @é   @ë   @ñ   _              _    f1   f2   f3   f12
   _    _    _    _    _    _    _    _    _    _    _    _
 
 // Navigation and volume keys
