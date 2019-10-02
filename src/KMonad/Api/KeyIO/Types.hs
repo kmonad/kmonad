@@ -26,8 +26,6 @@ module KMonad.Api.KeyIO.Types
   , withKeySink
   , Emitter
   , Receiver
-  , HasEmitter(..)
-  , HasEventSource(..)
   , CanKeyIO
 
     -- * Wrapped KeySource that allows injecting events
@@ -41,6 +39,11 @@ module KMonad.Api.KeyIO.Types
     -- $err
   , KeyIOError
   , AsKeyIOError(..)
+
+    -- * Classy lenses and monad instances for KeyIO
+  , HasEmitter(..)
+  , HasEventSource(..)
+
   )
 where
 
@@ -49,12 +52,14 @@ import Prelude hiding (read)
 import Control.Exception (Exception, throw)
 import Control.Lens
 import Control.Monad.Except
+import Control.Monad.Reader
 import Data.Text (unpack)
 
 import UnliftIO as U
 
 
 import KMonad.Core
+import KMonad.Domain.Effect
 
 --------------------------------------------------------------------------------
 -- $err
@@ -112,59 +117,33 @@ type Emitter = KeyEvent -> IO ()
 -- | The type of actions that receive new key events
 type Receiver = IO KeyEvent
 
+-- | The generalized data type for IO actions that can only exist in the context
+-- of being bracketed by some /acquire/ and /release/ behavior.
 data BracketIO a = forall r. BracketIO
   { _open  :: IO r
   , _close :: r -> IO ()
   , _use   :: r -> a }
 makeClassy ''BracketIO
 
-type KeySink   = BracketIO Emitter
-type KeySource = BracketIO Receiver
-
+-- | Run an action that requires a managed /a/ by bracketting it with acquiring
+-- and releasing the resource.
 withBracketIO :: BracketIO a -> (a -> IO b) -> IO b
 withBracketIO BracketIO{ _open=o, _close=c, _use=u } go
   = bracket o c (\a -> go $ u a)
 
+-- | KeySink is a BracketIO specialized to a function that emits events
+type KeySink   = BracketIO Emitter
 
--- -- | A record describing how to plug in Key-writing capabilities
--- data KeySink = forall a. KeySink
---   { snkOpen  :: IO a         -- ^ How to open and capture the output
---   , snkWrite :: a -> Emitter -- ^ How to write events to the output
---   , snkClose :: a -> IO ()   -- ^ How to release and close the output
---   }
+-- | KeySource is a BracketIO specialized to an action that fetches events
+type KeySource = BracketIO Receiver
 
--- -- | A record describing how to plug in Key-reading capabilities
--- data KeySource = forall a. KeySource
---   { srcOpen  :: IO a          -- ^ How to open and capture the input
---   , srcRead  :: a -> Receiver -- ^ How to read events from the input
---   , srcClose :: a -> IO ()    -- ^ How to close and release the input
---   }
-
--- | Run a function that writes key events in the context of an acquired
--- KeySink. This uses bracket functionality to make sure the cleanup is always
--- performed, even on error.
--- withKeySink :: KeySink -> (Emitter -> IO a) ->  IO a
--- withKeySink KeySink{snkOpen=open, snkClose=close, snkWrite=write} go
---   = bracket open close (\a -> go $ write a)
-
+-- | Run an action in the presence of an acquired KeySink
 withKeySink :: KeySink -> (Emitter -> IO a) -> IO a
 withKeySink = withBracketIO 
 
--- wrapError ::
-
--- | Run a function that reads key events in the context of an acquired
--- KeySource. This uses bracket functionality to make sure the cleanup is always
--- performed.
+-- | Run an action in the presence of an acquired KeySource
 withKeySource :: KeySource -> (Receiver -> IO a) -> IO a
 withKeySource = withBracketIO
-
--- KeySource{srcOpen=open, srcClose=close, srcRead=read} go
---   = bracket open close (\a -> go $ read a)
-
--- | The property of having access to an Emitter function
-class HasEmitter r where
-  emitter :: Lens' r Emitter
-
 
 --------------------------------------------------------------------------------
 -- $esrc
@@ -200,3 +179,10 @@ writeEvent :: MonadIO m => Event -> EventSource -> m ()
 writeEvent e es = liftIO . putMVar (es^.injectV) $ e
 
 
+
+--------------------------------------------------------------------------------
+-- $monad
+
+-- | The property of having access to an Emitter function
+class HasEmitter r where
+  emitter :: Lens' r Emitter
