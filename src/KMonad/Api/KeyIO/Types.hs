@@ -19,8 +19,9 @@ interface with the OS.
 module KMonad.Api.KeyIO.Types
   ( -- * Common API to any type of OS keyboard interface
     -- $types
-    KeySink(..)
-  , KeySource(..)
+    KeySink
+  , KeySource
+  , BracketIO(..)
   , withKeySource
   , withKeySink
   , Emitter
@@ -111,26 +112,43 @@ type Emitter = KeyEvent -> IO ()
 -- | The type of actions that receive new key events
 type Receiver = IO KeyEvent
 
--- | A record describing how to plug in Key-writing capabilities
-data KeySink = forall a. KeySink
-  { snkOpen  :: IO a         -- ^ How to open and capture the output
-  , snkWrite :: a -> Emitter -- ^ How to write events to the output
-  , snkClose :: a -> IO ()   -- ^ How to release and close the output
-  }
+data BracketIO a = forall r. BracketIO
+  { _open  :: IO r
+  , _close :: r -> IO ()
+  , _use   :: r -> a }
+makeClassy ''BracketIO
 
--- | A record describing how to plug in Key-reading capabilities
-data KeySource = forall a. KeySource
-  { srcOpen  :: IO a          -- ^ How to open and capture the input
-  , srcRead  :: a -> Receiver -- ^ How to read events from the input
-  , srcClose :: a -> IO ()    -- ^ How to close and release the input
-  }
+type KeySink   = BracketIO Emitter
+type KeySource = BracketIO Receiver
+
+withBracketIO :: BracketIO a -> (a -> IO b) -> IO b
+withBracketIO BracketIO{ _open=o, _close=c, _use=u } go
+  = bracket o c (\a -> go $ u a)
+
+
+-- -- | A record describing how to plug in Key-writing capabilities
+-- data KeySink = forall a. KeySink
+--   { snkOpen  :: IO a         -- ^ How to open and capture the output
+--   , snkWrite :: a -> Emitter -- ^ How to write events to the output
+--   , snkClose :: a -> IO ()   -- ^ How to release and close the output
+--   }
+
+-- -- | A record describing how to plug in Key-reading capabilities
+-- data KeySource = forall a. KeySource
+--   { srcOpen  :: IO a          -- ^ How to open and capture the input
+--   , srcRead  :: a -> Receiver -- ^ How to read events from the input
+--   , srcClose :: a -> IO ()    -- ^ How to close and release the input
+--   }
 
 -- | Run a function that writes key events in the context of an acquired
 -- KeySink. This uses bracket functionality to make sure the cleanup is always
 -- performed, even on error.
-withKeySink :: KeySink -> (Emitter -> IO a) ->  IO a
-withKeySink KeySink{snkOpen=open, snkClose=close, snkWrite=write} go
-  = bracket open close (\a -> go $ write a)
+-- withKeySink :: KeySink -> (Emitter -> IO a) ->  IO a
+-- withKeySink KeySink{snkOpen=open, snkClose=close, snkWrite=write} go
+--   = bracket open close (\a -> go $ write a)
+
+withKeySink :: KeySink -> (Emitter -> IO a) -> IO a
+withKeySink = withBracketIO 
 
 -- wrapError ::
 
@@ -138,8 +156,10 @@ withKeySink KeySink{snkOpen=open, snkClose=close, snkWrite=write} go
 -- KeySource. This uses bracket functionality to make sure the cleanup is always
 -- performed.
 withKeySource :: KeySource -> (Receiver -> IO a) -> IO a
-withKeySource KeySource{srcOpen=open, srcClose=close, srcRead=read} go
-  = bracket open close (\a -> go $ read a)
+withKeySource = withBracketIO
+
+-- KeySource{srcOpen=open, srcClose=close, srcRead=read} go
+--   = bracket open close (\a -> go $ read a)
 
 -- | The property of having access to an Emitter function
 class HasEmitter r where

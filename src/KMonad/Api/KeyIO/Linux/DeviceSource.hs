@@ -85,10 +85,10 @@ deviceSource
   -> EventParser -- ^ A function that parses LinuxEvent's from bytes
   -> FilePath    -- ^ The filepath to the device file
   -> KeySource
-deviceSource n prs' pth' = KeySource
-  { srcOpen  = lsOpen n prs' pth'
-  , srcClose = lsClose
-  , srcRead  = lsRead
+deviceSource n prs' pth' = BracketIO
+  { _open  = lsOpen n prs' pth'
+  , _close = lsClose
+  , _use   = lsRead
   }
 
 -- | Open a device file on a standard linux 64 bit architecture

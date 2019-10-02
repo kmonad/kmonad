@@ -62,10 +62,10 @@ newtype UinputSink = UinputSink { st :: MVar Fd }
 
 -- | Return a new uinput 'KeySink'
 uinputSink :: KeySink
-uinputSink = KeySink
-  { snkOpen  = usOpen
-  , snkClose = usClose
-  , snkWrite = usWrite
+uinputSink = BracketIO
+  { _open  = usOpen
+  , _close = usClose
+  , _use   = usWrite
   }
 
 -- | Create a new UinputSink
