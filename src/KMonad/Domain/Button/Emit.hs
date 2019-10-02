@@ -19,9 +19,7 @@ module KMonad.Domain.Button.Emit
   )
 where
 
-import KMonad.Core.Button
-import KMonad.Core.Keyboard
-import KMonad.Core.KeyCode
+import KMonad.Core
 import KMonad.Domain.Effect
 
 

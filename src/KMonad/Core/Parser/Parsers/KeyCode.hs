@@ -12,14 +12,24 @@ Keycodes are mainly parsed by names.
 
 -}
 module KMonad.Core.Parser.Parsers.KeyCode
-  ( keycodeP
+  ( -- * Parse raw keycode
+    -- $ keycode
+     keycodeP
+
+    -- * Parse lockkey
+    -- $lock
+  , lockkeyP
+
+    -- * Reexports
   , module KMonad.Core.KeyCode
   )
 where
 
-import Control.Arrow ((&&&))
+import Control.Arrow ((&&&), second)
 import Data.Foldable (foldl')
+import Data.Maybe (catMaybes)
 
+import KMonad.Core.Keyboard
 import KMonad.Core.KeyCode
 import KMonad.Core.Parser.Utility
 
@@ -27,7 +37,7 @@ import qualified Data.Text as T
 
 
 --------------------------------------------------------------------------------
--- Parsing keycodes by its name
+-- $keycode
 
 -- | Parse a 'KeyCode'
 keycodeP :: Parser KeyCode
@@ -95,3 +105,16 @@ specialNames = concatMap (\(k, as) -> map (,k) as) $
   , (KeyGrave,          ["grv"])
   , (Key102nd,          ["102d"])
   ]
+
+
+--------------------------------------------------------------------------------
+-- $lock
+
+
+-- | Parse a locker as matching the keycode of CapsLock, ScrollLock, or NumLock
+lockkeyP :: Parser LockKey
+lockkeyP = fromNamed . catMaybes . map p $ allNames
+  where p (s, KeyCapsLock)   = Just (s, CapsLock)
+        p (s, KeyNumLock)    = Just (s, NumLock)
+        p (s, KeyScrollLock) = Just (s, ScrollLock)
+        p _                  = Nothing

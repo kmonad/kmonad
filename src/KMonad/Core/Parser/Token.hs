@@ -38,6 +38,7 @@ import Control.Lens
 import Data.Text
 
 import KMonad.Core.KeyCode
+import KMonad.Core.Keyboard
 import KMonad.Core.Matrix
 import KMonad.Core.Time
 
@@ -87,6 +88,10 @@ data ButtonToken
   | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
   | BLayerAdd LayerId           -- ^ Add a layer to the top of the stack
   | BLayerRem LayerId           -- ^ Remove a layer from the stack
+  | BLockOn LockKey             -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
+  | BLockOff LockKey            -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
+  | BLockToggle LockKey         -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
+
   deriving (Eq, Show)
 
 -- | A token describing anything that can be interpreted as a 'ButtonToken'

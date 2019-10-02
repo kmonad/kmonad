@@ -28,6 +28,7 @@ import KMonad.Api.Encode
 import KMonad.Api.EventTracker
 import KMonad.Api.KeyIO
 import KMonad.Api.LayerStack
+import KMonad.Api.LockManager
 import KMonad.Api.Sluice
 
 import qualified UnliftIO.Async as A
@@ -86,6 +87,12 @@ instance MonadHold App where
 instance MonadInject App where
   injectEvent e = writeEvent e =<< view eventSource
 
+-- | Handle lock events using the LockManager
+instance MonadLock App where
+  lockOn     lk = trace ("Engaging: "  <> tshow lk) >> lmLockOn lk
+  lockOff    lk = trace ("Releasing: " <> tshow lk) >> lmLockOff lk
+  lockToggle lk = trace ("Toggling: "  <> tshow lk) >> lmLockToggle lk
+
 -- | Deal with masking input through the EventTracker object
 instance MonadMaskInput App where
   maskInput = maskEvent =<< view eventTracker
@@ -132,6 +139,7 @@ runAppIO m env = runApp m env >>= \case
   Left e  -> throwIO e
   Right a -> return a
 
+
 --------------------------------------------------------------------------------
 
 -- | Handle a KeyEvent by
@@ -177,14 +185,14 @@ interpretConfig us cfg = AppCfg
   , _cfgEntry      = cfg^.entry
   }
 
-
 -- | The AppEnv reader environment that all App actions have access to.
 data AppEnv = AppEnv
   { _appEmitter      :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
   , _appEventSource  :: EventSource       -- ^ The entrypoint for events
   , _appEventTracker :: EventTracker      -- ^ Tracking and masking events
   , _appSluice       :: Sluice App ()     -- ^ Sluice to enable holding processing
-  , _appLayerStack   :: LayerStack App    -- ^ LayerStack to manage the layers
+  , _appLayerStack   :: LayerStack App -- ^ LayerStack to manage the layers
+  , _appLockManager  :: LockManager       -- ^ State to keep track of lock-style keys
   }
 
 makeClassy ''AppCfg
@@ -196,6 +204,10 @@ instance HasEmitter      AppEnv        where emitter      = appEmitter
 instance HasEventTracker AppEnv        where eventTracker = appEventTracker
 instance HasSluice       AppEnv App () where sluice       = appSluice
 instance HasLayerStack   AppEnv App    where layerStack   = appLayerStack
+instance HasLockManager  AppEnv        where lockManager  = appLockManager
+
+
+--------------------------------------------------------------------------------
 
 -- | Run KMonad until an error occurs
 runOnce :: AppCfg -> IO ()
@@ -209,6 +221,7 @@ runOnce cfg = do
       etrc <- mkEventTracker
       slce <- mkSluice
       stck <- mkLayerStack (cfg^.cfgLayerStack) (cfg^.cfgEntry)
+      lmgr <- mkLockManager
 
       let env = AppEnv
             { _appEmitter      = snk
@@ -216,6 +229,7 @@ runOnce cfg = do
             , _appEventTracker = etrc
             , _appSluice       = slce
             , _appLayerStack   = stck
+            , _appLockManager  = lmgr
             }
 
       -- Start the event loop

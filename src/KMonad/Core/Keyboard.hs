@@ -29,7 +29,15 @@ module KMonad.Core.Keyboard
   , KeyEvent(..)
   , AsKeyEvent(..)
   , eventType, keyCode
-  , press, release, repeat
+  , press, release, repeat, tap
+
+    -- * Dealing especially with /LockingKeys/
+    -- $locks
+  , LockKey(..)
+  , LockState
+  , LockUpdate
+  , emptyLockState
+  , addLock , deleteLock , toggleLock
 
     -- * Comparing events
     -- $comps
@@ -45,6 +53,8 @@ import Control.Lens
 
 import KMonad.Core.KeyCode
 import KMonad.Core.Time
+
+import qualified Data.Set as S
 
 --------------------------------------------------------------------------------
 -- $types
@@ -93,6 +103,62 @@ press, release, repeat :: KeyCode -> Time -> KeyEvent
 press   c = KeyEvent Press   c
 release c = KeyEvent Release c
 repeat  c = KeyEvent Repeat  c
+
+-- | Create a 'KeyEvent' sequence that presses and then releases a button
+tap :: KeyCode -> Time -> [KeyEvent]
+tap c t = [press c t, release c t]
+
+
+--------------------------------------------------------------------------------
+-- $locks
+--
+-- We provide some extra functionality to deal differently with the 3 classical
+-- 'locking' keys. This is to facilitate being able to differentiate between
+-- "activating a lock", "releasing a lock", or "toggling a lock".
+
+-- | ADT representing the 3 different 'locking keys' that can exist on keyboards
+data LockKey
+  = ScrollLock
+  | NumLock
+  | CapsLock
+  deriving (Eq, Show, Ord)
+
+-- | A set describing the locks that are currently engaged
+type LockState = S.Set LockKey
+
+-- | The update required to update both the OS and the internal LockState
+-- representation
+type LockUpdate = (Time -> [KeyEvent], LockState)
+
+emptyLockState :: LockState
+emptyLockState = S.empty
+
+-- | The KeyCodes corresponding to the different LockKeys
+codeForLock :: LockKey -> KeyCode
+codeForLock ScrollLock = KeyScrollLock
+codeForLock NumLock    = KeyNumLock
+codeForLock CapsLock   = KeyCapsLock
+
+-- | Tap a lock key
+tapLock :: LockKey -> Time -> [KeyEvent]
+tapLock = tap . codeForLock
+
+-- | Switch a lock to on, or do nothing if already on
+addLock :: LockKey -> LockState -> LockUpdate
+addLock k st = if S.member k st
+  then (const [], st)
+  else (tapLock k, S.insert k st)
+
+-- | Switch a lock to off, or do nothing if already off
+deleteLock :: LockKey -> LockState -> LockUpdate
+deleteLock k st = if S.member k st
+  then (tapLock k, S.delete k st)
+  else (const [], st)
+
+-- | Toggle a lock from on to off or vice versa
+toggleLock :: LockKey -> LockState -> LockUpdate
+toggleLock k st = (tapLock k,) $ if S.member k st
+  then S.delete k st else S.insert k st
 
 
 --------------------------------------------------------------------------------

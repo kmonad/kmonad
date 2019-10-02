@@ -24,6 +24,7 @@ module KMonad.Domain.Button
   , module KMonad.Domain.Button.LayerAdd
   , module KMonad.Domain.Button.LayerRem
   , module KMonad.Domain.Button.LayerToggle
+  , module KMonad.Domain.Button.Lockers
   , module KMonad.Domain.Button.Macro
   , module KMonad.Domain.Button.MultiTap
   , module KMonad.Domain.Button.TapHold
@@ -43,6 +44,7 @@ import KMonad.Domain.Button.Emit
 import KMonad.Domain.Button.LayerAdd
 import KMonad.Domain.Button.LayerRem
 import KMonad.Domain.Button.LayerToggle
+import KMonad.Domain.Button.Lockers
 import KMonad.Domain.Button.Macro
 import KMonad.Domain.Button.MultiTap
 import KMonad.Domain.Button.TapHold
@@ -70,3 +72,6 @@ encode (BTapNext bt bh) = do
   mkTapNext btap bhld
 encode (BTapMacro bs) = mkMacroM =<< mapM encode bs
 encode (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
+encode (BLockOn lk) = mkLockOnM lk
+encode (BLockOff lk) = mkLockOffM lk
+encode (BLockToggle lk) = mkLockToggleM lk

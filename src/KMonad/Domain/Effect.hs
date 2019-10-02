@@ -56,6 +56,10 @@ module KMonad.Domain.Effect
     -- $inject
   , MonadInject(..)
 
+    -- * MonadLock
+    -- $lock
+  , MonadLock(..)
+
     -- * MonadMaskInput
     -- $maskinput
   , MonadMaskInput(..)
@@ -97,6 +101,7 @@ where
 
 import Control.Concurrent.MVar
 import Control.Lens
+import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.Writer
 import Data.Text
@@ -124,6 +129,7 @@ type CanButton m =
   , MonadFuture     m
   , MonadHold       m
   , MonadInject     m
+  , MonadLock       m
   , MonadMaskInput  m
   , MonadNext       m
   , MonadNow        m
@@ -250,6 +256,17 @@ holdDuring a = do
 -- shutdown KMonad (by passing a 'KMonad.Core.Event.Quit' event).
 class Monad m => MonadInject m where
   injectEvent :: Event -> m ()
+
+
+--------------------------------------------------------------------------------
+-- $lock
+
+-- | This allows for the toggling of keyboard locking keys while keeping track
+-- of the state internally.
+class Monad m => MonadLock m where
+  lockOn     :: LockKey -> m ()
+  lockOff    :: LockKey -> m ()
+  lockToggle :: LockKey -> m ()
 
 
 --------------------------------------------------------------------------------

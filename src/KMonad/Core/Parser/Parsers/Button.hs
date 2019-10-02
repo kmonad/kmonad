@@ -34,7 +34,10 @@ import qualified Data.Text as T
 -- | Parse a 'ButtonToken'
 buttonP :: Parser ButtonToken
 buttonP = choice
-  [ shifted
+  [ lockOnP
+  , lockOffP
+  , lockToggleP  -- This has to happen before emit, we are shadowing 'caps' etc.
+  , shifted
   , block
   , modded
   , emit
@@ -75,7 +78,23 @@ trans = Transparent <$ (string "transparent" <|> "trans" <|> "_")
 -- | Compound parser for buttons that are 'simple', i.e. that can fill the 'tap'
 -- field of any compound 'tap/hold' style button
 tapper :: Parser ButtonToken
-tapper = emit <|> modded <|> shifted
+tapper = emit <|> modded <|> shifted <|> locker
+
+-- | Compound parser for any button that does lock manipulation
+locker :: Parser ButtonToken
+locker = lockOnP <|> lockOffP <|> lockToggleP
+
+-- | Parse a button that engages a lock
+lockOnP :: Parser ButtonToken
+lockOnP = BLockOn <$> (string "LON-" >> lockkeyP)
+
+-- | Parse a button that disengages a lock
+lockOffP :: Parser ButtonToken
+lockOffP = BLockOff <$> (string "LOFF-" >> lockkeyP)
+
+-- | Parse a button that toggles a lock
+lockToggleP :: Parser ButtonToken
+lockToggleP = BLockToggle <$> lockkeyP
 
 -- | Parse an emit by reading the name of a keycode
 emit :: Parser ButtonToken

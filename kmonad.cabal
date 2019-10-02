@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b24e6e77bdd96946d6b22dbc26d9cfc55df9497032c995ac104ab94744b6efa9
+-- hash: 9412c0e0c255e83c165bb1e3457a531371dc61454171d7d4c43c8155e5ba9cb6
 
 name:           kmonad
 version:        0.1.0
@@ -28,6 +28,7 @@ library
       KMonad.Api.KeyIO.Linux.UinputSink
       KMonad.Api.KeyIO.Types
       KMonad.Api.LayerStack
+      KMonad.Api.LockManager
       KMonad.Api.Sluice
       KMonad.Core
       KMonad.Core.Button
@@ -57,6 +58,7 @@ library
       KMonad.Domain.Button.LayerAdd
       KMonad.Domain.Button.LayerRem
       KMonad.Domain.Button.LayerToggle
+      KMonad.Domain.Button.Lockers
       KMonad.Domain.Button.Macro
       KMonad.Domain.Button.MultiTap
       KMonad.Domain.Button.TapHold
