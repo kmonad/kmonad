@@ -616,3 +616,40 @@ For example:
 ```
 
 The buttons that can exist in a multitap are either emits or modded.
+
+### Lock buttons
+The 3 different lock-buttons, ScrollLock, CapsLock, and NumLock are handled a
+little bit differently from normal emitting keys. KMonad keeps track of what
+state the 3 locks are currently in and provides 3 different actions: Engaging a
+lock (does nothing if the lock is already on), releasing a lock (does nothing if
+the lock is already off), and toggling a lock, which behaves like a lock-key
+does normally.
+
+Engaging a lock is defined by: `LON-` followed by the name of the key,
+disenganging the lock is defined by `LOFF-` followed by the name. Finally,
+simply the name of a lock-button is automatically mapped to the correct toggle
+version.
+
+NOTE: This means you need to make sure all 3 locks are **off** when starting KMonad.
+
+For example:
+```
+@con = LON-caps
+@cof = LOFF-caps
+@ctp = MT LOFF-caps 200 LON-caps
+
+SRC
+  a    s    d    f    g
+  
+LAYER test
+  @con @cof caps @ctp g
+```
+
+Now:
+1. Pressing `a` will always engage caps-lock, regardless of whether capslock is
+   on or not.
+2. Pressing `s` will always disengage caps-lock, regardless of whether capslock
+   is on or not.
+3. Pressing `d` will toggle caps-lock, like a normal caps-lock would.
+4. Tapping `f` once will disable caps-lock, tapping `f` twice will enable caps-lock
+5. You can press `g` to emit a `g` to see that things are indeed locked or not.
