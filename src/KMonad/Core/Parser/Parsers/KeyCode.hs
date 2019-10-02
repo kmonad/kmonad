@@ -26,6 +26,7 @@ module KMonad.Core.Parser.Parsers.KeyCode
 where
 
 import Control.Arrow ((&&&), second)
+import Data.Char
 import Data.Foldable (foldl')
 import Data.Maybe (catMaybes)
 
@@ -41,7 +42,7 @@ import qualified Data.Text as T
 
 -- | Parse a 'KeyCode'
 keycodeP :: Parser KeyCode
-keycodeP = fromNamed allNames
+keycodeP = label "keycode" $ fromNamed allNames
 
 -- | A large alist of all named 'KeyCode's
 allNames :: Named KeyCode
@@ -118,3 +119,19 @@ lockkeyP = fromNamed . catMaybes . map p $ allNames
         p (s, KeyNumLock)    = Just (s, NumLock)
         p (s, KeyScrollLock) = Just (s, ScrollLock)
         p _                  = Nothing
+
+--------------------------------------------------------------------------------
+-- $unicode
+
+-- | Parse a unicode character
+unicodeP :: Parser Unicode
+unicodeP = do
+  c <- satisfy (not . isSpace)
+  return $ fromChar c
+
+
+test :: Text
+test = T.singleton $ 'Ñ'
+
+test2 :: Char
+test2 = 'ñ'

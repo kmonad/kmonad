@@ -25,14 +25,21 @@ module KMonad.Core.KeyCode
   ( -- * The KeyCode type
     KeyCode(..)
 
+    -- * THe Unicode type
+  , Unicode(..)
+  , fromChar
+
     -- * A ClassyLens style class for "Having a KeyCode"
   , HasKeyCode(..)
   )
 where
 
 import Control.Lens
+import Data.Char
 import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
+import Numeric
+import qualified Data.Text as T
 
 -- | The 'KeyCode' type and its constructors. Essentially a gigantic 'Enum'
 data KeyCode
@@ -302,3 +309,22 @@ class HasKeyCode a where
   keyCode :: Lens' a KeyCode
 instance HasKeyCode KeyCode where
   keyCode = id
+
+
+--------------------------------------------------------------------------------
+-- $unicode
+
+newtype Unicode = Unicode Int
+  deriving (Eq, Show, Bounded, Enum, Ord)
+
+fromChar :: Char -> Unicode
+fromChar = Unicode . fromEnum
+
+showSeq :: Unicode -> T.Text
+showSeq (Unicode c) = T.pack (showIntAtBase 16 intToDigit c $ "")
+
+test :: Char
+test = 'Ñ'
+
+test2 :: Char
+test2 = 'ñ'
