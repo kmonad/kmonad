@@ -18,8 +18,9 @@ specialSymbols =
       ("Euro sign"    , '€', "= c")
     , ("Pound sign"   , '₤', "= l")
 
-      -- Accents
+      -- Accented A's
     , ("A grave"      , 'À', "` A")
     , ("a grave"      , 'à', "` a")
     , ("a circumflex" , 'â', "^ a")
+
     ]
