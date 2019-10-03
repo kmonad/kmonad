@@ -19,11 +19,11 @@ import KMonad.Core
 import KMonad.Domain.Effect
 
 -- | Return a button that emits a series of events upon press
-mkMacro :: MonadEmit m => [Button m] -> Button m
+mkMacro :: MonadEmit m => KeySequence -> Button m
 mkMacro es = mkButton $ \case
-  BPress   -> mapM_ bTap es
+  BPress   -> emitSeq es
   BRelease -> pure ()
 
 -- | Return a button that emits a series of events upon press from some arbitrary Monad
-mkMacroM :: (Monad n, MonadEmit m) => [Button m] -> n (Button m)
+mkMacroM :: (Monad n, MonadEmit m) => KeySequence -> n (Button m)
 mkMacroM = pure . mkMacro

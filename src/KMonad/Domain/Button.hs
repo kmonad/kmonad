@@ -70,7 +70,7 @@ encode (BTapNext bt bh) = do
   btap <- encode bt
   bhld <- encode bh
   mkTapNext btap bhld
-encode (BTapMacro bs) = mkMacroM =<< mapM encode bs
+encode (BMacro bs) = mkMacroM bs
 encode (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
 encode (BLockOn lk) = mkLockOnM lk
 encode (BLockOff lk) = mkLockOffM lk

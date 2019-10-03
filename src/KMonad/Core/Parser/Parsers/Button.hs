@@ -24,6 +24,7 @@ where
 import KMonad.Core.KeyCode
 import KMonad.Core.Time
 import KMonad.Core.Parser.Parsers.KeyCode
+import KMonad.Core.Parser.Parsers.KeySequence
 import KMonad.Core.Parser.Utility
 
 import qualified Data.Text as T
@@ -47,7 +48,7 @@ buttonP = choice
   , multiTap
   , tapHold
   , tapNext
-  , tapMacro
+  , macro
   ]
 
 -- | Parse a 'ButtonSymbol' by matching either a 'ButtonToken', an 'AliasRef',
@@ -141,12 +142,12 @@ tapNext = do
   return $ BTapNext tapB hldB
 
 -- | Parse a macro button
-tapMacro :: Parser ButtonToken
-tapMacro = do
+macro :: Parser ButtonToken
+macro = do
   _  <- symbol "||"
-  bs <- many (lexemeSameLine tapper)
+  bs <- keySequence
   _  <- symbol "||"
-  pure $ BTapMacro bs
+  pure $ BMacro bs
 
 -- | Parse a multi-tap button
 multiTap :: Parser ButtonToken
@@ -177,7 +178,7 @@ modded = do
                 , KeyRightMeta  <$ string "RM-"
                 , KeyCompose    <$ string "CMP-"
                 ]
-  rest <- modded <|> emit <|> tapMacro <|> shifted
+  rest <- modded <|> emit <|> macro <|> shifted
   return $ BModded mod rest
 
 -- | Parse a number of special characters as "the shifted sequence to push
