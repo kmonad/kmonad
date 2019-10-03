@@ -19,7 +19,7 @@ import KMonad.Core.Parser.Parsers.Matrix
 import KMonad.Core.Parser.Utility
 
 -- | Parse the header of a 'LayerToken' definition
-header :: Parser (LayerId, Maybe KeyCode)
+header :: Parser (Name, Maybe KeyCode)
 header = do
   _  <- symbol "LAYER"
   n  <- lexeme name

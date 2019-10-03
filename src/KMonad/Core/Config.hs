@@ -86,9 +86,9 @@ data ConfigError
   | DuplicateAlias      Symbol
   | DuplicateInSource
   | ParseErrorFound     PError
-  | AnchorNotFound      KeyCode LayerId
-  | AlignmentError      Coor    ButtonSymbol LayerId
-  | AliasNotFound       Symbol  LayerId
+  | AnchorNotFound      KeyCode Name
+  | AlignmentError      Coor    ButtonSymbol Name
+  | AliasNotFound       Symbol  Name
   deriving Exception
 
 instance Show ConfigError where
@@ -155,15 +155,15 @@ type CanComp e m = (MonadError e m, AsConfigError e)
 -- are later converted to concrete actions.
 type ButtonMap = [(KeyCode, ButtonToken)]
 
--- | A correspondence between 'LayerId's and 'ButtonMap's.
-type LayerMap = [(LayerId, ButtonMap)]
+-- | A correspondence between 'Name's and 'ButtonMap's.
+type LayerMap = [(Name, ButtonMap)]
 
 -- | The record containing all configuration options required to run KMonad
 data Config = Config
   { _mappings :: LayerMap    -- ^ The 'LayerMap' describing the actual mapping
   , _input    :: InputToken  -- ^ A token describing how to get keys from the OS
   , _output   :: OutputToken -- ^ A token describing how to send keys to the OS
-  , _entry    :: LayerId     -- ^ The 'LayerId' that should be loaded at start
+  , _entry    :: Name     -- ^ The 'Name' that should be loaded at start
   } deriving Show
 makeClassy ''Config
 

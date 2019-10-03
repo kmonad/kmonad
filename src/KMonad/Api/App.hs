@@ -170,7 +170,7 @@ data AppCfg = AppCfg
   , _cfgKeySink     :: KeySink            -- ^ The 'KeySink' interface to the OS simulated output keyboard
   , _cfgRestart     :: Maybe Microseconds -- ^ If, and how long, to wait before attempting restart
   , _cfgLayerStack  :: LayerMap           -- ^ The nested alist of Layer, Keycode, ButtonToken correspondences
-  , _cfgEntry       :: LayerId            -- ^ The first layer we start in
+  , _cfgEntry       :: Name            -- ^ The first layer we start in
   }
 
 -- | Interpret a 'Config' as a valid 'AppCfg'

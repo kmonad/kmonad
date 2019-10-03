@@ -14,8 +14,7 @@ import lists.
 -}
 module KMonad.Core
   ( -- * Reexports
-    LayerId
-  , module KMonad.Core.Button
+    module KMonad.Core.Button
   , module KMonad.Core.Config
   , module KMonad.Core.Event
   , module KMonad.Core.Keyboard
@@ -38,4 +37,3 @@ import KMonad.Core.Matrix
 import KMonad.Core.Pretty
 import KMonad.Core.Time
 import KMonad.Core.Types
-import KMonad.Core.Parser.Token (LayerId)

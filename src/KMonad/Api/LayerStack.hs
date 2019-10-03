@@ -44,7 +44,7 @@ import qualified Data.HashMap.Strict  as M
 
 -- | A LayerStack object that manages overlapping sets of handlers
 data LayerStack m = LayerStack
-  { mapStack   :: MVar (S.MapStack LayerId KeyCode (Button m))
+  { mapStack   :: MVar (S.MapStack Name KeyCode (Button m))
   , mapRelease :: MVar (M.HashMap KeyCode (Button m))}
 
 -- | A ClassyLens style typeclass to describe 'having a LayerStack'
@@ -77,11 +77,11 @@ handleWith e ls
 -- have to line up, maybe change this? FIXME: Add error handling and remove the
 -- FromJust (or not... I can ensure there are no references to nonexistent
 -- layers when I compile the Config)
-pushLS :: MonadIO m => LayerId -> LayerStack m -> m ()
+pushLS :: MonadIO m => Name -> LayerStack m -> m ()
 pushLS lid ls = liftIO $ modifyMVar_ (mapStack ls) $ return . fromJust . push lid
 
--- | Pop a LayerId from the stack
-popLS :: MonadIO m => LayerId -> LayerStack m -> m ()
+-- | Pop a Name from the stack
+popLS :: MonadIO m => Name -> LayerStack m -> m ()
 popLS lid ls = liftIO $ modifyMVar_ (mapStack ls) $ return . pop lid
 
 
@@ -90,8 +90,8 @@ popLS lid ls = liftIO $ modifyMVar_ (mapStack ls) $ return . pop lid
 
 -- | Turn a nested set of tokens into a layer stack of operations
 mkLayerStack :: (CanButton m, MonadIO n)
-  => [(LayerId, [(KeyCode, ButtonToken)])]
-  -> LayerId
+  => [(Name, [(KeyCode, ButtonToken)])]
+  -> Name
   -> n (LayerStack m)
 mkLayerStack ts def = do
   -- There is probably a much prettier lensy way of doing this

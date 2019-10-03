@@ -21,13 +21,13 @@ import KMonad.Core
 import KMonad.Domain.Effect
 
 mkLayerRem :: (MonadTrace m, MonadStackManip m)
-  => LayerId -- ^ The ID of the layer to add to the stack
+  => Name -- ^ The ID of the layer to add to the stack
   -> Button m
 mkLayerRem lid = mkButton $ \case
   BPress   -> trace ("popping layer: " <> lid) >> popL lid
   BRelease -> pure ()
 
 mkLayerRemM :: (MonadTrace m, MonadStackManip m, Monad n)
-  => LayerId -- ^ The ID of the layer to remove from the stack
+  => Name -- ^ The ID of the layer to remove from the stack
   -> n (Button m)
 mkLayerRemM = pure . mkLayerRem

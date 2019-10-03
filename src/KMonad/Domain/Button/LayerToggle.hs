@@ -29,11 +29,11 @@ type LTCtx m =
 
 -- | Return a 'Button' that pushes a layer onto the stack when pressed, and pops
 -- it when released.
-mkLayerToggle :: (LTCtx m) => LayerId -> Button m
+mkLayerToggle :: (LTCtx m) => Name -> Button m
 mkLayerToggle lid = mkButton $ \case
   BPress   -> trace ("pushing layer: " <> lid) >> pushL lid
   BRelease -> trace ("popping layer: " <> lid) >> popL  lid
 
 -- | Return a LayerToggle from some arbitrary Monad
-mkLayerToggleM :: (LTCtx m, Monad n) => LayerId -> n (Button m)
+mkLayerToggleM :: (LTCtx m, Monad n) => Name -> n (Button m)
 mkLayerToggleM = return . mkLayerToggle

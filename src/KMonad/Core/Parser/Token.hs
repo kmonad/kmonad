@@ -18,7 +18,6 @@ straight from text, in addition to KeyCode's.
 -}
 module KMonad.Core.Parser.Token
   ( Symbol
-  , LayerId
   , InputDecoder(..)
   , InputToken(..)
   , OutputToken(..)
@@ -41,17 +40,15 @@ import KMonad.Core.KeyCode
 import KMonad.Core.Keyboard
 import KMonad.Core.Matrix
 import KMonad.Core.Time
+import KMonad.Core.Types
 
 
 --------------------------------------------------------------------------------
 
--- TODO: Move LayerId somewhere sane
+-- TODO: Move Name somewhere sane
 
 -- | The type of 'Symbol' keywords used in our mini-language.
 type Symbol = Text
-
--- | The type of 'LayerId', used to name layers.
-type LayerId = Text
 
 --------------------------------------------------------------------------------
 
@@ -77,7 +74,7 @@ data OutputToken
 data ButtonToken
   = BEmit KeyCode               -- ^ Corresponds to "KMonad.Domain.Button.Emit"
   | BModded KeyCode ButtonToken -- ^ Corresponds to "KMonad.Domain.Button.Around"
-  | BLayerToggle LayerId        -- ^ Corresponds to "KMonad.Domain.Button.LayerToggle"
+  | BLayerToggle Name        -- ^ Corresponds to "KMonad.Domain.Button.LayerToggle"
   | BTapHold Milliseconds ButtonToken ButtonToken
     -- ^ Corresponds to "KMonad.Domain.Button.TapHold"
   | BTapNext ButtonToken ButtonToken
@@ -86,8 +83,8 @@ data ButtonToken
   | BMultiTap [(Microseconds, ButtonToken)]
     -- ^ Corresponds to "KMonad.Domain.Button.MultiTap"
   | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
-  | BLayerAdd LayerId           -- ^ Add a layer to the top of the stack
-  | BLayerRem LayerId           -- ^ Remove a layer from the stack
+  | BLayerAdd Name           -- ^ Add a layer to the top of the stack
+  | BLayerRem Name           -- ^ Remove a layer from the stack
   | BLockOn LockKey             -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockOff LockKey            -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockToggle LockKey         -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
@@ -126,7 +123,7 @@ data AliasDef = AliasDef Symbol ButtonToken deriving (Eq, Show)
 
 -- | A token representing an entire layer of buttons
 data LayerToken = LayerToken
-  { _layerName :: LayerId             -- ^ The name of this layer
+  { _layerName :: Name             -- ^ The name of this layer
   , _anchor    :: Maybe KeyCode       -- ^ Where to anchor this layer to the source layer
   , _buttons   :: Matrix ButtonSymbol -- ^ A matrix of 'ButtonSymbol's to map to the source
   } deriving (Eq, Show)

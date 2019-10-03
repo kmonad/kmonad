@@ -21,13 +21,13 @@ import KMonad.Core
 import KMonad.Domain.Effect
 
 mkLayerAdd :: (MonadTrace m, MonadStackManip m)
-  => LayerId -- ^ The ID of the layer to add to the stack
+  => Name -- ^ The ID of the layer to add to the stack
   -> Button m
 mkLayerAdd lid = mkButton $ \case
   BPress   -> trace ("pushing layer: " <> lid) >> pushL lid
   BRelease -> pure ()
 
 mkLayerAddM :: (MonadTrace m, MonadStackManip m, Monad n)
-  => LayerId -- ^ The ID of the layer to remove from the stack
+  => Name -- ^ The ID of the layer to remove from the stack
   -> n (Button m)
 mkLayerAddM = pure . mkLayerAdd
