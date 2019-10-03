@@ -105,6 +105,10 @@ specialNames = concatMap (\(k, as) -> map (,k) as) $
   , (KeyCapsLock,       ["caps"])
   , (KeyGrave,          ["grv"])
   , (Key102nd,          ["102d"])
+  , (KeyForward,        ["fwd"])
+  , (KeyScrollLock,     ["scrlck", "slck"])
+  , (KeyPrint,          ["prnt"])
+  , (KeyWakeUp,         ["wkup"])
   ]
 
 
