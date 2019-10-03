@@ -10,6 +10,8 @@ Portability : portable
 -}
 module KMonad.Core.Parser.Parsers.KeySequence
   ( keySequence
+  , shifted
+  , modded
   )
 where
 
@@ -23,21 +25,47 @@ import KMonad.Core.Parser.Utility
 
 --------------------------------------------------------------------------------
 
--- | Parse any sequence of keypresses. Keycodes are interpreted as taps,
--- keycodes preceded by a P are presses, and by an R are releases. For example:
+keySequence :: Parser KeySequence
+keySequence = keySequenceNew <|> keySequenceOld
+
+
+-- | Parse any sequence of keypresses between '((' and '))' Keycodes are
+-- interpreted as taps, keycodes preceded by a P are presses, and by an R are
+-- releases. For example:
 --
 -- >>> "Plsft a b c Rlsft d e"
 -- would correspond to typing ABCde
-keySequence :: Parser KeySequence
-keySequence = concat <$> many (lexemeSameLine $ choice [pressSeqP, releaseSeqP, tapP])
+keySequenceNew :: Parser KeySequence
+keySequenceNew = do
+  _  <- symbol "(("
+  es <- concat <$> many (lexemeSameLine $ rawElem <|> shifted <|> modded)
+  _  <- symbol "))"
+  return es
+
+
+{-# DEPRECATED keySequenceOld "Support for || a b c || macros to end soon, use (( a b c ))" #-}
+keySequenceOld :: Parser KeySequence
+keySequenceOld = do
+  _  <- symbol "||"
+  es <- concat <$> many (lexemeSameLine $ rawElem <|> shifted <|> modded)
+  _  <- symbol "||"
+  return es
+
+
+rawElem :: Parser KeySequence
+rawElem = choice [pressSeqP, releaseSeqP, tapP]
+
+-- | Parse a raw sequence consisting only of basic tokens
+rawSeq :: Parser KeySequence
+rawSeq = concat <$> many (lexemeSameLine $ choice [pressSeqP, releaseSeqP, tapP])
 
 -- | Parse a Press action
 pressP :: Parser KeyAction
-pressP = char 'P' *> (kP <$> keycodeP)
+pressP = char 'P' *> (press <$> keycodeP)
 
 -- | Parse a Release action
 releaseP :: Parser KeyAction
-releaseP = char 'R' *> (kR <$> keycodeP)
+releaseP = char 'R' *> (release <$> keycodeP)
 
 -- | Parse a Press action as a sequence of 1
 pressSeqP :: Parser KeySequence
@@ -49,7 +77,7 @@ releaseSeqP = (:[]) <$> releaseP
 
 -- | Parse a Tap as a press and release
 tapP :: Parser KeySequence
-tapP = (\c -> [kP c, kR c]) <$> keycodeP
+tapP = (\c -> [press c, release c]) <$> keycodeP
 
 --------------------------------------------------------------------------------
 
@@ -57,19 +85,46 @@ tapP = (\c -> [kP c, kR c]) <$> keycodeP
 
 -- | Parse any "S-button" or "C-button" style indicator as a modded button. This
 -- is recursive, so "C-S-button" works fine too
--- modded :: Parser KeySequence
--- modded = do
---   mod <- choice [ KeyLeftShift  <$ string "S-"
---                 , KeyLeftCtrl   <$ string "C-"
---                 , KeyLeftAlt    <$ string "A-"
---                 , KeyLeftMeta   <$ string "M-"
---                 , KeyRightShift <$ string "RS-"
---                 , KeyRightCtrl  <$ string "RC-"
---                 , KeyRightAlt   <$ string "RA-"
---                 , KeyRightMeta  <$ string "RM-"
---                 , KeyCompose    <$ string "CMP-"
---                 ]
---   rest <- modded <|> keycodeP
+modded :: Parser KeySequence
+modded = do
+  mod <- choice [ KeyLeftShift  <$ string "S-"
+                , KeyLeftCtrl   <$ string "C-"
+                , KeyLeftAlt    <$ string "A-"
+                , KeyLeftMeta   <$ string "M-"
+                , KeyRightShift <$ string "RS-"
+                , KeyRightCtrl  <$ string "RC-"
+                , KeyRightAlt   <$ string "RA-"
+                , KeyRightMeta  <$ string "RM-"
+                , KeyCompose    <$ string "CMP-"
+                ] <?> "Mod sequence"
+  rest <- keySequence <|> modded <|> shifted <|> tapP <|> pressSeqP <|> releaseSeqP
+  return $ around mod rest
 
-  --   emit <|> macro <|> shifted
-  -- return $ BModded mod rest
+-- | Parse a number of special characters as "the shifted sequence to push
+-- them". So "!" gets parsed to a shifted 1, for example. This does not include
+-- any capital letters, since those signify special characters.
+shifted :: Parser KeySequence
+shifted = (fromNamed m <* notFollowedBy alphaNumChar)
+  where
+    s kc = kP KeyLeftShift <> tap kc <> kR KeyLeftShift
+    m = [ ( "!",  s Key1)
+        , ( "@",  s Key2)
+        , ( "#",  s Key3)
+        , ( "$",  s Key4)
+        , ( "%",  s Key5)
+        , ( "^",  s Key6)
+        , ( "&",  s Key7)
+        , ( "*",  s Key8)
+        , ( "(",  s Key9)
+        , ( ")",  s Key0)
+        , ( "__", s KeyMinus)
+        , ( "<",  s KeyComma)
+        , ( ">",  s KeyDot)
+        , ( "{",  s KeyLeftBrace)
+        , ( "}",  s KeyRightBrace)
+        , ( "?",  s KeySlash)
+        , ( "|",  s KeyBackslash)
+        , ( ":",  s KeySemicolon)
+        , ( "\"", s KeyApostrophe)
+        , ( "~",  s KeyGrave)
+        , ( "+",  s KeyEqual) ]

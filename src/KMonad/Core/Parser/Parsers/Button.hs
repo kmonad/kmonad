@@ -38,9 +38,7 @@ buttonP = choice
   [ lockOnP
   , lockOffP
   , lockToggleP  -- This has to happen before emit, we are shadowing 'caps' etc.
-  , shifted
   , block
-  , modded
   , emit
   , layerToggle
   , layerAdd
@@ -79,7 +77,7 @@ trans = Transparent <$ (string "transparent" <|> "trans" <|> "_")
 -- | Compound parser for buttons that are 'simple', i.e. that can fill the 'tap'
 -- field of any compound 'tap/hold' style button
 tapper :: Parser ButtonToken
-tapper = emit <|> modded <|> shifted <|> locker
+tapper = emit <|> macro <|> locker
 
 -- | Compound parser for any button that does lock manipulation
 locker :: Parser ButtonToken
@@ -141,13 +139,11 @@ tapNext = do
   hldB <- tapper <|> layerToggle
   return $ BTapNext tapB hldB
 
--- | Parse a macro button
+-- | Parse anything that will evaluate to a keysequence as a macro button that
+-- emits that sequence.
 macro :: Parser ButtonToken
-macro = do
-  _  <- symbol "||"
-  bs <- keySequence
-  _  <- symbol "||"
-  pure $ BMacro bs
+macro = BMacro <$> choice [keySequence, modded, shifted]
+
 
 -- | Parse a multi-tap button
 multiTap :: Parser ButtonToken
@@ -164,48 +160,3 @@ multiTap = do
       num <- read <$> lexemeSameLine (some digitChar) :: Parser Int
       pure (fromIntegral $ 1000 * num, b)
 
--- | Parse any "S-button" or "C-button" style indicator as a modded button. This
--- is recursive, so "C-S-button" works fine too
-modded :: Parser ButtonToken
-modded = do
-  mod <- choice [ KeyLeftShift  <$ string "S-"
-                , KeyLeftCtrl   <$ string "C-"
-                , KeyLeftAlt    <$ string "A-"
-                , KeyLeftMeta   <$ string "M-"
-                , KeyRightShift <$ string "RS-"
-                , KeyRightCtrl  <$ string "RC-"
-                , KeyRightAlt   <$ string "RA-"
-                , KeyRightMeta  <$ string "RM-"
-                , KeyCompose    <$ string "CMP-"
-                ]
-  rest <- modded <|> emit <|> macro <|> shifted
-  return $ BModded mod rest
-
--- | Parse a number of special characters as "the shifted sequence to push
--- them". So "!" gets parsed to a shifted 1, for example. This does not include
--- any capital letters, since those signify special characters.
-shifted :: Parser ButtonToken
-shifted = try $ (fromNamed m <* notFollowedBy alphaNumChar)
-  where
-    s = BModded KeyLeftShift . BEmit
-    m = [ ( "!",  s Key1)
-        , ( "@",  s Key2)
-        , ( "#",  s Key3)
-        , ( "$",  s Key4)
-        , ( "%",  s Key5)
-        , ( "^",  s Key6)
-        , ( "&",  s Key7)
-        , ( "*",  s Key8)
-        , ( "(",  s Key9)
-        , ( ")",  s Key0)
-        , ( "__", s KeyMinus)
-        , ( "<",  s KeyComma)
-        , ( ">",  s KeyDot)
-        , ( "{",  s KeyLeftBrace)
-        , ( "}",  s KeyRightBrace)
-        , ( "?",  s KeySlash)
-        , ( "|",  s KeyBackslash)
-        , ( ":",  s KeySemicolon)
-        , ( "\"", s KeyApostrophe)
-        , ( "~",  s KeyGrave)
-        , ( "+",  s KeyEqual) ]

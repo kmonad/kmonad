@@ -196,14 +196,17 @@ press   = KeyAction Press
 release = KeyAction Release
 repeat  = KeyAction Repeat
 
--- | Aliases for `press` and `release`
-kP, kR :: KeyCode -> KeyAction
-kP = press
-kR = release
+-- | Aliases for `press` and `release` that return sequences
+kP, kR :: KeyCode -> KeySequence
+kP = (:[]) . press
+kR = (:[]) . release
 
 -- | Create a 'KeyEvent' sequence that presses and then releases a button
 tap :: KeyCode -> KeySequence
-tap c = [kP c, kR c]
+tap c = [press c, release c]
+
+around :: KeyCode -> KeySequence -> KeySequence
+around kc sq = kP kc <> sq <> kR kc
 
 
 --------------------------------------------------------------------------------
