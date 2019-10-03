@@ -164,9 +164,11 @@ type CanApi m =
 -- $emit
 
 -- | The 'MonadEmit' effect allows sending KeyEvent's to the OS.
-class Monad m => MonadEmit m where
-  emitKey :: KeyEvent -> m ()
+class MonadNow m => MonadEmit m where
+  emitKey :: KeyAction -> m ()
 
+emitSeq :: (MonadEmit m) => KeySequence -> m ()
+emitSeq = mapM_ emitKey
 
 --------------------------------------------------------------------------------
 -- $fork
@@ -391,8 +393,8 @@ class Monad m => MonadWait m where
   wait :: Microseconds -> m ()
 
 
---------------------------------------------------------------------------------
+
 -- $compound
 
-emitSeq :: (MonadNow m, MonadEmit m) => KeySequence -> m ()
-emitSeq ks = mapM_ emit . withNow $ runSequence ks
+-- emitSeq :: (MonadNow m, MonadEmit m) => KeySequence -> m ()
+-- emitSeq ks = mapM_ emit . withNow $ runSequence ks

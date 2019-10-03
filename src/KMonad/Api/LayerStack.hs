@@ -53,22 +53,24 @@ class MonadIO m => HasLayerStack r m where
 
 -- | Use a LayerStack to handle a single key event
 handleWith :: MonadIO m => KeyEvent -> LayerStack m -> m ()
-handleWith (KeyEvent Press kc _) ls = do
-  ms  <- readMVar . mapStack $ ls
-  case S.lookup kc ms of
-    Nothing -> return ()
-    Just b  -> do
-      liftIO . modifyMVar_ (mapRelease ls) $ return . M.insert kc b
-      bPress b
-handleWith (KeyEvent Release kc _) ls = do
-  rels <- takeMVar (mapRelease ls)
-  case M.lookup kc rels of
-    Nothing -> putMVar (mapRelease ls) rels
-    Just b  -> do
-      putMVar (mapRelease ls) (M.delete kc rels)
-      bRelease b
- 
-handleWith _ _ = pure ()
+handleWith e ls
+  | isPress e = do -- Handle presses by looking up the key in the layerstack
+      let kc = e^.keyCode
+      ms  <- readMVar . mapStack $ ls
+      case S.lookup (e^.keyCode) ms of
+        Nothing -> return ()
+        Just b  -> do
+          liftIO . modifyMVar_ (mapRelease ls) $ return . M.insert kc b
+          bPress b
+  | isRelease e = do -- Handle releases by finding the key that initiated the press
+      let kc = e^.keyCode
+      rels <- takeMVar (mapRelease ls)
+      case M.lookup kc rels of
+        Nothing -> putMVar (mapRelease ls) rels
+        Just b  -> do
+          putMVar (mapRelease ls) (M.delete kc rels)
+          bRelease b
+  | otherwise = pure ()
 
 
 -- | Push a LayerID to the top of the stack NOTE: the monads do not necessarily

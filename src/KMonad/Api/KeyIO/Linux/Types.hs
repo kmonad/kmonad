@@ -24,6 +24,7 @@ import Foreign.C.Types (CInt)
 import KMonad.Core.KeyCode
 import KMonad.Core.Keyboard
 import KMonad.Core.Time
+import KMonad.Core.Types
 
 fi :: Integral a => a -> CInt
 fi = fromIntegral
@@ -74,7 +75,7 @@ sync t = LinuxKeyEvent (fi $ t^.s :: CInt, fi $ t^.ns :: CInt, n, n, n)
 -- | Translate KeyEvents to LinuxKeyEvents for writing
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (s', ns', typ, c, val))
-  | typ == 1  = Just $ KeyEvent et (toEnum . fromIntegral $ c) t
+  | typ == 1  = Just $ mkKeyEvent et (toEnum . fromIntegral $ c) t
   | otherwise = Nothing
     -- Unsupported events:
     -- 0:  Sync events
@@ -94,7 +95,7 @@ toLinuxKeyEvent :: KeyEvent -> LinuxKeyEvent
 toLinuxKeyEvent e = LinuxKeyEvent (fi $ e^.time.s, fi $ e^.time.ns, 1, c, val)
   where
     c, val :: CInt
-    (c, val) = (fromIntegral . fromEnum $ e^.keyCode, case e^.eventType of
+    (c, val) = (fromIntegral . fromEnum $ e^.keyCode, case e^._type of
         Release -> 0
         Press   -> 1
         Repeat  -> 2)

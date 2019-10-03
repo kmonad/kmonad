@@ -63,9 +63,9 @@ hPress v t h = do
   nxt <- pinComparison
   let f = nxt >>= \cmp -> if
         -- If next event is another press (by definition another button), start hold
-        | cmp^.eventType == Press -> bPress h
+        | cmp^._type == Press -> bPress h
         -- If next event is the release of the TapNext button, tap
-        | cmp^.eventType == Release && cmp^.sameCode
+        | cmp^._type == Release && cmp^.sameCode
           -> bTap t >> swapVar Unpressed v >> return ()
         -- Otherwise loop
         | otherwise               -> f

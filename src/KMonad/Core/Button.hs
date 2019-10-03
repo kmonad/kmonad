@@ -48,6 +48,7 @@ where
 
 import Control.Lens
 import KMonad.Core.Keyboard
+import KMonad.Core.Types
 
 --------------------------------------------------------------------------------
 -- $types
@@ -83,8 +84,8 @@ runButton = unButton
 -- 'Repeat' events.
 --
 -- @since 0.1.0
-asSignal :: KeyEvent -> Maybe ButtonSignal
-asSignal e = case e^.eventType of
+asSignal :: (HasType a KeyActionType) => a -> Maybe ButtonSignal
+asSignal e = case e^._type of
   Repeat  -> Nothing
   Press   -> Just BPress
   Release -> Just BRelease

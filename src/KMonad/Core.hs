@@ -24,6 +24,7 @@ module KMonad.Core
   , module KMonad.Core.Matrix
   , module KMonad.Core.Pretty
   , module KMonad.Core.Time
+  , module KMonad.Core.Types
   )
 where
 
@@ -36,4 +37,5 @@ import KMonad.Core.MapStack
 import KMonad.Core.Matrix
 import KMonad.Core.Pretty
 import KMonad.Core.Time
+import KMonad.Core.Types
 import KMonad.Core.Parser.Token (LayerId)

@@ -58,4 +58,4 @@ recurse nxt ((d, b):bs) = do      -- Recurse deeper when we encounter a press of
     Left  _ -> bTap b
     Right _ -> recurse nxt bs
   where
-    pred cmp = cmp^.sameCode && cmp^.eventType == Press
+    pred cmp = cmp^.sameCode && cmp^._type == Press

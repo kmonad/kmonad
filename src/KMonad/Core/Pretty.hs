@@ -23,7 +23,9 @@ import Control.Lens
 import Control.Monad.Trans
 
 import KMonad.Core.Keyboard
+import KMonad.Core.KeyCode
 import KMonad.Core.Time
+import KMonad.Core.Types
 
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
@@ -44,7 +46,7 @@ instance Pretty Time where
                  ns' = fromIntegral $ t^.ns :: Int
              in tshow s' <> ":" <> tshow ns'
 
-instance Pretty KeyEventType where
+instance Pretty KeyActionType where
   pretty Press   = "P"
   pretty Release = "R"
   pretty Repeat  = "E"
@@ -53,7 +55,7 @@ instance Pretty KeyEventType where
 instance Pretty KeyEvent where
   pretty e = pretty (e^.time)
           <> "   "
-          <> pretty (e^.eventType)
+          <> pretty (e^._type)
           <> "   "
           <> tshow (e^.keyCode)
 

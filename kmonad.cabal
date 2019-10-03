@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b167f4a984ae5506c78c3cc23da617a276805b677139e0e6320de565ccccc28c
+-- hash: 9a36688c4ed10a2db932fa2441866cccad0e1c91bbc6fce1bdfac8cb674ec010
 
 name:           kmonad
 version:        0.1.0
@@ -52,6 +52,7 @@ library
       KMonad.Core.Pretty
       KMonad.Core.SpecialSymbol
       KMonad.Core.Time
+      KMonad.Core.Types
       KMonad.Domain.Button
       KMonad.Domain.Button.Around
       KMonad.Domain.Button.Block

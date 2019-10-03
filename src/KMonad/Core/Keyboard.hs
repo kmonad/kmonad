@@ -106,6 +106,10 @@ instance HasTime KeyEvent               where time = evTime
 mkKeyEvent :: KeyActionType -> KeyCode -> Time -> KeyEvent
 mkKeyEvent a c = KeyEvent (KeyAction a c)
 
+-- | Create a KeyEvent by running a KeyAction at a given time
+actAtTime :: KeyAction -> Time -> KeyEvent
+actAtTime = KeyEvent
+
 -- | A prism describing something that can be cast to a KeyEvent. This is used
 -- in the concrete implementation of Linux KeyIO, converting raw event tuples to
 -- 'KeyEvent's when reading, and 'KeyEvent's to raw event tuples when writing.
@@ -115,6 +119,14 @@ class AsKeyEvent s where
   _KeyEvent :: Prism' s KeyEvent
 instance AsKeyEvent KeyEvent where
   _KeyEvent = prism' id Just
+
+--------------------------------------------------------------------------------
+-- $util
+
+isPress, isRepeat, isRelease :: (HasType a KeyActionType) => a -> Bool
+isPress   x = x^._type == Press
+isRelease x = x^._type == Release
+isRepeat  x = x^._type == Repeat
 
 
 --------------------------------------------------------------------------------
