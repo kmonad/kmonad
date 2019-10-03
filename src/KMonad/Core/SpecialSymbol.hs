@@ -12,15 +12,17 @@ data SpecialSymbol = SpecialSymbol
   { _name       :: Text
   , _chr        :: Char
   , _composeSeq :: Maybe KeySequence
-  }
+  } deriving (Eq, Show)
 makeClassy ''SpecialSymbol
+
+
 
 
 -- specialSymbols :: [SpecialSymbol]
 -- specialSymbols = let ss (a, b, c) = SpecialSymbol a b c in map ss
 --   [ -- Currency
---     ("Euro sign"    , '€', Just [KeyEqual, KeyC])
---   , ("Pount sign"   , '₤', Just [KeyEqual, KeyL])
+--     ("Euro sign"    , '€', Just $ tap KeyEqual <> tap KeyC) -- [KeyEqual, KeyC])
+  -- , ("Pount sign"   , '₤', Just [KeyEqual, KeyL])
 
 --     -- Fractions
 --   , ("One-half"     , '½', Just [Key1, Key2])
@@ -28,7 +30,7 @@ makeClassy ''SpecialSymbol
 
 
 
---   ]
+  -- ]
 
 -- --------------------------------------------------------------------------------
 -- -- $unicode

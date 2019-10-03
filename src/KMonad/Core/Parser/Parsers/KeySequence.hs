@@ -12,6 +12,7 @@ module KMonad.Core.Parser.Parsers.KeySequence
   ( keySequence
   , shifted
   , modded
+  , seqElem
   )
 where
 
@@ -38,7 +39,7 @@ keySequence = keySequenceNew <|> keySequenceOld
 keySequenceNew :: Parser KeySequence
 keySequenceNew = do
   _  <- symbol "(("
-  es <- concat <$> many (lexemeSameLine $ rawElem <|> shifted <|> modded)
+  es <- concat <$> many (lexemeSameLine $ seqElem <|> shifted <|> modded)
   _  <- symbol "))"
   return es
 
@@ -47,13 +48,12 @@ keySequenceNew = do
 keySequenceOld :: Parser KeySequence
 keySequenceOld = do
   _  <- symbol "||"
-  es <- concat <$> many (lexemeSameLine $ rawElem <|> shifted <|> modded)
+  es <- concat <$> many (lexemeSameLine $ seqElem <|> shifted <|> modded)
   _  <- symbol "||"
   return es
 
-
-rawElem :: Parser KeySequence
-rawElem = choice [pressSeqP, releaseSeqP, tapP]
+seqElem :: Parser KeySequence
+seqElem = choice [pressSeqP, releaseSeqP, tapP, shifted, modded]
 
 -- | Parse a raw sequence consisting only of basic tokens
 rawSeq :: Parser KeySequence
