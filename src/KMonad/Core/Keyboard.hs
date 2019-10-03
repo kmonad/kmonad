@@ -40,6 +40,7 @@ module KMonad.Core.Keyboard
 
     -- * Creating sequences of KeyEvents
     -- $seqs
+  , KeySequence
   , press, release, repeat, tap
 
     -- * Comparing events
@@ -96,21 +97,6 @@ class AsKeyEvent s where
 instance AsKeyEvent KeyEvent where
   _KeyEvent = prism' id Just
 
--- | Create a 'KeyEvent' of a given type for a 'KeyCode'. These functions are
--- intended to be partially applied and used in conjunction with
--- 'KMonad.Domain.Effect.Now.withNow' like this:
---
--- >>> withNow $ press KeyA :: m KeyEvent
---
-press, release, repeat :: KeyCode -> Time -> KeyEvent
-press   c = KeyEvent Press   c
-release c = KeyEvent Release c
-repeat  c = KeyEvent Repeat  c
-
--- | Create a 'KeyEvent' sequence that presses and then releases a button
-tap :: KeyCode -> Time -> [KeyEvent]
-tap c t = [press c t, release c t]
-
 
 --------------------------------------------------------------------------------
 -- $locks
@@ -165,6 +151,31 @@ toggleLock k st = (tapLock k,) $ if S.member k st
 
 
 --------------------------------------------------------------------------------
+-- $seqs
+
+type KeySequence =  Time -> [KeyEvent]
+
+-- | Create a KeySequence containing 1 event
+one :: KeyEventType -> KeyCode -> KeySequence
+one e c = \t -> [KeyEvent e c t]
+
+-- | Create a 'KeyEvent' of a given type for a 'KeyCode'. These functions are
+-- intended to be partially applied and used in conjunction with
+-- 'KMonad.Domain.Effect.Now.withNow' like this:
+--
+-- >>> withNow $ press KeyA :: m KeyEvent
+--
+press, release, repeat :: KeyCode -> Time -> KeyEvent
+press   c = KeyEvent Press   c
+release c = KeyEvent Release c
+repeat  c = KeyEvent Repeat  c
+
+-- | Create a 'KeyEvent' sequence that presses and then releases a button
+tap :: KeyCode -> KeySequence
+tap c t = [press c t, release c t]
+
+
+--------------------------------------------------------------------------------
 -- $comps
 --
 -- For some 'KMonad.Core.Button.Button' actions we need to be able to know
@@ -192,3 +203,5 @@ compareEvent a b = EventComparison
   , _since        = (a^.time) `tminus` (b^.time)
   , _cmpEventType = b^.eventType
   }
+
+

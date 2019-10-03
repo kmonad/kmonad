@@ -91,8 +91,8 @@ data ButtonToken
   | BLockOn LockKey             -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockOff LockKey            -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockToggle LockKey         -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
-  | BUnicode Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
-  | BCompose Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
+  -- | BUnicode Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
+  -- | BCompose Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
 
   deriving (Eq, Show)
 

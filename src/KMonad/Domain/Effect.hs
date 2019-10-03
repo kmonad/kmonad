@@ -389,3 +389,10 @@ readVar v = getVar v >>= \x -> putVar x v >> pure x
 -- | Allow an action to wait for a bit.
 class Monad m => MonadWait m where
   wait :: Microseconds -> m ()
+
+
+--------------------------------------------------------------------------------
+-- $compound
+
+emitSeq :: (MonadNow m, MonadEmit m) => KeySequence -> m ()
+emitSeq ks = mapM_ emit . withNow $ runSequence ks

@@ -128,14 +128,14 @@ lockkeyP = fromNamed . catMaybes . map p $ allNames
 -- $unicode
 
 -- | Parse a unicode character
-unicodeP :: Parser Unicode
-unicodeP = do
-  c <- satisfy (not . isSpace)
-  return $ fromChar c
+-- unicodeP :: Parser Unicode
+-- unicodeP = do
+--   c <- satisfy (not . isSpace)
+--   return $ fromChar c
 
 
-test :: Text
-test = T.singleton $ 'Ñ'
+-- test :: Text
+-- test = T.singleton $ 'Ñ'
 
-test2 :: Char
-test2 = 'ñ'
+-- test2 :: Char
+-- test2 = 'ñ'
