@@ -63,7 +63,11 @@ newtype App a = App
 
 -- | Emit keys by sending them to the OS through the emitter
 instance MonadEmit App where
-  emitKey e = view emitter >>= \f -> liftIO $ f e
+  emitKey e = view emitter >>= \f -> liftIO $ f =<< (withNow $ actAtTime e)
+    -- f <- view emitter
+    -- withNow $ actAtTime e
+    -- view emitter >>= \f -> liftIO $ f e
+
 
 -- | Deal with fork requests by using forkIO
 instance MonadFork App where

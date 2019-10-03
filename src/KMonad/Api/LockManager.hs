@@ -41,7 +41,7 @@ doOne :: ( HasLockManager r , MonadReader r m , MonadEmit m , MonadNow m , Monad
 doOne f k = do
   lm       <- view $ lockManager.lState
   (es, st) <- f k <$> takeMVar lm
-  mapM_ emitKey =<< withNow es
+  emitSeq es
   putMVar lm st
 
 

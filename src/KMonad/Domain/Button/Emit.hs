@@ -28,8 +28,8 @@ mkEmit :: (MonadEmit m, MonadNow m)
   => KeyCode  -- ^ The keycode to emit on manipulation
   -> Button m -- ^ The resulting button
 mkEmit kc = mkButton $ \case
-  BPress   -> press kc   <$> now >>= emitKey
-  BRelease -> release kc <$> now >>= emitKey
+  BPress   -> emitPress kc
+  BRelease -> emitRelease kc
 
 -- | Return an Emit button from within some Monad
 mkEmitM :: (MonadEmit m, MonadNow m, Monad n)

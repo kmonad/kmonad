@@ -32,6 +32,7 @@ module KMonad.Domain.Effect
     -- * MonadEmit
     -- $emit
   , MonadEmit(..)
+  , emitSeq, emitPress, emitRelease
 
     -- * MonadFork
     -- $fork
@@ -169,6 +170,12 @@ class MonadNow m => MonadEmit m where
 
 emitSeq :: (MonadEmit m) => KeySequence -> m ()
 emitSeq = mapM_ emitKey
+
+emitPress :: MonadEmit m => KeyCode -> m ()
+emitPress = emitKey . press
+
+emitRelease :: MonadEmit m => KeyCode -> m ()
+emitRelease = emitKey . release
 
 --------------------------------------------------------------------------------
 -- $fork
