@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9a36688c4ed10a2db932fa2441866cccad0e1c91bbc6fce1bdfac8cb674ec010
+-- hash: 5bcf5649e096b5cd2a714404dff6a5c5c7f43aac11cbe01e4fe95ef43c8dd4f6
 
 name:           kmonad
 version:        0.1.0
@@ -44,6 +44,7 @@ library
       KMonad.Core.Parser.Parsers.Config
       KMonad.Core.Parser.Parsers.IO
       KMonad.Core.Parser.Parsers.KeyCode
+      KMonad.Core.Parser.Parsers.KeySequence
       KMonad.Core.Parser.Parsers.Layer
       KMonad.Core.Parser.Parsers.Matrix
       KMonad.Core.Parser.Parsers.Source

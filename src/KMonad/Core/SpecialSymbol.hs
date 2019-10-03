@@ -8,12 +8,12 @@ import Data.Text (Text)
 import KMonad.Core.Keyboard
 import KMonad.Core.KeyCode
 
--- data SpecialSymbol = SpecialSymbol
---   { _name       :: Text
---   , _chr        :: Char
---   , _composeSeq :: Maybe [KeySequence]
---   }
--- makeClassy ''SpecialSymbol
+data SpecialSymbol = SpecialSymbol
+  { _name       :: Text
+  , _chr        :: Char
+  , _composeSeq :: Maybe KeySequence
+  }
+makeClassy ''SpecialSymbol
 
 
 -- specialSymbols :: [SpecialSymbol]
