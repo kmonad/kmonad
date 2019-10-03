@@ -29,7 +29,6 @@ module KMonad.Core.Keyboard
   , KeyEvent(..)
   , AsKeyEvent(..)
   , eventType, keyCode
-  , press, release, repeat, tap
 
     -- * Dealing especially with /LockingKeys/
     -- $locks
@@ -38,6 +37,10 @@ module KMonad.Core.Keyboard
   , LockUpdate
   , emptyLockState
   , addLock , deleteLock , toggleLock
+
+    -- * Creating sequences of KeyEvents
+    -- $seqs
+  , press, release, repeat, tap
 
     -- * Comparing events
     -- $comps

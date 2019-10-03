@@ -25,10 +25,6 @@ module KMonad.Core.KeyCode
   ( -- * The KeyCode type
     KeyCode(..)
 
-    -- * THe Unicode type
-  , Unicode(..)
-  , fromChar
-
     -- * A ClassyLens style class for "Having a KeyCode"
   , HasKeyCode(..)
   )
@@ -310,21 +306,3 @@ class HasKeyCode a where
 instance HasKeyCode KeyCode where
   keyCode = id
 
-
---------------------------------------------------------------------------------
--- $unicode
-
-newtype Unicode = Unicode Int
-  deriving (Eq, Show, Bounded, Enum, Ord)
-
-fromChar :: Char -> Unicode
-fromChar = Unicode . fromEnum
-
-showSeq :: Unicode -> T.Text
-showSeq (Unicode c) = T.pack (showIntAtBase 16 intToDigit c $ "")
-
-test :: Char
-test = 'Ñ'
-
-test2 :: Char
-test2 = 'ñ'
