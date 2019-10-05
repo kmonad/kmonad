@@ -1,9 +1,8 @@
 resolver: lts-14.7
 packages:
 - .
-extra-deps:
-# Explicitly state these packages to make the static build (see default.nix) succeed.
-# Keep in sync with the versions provided by the `resolver` used above.
-# TODO: Remove when https://github.com/nh2/static-haskell-nix/issues/53 is fixed.
-- text-1.2.3.1
-- stm-2.5.0.0
+# extra-deps:
+#
+#   Currently not required. Leaving this comment in case static-haskell-nix has
+#   problems in the future. If it cannot find packages, perhaps adding them here
+#   can fix this.
