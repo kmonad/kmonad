@@ -57,7 +57,7 @@ LAYER l
 
 // Haskell macros: to be completed when I implement macros
 LAYER ll
-  _    @->  @>>= _    ঊ              ralt &    *    =    lsft
+  _    @->  @>>= _    _              ralt &    *    =    lsft
   _    @<-  @<$> _    _              _    $    %    ^    _
   _    @=>  @<*> _    _              _    !    @    #    _
   _    _    _    _    _    _    _    _    _    _    _    _
