@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 13b52c76e694639617a264048c443d6c696900decb8500b96dded4460e6a2c4f
+-- hash: 8e1456f1261b2ebad01c59b6285b1707278d46b9b3c20e3dbda2c31750b4fe0d
 
 name:           kmonad
 version:        0.1.0
@@ -90,6 +90,7 @@ library
     , megaparsec
     , mtl
     , optparse-applicative
+    , process
     , text
     , time
     , unagi-chan
@@ -120,6 +121,7 @@ executable kmonad
     , megaparsec
     , mtl
     , optparse-applicative
+    , process
     , text
     , time
     , unagi-chan

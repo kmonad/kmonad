@@ -60,6 +60,7 @@ dependencies:
   - megaparsec
   - mtl
   - optparse-applicative
+  - process
   - text
   - time
   - unagi-chan
