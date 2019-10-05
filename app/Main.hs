@@ -22,5 +22,4 @@ import KMonad
 
 main :: IO ()
 main = do
-  putStrLn "WARNING!!! || a b c ||-style macros are deprecated, (( a b c ))-style macros are preferred"
   runKMonad
