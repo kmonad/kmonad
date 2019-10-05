@@ -66,7 +66,7 @@ data InputToken
 -- | A token describing which output to use
 -- TODO: Add the ability to give a custom name to your uinput keyboard
 data OutputToken
-  = UinputDevice -- ^ A Linux uinput device
+  = UinputDevice (Maybe Text) (Maybe Text) -- ^ A Linux uinput device
   deriving (Eq, Show)
 
 --------------------------------------------------------------------------------

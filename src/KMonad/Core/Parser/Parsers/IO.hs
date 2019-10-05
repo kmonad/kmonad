@@ -16,6 +16,8 @@ where
 
 import KMonad.Core.Parser.Utility
 
+import qualified Data.Text as T
+
 --------------------------------------------------------------------------------
 
 -- | Correspondence between names and 'InputDecoder' values
@@ -51,12 +53,21 @@ inputP = do
 -- | Correspondence between names and 'OutputToken' values.
 outputNames :: Named (Parser OutputToken)
 outputNames =
-  [ ("UINPUT_SINK", pure UinputDevice) ]
+  [ ("UINPUT_SINK", uinputP) ]
+
+-- | Parse a UinputToken
+uinputP :: Parser OutputToken
+uinputP = do
+  let f = maybe Nothing (\s -> if T.null s then Nothing else Just s)
+  name <- f <$> (optional $ lexemeSameLine someString)
+  post <- f <$> (optional $ lexemeSameLine someString)
+
+  pure $ UinputDevice name post
 
 -- | Parse an 'OutputToken'
 outputP :: Parser OutputToken
 outputP = do
   _ <- symbol "OUTPUT"
   _ <- symbol "="
-  p <- lexeme $ fromNamed outputNames
+  p <- lexemeSameLine $ fromNamed outputNames
   p

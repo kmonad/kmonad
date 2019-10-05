@@ -25,6 +25,7 @@ module KMonad.Core.Parser.Utility
   , lexeme, lexemeSameLine
   , name, symbol, only
   , indent, end, linuxFP
+  , someString
 
     -- * A-list utilities
     -- $alist
@@ -116,6 +117,10 @@ symbol = L.symbol scn
 -- | Parse any number of sequential alpha-num chars as a name
 name :: Parser Text
 name = T.pack <$> (many $ alphaNumChar <|> punctuationChar <|> symbolChar)
+
+-- | Parse anything between ""'s, can't escape " yet
+someString :: Parser Text
+someString = try $ T.pack <$> (char '"' *> manyTill anySingle (char '"'))
 
 -- | Run the parser IFF it is followed by a space or eof. If that is not the
 -- case, the parse state is not updated.

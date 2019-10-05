@@ -14,11 +14,15 @@ module KMonad.Api.Encode
   )
 where
 
+import Control.Lens
+import Data.Maybe
+
 import KMonad.Core.Parser
 import KMonad.Api.KeyIO
 import KMonad.Api.KeyIO.Linux.DeviceSource
 import KMonad.Api.KeyIO.Linux.UinputSink
 
+import qualified Data.Text as T
 
 --------------------------------------------------------------------------------
 
@@ -28,4 +32,8 @@ pickInputIO (LinuxDeviceSource L64 pth) = deviceSource64 pth
 
 -- | Translate an 'OutputToken' to a 'KeySink' object
 pickOutputIO :: OutputToken -> KeySink
-pickOutputIO UinputDevice = uinputSink
+pickOutputIO (UinputDevice nm pi) = let def = defUinputCfg in
+  mkUinputSink $ def
+    { _keyboardName = fromMaybe (def^.keyboardName) (T.unpack <$> nm)
+    , _postInit     = T.unpack <$> pi
+    }
