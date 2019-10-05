@@ -23,32 +23,39 @@ deal with how to generate repeating events.
 
 -}
 module KMonad.Core.Keyboard
-  -- ( -- * Types and lenses for KeyEvents
-  --   -- $types
-  --   KeyEventType(..)
-  -- , KeyEvent(..)
-  -- , AsKeyEvent(..)
-  -- , eventType, keyCode
+  ( -- * Types for KeyActions
+    KeyActionType(..)
+  , KeyAction(..)
 
-  --   -- * Dealing especially with /LockingKeys/
-  --   -- $locks
-  -- , LockKey(..)
-  -- , LockState
-  -- , LockUpdate
-  -- , emptyLockState
-  -- , addLock , deleteLock , toggleLock
+    -- * Types and lenses for KeyEvents
+    -- $types
+  , KeyEvent
+  , mkKeyEvent
+  , AsKeyEvent(..)
+  , _type, keyCode
+  , isPress, isRelease
+  , actAtTime
 
-  --   -- * Creating sequences of KeyEvents
-  --   -- $seqs
-  -- , KeySequence
-  -- , press, release, repeat, tap
+    -- * Dealing especially with /LockingKeys/
+    -- $locks
+  , LockKey(..)
+  , LockState
+  , LockUpdate
+  , emptyLockState
+  , addLock , deleteLock , toggleLock
 
-  --   -- * Comparing events
-  --   -- $comps
-  -- , EventComparison
-  -- , compareEvent
-  -- , since, sameCode
-  -- )
+    -- * Creating sequences of KeyEvents
+    -- $seqs
+  , KeySequence
+  , press, release, repeat, tap
+  , kR, kP, around
+
+    -- * Comparing events
+    -- $comps
+  , EventComparison
+  , compareEvent
+  , since, sameCode
+  )
 where
 
 import Prelude hiding (repeat)
@@ -70,7 +77,7 @@ data KeyActionType
   = Press
   | Release
   | Repeat
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 makeClassyPrisms ''KeyActionType
 
 -- | A KeyAction is a Press, Release, or Repeat of a KeyCode
@@ -79,6 +86,11 @@ data KeyAction = KeyAction
   , _kaKeyCode :: KeyCode
   } deriving (Eq, Show)
 makeClassy ''KeyAction
+
+instance Ord KeyAction where
+  a `compare` b = case (a^._type) `compare` (b^._type) of
+    EQ -> (a^.keyCode) `compare` (b^.keyCode)
+    x  -> x
 
 instance HasType KeyAction KeyActionType where
   _type = kaType

@@ -40,6 +40,7 @@ module KMonad.Core.Parser.Utility
 where
 
 import Control.Monad (void)
+import Data.Foldable
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Text (Text)
@@ -151,14 +152,31 @@ sortNamed :: Named a -> Named a
 sortNamed = sortBy (cmpName `on` fst)
 
 -- | Turn an Alist of (Pattern, Object) matches into a 'Parser' of 'only'
--- matches.
--- TODO: improve error handling
+-- matches. If the provided Alist has duplicate keys, return a set of all
+-- duplicate names.
 fromNamed :: Named a -> Parser a
 fromNamed as = case sortNamed as of
   [] -> failP
-  xs -> if any (uncurry ((==) `on` fst)) . zip xs $ tail xs
-    then error "duplicates in alist"
-    else choice . map mkOne $ xs
+  xs -> let dups = findDuplicates (map fst xs) in
+    if S.null dups
+      then choice . map mkOne $ xs
+      else error $ "Duplicate keys: " <> show dups
   where
     mkOne (s, a) = a <$ (only $ string s)
 
+
+-- | Return a set of all elements in f that occur more than once
+findDuplicates :: (Foldable f, Ord a) => f a -> S.Set a
+findDuplicates xs = go (toList xs) S.empty S.empty
+  where
+    go []     old dups = dups
+    go (x:xs) old dups = if S.member x old
+       then go xs (S.insert x old) (S.insert x dups)
+       else go xs (S.insert x old) dups
+
+
+    -- f ((k, v):xs') mRef = do
+    --   m <- readSTRef mRef
+    --   if M.member k m
+    --     then return . Left $ k
+    --     else modifySTRef' mRef (M.insert k v) >> f xs' mRef

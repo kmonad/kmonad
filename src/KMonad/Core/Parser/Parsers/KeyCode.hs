@@ -79,7 +79,6 @@ strippedNames = foldl' (\acc (k, v) -> case T.stripPrefix "key" k of
 specialNames :: Named KeyCode
 specialNames = concatMap (\(k, as) -> map (,k) as) $
   [ (KeyEnter,          ["ret", "return", "ent"])
-  , (KeyRight,          ["rght"])
   , (KeyMinus,          ["min"])
   , (KeyEqual,          ["eql"])
   , (KeySleep,          ["zzz"])
@@ -109,6 +108,8 @@ specialNames = concatMap (\(k, as) -> map (,k) as) $
   , (KeyScrollLock,     ["scrlck", "slck"])
   , (KeyPrint,          ["prnt"])
   , (KeyWakeUp,         ["wkup"])
+  , (KeyLeft,           ["lft"])
+  , (KeyRight,          ["rght"])
   ]
 
 

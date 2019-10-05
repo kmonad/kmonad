@@ -27,6 +27,9 @@ module KMonad.Core.KeyCode
 
     -- * A ClassyLens style class for "Having a KeyCode"
   , HasKeyCode(..)
+
+    -- * A converter from Char to keycode
+  , kcFromChar
   )
 where
 
@@ -34,8 +37,9 @@ import Control.Lens
 import Data.Char
 import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
-import Numeric
+
 import qualified Data.Text as T
+import qualified Data.IntMap.Strict as M
 
 -- | The 'KeyCode' type and its constructors. Essentially a gigantic 'Enum'
 data KeyCode
@@ -306,3 +310,49 @@ class HasKeyCode a where
 instance HasKeyCode KeyCode where
   keyCode = id
 
+
+-- | There is no easy correspondence between characters and keycodes, but it is
+-- sometimes nice to be able to refer to keycodes by their letter or number.
+-- This function is just a lookup-table. Both upper- and lower-case chars are
+-- mapped to their corresponding keycode. Mappings only exist for letters and
+-- numbers.
+kcFromChar :: Char -> Maybe KeyCode
+kcFromChar c = M.lookup (fromEnum . toLower $ c) m
+  where m = M.fromList . map (\x -> x & _1 %~ fromEnum) $
+          [ ('a', KeyA)
+          , ('b', KeyB)
+          , ('c', KeyC)
+          , ('d', KeyD)
+          , ('e', KeyE)
+          , ('f', KeyF)
+          , ('g', KeyG)
+          , ('h', KeyH)
+          , ('i', KeyI)
+          , ('j', KeyJ)
+          , ('k', KeyK)
+          , ('l', KeyL)
+          , ('m', KeyM)
+          , ('n', KeyN)
+          , ('o', KeyO)
+          , ('p', KeyP)
+          , ('q', KeyQ)
+          , ('r', KeyR)
+          , ('s', KeyS)
+          , ('t', KeyT)
+          , ('u', KeyU)
+          , ('v', KeyV)
+          , ('w', KeyW)
+          , ('x', KeyX)
+          , ('y', KeyY)
+          , ('z', KeyZ)
+          , ('0', Key0)
+          , ('1', Key1)
+          , ('2', Key2)
+          , ('3', Key3)
+          , ('4', Key4)
+          , ('5', Key5)
+          , ('6', Key6)
+          , ('7', Key7)
+          , ('8', Key8)
+          , ('9', Key9)
+          ]

@@ -25,6 +25,7 @@ import KMonad.Core.KeyCode
 import KMonad.Core.Time
 import KMonad.Core.Parser.Parsers.KeyCode
 import KMonad.Core.Parser.Parsers.KeySequence
+import KMonad.Core.Parser.Parsers.SpecialSymbol
 import KMonad.Core.Parser.Utility
 
 import qualified Data.Text as T
@@ -40,6 +41,8 @@ buttonP = choice
   , lockToggleP  -- This has to happen before emit, we are shadowing 'caps' etc.
   , block
   , emit
+  , emitSpecial  -- Putting this after emit, just in case
+  , emitDeadKey
   , layerToggle
   , layerAdd
   , layerRem
@@ -98,6 +101,12 @@ lockToggleP = BLockToggle <$> lockkeyP
 -- | Parse an emit by reading the name of a keycode
 emit :: Parser ButtonToken
 emit = BEmit <$> keycodeP
+
+emitSpecial :: Parser ButtonToken
+emitSpecial = BEmitSpecial <$> specialSymbolP
+
+emitDeadKey :: Parser ButtonToken
+emitDeadKey = BEmitDeadKey <$> deadkeyP
 
 -- | Parse a capital X or the word "block" as a block button
 block :: Parser ButtonToken

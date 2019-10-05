@@ -22,6 +22,7 @@ module KMonad.Core
   , module KMonad.Core.MapStack
   , module KMonad.Core.Matrix
   , module KMonad.Core.Pretty
+  , module KMonad.Core.SpecialSymbol
   , module KMonad.Core.Time
   , module KMonad.Core.Types
   )
@@ -35,5 +36,6 @@ import KMonad.Core.KeyCode
 import KMonad.Core.MapStack
 import KMonad.Core.Matrix
 import KMonad.Core.Pretty
+import KMonad.Core.SpecialSymbol
 import KMonad.Core.Time
 import KMonad.Core.Types

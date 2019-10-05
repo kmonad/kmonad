@@ -30,6 +30,7 @@ import KMonad.Api.KeyIO
 import KMonad.Api.LayerStack
 import KMonad.Api.LockManager
 import KMonad.Api.Sluice
+import KMonad.Api.SymbolEncoder
 
 import qualified UnliftIO.Async as A
 
@@ -93,9 +94,9 @@ instance MonadInject App where
 
 -- | Handle lock events using the LockManager
 instance MonadLock App where
-  lockOn     lk = trace ("Engaging: "  <> tshow lk) >> lmLockOn lk
+  lockOn     lk = trace ("Engaging:  "  <> tshow lk) >> lmLockOn lk
   lockOff    lk = trace ("Releasing: " <> tshow lk) >> lmLockOff lk
-  lockToggle lk = trace ("Toggling: "  <> tshow lk) >> lmLockToggle lk
+  lockToggle lk = trace ("Toggling:  "  <> tshow lk) >> lmLockToggle lk
 
 -- | Deal with masking input through the EventTracker object
 instance MonadMaskInput App where
@@ -119,6 +120,15 @@ instance MonadRace App where
 instance MonadStackManip App where
   pushL lid = view layerStack >>= pushLS lid
   popL  lid = view layerStack >>= popLS  lid
+
+-- | Dead with special symbols by looking them up using the encoder ring
+instance MonadSymbol App where
+  emitSymbol ss = encodeSymbol ss >>= \case
+    Just ks -> emitSeq ks
+    Nothing -> pure ()
+  emitDeadKey dk = encodeDeadKey dk >>= \case
+    Just ks -> emitSeq ks
+    Nothing -> pure ()
 
 -- | Traces are written to stdout
 instance MonadTrace App where
@@ -191,24 +201,26 @@ interpretConfig us cfg = AppCfg
 
 -- | The AppEnv reader environment that all App actions have access to.
 data AppEnv = AppEnv
-  { _appEmitter      :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
-  , _appEventSource  :: EventSource       -- ^ The entrypoint for events
-  , _appEventTracker :: EventTracker      -- ^ Tracking and masking events
-  , _appSluice       :: Sluice App ()     -- ^ Sluice to enable holding processing
-  , _appLayerStack   :: LayerStack App -- ^ LayerStack to manage the layers
-  , _appLockManager  :: LockManager       -- ^ State to keep track of lock-style keys
+  { _appEmitter       :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
+  , _appEventSource   :: EventSource       -- ^ The entrypoint for events
+  , _appEventTracker  :: EventTracker      -- ^ Tracking and masking events
+  , _appSluice        :: Sluice App ()     -- ^ Sluice to enable holding processing
+  , _appLayerStack    :: LayerStack App    -- ^ LayerStack to manage the layers
+  , _appLockManager   :: LockManager       -- ^ State to keep track of lock-style keys
+  , _appSymbolEncoder :: SymbolEncoderRing -- ^ State to keep track of Symbol encodings
   }
 
 makeClassy ''AppCfg
 makeClassy ''AppEnv
 
 -- | Various ClassyLenses plugging in
-instance HasEventSource  AppEnv        where eventSource  = appEventSource
-instance HasEmitter      AppEnv        where emitter      = appEmitter
-instance HasEventTracker AppEnv        where eventTracker = appEventTracker
-instance HasSluice       AppEnv App () where sluice       = appSluice
-instance HasLayerStack   AppEnv App    where layerStack   = appLayerStack
-instance HasLockManager  AppEnv        where lockManager  = appLockManager
+instance HasEventSource       AppEnv          where eventSource       = appEventSource
+instance HasEmitter           AppEnv          where emitter           = appEmitter
+instance HasEventTracker      AppEnv          where eventTracker      = appEventTracker
+instance HasSluice            AppEnv App ()   where sluice            = appSluice
+instance HasLayerStack        AppEnv App      where layerStack        = appLayerStack
+instance HasLockManager       AppEnv          where lockManager       = appLockManager
+instance HasSymbolEncoderRing AppEnv          where symbolEncoderRing = appSymbolEncoder
 
 
 --------------------------------------------------------------------------------
@@ -227,13 +239,18 @@ runOnce cfg = do
       stck <- mkLayerStack (cfg^.cfgLayerStack) (cfg^.cfgEntry)
       lmgr <- mkLockManager
 
+      -- Make this customizable at some point
+      encd <- mkSymbolEncoderRing [("compose", composeSymbol)]
+                                  [("compose", composeDeadKey)]
+
       let env = AppEnv
-            { _appEmitter      = snk
-            , _appEventSource  = esrc
-            , _appEventTracker = etrc
-            , _appSluice       = slce
-            , _appLayerStack   = stck
-            , _appLockManager  = lmgr
+            { _appEmitter       = snk
+            , _appEventSource   = esrc
+            , _appEventTracker  = etrc
+            , _appSluice        = slce
+            , _appLayerStack    = stck
+            , _appLockManager   = lmgr
+            , _appSymbolEncoder = encd
             }
 
       -- Start the event loop

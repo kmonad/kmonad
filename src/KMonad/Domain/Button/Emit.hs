@@ -24,7 +24,7 @@ import KMonad.Domain.Effect
 
 
 -- | Return an Emit button
-mkEmit :: (MonadEmit m, MonadNow m)
+mkEmit :: (MonadEmit m)
   => KeyCode  -- ^ The keycode to emit on manipulation
   -> Button m -- ^ The resulting button
 mkEmit kc = mkButton $ \case
@@ -32,7 +32,7 @@ mkEmit kc = mkButton $ \case
   BRelease -> emitRelease kc
 
 -- | Return an Emit button from within some Monad
-mkEmitM :: (MonadEmit m, MonadNow m, Monad n)
+mkEmitM :: (MonadEmit m, Monad n)
   => KeyCode      -- ^ The keycode to emit on manipulation
   -> n (Button m) -- ^ The resulting button
 mkEmitM = return . mkEmit

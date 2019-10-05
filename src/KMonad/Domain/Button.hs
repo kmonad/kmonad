@@ -21,6 +21,8 @@ module KMonad.Domain.Button
   , module KMonad.Domain.Button.Around
   , module KMonad.Domain.Button.Block
   , module KMonad.Domain.Button.Emit
+  , module KMonad.Domain.Button.EmitDeadKey
+  , module KMonad.Domain.Button.EmitSpecial
   , module KMonad.Domain.Button.LayerAdd
   , module KMonad.Domain.Button.LayerRem
   , module KMonad.Domain.Button.LayerToggle
@@ -41,6 +43,8 @@ import KMonad.Domain.Effect (CanButton)
 import KMonad.Domain.Button.Around
 import KMonad.Domain.Button.Block
 import KMonad.Domain.Button.Emit
+import KMonad.Domain.Button.EmitDeadKey
+import KMonad.Domain.Button.EmitSpecial
 import KMonad.Domain.Button.LayerAdd
 import KMonad.Domain.Button.LayerRem
 import KMonad.Domain.Button.LayerToggle
@@ -54,6 +58,8 @@ import KMonad.Domain.Button.TapNext
 -- | Turn a ButtonToken into a Button operation
 encode :: (CanButton m, MonadIO n) => ButtonToken -> n (Button m)
 encode (BEmit kc)     = mkEmitM kc
+encode (BEmitSpecial ss) = mkEmitSpecialM ss
+encode (BEmitDeadKey dk) = mkEmitDeadKeyM dk
 encode (BModded kc b) = do
   x <- mkEmitM kc
   y <- encode  b

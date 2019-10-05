@@ -39,6 +39,7 @@ import Data.Text
 import KMonad.Core.KeyCode
 import KMonad.Core.Keyboard
 import KMonad.Core.Matrix
+import KMonad.Core.SpecialSymbol
 import KMonad.Core.Time
 import KMonad.Core.Types
 
@@ -88,6 +89,8 @@ data ButtonToken
   | BLockOn LockKey             -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockOff LockKey            -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
   | BLockToggle LockKey         -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
+  | BEmitSpecial SpecialSymbol
+  | BEmitDeadKey DeadKey
   -- | BUnicode Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
   -- | BCompose Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
 

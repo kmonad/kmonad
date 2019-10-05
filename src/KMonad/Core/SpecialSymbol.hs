@@ -3,49 +3,64 @@ module KMonad.Core.SpecialSymbol
 where
 
 import Control.Lens
+import Data.Char (intToDigit)
+import Data.Maybe (fromJust)
 import Data.Text (Text)
+import Numeric
 
 import KMonad.Core.Keyboard
 import KMonad.Core.KeyCode
+import KMonad.Core.Types
+
+import qualified Data.Text as T
+
+class HasChr a where
+  chr :: Lens' a Char
+
+--------------------------------------------------------------------------------
 
 data SpecialSymbol = SpecialSymbol
-  { _name       :: Text
-  , _chr        :: Char
-  , _composeSeq :: Maybe KeySequence
+  { _ssName     :: !Name
+  , _ssChr      :: !Char
+  , _composeSeq :: !(Maybe KeySequence)
+  , _utfSeq     :: !KeySequence
   } deriving (Eq, Show)
 makeClassy ''SpecialSymbol
 
 
 
+instance Ord SpecialSymbol where
+  a `compare` b = (a^.chr) `compare` (b^.chr)
 
--- specialSymbols :: [SpecialSymbol]
--- specialSymbols = let ss (a, b, c) = SpecialSymbol a b c in map ss
---   [ -- Currency
---     ("Euro sign"    , '€', Just $ tap KeyEqual <> tap KeyC) -- [KeyEqual, KeyC])
-  -- , ("Pount sign"   , '₤', Just [KeyEqual, KeyL])
+instance HasName SpecialSymbol where name = ssName
+instance HasChr  SpecialSymbol where chr  = ssChr
 
---     -- Fractions
---   , ("One-half"     , '½', Just [Key1, Key2])
---   , ("Two-thirds"   , '⅔', Just [Key2, Key3])
+mkSpecialSymbol :: Name -> Char -> Maybe KeySequence -> SpecialSymbol
+mkSpecialSymbol n c cmp = SpecialSymbol
+  { _ssName     = n
+  , _ssChr      = c
+  , _composeSeq = cmp
+  , _utfSeq     = utfSequence c
+  }
+
+-- | Return the hex-string representation of a character
+utfString :: Char -> String
+utfString c = showIntAtBase 16 intToDigit (fromEnum c) $ ""
+
+-- | Return the 'KeySequence' required to perform the UTF-code entry for a char
+utfSequence :: Char -> KeySequence
+utfSequence = concatMap (tap . fromJust . kcFromChar) . utfString
+  -- fromJust is justified here because 'utfString' is always a hex-string, and
+  -- we know that we have full correspondence between letters/numbers and
+  -- keycodes
 
 
+--------------------------------------------------------------------------------
 
-  -- ]
+data DeadKey = DeadKey
+  { _dkKeyCode :: !KeyCode
+  } deriving (Eq, Show)
+makeClassy ''DeadKey
 
--- --------------------------------------------------------------------------------
--- -- $unicode
-
--- -- newtype Unicode = Unicode Int
--- --   deriving (Eq, Show, Bounded, Enum, Ord)
-
--- -- fromChar :: Char -> Unicode
--- -- fromChar = Unicode . fromEnum
-
--- -- showSeq :: Unicode -> T.Text
--- -- showSeq (Unicode c) = T.pack (showIntAtBase 16 intToDigit c $ "")
-
--- -- test :: Char
--- -- test = 'Ñ'
-
--- -- test2 :: Char
--- -- test2 = 'ñ'
+instance HasKeyCode DeadKey where
+  keyCode = dkKeyCode

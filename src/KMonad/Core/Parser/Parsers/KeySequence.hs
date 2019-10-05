@@ -53,7 +53,7 @@ keySequenceOld = do
   return es
 
 seqElem :: Parser KeySequence
-seqElem = choice [pressSeqP, releaseSeqP, tapP, shifted, modded]
+seqElem = choice [try pressSeqP, try releaseSeqP, tapP, shifted, modded]
 
 -- | Parse a raw sequence consisting only of basic tokens
 rawSeq :: Parser KeySequence
@@ -127,4 +127,31 @@ shifted = (fromNamed m <* notFollowedBy alphaNumChar)
         , ( ":",  s KeySemicolon)
         , ( "\"", s KeyApostrophe)
         , ( "~",  s KeyGrave)
-        , ( "+",  s KeyEqual) ]
+        , ( "+",  s KeyEqual)
+        , ( "A",  s KeyA)
+        , ( "B",  s KeyB)
+        , ( "C",  s KeyC)
+        , ( "D",  s KeyD)
+        , ( "E",  s KeyE)
+        , ( "F",  s KeyF)
+        , ( "G",  s KeyG)
+        , ( "H",  s KeyH)
+        , ( "I",  s KeyI)
+        , ( "J",  s KeyJ)
+        , ( "K",  s KeyK)
+        , ( "L",  s KeyL)
+        , ( "M",  s KeyM)
+        , ( "N",  s KeyN)
+        , ( "O",  s KeyO)
+        , ( "P",  s KeyP)
+        , ( "Q",  s KeyQ)
+        , ( "R",  s KeyR)
+        , ( "S",  s KeyS)
+        , ( "T",  s KeyT)
+        , ( "U",  s KeyU)
+        , ( "V",  s KeyV)
+        , ( "W",  s KeyW)
+        , ( "X",  s KeyX)
+        , ( "Y",  s KeyY)
+        , ( "Z",  s KeyZ)
+        ]

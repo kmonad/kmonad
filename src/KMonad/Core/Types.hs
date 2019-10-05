@@ -22,7 +22,7 @@ import Data.Text (Text)
 type Name = Text
 
 class HasName a where
-  name :: a -> Name
+  name :: Lens' a Name
 
 
 -- | For things that have a type

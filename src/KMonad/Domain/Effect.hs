@@ -83,6 +83,10 @@ module KMonad.Domain.Effect
     -- $stack
   , MonadStackManip(..)
 
+    -- * MonadSymbol
+    -- $symbol
+  , MonadSymbol(..)
+
     -- * MonadTrace
     -- $trace
   , MonadTrace(..)
@@ -136,6 +140,7 @@ type CanButton m =
   , MonadNow        m
   , MonadRace       m
   , MonadStackManip m
+  , MonadSymbol     m
   , MonadTrace      m
   , MonadVar        m
   , MonadWait       m
@@ -333,6 +338,17 @@ class Monad m => MonadRace m where
 class Monad m => MonadStackManip m where
   pushL :: Name -> m ()
   popL  :: Name -> m ()
+
+
+--------------------------------------------------------------------------------
+-- $symbol
+
+-- | The 'MonadSymbol' effect, used to emit special characters using
+-- key-sequences.
+
+class  MonadEmit m => MonadSymbol m where
+  emitSymbol  :: SpecialSymbol -> m ()
+  emitDeadKey :: DeadKey -> m ()
 
 
 --------------------------------------------------------------------------------
