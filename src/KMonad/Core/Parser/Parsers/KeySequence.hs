@@ -13,6 +13,7 @@ module KMonad.Core.Parser.Parsers.KeySequence
   , shifted
   , modded
   , seqElem
+  , tapP
   )
 where
 

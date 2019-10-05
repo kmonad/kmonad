@@ -19,7 +19,7 @@ composeSymbol :: SymbolEncoder
 composeSymbol ss = (tap KeyRightAlt <>) <$> (ss^.composeSeq)
 
 composeDeadKey :: DeadKeyEncoder
-composeDeadKey dk = Just $ tap KeyRightAlt <> tap (dk^.keyCode)
+composeDeadKey dk = (tap KeyRightAlt <>) <$> (dk^.composeSeq)
 
 data SymbolEncoderRing = SymbolEncoderRing
   { _seEncoders :: M.HashMap Name SymbolEncoder

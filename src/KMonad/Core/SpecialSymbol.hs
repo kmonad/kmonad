@@ -22,25 +22,27 @@ class HasChr a where
 data SpecialSymbol = SpecialSymbol
   { _ssName     :: !Name
   , _ssChr      :: !Char
-  , _composeSeq :: !(Maybe KeySequence)
+  , _ssComposeSeq :: !(Maybe KeySequence)
   , _utfSeq     :: !KeySequence
   } deriving (Eq, Show)
 makeClassy ''SpecialSymbol
 
-
+class HasComposeSeq a where
+  composeSeq :: Lens' a (Maybe KeySequence)
 
 instance Ord SpecialSymbol where
   a `compare` b = (a^.chr) `compare` (b^.chr)
 
 instance HasName SpecialSymbol where name = ssName
 instance HasChr  SpecialSymbol where chr  = ssChr
+instance HasComposeSeq SpecialSymbol where composeSeq = ssComposeSeq
 
 mkSpecialSymbol :: Name -> Char -> Maybe KeySequence -> SpecialSymbol
 mkSpecialSymbol n c cmp = SpecialSymbol
-  { _ssName     = n
-  , _ssChr      = c
-  , _composeSeq = cmp
-  , _utfSeq     = utfSequence c
+  { _ssName       = n
+  , _ssChr        = c
+  , _ssComposeSeq = cmp
+  , _utfSeq       = utfSequence c
   }
 
 -- | Return the hex-string representation of a character
@@ -58,9 +60,9 @@ utfSequence = concatMap (tap . fromJust . kcFromChar) . utfString
 --------------------------------------------------------------------------------
 
 data DeadKey = DeadKey
-  { _dkKeyCode :: !KeyCode
+  { _dkComposeSeq :: !(Maybe KeySequence)
   } deriving (Eq, Show)
 makeClassy ''DeadKey
 
-instance HasKeyCode DeadKey where
-  keyCode = dkKeyCode
+instance HasComposeSeq DeadKey where
+  composeSeq = dkComposeSeq

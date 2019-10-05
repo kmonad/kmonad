@@ -22,9 +22,9 @@ specialSymbolP = fromNamed . map (\ss -> (T.singleton $ ss^.chr, ss)) $ allSymbs
 -- | Incomplete sequences to mod the next keypress
 deadkeyP :: Parser DeadKey
 deadkeyP = try $ do
-  _ <- char '+'
-  c <- keycodeP -- satisfy $ not . isSpace
-  pure $ DeadKey c
+  _  <- char '+'
+  sq <- tapP <|> shifted -- satisfy $ not . isSpace
+  pure . DeadKey . Just $ sq
 
 mkSeq :: Text -> Maybe KeySequence
 mkSeq "" = Nothing
