@@ -70,10 +70,8 @@ KMonad is written in haskell (with a tiny bit of C). You can either compile it
 yourself using the instructions mentioned below. Alternatively, the lovely
 people over at https://github.com/nh2/static-haskell-nix have helped me figure
 how to compile a static binary that should work basically on any standard 64-bit
-linux system. Note that this is almost entirely untested, only on my own
-computer and in a virtualbox running Ubuntu. You can download a binary for the
-`0.1.0` release
-[here](https://github.com/david-janssen/kmonad/releases/download/0.1.0/kmonad).
+linux system. You can find the most recent release [on the releases
+page](https://github.com/david-janssen/kmonad/releases).
 
 ### Compiling
 Probably the easiest way to compile KMonad is using `stack`. If you do not have `stack`
