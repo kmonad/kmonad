@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: 8e1456f1261b2ebad01c59b6285b1707278d46b9b3c20e3dbda2c31750b4fe0d
 
 name:           kmonad
-version:        0.1.0
+version:        0.2.0
 synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
 maintainer:     janssen.dhj@gmail.com
