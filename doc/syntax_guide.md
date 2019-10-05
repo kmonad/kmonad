@@ -734,6 +734,9 @@ LAYER example
   é    ë    ñ    Æ
 ```
 
+For an overview of *all* the supported special characters, the best place to
+look at the moment is [the source code](../src/KMonad/Core/Parser/Parsers/SpecialSymbol.hs).
+
 Additionally, we provide support for a variety of 'hidden-key' style
 modify-the-next-keystroke behavior (again, using X11's macros). These can be
 specified by using the `+` character, followed immediately by the keycode (or
