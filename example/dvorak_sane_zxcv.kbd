@@ -33,12 +33,6 @@ LAYER name
 @smt = TH 300 esc LT-sym // Use this if you want that button to also double
                          // as an escape key when tapped
 
-// Different ways of adding accents to letters
-@e1 = CMP-|| " e ||      // I think this is how a Compose key is supposed to work?
-@e2 = CMP-|| ' e ||      // Or do you tap it before the rest of the sequence?
-@e3 = || cmps " e ||     // This is how a tapped compose-key macro would look.
-@e4 = RA-e               // Additionally something RightAlt as a mod can add accents
-
 // Permanently switch to a different layer
 @aqw = LA-qwerty         // Add qwerty to the top of the stack
 @rqw = LR-qwerty         // Remove qwerty from the stack
@@ -65,7 +59,7 @@ LAYER dvorak
 LAYER sym
   _    _    _    _    _    _    _    _    _    _    _    _    _
   _    _    _    _    _    _    _    _    /    *    _    _    _    _
-  _    _    _    @e1  @e2  _    _    7    8    9    -    _    _    _
+  _    _    _    ë    é    _    _    7    8    9    -    _    _    _
   _    C-z  C-x  C-c  C-v  _    _    4    5    6    +    _         _
   _    _    _    _    _    _    _    1    2    3    0              caps
   _    _    lsft                _                   _    _    _    @aqw
