@@ -14,8 +14,8 @@ let
   static-haskell-nix = nixpkgs.fetchFromGitHub {
     owner   = "nh2";
     repo    = "static-haskell-nix";
-    rev     = "c6284b47f636c53230c98f6d115fd3f4561349f8";
-    sha256  = "1mhkd4yfqcnr2hgap02kj1mcc4qvbmf317n2rfrx73xzd5rkx9y6";
+    rev     = "c1a550481c475fb20d3858a1cbc446a99e0936ee";
+    sha256  = "069l1brnamfndd245p0f9syid1fi01s9d0bj9krsjg6snnxy97pn";
   };
 
   # Import the pkgs provided by `static-haskell-nix`
