@@ -1,11 +1,15 @@
 # Syntax guide
 
-## Basic concepts
-The KMonad configuration language tries to provide the cleanest possible
-configuration syntax for specifying keyboard remappings. It does this by making
-nearly everything a button or token, and removing nearly all syntax. The syntax
-constructs that do exist are nearly always introduced by capital letters, or the
-'@', '-', '=', or '_' symbols.
+For an overview of the general concepts underpinning KMonad, see the [general
+concepts documentation](concepts.md).
+
+Note that KMonad is still very much under active development and I am learning a
+lot about syntax. Therefore please remember that there are currently **no
+guarantees** of syntactic backward compatibility. If you update, please check
+for syntax changes and bear with me. Once we go to version 1.0.0 backward
+compatibility will be maintained.
+
+## General syntax
 
 ### Comments
 We currently support `//`-style line-comments and `/* ... */`-style
@@ -63,17 +67,42 @@ specify different decoders for different systems.
 We currently use the `uinput` subsystem to create a simulated keyboard over
 which we emit keyevents back to the OS. To that extent, the user needs to have
 permissions, and the `uinput` subsystem has to be loaded. For information on how
-to make this happen, see the
-[README](https://github.com/david-janssen/kmonad/blob/master/README.md#uinput-permissions).
+to make this happen, see the [README](../README.md#uinput-permissions).
+<!-- [README](https://github.com/david-janssen/kmonad/blob/master/README.md#uinput-permissions). -->
 
-Since we currently only allow exactly one way to specify output, the syntax is
-simply:
+Since there is only 1 supported output method at the moment, the basic syntax is
+very simple:
 ```
 OUTPUT = UINPUT_SINK
 ```
 
-I am considering adding the ability to specify a name for your uinput sink in
-the future.
+Additionally, we have two optional positional arguments. First, it is possible
+to specify a name for your generated keyboard, helping you distinguish multiple
+instances of KMonad for different devices. A name is provided simply as a string
+between "".
+
+```
+OUTPUT = UINPUT_SINK "My Keyboard"
+```
+
+Secondly, there is an optional 'post-init' shell-command that KMonad will fork
+off to be run. This is very useful if you intend to use the support for
+special-characters, as depending on your configuration, X11 might have to be
+informed about what to consider a 'Compose' key. Note that there is a little bit
+of time between the UinputDevice being created, and actually being registered by
+the OS, so it is necessary to include a small delay in your command.
+Additionally, note that currently the only 'Compose' key we support is
+right-Alt. This will be expanded on in the future.
+
+The command is forked, so KMonad will start immediately, but not until the
+forked command has run will any special-character macros evaluate correctly. 
+
+Note as well that, at the moment, if you want to specify a post-init command,
+you are also forced to specify a custom name. Also, new-lines are not supported
+yet in the `OUTPUT` definition.
+```
+OUTPUT = UINPUT_SINK "My Keyboard" "/usr/bin/sleep 1 && /usr/bin/setxkbmap -option compose:ralt"
+```
 
 ## Aliases
 Since we use alignment to indicate button correspondence, it is very cumbersome
@@ -278,6 +307,11 @@ LAYER numpad3
                                      1    2    3    0
 ```
 
+A good practice is using the `transparent` button to mark every single button
+location in a map, even if you only want to specify a few buttons. It provides
+for very clear and readable configurations. For an overview of this technique,
+consult the configuration [for my daily driver](../example/atreus.kbd).
+
 ## Parsing keycodes
 Many keycodes have various ways to refer to them.
 
@@ -302,6 +336,7 @@ Additionally, note that there simply are no keycodes for symbols like `%`, `&`,
 or `#`. These are simply shifted versions of other keycodes.
 
 ## Parsing buttons, and types of buttons
+
 ### Emit
 An `emit` button is exactly what you would expect of a button. You push it, and
 it emits a keypress event for some keycode, you release it, and it emits a
@@ -343,6 +378,13 @@ etc. `>` is `S-,`, `{` is `S-[`, etc. There is one **major** exception. `_` does
 not correspond to `S--`, but instead to `transparent` (see below). To shortcut
 an `S--`, use `__` instead.
 
+Additionally, shifted letters also evaluate to macros of themselves, so an `A`
+in a list will evaluate to a macro producing an `A`.
+
+Note that currently the `!` and `A` style macros evaluate to complete macros
+that trigger upon a press. That means that you can't hold them and get a series
+of repeating `A`'s or `!`'s. This will be fixed in the future.
+
 ### Transparent
 Since it might in certain cases be clearer to signal that a particular keycode
 exists in a certain place, but that you do not want to handle it, you can
@@ -374,37 +416,55 @@ LAYER bar
 If you do not want to do anything for a particular keycode, but neither do you
 want any potential other layers lower down the stack to handle the event, you
 can signal that an event should be blocked by adding a block-button to that
-location, using either the word `block` or simply a capital `X`
+location, using either the word `block` or simply a double capital `XX`
 
 For example
 ```
 SRC
-  a b c
+  a  b  c  d
  
-// We pass the 'a' down the stack, block the 'b' altogether, and turn the c to a q
+// We:
+// 1. Pass the 'a' down the stack
+// 2. Block the 'b' altogether
+// 3. Turn the 'c' into 'emiting an underscore'
+// 4. Turn the 'd' into 'emiting a d'
 LAYER foo
-  _ X q
+  _  XX __ d
 
 ```
 
-### Tap-macros
-KMonad provides support for macros that consist of tapping other buttons. There
-is currently no support for pressing one button, tapping another, and then
-releasing again, only consecutive taps. Tap-macro buttons trigger their output
-sequence on press, and do nothing on release.
+### Macros
 
-To define a tap-macro, enclose a sequence of emit or modded buttons in double
-`||`.
+We provide full support for emitting sequences of key-presses and releases in a
+macro. Various other buttons are implemented as macros as well, like
+special-symbol emit-sequences or currently characters like `%` or `A`. It is,
+however, possible to define your own completely arbitrary macros.
+
+Since `(` evaluates to "emit a `(`", we enclose our macros in double parens
+instead. Inside double parens we support a special syntax. Any character on its
+own evaluates as either a tap of that button (like `a`) or the macro required to
+tap that button (like `%`) Additionally, `Px` will evaluate to 'Press x' where 'x'
+must be a **keycode**, therefore `P%` is illegal, whereas `P.` is perfectly fine
+(support will be expanded in the future). The same is true for `Rx` and
+releases. If you want to press a shifted button, you can simply use `Plsft P5`
+to achieve `P%`-style behavior.
+
+If you use the press-only or release-only style sequences in your macros it is
+intirely your own responsibility to make sure you leave the keyboard in a
+neutral state when you finish (or not, if that is what you want). It is
+perfectly possible to leave your keyboard in a state of constantly pressing `a`
+by using a `Pa` and never releasing it again.
 
 ```
-@>>= = || > > = ||
-@foo = || H e l l o spc w o r l d ||
+@>>= = (( > > = ))
+@foo = (( H e l l o spc w o r l d ))
+@forevera = (( Pa ))
 ```
 
 Note, this might go without saying, but although it is possible to encode your
 security paswords into your keyboard driver so you can trigger them with just a
-button, this is very much not recommended, since it seriously compromises your
-security. 
+button, this is very much **not recommended**, since it seriously compromises
+your security.
 
 ### Layer-Toggle
 The Layer-Toggle manipulates the layer-stack. When pressed, it adds the layer it
@@ -468,7 +528,6 @@ In the above example, if you press `q` once, the bottom row will then function a
 numbers. If you press `w`, everything is back to normal again. If you press `q`
 twice, though, you will have to press `w` twice as well to restore normal
 functioning. This is the most naive way of doing this.
-
 
 ```
 @anm = LA-num
@@ -653,3 +712,44 @@ Now:
 3. Pressing `d` will toggle caps-lock, like a normal caps-lock would.
 4. Tapping `f` once will disable caps-lock, tapping `f` twice will enable caps-lock
 5. You can press `g` to emit a `g` to see that things are indeed locked or not.
+
+### Special character support
+As indicated above, special characters are nothing more than macros. There *are*
+no real special characters at the level at which KMonad operates, however
+specifying special-characters is so close to KMonad's domain that we do try to
+provide good support.
+
+Support currently only exists for special characters that can be emitted by
+X11's compose-key sequences. Support for general Unicode is on the books.
+
+Essentially, any special character that has an XLib defined compose-key sequence
+can most simply be defined as itself. For example, given that you have
+configured KMonad and X11 correctly, the following should just work:
+
+```
+SRC
+  a    s    d    f
+
+LAYER example
+  é    ë    ñ    Æ
+```
+
+Additionally, we provide support for a variety of 'hidden-key' style
+modify-the-next-keystroke behavior (again, using X11's macros). These can be
+specified by using the `+` character, followed immediately by the keycode (or
+shifted keycode) to trigger it. For example:
+
+```
+SRC
+  a    s    d    f
+
+LAYER example
+  +'   +"   +o   e 
+```
+Here:
+- [a, f] -> é
+- [s, f] -> ë
+- [d, f] -> œ
+
+For info on getting special character support working, consult [the
+README](../README.md). 

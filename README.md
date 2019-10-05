@@ -1,12 +1,10 @@
 # KMonad
 
-Welcome to the very first release of KMonad! Please bear with us, this is our
-very first release, and our very first open source project of any real scale.
-Let me start by immediately disappointing you if you are running Windows or Mac:
-KMonad has been developed and tested solely on Linux and currently depends on
-the linux `/dev/input` files and the `uinput` subsystem to interface with the
-OS. Trying to get cross-platform support is high on my todo list, and any help
-is greatly appreciated.
+Welcome to KMonad! If you are currently running Linux and want to experiment
+with this new way of defining keyboard layouts, either:
+- Head over to [releases](https://github.com/david-janssen/kmonad/releases) for
+  the latest static binary.
+- Consult the [installation section](README.md#Compiling)
 
 ## What is KMonad?
 
@@ -124,6 +122,8 @@ IO exception will cause KMonad to pause for a second and attempt a restart, ad
 infinitum. This means its fine to unplug the mapped keyboard and plug it back
 in, without crashing KMonad. 
 
+## Common issues
+
 ### Uinput permissions
 Currently, the only supported operating system is Linux. KMonad uses the
 `uinput` subsystem to write events to the operating system. If you want to be
@@ -153,32 +153,38 @@ will be assigned the same numbered event-file. If this is not the case, however,
 the easiest way to figure out which event-file corresponds to your keyboard is
 probably to use the `evtest` linux utility. 
 
-## A note on compose-key behavior
-Getting your OS to emit various 'compose-key' based symbols depends on the
-configuration of your OS itself. KMonad only takes care of emitting the most
-basic of KeyEvent's. This means you are responsible for hooking up the correct
-keymap yourself. Luckily, with X11 this is quite straightforward.
+### Getting special characters to work
+Since KMonad only deals in 'raw', primitive keyboard events, there is no such
+thing at that level as a special symbol. Instead we emit common keyboard
+sequences that the operating system needs to map to special characters. To that
+extent, you need to indicate to X11 what key is supposed to trigger a
+special-character macro.
 
-The single most important thing to do is to indicate to X11 which key should
-correspond to the MultiKey. An oft-used default is `AltGr` (which is just
-Right-Alt). This needs to happen *after* KMonad has started up, and if for some
-reason you unplug your keyboard and plug it back in, you will have to make this
-call again. 
-
-There might be support for post-startup initialization fed straight to KMonad,
-but at the moment this is not supported.
-
-To map Right-Alt to X11's multikey, call:
-
-```shell
-xmodmap -e "keysym Alt_R = Multi_key" 
-```
-
-Then you can start defining macros that emit various accented characters using
-the multi-key you chose. For example:
+There are two ways of doing this:
+1. Manually, after launching KMonad, use either `xmodmap` or `setxkbmap` to
+   indicate to your OS that 'Right-Alt' should be used as the compose key
+   (support for other compose keys is coming in the future). For example:
 
 ``` shell
-@ë = || RA " e ||
-@é = || RA ' e ||
-@ñ = || RA ~ n ||
+# Either
+xmodmap -e "keysym Alt_R = Multi_key" 
+# or:
+setxkbmap option compose:ralt
 ```
+
+It is probably better to use `setxkbmap` here, since it resets your config
+before applying modifications, whereas repeated calls to `xmodmap` can run into
+errors because you are trying to map to buttons that have already been remapped.
+
+2. Automatically, through the UINPUT_SINK token. If you consult [the syntax
+   guide](doc/syntax_guide.md#Output) you will see exactly how you can provide
+   KMonad with a shell-command to execute whenever a new uinput sink is created.
+   This has the added benefit that, whenever we need to recreate the uinput sink
+   (this is sometimes necessary after resuming from suspend, for example), the
+   command is automatically called again for you.
+   
+Note that there is a small interval between creating a uinput sink and it
+actually being registered by the OS, so whether you manually call `setxkbmap` or
+use the UINPUT_SINK token to pass a shell command, you need to ensure that it
+contains a small period of time for the OS to register the keyboard. I have
+found that 1 second is more than sufficient, but experiment yourself.
