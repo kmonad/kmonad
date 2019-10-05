@@ -13,7 +13,7 @@ int ioctl_keyboard(int fd, int grab) {
 }
 
 // Acquire a filedescriptor as a uinput keyboard
-int acquire_uinput_keysink(int fd) {
+int acquire_uinput_keysink(int fd, char *name, int vendor, int product, int version) {
 
   // Designate fd as a keyboard of all keys
   ioctl(fd, UI_SET_EVBIT, EV_KEY);
@@ -26,9 +26,11 @@ int acquire_uinput_keysink(int fd) {
   struct uinput_setup usetup;
   memset(&usetup, 0, sizeof(usetup));
   usetup.id.bustype = BUS_USB;
-  usetup.id.vendor = 0x1234;
-  usetup.id.product = 0x5678;
-  strcpy(usetup.name, "KMonad - Simulated keyboard");
+  usetup.id.vendor = vendor;
+  usetup.id.product = product;
+  usetup.id.version = version;
+  /* strcpy(usetup.name, "KMonad - Simulated keyboard"); */
+  strcpy(usetup.name, name);
   ioctl(fd, UI_DEV_SETUP, &usetup);
 
   // Create the device
@@ -71,3 +73,4 @@ void input_event_info() {
   printf("sizeof  event.value is:         %d\n", (int) sizeof(event.value));
   printf("alignof event.value is:         %d\n", (int) __alignof__(event.value));
 }
+

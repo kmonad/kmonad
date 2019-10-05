@@ -20,8 +20,9 @@ module KMonad
   )
 where
 
-import           System.Environment (getArgs)
+-- import           System.Environment (getArgs)
 import           KMonad.Api.App     (startAppIO)
+import           KMonad.Api.Args
 import           KMonad.Core.Config (loadConfig)
 
 
@@ -30,6 +31,6 @@ import           KMonad.Core.Config (loadConfig)
 -- @since 0.1.0
 runKMonad :: IO ()
 runKMonad = do
-  pth <- head <$> getArgs
-  cfg <- loadConfig pth
+  args <- getArgs
+  cfg  <- loadConfig (configFile args)
   startAppIO cfg
