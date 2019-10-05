@@ -102,15 +102,17 @@ lockToggleP = BLockToggle <$> lockkeyP
 emit :: Parser ButtonToken
 emit = BEmit <$> keycodeP
 
+-- | Parse a special character as a button-token
 emitSpecial :: Parser ButtonToken
 emitSpecial = BEmitSpecial <$> specialSymbolP
 
+-- | Parse a "+c" style token as a dead-key
 emitDeadKey :: Parser ButtonToken
 emitDeadKey = BEmitDeadKey <$> deadkeyP
 
--- | Parse a capital X or the word "block" as a block button
+-- | Parse a double capital XX or the word "block" as a block button
 block :: Parser ButtonToken
-block = BBlock <$ (string "block" <|> string "X")
+block = BBlock <$ (string "block" <|> string "XX")
 
 -- | Parse a Layer-toggler as "LT-layername"
 layerToggle :: Parser ButtonToken
@@ -129,7 +131,6 @@ layerRem :: Parser ButtonToken
 layerRem = do
   tag <- (string "LR-" >> some alphaNumChar)
   return . BLayerRem . T.pack $ tag
-
 
 -- | Parse a TapHold button as "TH delay bTap bHold"
 tapHold :: Parser ButtonToken

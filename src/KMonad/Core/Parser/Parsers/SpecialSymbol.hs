@@ -17,7 +17,10 @@ import qualified Data.Text as T
 
 -- | Parse a special symbol
 specialSymbolP :: Parser SpecialSymbol
-specialSymbolP = fromNamed . map (\ss -> (T.singleton $ ss^.chr, ss)) $ allSymbs
+specialSymbolP = composeSymbP
+
+composeSymbP :: Parser SpecialSymbol
+composeSymbP = fromNamed . map (\ss -> (T.singleton $ ss^.chr, ss)) $ composeSymbs
 
 -- | Incomplete sequences to mod the next keypress
 deadkeyP :: Parser DeadKey
@@ -30,9 +33,9 @@ mkSeq :: Text -> Maybe KeySequence
 mkSeq "" = Nothing
 mkSeq s  = Just $ parseE (concat <$> (many . lexeme $ seqElem)) s
 
--- | Full sequence to generate a compose-key special symbol
-allSymbs :: [SpecialSymbol]
-allSymbs =
+-- | Collection of all symbols that have a Compose-key sequence
+composeSymbs :: [SpecialSymbol]
+composeSymbs =
   let
     f (a, b, c) = mkSpecialSymbol c b (mkSeq a)
   in map f $
