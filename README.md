@@ -133,6 +133,21 @@ On most linux's this can be achieved by:
 sudo usermod -aG uinput username
 ```
 
+If the `uinput` group does not exist, check whether your system has an `input`
+group and try adding your user to that one instead. If this does not work,
+create a new group with:
+
+``` shell
+sudo groupadd uinput
+```
+
+You then have to add a udev rule (in either `/etc/dev/rules.d` or
+`/lib/udev/rules.d`) with the following content:
+
+``` shell
+KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+```
+
 Additionally, you might need to ensure that the `uinput` drivers are loaded
 before starting KMonad, this can be achieved through:
 
