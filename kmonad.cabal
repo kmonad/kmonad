@@ -82,6 +82,9 @@ library
   if os(linux)
     c-sources:
       c_src/keyio.c
+  if os(windows)
+    c-sources:
+      c_src/keyio_win.c
   build-depends:
       base
     , bytestring
