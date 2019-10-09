@@ -100,6 +100,9 @@ library
     , unordered-containers
   if os(linux)
      build-depends: unix
+  if os(windows)
+     build-depends: win32
+
   default-language: Haskell2010
 
 executable kmonad
