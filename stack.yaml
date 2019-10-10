@@ -1,7 +1,8 @@
 resolver: lts-14.7
 packages:
 - .
-# extra-deps:
+#extra-deps:
+#- Win32-2.8.3.0
 #
 #   Currently not required. Leaving this comment in case static-haskell-nix has
 #   problems in the future. If it cannot find packages, perhaps adding them here
