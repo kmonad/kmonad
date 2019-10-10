@@ -28,7 +28,7 @@ so `KMonad` was born.
 
 The name KMonad is a wink at my favorite window manager:
 [XMonad](https://github.com/xmonad/xmonad), but where XMonad manages your
-x-windows in its X-monad, we manage your Keys in our K-monad (actually, we call
+X Window in its X-monad, we manage your Keys in our K-monad (actually, we call
 it App, but who's checking).
 
 ### What can I do with KMonad?
