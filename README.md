@@ -28,7 +28,7 @@ so `KMonad` was born.
 
 The name KMonad is a wink at my favorite window manager:
 [XMonad](https://github.com/xmonad/xmonad), but where XMonad manages your
-x-windows in its X-monad, we manage your Keys in our K-monad (actually, we call
+X Window in its X-monad, we manage your Keys in our K-monad (actually, we call
 it App, but who's checking).
 
 ### What can I do with KMonad?
@@ -66,11 +66,11 @@ for an overview of different button-types.
 
 ## Getting KMonad
 
-KMonad is written in haskell (with a tiny bit of C). You can either compile it
+KMonad is written in Haskell (with a tiny bit of C). You can either compile it
 yourself using the instructions mentioned below. Alternatively, the lovely
 people over at https://github.com/nh2/static-haskell-nix have helped me figure
 how to compile a static binary that should work basically on any standard 64-bit
-linux system. You can find the most recent release [on the releases
+Linux system. You can find the most recent release [on the releases
 page](https://github.com/david-janssen/kmonad/releases).
 
 ### Compiling
@@ -89,7 +89,7 @@ Or call the following:
 ``` shell
 stack haddock --no-haddock-deps
 ```
-to build a KMonad binary and the haddock documentation. I have put some effort
+to build a KMonad binary and the Haddock documentation. I have put some effort
 into documenting the code if you want to have a look around. It is nowhere near
 perfect, and I hope to do more in the future.
 
@@ -127,7 +127,7 @@ Currently, the only supported operating system is Linux. KMonad uses the
 `uinput` subsystem to write events to the operating system. If you want to be
 able to run KMonad without using sudo (highly recommended to avoid sudo wherever
 possible), you will need to ensure that your user is part of the `uinput` group.
-On most linux's this can be achieved by:
+On most Linux's this can be achieved by:
 
 ``` shell
 sudo usermod -aG uinput username
@@ -164,7 +164,7 @@ Sometimes you can find your keyboard listed under `/dev/input/by-id`. If so,
 this is by far the best solution, since there is no guarantee that a keyboard
 will be assigned the same numbered event-file. If this is not the case, however,
 the easiest way to figure out which event-file corresponds to your keyboard is
-probably to use the `evtest` linux utility. 
+probably to use the `evtest` Linux utility. 
 
 ### Getting special characters to work
 Since KMonad only deals in 'raw', primitive keyboard events, there is no such
