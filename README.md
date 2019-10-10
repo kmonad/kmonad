@@ -66,7 +66,7 @@ for an overview of different button-types.
 
 ## Getting KMonad
 
-KMonad is written in haskell (with a tiny bit of C). You can either compile it
+KMonad is written in Haskell (with a tiny bit of C). You can either compile it
 yourself using the instructions mentioned below. Alternatively, the lovely
 people over at https://github.com/nh2/static-haskell-nix have helped me figure
 how to compile a static binary that should work basically on any standard 64-bit
