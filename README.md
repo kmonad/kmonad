@@ -89,7 +89,7 @@ Or call the following:
 ``` shell
 stack haddock --no-haddock-deps
 ```
-to build a KMonad binary and the haddock documentation. I have put some effort
+to build a KMonad binary and the Haddock documentation. I have put some effort
 into documenting the code if you want to have a look around. It is nowhere near
 perfect, and I hope to do more in the future.
 
