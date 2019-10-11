@@ -5,21 +5,31 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <winsock2.h>
+
 
 HHOOK hookHandle;
 LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam);
 void last_error ();
+KBDLLHOOKSTRUCT waitNext();
 
-WSADATA wsaData;
+// Pipes used to communicate between threads
+HANDLE readPipe  = NULL;
+HANDLE writePipe = NULL;
 
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmd_line, int cmd_show)
 int main()
 {
-	
+	printf("hello\n");
+	// Initialize keyboard hook
 	hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
 	if (hookHandle == NULL) last_error();
+	printf("boooo\n");
 	
-	fprintf(stdout, "starting loop!");
+	
+	printf("making pipe\n");
+	if ( ! CreatePipe(&readPipe, &writePipe, NULL, 0)) last_error();
+	
+	printf("starting loop!");
 	
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -37,20 +47,11 @@ int main()
 }
 
 
-// So: to capture input, we need to launch the keyboard listener. This needs to
-// create an (invisible) window that windows will send RAWINPUT to, that we can
-// then get into KMonad using the FFI.
 
-// Subsystem linker?
-
-// Synthesize keystrokes 
-// use: SendInput
-
-
+// Print last error and exit program
 void last_error()
 {
 	LPVOID lpMsgBuf;
-	//LPVOID lpDisplayBuf;
 	DWORD dw = GetLastError();
 	
 	FormatMessage(
@@ -62,21 +63,43 @@ void last_error()
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR) &lpMsgBuf,
 		0, NULL);
-	
-	fprintf(stdout, lpMsgBuf);
+	printf("Error: ");
+	printf(lpMsgBuf);
 	exit(dw);
-	//if (dw == ERROR_IS_SUBSTED) { fprintf(stdout, "boop"); };
-	//fprintf(stdout, "\n%lu", dw);
 }
 
+// Handle key callback
 LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam) {
 	fprintf(stdout, "keyping\n");
 	if (nCode < 0) {
 		return CallNextHookEx(hookHandle, nCode, wParam, lParam);
 	};
+	DWORD dwWritten;
+	KBDLLHOOKSTRUCT* e = (KBDLLHOOKSTRUCT*)(lParam);
+	KBDLLHOOKSTRUCT e2;
+	BOOL bSuccess = FALSE;
 	
-	// Put handling here in future
+	printf("%d", e->vkCode);
+
+
+	bSuccess = WriteFile(writePipe, e, sizeof(e), &dwWritten, NULL);
+	if (! bSuccess) { printf("nope"); exit(-1);}
+
+	printf("finished write");
+	e2 = waitNext();
+	printf("Just read %d", e->vkCode);
 	return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+}
+
+// Get next key
+KBDLLHOOKSTRUCT waitNext() {
+	BOOL bSuccess = FALSE;
+	DWORD dwRead;
+	KBDLLHOOKSTRUCT e;
+	
+	bSuccess = ReadFile(readPipe, &e, sizeof(e), &dwRead, NULL);
+	printf("read success");
+	return e;
 }
 
 // Tell windows to start sending all keyboard events to hTarget
