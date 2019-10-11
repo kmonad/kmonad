@@ -5,46 +5,126 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <winsock2.h>
 
-const USHORT HID_KEYBOARD = 0x06;
-
+HHOOK hookHandle;
+LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam);
 void last_error ();
 
+WSADATA wsaData;
 
-void grab_keyboard(HWND hTarget)
+int main()
+{
+	
+	hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
+	if (hookHandle == NULL) last_error();
+	
+	fprintf(stdout, "starting loop!");
+	
+	MSG msg;
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		fprintf(stdout, "Message!\n");
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	} 
+	fprintf(stdout, "finished loop!");
+	
+	UnhookWindowsHookEx(hookHandle);
+  
+	return (0);
+
+}
+
+
+// So: to capture input, we need to launch the keyboard listener. This needs to
+// create an (invisible) window that windows will send RAWINPUT to, that we can
+// then get into KMonad using the FFI.
+
+// Subsystem linker?
+
+// Synthesize keystrokes 
+// use: SendInput
+
+
+void last_error()
+{
+	LPVOID lpMsgBuf;
+	//LPVOID lpDisplayBuf;
+	DWORD dw = GetLastError();
+	
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		dw,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &lpMsgBuf,
+		0, NULL);
+	
+	fprintf(stdout, lpMsgBuf);
+	exit(dw);
+	//if (dw == ERROR_IS_SUBSTED) { fprintf(stdout, "boop"); };
+	//fprintf(stdout, "\n%lu", dw);
+}
+
+LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam) {
+	fprintf(stdout, "keyping\n");
+	if (nCode < 0) {
+		return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+	};
+	
+	// Put handling here in future
+	return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+}
+
+// Tell windows to start sending all keyboard events to hTarget
+/* bool HID_RegisterDevice(HWND hTarget, USHORT usage)
+{
+  RAWINPUTDEVICE hid[1];
+
+  hid[0].usUsagePage = 0x01;
+  hid[0].usUsage     = usage;
+  hid[0].dwFlags     = RIDEV_INPUTSINK; // RIDEV_DEVNOTIFY RIDEV_NOLEGACY
+  hid[0].hwndTarget  = hTarget;
+
+  return RegisterRawInputDevices(&hid, 1, sizeof(RAWINPUTDEVICE));
+}
+ */
+ /* void grab_keyboard(HWND hTarget)
 {
 	RAWINPUTDEVICE ri[1];
 	
 	ri[0].usUsagePage = 0x01;
 	ri[0].usUsage     = 0x06;
-	ri[0].dwFlags     = RIDEV_NOLEGACY;
+	ri[0].dwFlags     = RIDEV_NOLEGACY | RIDEV_INPUTSINK;
 	ri[0].hwndTarget  = hTarget;
 	
 	if (RegisterRawInputDevices(ri, 1, sizeof(ri[0])) == FALSE) {
 		last_error();
 	}
 }
+ */
 
-
-// Windows event callback
-LRESULT CALLBACK callback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+ 
+/* 
+// Tell windows to stop sending all keyboard events to hTarget
+void HID_UnregisterDevice(USHORT usage)
 {
-	fprintf(stdout, "taaadaa");
-	switch (uMsg)
-	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
+  RAWINPUTDEVICE hid;
 
-// WinMain is the entry-point for windows applications when they run
-// Use the /Subsystem linker to hide window?
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmd_line, int cmd_show)
-{
-	//const wchar_t CLASS_NAME[] = L"Sample Window Class";
+  hid.usUsagePage = 1;
+  hid.usUsage     = usage;
+  hid.dwFlags     = RIDEV_REMOVE;
+  hid.hwndTarget  = NULL;
+
+  RegisterRawInputDevices(&hid, 1, sizeof(RAWINPUTDEVICE));
+} */
+ 
+ 
+ /* Make windows class and window
+ 	//const wchar_t CLASS_NAME[] = L"Sample Window Class";
 	static const char* CLASS_NAME = "MESSAGE_ONLY";
 	
 	WNDCLASSEX wc;
@@ -81,98 +161,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmd_line, int cmd
 		NULL // Additional data
     );
 	ShowWindow(hwnd, cmd_show);
-	
-	
-	
-	fprintf(stdout, "boop");
-	grab_keyboard(hwnd);
-	sleep(30);
-	fprintf(stdout, "bap!");
-
-
-/*   // ShowWindow(hwnd, nCmdShow); Can keep invisible?
-  // Register keyboard
-    if (HID_RegisterDevice(hwnd, HID_KEYBOARD) == FALSE)
-	{ fprintf(stdout, "registration failed\n");
-	  //DWORD dw = GetLastError();
-	  PrintLastError();
-      return -1;
-	} */
-
-/* 	PRAWINPUT rinp;
-	fprintf(stdout, "starting loop!");
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		fprintf(stdout, "boop!");
-    // Listen to keyboard
-	} */
-	fprintf(stdout, "finished loop!");
-  
-
-  // Unregister keyboard
-/*   HID_UnregisterDevice(HID_KEYBOARD); */
-}
-
-
-// So: to capture input, we need to launch the keyboard listener. This needs to
-// create an (invisible) window that windows will send RAWINPUT to, that we can
-// then get into KMonad using the FFI.
-
-// Subsystem linker?
-
-// Synthesize keystrokes 
-// use: SendInput
-
-
-void last_error()
+ 
+ 
+// Windows event callback
+LRESULT CALLBACK callback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LPVOID lpMsgBuf;
-	//LPVOID lpDisplayBuf;
-	DWORD dw = GetLastError();
-	
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		FORMAT_MESSAGE_FROM_SYSTEM |
-		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		dw,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR) &lpMsgBuf,
-		0, NULL);
-	
-	fprintf(stdout, lpMsgBuf);
-	exit(dw);
-	//if (dw == ERROR_IS_SUBSTED) { fprintf(stdout, "boop"); };
-	//fprintf(stdout, "\n%lu", dw);
+	switch (uMsg) {
+		
+		case WM_DESTROY: {
+			PostQuitMessage(0);
+			return 0;
+		}
+		
+		case WM_CLOSE: {
+			DestroyWindow(hwnd);
+			return 0;
+		}
+		
+		case WM_INPUT: {
+			fprintf(stdout, "hello");
+			UINT dwSize;
+			
+			GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+			//LPBYTE lpb = new BYTE[dwSize];
+			//inf (lpb == NULL) {
+			//	return 0; }
+			return 0;
+			
+		}	
+	}
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-
-// Tell windows to start sending all keyboard events to hTarget
-/* bool HID_RegisterDevice(HWND hTarget, USHORT usage)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmd_line, int cmd_show)
 {
-  RAWINPUTDEVICE hid[1];
 
-  hid[0].usUsagePage = 0x01;
-  hid[0].usUsage     = usage;
-  hid[0].dwFlags     = RIDEV_INPUTSINK; // RIDEV_DEVNOTIFY RIDEV_NOLEGACY
-  hid[0].hwndTarget  = hTarget;
-
-  return RegisterRawInputDevices(&hid, 1, sizeof(RAWINPUTDEVICE));
-}
  */
- 
- 
-/* 
-// Tell windows to stop sending all keyboard events to hTarget
-void HID_UnregisterDevice(USHORT usage)
-{
-  RAWINPUTDEVICE hid;
-
-  hid.usUsagePage = 1;
-  hid.usUsage     = usage;
-  hid.dwFlags     = RIDEV_REMOVE;
-  hid.hwndTarget  = NULL;
-
-  RegisterRawInputDevices(&hid, 1, sizeof(RAWINPUTDEVICE));
-} */
- 
