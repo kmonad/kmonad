@@ -31,7 +31,7 @@ int main()
 	if ( ! CreatePipe(&readPipe, &writePipe, NULL, 0)) last_error();
 	
 	printf("starting loop!");
-	
+	Sleep(5000);
 	sendKey(0x41, 0);
 	sendKey(0x41, KEYEVENTF_KEYUP);
 	
