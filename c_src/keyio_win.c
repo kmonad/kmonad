@@ -6,21 +6,22 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-
-HHOOK hookHandle;
+// Declare some stuff to prevent warnings
 LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam);
 void last_error ();
-KBDLLHOOKSTRUCT waitNext();
+KBDLLHOOKSTRUCT* waitNext();
 
-// Pipes used to communicate between threads
+// Pipes used to communicate between threads, need to be accessed globally
 HANDLE readPipe  = NULL;
 HANDLE writePipe = NULL;
+HHOOK hookHandle;
 
-//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmd_line, int cmd_show)
+
 int main()
 {
 	printf("hello\n");
 	// Initialize keyboard hook
+
 	hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
 	if (hookHandle == NULL) last_error();
 	printf("boooo\n");
@@ -30,6 +31,9 @@ int main()
 	if ( ! CreatePipe(&readPipe, &writePipe, NULL, 0)) last_error();
 	
 	printf("starting loop!");
+	
+	sendKey(0x41, 0);
+	sendKey(0x41, KEYEVENTF_KEYUP);
 	
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -45,8 +49,6 @@ int main()
 	return (0);
 
 }
-
-
 
 // Print last error and exit program
 void last_error()
@@ -76,30 +78,49 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam) {
 	};
 	DWORD dwWritten;
 	KBDLLHOOKSTRUCT* e = (KBDLLHOOKSTRUCT*)(lParam);
-	KBDLLHOOKSTRUCT e2;
+	KBDLLHOOKSTRUCT* e2;
 	BOOL bSuccess = FALSE;
 	
 	printf("%d", e->vkCode);
-
+	if (e->flags & LLKHF_INJECTED)
+	{	printf("injected");
+		return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+	}
 
 	bSuccess = WriteFile(writePipe, e, sizeof(e), &dwWritten, NULL);
 	if (! bSuccess) { printf("nope"); exit(-1);}
 
 	printf("finished write");
 	e2 = waitNext();
-	printf("Just read %d", e->vkCode);
+	printf("Just read %d", e2->vkCode);
+	
+	
+	// Comment this out when ready for final
 	return CallNextHookEx(hookHandle, nCode, wParam, lParam);
 }
 
 // Get next key
-KBDLLHOOKSTRUCT waitNext() {
+KBDLLHOOKSTRUCT* waitNext() {
 	BOOL bSuccess = FALSE;
 	DWORD dwRead;
-	KBDLLHOOKSTRUCT e;
+	KBDLLHOOKSTRUCT* e;
 	
-	bSuccess = ReadFile(readPipe, &e, sizeof(e), &dwRead, NULL);
+	bSuccess = ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
 	printf("read success");
 	return e;
+}
+
+// Send key
+void sendKey(DWORD kvCode, DWORD dwFlags)
+{
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.wScan = 0;
+	ip.ki.time = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wVk = kvCode;
+	ip.ki.dwFlags = dwFlags;
+	SendInput(1, &ip, sizeof(INPUT));
 }
 
 // Tell windows to start sending all keyboard events to hTarget
