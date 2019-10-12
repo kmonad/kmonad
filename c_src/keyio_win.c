@@ -8,7 +8,7 @@
 
 
 // Whether an event is a press or release
-enum EVENT_TYPE {KEY_PRESS, KEY_RELEASE};
+enum EVENT_TYPE {KEY_PRESS, KEY_RELEASE, KEY_REPEAT};
 
 // All the information KMonad needs about a key-event
 typedef struct KEY_EVENT {
@@ -23,7 +23,7 @@ HHOOK hookHandle;
 
 // Print last error and exit program
 void last_error()
-{LPVOID lpMsgBuf;
+{ LPVOID lpMsgBuf;
   DWORD dw = GetLastError();
 
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -84,7 +84,7 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
 }
 
 // When called, get the next event from the pipe
-KEY_EVENT* waitNext()
+KEY_EVENT* wait_key()
 {
   DWORD dwRead;
   KEY_EVENT* e;
@@ -113,6 +113,9 @@ int grab_kb()
   UnhookWindowsHookEx(hookHandle);
   return(0);
 }
+
+// Return ms since system-start
+DWORD time_since_start() { GetTickCount(); }
 
 // Send key to the OS
 void sendKey(KEY_EVENT e)

@@ -26,6 +26,7 @@ module KMonad.Core.Keyboard
   ( -- * Types for KeyActions
     KeyActionType(..)
   , KeyAction(..)
+  , AsKeyActionType(..)
 
     -- * Types and lenses for KeyEvents
     -- $types
@@ -77,7 +78,7 @@ data KeyActionType
   = Press
   | Release
   | Repeat
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Enum)
 makeClassyPrisms ''KeyActionType
 
 -- | A KeyAction is a Press, Release, or Repeat of a KeyCode
