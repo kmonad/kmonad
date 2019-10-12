@@ -61,7 +61,7 @@ utfSequence = concatMap (tap . fromJust . kcFromChar) . utfString
 
 data DeadKey = DeadKey
   { _dkComposeSeq :: !(Maybe KeySequence)
-  } deriving (Eq, Show)
+  } deriving (Eq, Ord, Show)
 makeClassy ''DeadKey
 
 instance HasComposeSeq DeadKey where
