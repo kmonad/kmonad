@@ -73,16 +73,12 @@ llClose ll = liftIO $ do
 -- | Prompt windows to write the next event into the buffer, then read and return it.
 llRead :: CanKeyIO e m => LLHook -> m KeyEvent
 llRead ll = do
-  liftIO . putStrLn $ "awaiting key event"
   liftIO . wait_key $ ll^.buffer
   we <- liftIO . peek $ ll^.buffer
   liftIO . putStrLn $ "got key event"
-  case we^?_KeyEvent of
-    Just e -> return ()
-    Nothing -> return ()
-  liftIO . print $ "Noppo"
+  liftIO . print $ we
   ee <- case we^?_KeyEvent of
-          Just e  -> (liftIO $ putStrLn ("returning ")) >> return e
+          Just e  -> (liftIO $ putStrLn ("returning " <> show e)) >> return e
           Nothing -> error "Couldn't parse event" -- llRead ll
-  liftIO . print $ "Yeppo"
   return ee
+  

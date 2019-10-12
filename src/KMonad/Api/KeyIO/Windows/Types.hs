@@ -30,6 +30,7 @@ newtype WinKeyCode    = WinKeyCode    Word32 -- ^ `DWORD` for windows keycode
 -- | WinKeyEvent as a wrapper around the basic data required used to represent
 -- raw key events from windows
 newtype WinKeyEvent = WinKeyEvent (WinKeyActType, WinKeyCode, WinTime)
+  deriving (Eq, Ord, Show)
 
 -- | An instance for Storable so we can use it in the interface with C
 instance Storable WinKeyEvent where
@@ -114,7 +115,7 @@ kcMap =
   -- , (0x29, ???)            -- Defined as VK_SELECT
   , (0x2A, KeyPrint)
   -- , (0x2B, ???)            -- Defined as VK_EXECUTE
-  -- , (0x2C, ???)            -- Defined as VK_PRINT_SCREEN
+  , (0x2C, KeyPrint)          -- Defined as VK_PRINT_SCREEN
   , (0x2D, KeyInsert)
   , (0x2E, KeyDelete)
   , (0x2F, KeyHelp)
@@ -155,9 +156,9 @@ kcMap =
   , (0x59, KeyY)
   , (0x5A, KeyZ)
 
-  -- , (0x5B, ???)             -- Defined as Left Windows key (Natural Keyboard)
-  -- , (0x5C, ???)             -- Defined as Right Windows key (Natural Keyboard)
-  -- , (0x5D, ???)             -- Defined as Applications key (Natural Keyboard)
+  , (0x5B, KeyLeftMeta)             -- Defined as Left Windows key (Natural Keyboard)
+  , (0x5C, KeyRightMeta)             -- Defined as Right Windows key (Natural Keyboard)
+  , (0x5D, KeyCompose)             -- Defined as Applications key (Natural Keyboard)
   , (0x5F, KeySleep)
   , (0x60, KeyKp0)
   , (0x61, KeyKp1)
@@ -267,3 +268,7 @@ kcMap =
   -- , (0xFD, ???)             -- Defined as VK_PA1
   -- , (0xFE, ???)             -- Defined as VK_CLEAR
   ]
+  
+-- Problem buttons
+--
+-- Sometimes we get a keycode 0
