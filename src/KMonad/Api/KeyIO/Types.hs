@@ -43,7 +43,6 @@ module KMonad.Api.KeyIO.Types
     -- * Classy lenses and monad instances for KeyIO
   , HasEmitter(..)
   , HasEventSource(..)
-
   )
 where
 
@@ -60,6 +59,8 @@ import UnliftIO as U
 
 import KMonad.Core
 import KMonad.Domain.Effect
+
+
 
 --------------------------------------------------------------------------------
 -- $err
@@ -186,3 +187,4 @@ writeEvent e es = liftIO . putMVar (es^.injectV) $ e
 -- | The property of having access to an Emitter function
 class HasEmitter r where
   emitter :: Lens' r Emitter
+

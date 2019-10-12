@@ -69,11 +69,17 @@ library
       KMonad.Domain.Button.TapNext
       KMonad.Domain.Effect
       KMonad.Domain.Loop
+	  Test
   if os(linux)
     exposed-modules:
       KMonad.Api.KeyIO.Linux.DeviceSource
       KMonad.Api.KeyIO.Linux.Types
       KMonad.Api.KeyIO.Linux.UinputSink
+  if os(windows)
+    exposed-modules:
+      KMonad.Api.KeyIO.Windows.LowLevelHookSource
+      KMonad.Api.KeyIO.Windows.Types
+	  Test
   other-modules:
       Paths_kmonad
   hs-source-dirs:

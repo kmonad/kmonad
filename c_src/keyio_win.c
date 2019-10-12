@@ -7,14 +7,16 @@
 #include <stdio.h>
 
 
-// Whether an event is a press or release
-enum EVENT_TYPE {KEY_PRESS, KEY_RELEASE, KEY_REPEAT};
+// Type of the key event: 0 Press, 1 Release, 2 Repeat
+typedef unsigned char ACTION;
+ACTION KEY_PRESS   = 0;
+ACTION KEY_RELEASE = 1;
 
 // All the information KMonad needs about a key-event
-typedef struct KEY_EVENT {
-  EVENT_TYPE type;
-  DWORD      keycode;
-}
+struct KeyEvent {
+  ACTION type;
+  DWORD  keycode;
+} KeyEvent;
 
 // Variables we need to access globally
 HANDLE readPipe  = NULL;
@@ -35,7 +37,7 @@ void last_error()
                 (LPTSTR) &lpMsgBuf,
                 0, NULL);
 
-  printf("Error: %s", lpMsgBuf);
+  printf("C:  Error: %s", lpMsgBuf);
   exit(dw);
 }
 
@@ -51,8 +53,8 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   };
 
   // Create the KEY_EVENT matching the current event
-  EVENT_TYPE type;
-  switch wParam {
+  ACTION type;
+  switch (wParam) {
       case WM_KEYDOWN:
         type = KEY_PRESS;
         break;
@@ -68,12 +70,12 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
       case WM_SYSKEYUP:
         type = KEY_RELEASE;
         break;
-    }
+    };
 
-  KEY_EVENT ev;
+  // Construct the KeyEvent to write to the pipe
+  struct KeyEvent ev;
   ev.type    = type;
   ev.keycode = e->vkCode;
-
 
   // Write the event to the pipe
   DWORD dwWritten;
@@ -84,18 +86,23 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
 }
 
 // When called, get the next event from the pipe
-KEY_EVENT* wait_key()
+void wait_key(struct KeyEvent* e)
 {
+  printf("C:  waiting for key\n");
   DWORD dwRead;
-  KEY_EVENT* e;
+  //struct KeyEvent* e;
 
   ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
-  return e;
+  printf("C:  got key, returning\n");
+  return;
 }
+
+
 
 // Insert the keyboard hook and start the monitoring process
 int grab_kb()
 {
+  printf("C:  grabbing kb\n");
   // Insert the hook, error on failure
   hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
   if (hookHandle == NULL) last_error();
@@ -118,8 +125,9 @@ int grab_kb()
 DWORD time_since_start() { GetTickCount(); }
 
 // Send key to the OS
-void sendKey(KEY_EVENT e)
+void sendKey(struct KeyEvent e)
 {
+  printf("C:  sending key\n");
   INPUT ip;
 
   // Standard stuff we don't use
@@ -129,14 +137,14 @@ void sendKey(KEY_EVENT e)
   ip.ki.dwExtraInfo = 0;
 
   // Insert the KeyUp or KeyDown flag
-  switch e.type {
-      case KEY_PRESS:
+  switch (e.type) {
+      case 0:
         ip.ki.dwFlags = 0;
-        break
+        break;
 
-      case KEY_RELEASE:
+      case 1:
         ip.ki.dwFlags = KEYEVENTF_KEYUP;
-        break
+        break;
     }
 
   // Insert the raw keycode
@@ -147,7 +155,7 @@ void sendKey(KEY_EVENT e)
 }
 
 
-
+// int main() { grab_kb(); }
 
 
 // OLD STUFF FOR FUTURE REFERENCE
