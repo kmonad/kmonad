@@ -6,6 +6,11 @@ with this new way of defining keyboard layouts, either:
   the latest static binary.
 - Consult the [installation section](README.md#Compiling)
 
+We now have (limited) Windows support! Look [down below](README.md#Compiling)
+for instructions on how to build your Windows-version of KMonad, or check out
+our [Windows binary](https://github.com/david-janssen/kmonad/releases). Check
+out the [limitations on windows support](README.md#windows-limitations) below.
+
 ## What is KMonad?
 
 KMonad is a keyboard remapping utility written to provide functionality that
@@ -74,6 +79,7 @@ Linux system. You can find the most recent release [on the releases
 page](https://github.com/david-janssen/kmonad/releases).
 
 ### Compiling
+#### Linux
 Probably the easiest way to compile KMonad is using `stack`. If you do not have `stack`
 installed, check https://docs.haskellstack.org/en/stable/README/ for
 instructions on installing it. After compilation, it can be removed again, since
@@ -85,7 +91,7 @@ After potentially installing `stack` and cloning this repo, you can build
 stack build
 ```
 
-Or call the following:
+Or call the following (CURRENTLY BROKEN, documentation will be fixed up in the future):
 ``` shell
 stack haddock --no-haddock-deps
 ```
@@ -95,6 +101,18 @@ perfect, and I hope to do more in the future.
 
 `stack` will tell you where it saved the compiled binary after which you can
 copy it to somewhere on your path.
+
+#### Windows
+Windows support was added under Windows10 using a [Haskell Platform
+installation](https://www.haskell.org/platform/). Additionally, you might need
+to install [MinGW](http://mingw.org/) to provide `gcc` for windows to compile
+the C-interface to Windows. Once both the Haskell Platform and MinGW are
+installed and available on the path, compiling KMonad should be identical to
+Linux, i.e.:
+
+``` powershell
+stack build
+```
 
 ## Running
 KMonad currently requires 1, and exactly 1 input argument: a path to a
@@ -201,3 +219,22 @@ actually being registered by the OS, so whether you manually call `setxkbmap` or
 use the UINPUT_SINK token to pass a shell command, you need to ensure that it
 contains a small period of time for the OS to register the keyboard. I have
 found that 1 second is more than sufficient, but experiment yourself.
+
+### Windows Limitations
+The low-level API to the operating system differs significantly between Windows
+and Linux, which means that the Windows version is currently more limited in
+what it can do. There is an active issue on this topic [over here](insert-link),
+and if you have experience with `Win32` programming, any help would be greatly
+appreciated. So if you want to help, or just want a more technical overview of
+the windows limitations head on over there.
+
+Currently, we cannot distinguish between different input keyboards, so whereas a
+Linux version of KMonad can be started for a variety of different keyboards, and
+handle them all in different ways, the Windows version of KMonad catches *all*
+keyboard input signals. The only distinction KMonad makes under Windows is
+between 'real' keyboard events and simulated keyboard events. Anything simulated
+is automatically passed on to the OS (that is also how KMonad avoids handling
+its own simulated output). 
+
+A secondary consequence of this
+
