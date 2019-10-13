@@ -63,9 +63,9 @@ pickOutputIO (UinputDevice nm pi) = let def = defUinputCfg in
 #ifdef mingw32_HOST_OS
 
 pickInputIO :: InputToken -> KeySource
-pickInputIO _ = error "not implemented yet"
+pickInputIO _ = llHook
 
 pickOutputIO :: OutputToken -> KeySink
-pickOutputIO _ = error "not implemented yet"
+pickOutputIO _ = sendEventKeySink
 
 #endif
