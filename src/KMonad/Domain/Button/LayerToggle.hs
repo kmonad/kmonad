@@ -13,10 +13,12 @@ Temporarily switch to a layer on press, and switch back on release.
 -}
 module KMonad.Domain.Button.LayerToggle
   ( LTCtx
-  , mkLayerToggle
   , mkLayerToggleM
   )
 where
+
+import Control.Lens
+import Control.Monad.Reader
 
 import KMonad.Core
 import KMonad.Domain.Effect
@@ -24,16 +26,34 @@ import KMonad.Domain.Effect
 -- | The context required by LayerToggle buttons
 type LTCtx m =
   ( MonadTrace      m
+  , MonadVar        m
   , MonadStackManip m
   )
 
+data BState
+  = Unpressed
+  | Pressed
+  deriving (Eq, Show)
+
 -- | Return a 'Button' that pushes a layer onto the stack when pressed, and pops
 -- it when released.
-mkLayerToggle :: (LTCtx m) => Name -> Button m
-mkLayerToggle lid = mkButton $ \case
-  BPress   -> trace ("pushing layer: " <> lid) >> pushL lid
-  BRelease -> trace ("popping layer: " <> lid) >> popL  lid
+mkLayerToggleM :: (LTCtx m, MonadIO n) => Name -> n (Button m)
+mkLayerToggleM lid = runVar Unpressed $ \st ->
+                       mkButton $ \x -> go st lid x
 
--- | Return a LayerToggle from some arbitrary Monad
-mkLayerToggleM :: (LTCtx m, Monad n) => Name -> n (Button m)
-mkLayerToggleM = return . mkLayerToggle
+go :: LTCtx m => Var BState -> Name -> ButtonSignal -> m ()
+go st lid x = do
+  v <- getVar st
+  case (v, x) of
+    -- Pressing an unpressed button
+    (Unpressed, BPress) -> do
+      putVar Pressed st
+      trace $ "pushing layer: " <> lid
+      pushL lid
+    -- Releasing a pressed button
+    (Pressed, BRelease) -> do
+      putVar Unpressed st
+      trace $ "popping layer: " <> lid
+      popL lid
+    -- Anything else
+    _                   -> putVar v st
