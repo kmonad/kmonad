@@ -78,6 +78,7 @@ library
   if os(windows)
     exposed-modules:
       KMonad.Api.KeyIO.Windows.LowLevelHookSource
+      KMonad.Api.KeyIO.Windows.SendEventSink
       KMonad.Api.KeyIO.Windows.Types
       Test
   other-modules:

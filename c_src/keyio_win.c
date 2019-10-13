@@ -21,6 +21,8 @@ struct KeyEvent {
 // Variables we need to access globally
 HANDLE readPipe  = NULL;
 HANDLE writePipe = NULL;
+HANDLE readKillPipe = NULL;
+HANDLE writeKillPipe = NULL;
 HHOOK hookHandle;
 
 // Print last error and exit program
@@ -82,7 +84,7 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   WriteFile(writePipe, &ev, sizeof(ev), &dwWritten, NULL);
 
   // Comment this out when ready for final
-  return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+  //return CallNextHookEx(hookHandle, nCode, wParam, lParam);
 }
 
 // When called, get the next event from the pipe
@@ -109,15 +111,42 @@ int grab_kb()
 
   // Create the pipe, error on failure
   if ( !CreatePipe(&readPipe, &writePipe, NULL, 0) ) last_error();
+  if ( !CreatePipe(&readKillPipe, &writeKillPipe, NULL, 0) ) last_error();
 
-  // Start an event-loop to keep the process alive
+  // Wait for a write to the kill-pipe
   MSG msg;
-  while (GetMessage(&msg, NULL, 0, 0))
-    { TranslateMessage(&msg);
-      DispatchMessage(&msg); }
+  printf("starting loop"); 
+  GetMessage(&msg, NULL, 0, 0);
+  /*while (GetMessage(&msg, NULL, 0, 0))
+    { printf("got a message");
+      TranslateMessage(&msg);
+      DispatchMessage(&msg); } */
 
+  printf("C:  waiting for kill\n");
+  DWORD dwRead;
+  int sig;
+  //struct KeyEvent* e;
+
+  ReadFile(readKillPipe, &sig, sizeof(sig), &dwRead, NULL);
   // Cleanup and close
+  //UnhookWindowsHookEx(hookHandle);
+  return(0);
+}
+
+int release_kb()
+{
+  printf("C:  releasing kb\n");
   UnhookWindowsHookEx(hookHandle);
+  PostQuitMessage(0);
+
+	  // Construct the KeyEvent to write to the pipe
+
+  int sig = 1;
+
+  // Write the event to the pipe
+  DWORD dwWritten;
+  WriteFile(writeKillPipe, &sig, sizeof(sig), &dwWritten, NULL);
+	
   return(0);
 }
 
@@ -125,9 +154,10 @@ int grab_kb()
 DWORD time_since_start() { GetTickCount(); }
 
 // Send key to the OS
-void sendKey(struct KeyEvent e)
+void sendKey(struct KeyEvent* ep)
 {
   printf("C:  sending key\n");
+  struct KeyEvent e = *ep;
   INPUT ip;
 
   // Standard stuff we don't use
@@ -155,7 +185,7 @@ void sendKey(struct KeyEvent e)
 }
 
 
-// int main() { grab_kb(); }
+//int main() { grab_kb(); }
 
 
 // OLD STUFF FOR FUTURE REFERENCE

@@ -4,10 +4,11 @@ where
 
 import Control.Concurrent
 import Control.Lens
+import Control.Monad
 import Data.Word
 import Foreign.C.Types
 import Foreign.ForeignPtr
-import Foreign.Marshal
+import Foreign.Marshal hiding (void)
 import Foreign.Ptr
 import Foreign.Storable
 import UnliftIO
@@ -21,7 +22,11 @@ import KMonad.Api.KeyIO.Windows.Types
 
 -- | Use the windows c-api to `grab` a keyboard
 foreign import ccall "grab_kb"
-  grab_kb :: IO ()
+  grab_kb :: IO Word8
+  
+-- | Release the keyboard hook
+foreign import ccall "release_kb"
+  release_kb :: IO Word8
 
 -- | Pass a pointer to a buffer to wait_key, when it returns the buffer can be
 -- read for the next key event.
@@ -58,7 +63,7 @@ llHook = BracketIO
 llOpen :: CanKeyIO e m => m LLHook
 llOpen = liftIO $ do
   putStrLn "starting llOpen"
-  tid <- forkIO grab_kb
+  tid <- forkIO (void grab_kb)
   buf <- mallocBytes $ sizeOf (undefined :: WinKeyEvent)
   tst <- time_since_start
   putStrLn "started llOpen"
@@ -67,7 +72,9 @@ llOpen = liftIO $ do
 -- | Kill the thread and free the data-buffer
 llClose :: CanKeyIO e m => LLHook -> m ()
 llClose ll = liftIO $ do
-  killThread $ ll^.thread
+  putStrLn "running release_kb"
+  _ <- release_kb
+  putStrLn "freeing buffer"
   free $ ll^.buffer
 
 -- | Prompt windows to write the next event into the buffer, then read and return it.
