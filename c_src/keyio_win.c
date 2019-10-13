@@ -105,13 +105,6 @@ int grab_kb()
   while (GetMessage(&msg, NULL, 0, 0))
     { TranslateMessage(&msg);
       DispatchMessage(&msg); }
-
-  DWORD dwRead;
-  int sig;
-
-  ReadFile(readKillPipe, &sig, sizeof(sig), &dwRead, NULL);
-  return(0);
->>>>>>> origin/win-support
 }
 
 // Uninstall the keyboard hook and kill the process
