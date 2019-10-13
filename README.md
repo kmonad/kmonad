@@ -222,10 +222,11 @@ found that 1 second is more than sufficient, but experiment yourself.
 #### Cannot distinguish between keyboards
 The low-level API to the operating system differs significantly between Windows
 and Linux, which means that the Windows version is currently more limited in
-what it can do. There is an active issue on this topic [over here](insert-link),
-and if you have experience with `Win32` programming, any help would be greatly
-appreciated. So if you want to help, or just want a more technical overview of
-the windows limitations head on over there.
+what it can do. There is an active issue on this topic [over
+here](https://github.com/david-janssen/kmonad/issues/10), and if you have
+experience with `Win32` programming, any help would be greatly appreciated. So
+if you want to help, or just want a more technical overview of the windows
+limitations head on over there.
 
 Currently, we cannot distinguish between different input keyboards, so whereas a
 Linux version of KMonad can be started for a variety of different keyboards, and
