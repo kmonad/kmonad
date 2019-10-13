@@ -95,7 +95,7 @@ data ButtonToken
   -- | BUnicode Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
   -- | BCompose Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
 
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | A token describing anything that can be interpreted as a 'ButtonToken'
 data ButtonSymbol
