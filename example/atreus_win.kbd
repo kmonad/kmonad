@@ -1,0 +1,96 @@
+// IO
+INPUT  = LINUX_DEVICE L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd
+OUTPUT = UINPUT_SINK "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt"
+
+/* Copy this out to create a template for a new layer
+LAYER
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+*/
+
+// Layer toggling shortcuts
+@l   = LT-l
+@ll  = LT-ll
+@lr  = LT-lr
+@r   = LT-r
+@as  = TH 200 / lalt
+@esp = LT-spanish
+@gsp = TH 200 g LT-spanish
+@xcp = TN esc lctl
+
+// Haskell aliases
+@>>= = || > > = ||
+@->  = || - >   ||
+@<-  = || < -   ||
+@<*> = || < * > ||
+@<$> = || < $ > ||
+@=>  = || = >   ||
+
+// Smileys, just for illustration purposes
+@:-) = || : - ) ||
+@;-) = || ; - ) ||
+@:p  = || : p   ||
+
+// Example of a multi-tap
+@qsc = MT q 200 esc  // q when used once, esc when tapped twice quickly
+
+// The raw input for my Atreus in 'raw' mode
+SRC
+  q    w    f    p    g              j    l    u    y    ;
+  a    r    s    t    d              h    n    e    i    o
+  z    x    c    v    b              k    m    ,    .    /
+  tab  lmet lalt lsft lctl ins  esc  spc  rmet -    bspc ret
+
+// The base colemak layer
+LAYER cole
+  q    w    f    p    @gsp           j    l    u    y    ;
+  a    r    s    t    d              h    n    e    i    o
+  z    x    c    v    b              k    m    ,    .    @as
+  tab  lalt @r   lsft lctl @l   @xcp spc  lmet -    bspc ret
+
+// Various symbols and a numpad
+LAYER l
+  X    `    ~    [    ]              X    7    8    9    /
+  @ll  "    __   (    )              X    4    5    6    *
+  lctl '    |    {    }              =    1    2    3    -
+  _    _    \    <    >    _    @lr  spc  0    _    _    +
+
+// Haskell macros: to be completed when I implement macros
+LAYER ll
+  _    @->  @>>= _    _              ralt &    *    =    lsft
+  _    @<-  @<$> _    _              _    $    %    ^    _
+  _    @=>  @<*> _    _              _    !    @    #    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+
+// Function keys
+LAYER lr
+  _    _    _    _    _              _    f7   f8   f9   f10
+  _    @:-) @;-) @:p  _              _    f4   f5   f6   f11
+  _    _    _    _    _              _    f1   f2   f3   f12
+  _    +'   +"   +~   _    _    _    _    _    _    _    _
+
+// Navigation and volume keys
+LAYER r
+  caps +`   +~   _    _              _    pgup up   pgdn volu
+  _    +"   _    _    _              _    left down rght vold
+  _    +'   _    _    _              _    _    _    _    mute
+  _    _    _    _    _    _    _    _    _    _    _    _
+
+
+// Copy this out to create a template for a new layer
+LAYER spanish
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+
+
+/* Copy this out to create a template for a new layer
+LAYER spanish
+  _    _    _    _    _              _    _    ú    _    _
+  á    _    _    _    _              _    ñ    é    í    ó
+  _    _    _    _    _              _    _    _    ¡    ¿
+  _    _    _    _    _    _    _    _    _    _    _    _
+*/

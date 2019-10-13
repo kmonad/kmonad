@@ -37,7 +37,8 @@ import KMonad.Api.KeyIO.Linux.UinputSink
 #endif
 
 #ifdef mingw32_HOST_OS
-import System.Win32
+import KMonad.Api.KeyIO.Windows.SendEventSink
+import KMonad.Api.KeyIO.Windows.LowLevelHookSource
 #endif
 
 -- Windows only import
