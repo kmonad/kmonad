@@ -39,7 +39,7 @@ void last_error()
                 (LPTSTR) &lpMsgBuf,
                 0, NULL);
 
-  printf("C:  Error: %s", lpMsgBuf);
+  //printf("C:  Error: %s", lpMsgBuf);
   exit(dw);
 }
 
@@ -90,12 +90,12 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
 // When called, get the next event from the pipe
 void wait_key(struct KeyEvent* e)
 {
-  printf("C:  waiting for key\n");
+  //printf("C:  waiting for key\n");
   DWORD dwRead;
   //struct KeyEvent* e;
 
   ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
-  printf("C:  got key, returning\n");
+  //printf("C:  got key, returning\n");
   return;
 }
 
@@ -104,7 +104,7 @@ void wait_key(struct KeyEvent* e)
 // Insert the keyboard hook and start the monitoring process
 int grab_kb()
 {
-  printf("C:  grabbing kb\n");
+  //printf("C:  grabbing kb\n");
   // Insert the hook, error on failure
   hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
   if (hookHandle == NULL) last_error();
@@ -115,14 +115,14 @@ int grab_kb()
 
   // Wait for a write to the kill-pipe
   MSG msg;
-  printf("starting loop"); 
+  //printf("starting loop"); 
   GetMessage(&msg, NULL, 0, 0);
   /*while (GetMessage(&msg, NULL, 0, 0))
     { printf("got a message");
       TranslateMessage(&msg);
       DispatchMessage(&msg); } */
 
-  printf("C:  waiting for kill\n");
+  //printf("C:  waiting for kill\n");
   DWORD dwRead;
   int sig;
   //struct KeyEvent* e;
@@ -135,7 +135,7 @@ int grab_kb()
 
 int release_kb()
 {
-  printf("C:  releasing kb\n");
+  //printf("C:  releasing kb\n");
   UnhookWindowsHookEx(hookHandle);
   PostQuitMessage(0);
 
@@ -156,7 +156,7 @@ DWORD time_since_start() { GetTickCount(); }
 // Send key to the OS
 void sendKey(struct KeyEvent* ep)
 {
-  printf("C:  sending key\n");
+  //printf("C:  sending key\n");
   struct KeyEvent e = *ep;
   INPUT ip;
 

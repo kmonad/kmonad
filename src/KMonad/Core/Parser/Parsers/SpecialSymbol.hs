@@ -44,7 +44,7 @@ composeSymbs =
     , ( "spc (", '˘', "breve" )
     , ( "\" \"", '¨', "diaeresis" )
     , ("spc <", 'ˇ', "caron")
-    , ("^ spc", '^', "asciicircum")
+    --, ("^ spc", '^', "asciicircum") -- This overlaps with the normal 'shifted-6' macro for 
     , ("` spc", '`', "grave")
     , (", spc", '¸', "cedilla")
     , ("spc spc", ' ', "nobreakspace")
