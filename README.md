@@ -243,7 +243,9 @@ special-character-emitting macros won't work out of the box. Luckily there is
 [WinCompose](https://github.com/SamHocevar/wincompose), a windows utility that
 maps compose-key sequences to special characters. They say they have full
 support for all X11 based compose-sequences, and in my limited test I did not
-run into any problems.
+run into any problems. We currently do not support remapping the compose-key
+internally, but the KMonad default lines up with the X11 default and the
+WinCompose default (right Alt).
 
 **NOTE**: For WinCompose to work with KMonad you *have* to enable support for
 handling injected key events, which is *off* by default.
