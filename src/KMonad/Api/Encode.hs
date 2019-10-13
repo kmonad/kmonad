@@ -77,6 +77,7 @@ pickInputIO WindowsLLHook = llHook
 pickInputIO d = error $ "This device is not supported on Windows: " <> show d
 
 pickOutputIO :: OutputToken -> KeySink
+pickOutputIO WindowsSendEventSink = sendEventKeySink
 pickOutputIO d = error $ "This device is not supported on Windows: " <> show d
 
 #endif

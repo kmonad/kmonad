@@ -87,6 +87,7 @@ void wait_key(struct KeyEvent* e)
 {
   DWORD dwRead;
   ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
+  //printf("receiving: %d\n", e->keycode);
   return;
 }
 
@@ -105,13 +106,6 @@ int grab_kb()
   while (GetMessage(&msg, NULL, 0, 0))
     { TranslateMessage(&msg);
       DispatchMessage(&msg); }
-
-  DWORD dwRead;
-  int sig;
-
-  ReadFile(readKillPipe, &sig, sizeof(sig), &dwRead, NULL);
-  return(0);
->>>>>>> origin/win-support
 }
 
 // Uninstall the keyboard hook and kill the process
@@ -145,7 +139,7 @@ void sendKey(struct KeyEvent* e)
         ip.ki.dwFlags = KEYEVENTF_KEYUP;
         break;
     }
-
+  //printf("emitting kc: %d\n", ip.ki.wVk);
   // Emit the event to the OS
   SendInput(1, &ip, sizeof(INPUT));
 }

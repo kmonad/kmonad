@@ -41,4 +41,4 @@ skSend :: SKSink -> KeyEvent -> IO ()
 skSend snk e = do
   poke (snk^.buffer) (e^.re _KeyEvent)
   sendKey (snk^.buffer)
-  putStrLn $ "emitting: " <> show e
+  --putStrLn $ "emitting: " <> show e

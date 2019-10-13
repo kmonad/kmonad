@@ -1,5 +1,5 @@
 // IO
-INPUT  = WINDOWS_LL_HOOK
+INPUT  = LL_KEYBOARD_HOOK
 OUTPUT = SEND_EVENT_SINK
 
 /* Copy this out to create a template for a new layer
@@ -81,16 +81,8 @@ LAYER r
 
 // Copy this out to create a template for a new layer
 LAYER spanish
-  _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    _    _    _    _    _    _    _    _
-
-
-/* Copy this out to create a template for a new layer
-LAYER spanish
   _    _    _    _    _              _    _    ú    _    _
   á    _    _    _    _              _    ñ    é    í    ó
   _    _    _    _    _              _    _    _    ¡    ¿
   _    _    _    _    _    _    _    _    _    _    _    _
-*/
+
