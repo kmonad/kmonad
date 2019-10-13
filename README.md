@@ -54,10 +54,8 @@ your operators to look like this: =>=->->>? That's a lot to type. Why not just
 define a macro that does it for you?
 
 The same technique can be used to create macros that insert a variety of
-accented or umlauted characters, depending on your OS. Why type `AltGr " e` when
-you can put this macro in a layer on a button close to home row? (Note:
-compose behavior depends on your OS, I don't think there is any 1 way to
-implement this). 
+accented or umlauted characters, depending on your OS. Why type `Right-Alt " e`
+when you can put this macro in a layer on a button close to home row?
 
 Or more practically: do you really like the Dvorak layout, but do you also wish
 you had very simple, left-handed access to the common Control z x c v shortcuts?

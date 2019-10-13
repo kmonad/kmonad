@@ -45,6 +45,7 @@ At the moment KMonad only supports 1 interface for each of these 2 capacities,
 and the syntax to define these inputs is therefore very simple. 
 
 ### Input
+#### Linux
 To register an input, KMonad reads binary data from a `/dev/input` device, and
 uses the `IOCTL` call to ensure the events do not get transmitted anywhere else.
 The syntax to define which file to open is:
@@ -63,12 +64,22 @@ portable this is. I am currently assuming that the decoder linked to `L64` works
 on other 64-bit linux systems. The code is designed so that it is easy to
 specify different decoders for different systems.
 
+#### Windows
+Under Windows we install a low-level keyboard hook with a callback that
+intercepts input keyboard events and sends them to KMonad. This IO interface is
+currently not configurable in any way, therefore the windows input syntax is
+simply:
+
+```
+INPUT = LL_KEYBOARD_HOOK
+```
+
 ### Output
+#### Linux
 We currently use the `uinput` subsystem to create a simulated keyboard over
 which we emit keyevents back to the OS. To that extent, the user needs to have
 permissions, and the `uinput` subsystem has to be loaded. For information on how
 to make this happen, see the [README](../README.md#uinput-permissions).
-<!-- [README](https://github.com/david-janssen/kmonad/blob/master/README.md#uinput-permissions). -->
 
 Since there is only 1 supported output method at the moment, the basic syntax is
 very simple:
@@ -102,6 +113,15 @@ you are also forced to specify a custom name. Also, new-lines are not supported
 yet in the `OUTPUT` definition.
 ```
 OUTPUT = UINPUT_SINK "My Keyboard" "/usr/bin/sleep 1 && /usr/bin/setxkbmap -option compose:ralt"
+```
+
+#### Windows
+Windows currently supports 1 method of simulating keyboard events using the
+`Win32` `SendInput` API-call. This currently does not come with any
+configuration options, so the way to configure the output under windows is
+simply:
+```
+OUTPUT = SEND_EVENT_SINK
 ```
 
 ## Aliases
