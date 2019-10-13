@@ -221,6 +221,7 @@ contains a small period of time for the OS to register the keyboard. I have
 found that 1 second is more than sufficient, but experiment yourself.
 
 ### Windows Limitations
+#### Cannot distinguish between keyboards
 The low-level API to the operating system differs significantly between Windows
 and Linux, which means that the Windows version is currently more limited in
 what it can do. There is an active issue on this topic [over here](insert-link),
@@ -236,5 +237,23 @@ between 'real' keyboard events and simulated keyboard events. Anything simulated
 is automatically passed on to the OS (that is also how KMonad avoids handling
 its own simulated output). 
 
-A secondary consequence of this
+#### No native support for compose sequences
+Windows does not support the same compose-sequences as X11, meaning that the
+special-character-emitting macros won't work out of the box. Luckily there is
+[WinCompose](https://github.com/SamHocevar/wincompose), a windows utility that
+maps compose-key sequences to special characters. They say they have full
+support for all X11 based compose-sequences, and in my limited test I did not
+run into any problems.
 
+**NOTE**: For WinCompose to work with KMonad you *have* to enable support for
+handling injected key events, which is *off* by default.
+
+#### No idea how this interacts with AHK
+Since KMonad essentially grabs *all* standard keyboard input and lets through
+only simulated events, there is no guarantee at all of this playing nice with
+AutoHotKey at the moment. Additionally, I am not entirely sure how Windows deals
+with its low-level keyboard hooks and how AHK tries to get at keyboard input,
+but it might even be the case that different startup-orders could result in
+different behavior. I have no experience with AHK at all, and rarely use
+Windows. If you run into any issues, please file them, and I'm sure that in time
+we can resolve everything.
