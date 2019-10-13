@@ -87,5 +87,6 @@ llRead ll = do
   ee <- case we^?_KeyEvent of
           Just e  -> return e
           Nothing -> error "Couldn't parse event" -- llRead ll
+  --liftIO . putStrLn $ "reading: " <> show ee
   return ee
   

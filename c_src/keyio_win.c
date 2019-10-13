@@ -87,6 +87,7 @@ void wait_key(struct KeyEvent* e)
 {
   DWORD dwRead;
   ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
+  //printf("receiving: %d\n", e->keycode);
   return;
 }
 
@@ -138,7 +139,7 @@ void sendKey(struct KeyEvent* e)
         ip.ki.dwFlags = KEYEVENTF_KEYUP;
         break;
     }
-
+  //printf("emitting kc: %d\n", ip.ki.wVk);
   // Emit the event to the OS
   SendInput(1, &ip, sizeof(INPUT));
 }
