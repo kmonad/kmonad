@@ -126,6 +126,18 @@ Once the compiled binary is on the PATH, running KMonad is as simple as:
 kmonad /path/to/config/file.kbd
 ```
 
+The method of running KMonad under Windows is exactly the same: you use the
+shell (for example: Powershell) to start KMonad. For example, put the compiled
+KMonad executable and config file in the same directory, start Powershell, cd to
+the directory, and run:
+
+``` powershell
+./kmonad config_file.kbd
+```
+
+This has the added benefit that, if KMonad experiences issues, you can use your
+mouse to close the powershell and hopefully release the keyboard-hook.
+
 Note that this interface is extremely provisional and subject to change.
 
 Any kind of internal KMonad error that indicates that something has gone
