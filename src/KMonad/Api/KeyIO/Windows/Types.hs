@@ -85,7 +85,8 @@ fromKeyCode c = WinKeyCode <$> M.lookup (fromEnum c) mapping
 
 kcMap :: [(Word32, KeyCode)]
 kcMap =
-  [ (0x08, KeyBackspace)
+  [ (0x00, Missing254)     -- Not documented, but happens often. Why??
+  , (0x08, KeyBackspace)
   , (0x09, KeyTab)
   , (0x0C, KeyKp5) -- VK_CLEAR: NumPad 5 when numlock is not engaged
   , (0x0D, KeyEnter)
@@ -155,7 +156,6 @@ kcMap =
   , (0x58, KeyX)
   , (0x59, KeyY)
   , (0x5A, KeyZ)
-
   , (0x5B, KeyLeftMeta)             -- Defined as Left Windows key (Natural Keyboard)
   , (0x5C, KeyRightMeta)             -- Defined as Right Windows key (Natural Keyboard)
   , (0x5D, KeyCompose)             -- Defined as Applications key (Natural Keyboard)

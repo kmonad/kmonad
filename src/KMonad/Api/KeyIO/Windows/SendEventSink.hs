@@ -24,8 +24,8 @@ data SKSink = SKSink
   { _buffer :: Ptr WinKeyEvent }
 makeClassy ''SKSink
 
-sendKeySink :: KeySink
-sendKeySink = BracketIO
+sendEventKeySink :: KeySink
+sendEventKeySink = BracketIO
   { _open  = skOpen
   , _close = skClose
   , _use   = skSend
