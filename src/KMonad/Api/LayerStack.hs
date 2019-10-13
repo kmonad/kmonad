@@ -28,7 +28,7 @@ module KMonad.Api.LayerStack
 where
 
 import Control.Lens
-import Data.Maybe (fromJust)
+import Data.Maybe (fromMaybe)
 import UnliftIO
 
 import KMonad.Core
@@ -38,6 +38,7 @@ import KMonad.Domain.Effect (CanButton)
 
 import qualified KMonad.Core.MapStack as S
 import qualified Data.HashMap.Strict  as M
+import qualified Data.Text            as T
 
 
 --------------------------------------------------------------------------------
@@ -73,12 +74,15 @@ handleWith e ls
   | otherwise = pure ()
 
 
+myFromJust :: String -> Maybe a -> a
+myFromJust s = fromMaybe (error s)
+
 -- | Push a LayerID to the top of the stack NOTE: the monads do not necessarily
 -- have to line up, maybe change this? FIXME: Add error handling and remove the
 -- FromJust (or not... I can ensure there are no references to nonexistent
 -- layers when I compile the Config)
 pushLS :: MonadIO m => Name -> LayerStack m -> m ()
-pushLS lid ls = liftIO $ modifyMVar_ (mapStack ls) $ return . fromJust . push lid
+pushLS lid ls = liftIO $ modifyMVar_ (mapStack ls) $ return . myFromJust ("Cannot find layer: " <> T.unpack lid) . push lid
 
 -- | Pop a Name from the stack
 popLS :: MonadIO m => Name -> LayerStack m -> m ()
@@ -96,7 +100,7 @@ mkLayerStack :: (CanButton m, MonadIO n)
 mkLayerStack ts def = do
   -- There is probably a much prettier lensy way of doing this
   bs <- mapM (mapTup (mapM (mapTup encode))) ts
-  h  <- newMVar . fromJust . push def . mkMapStack $ bs
+  h  <- newMVar . myFromJust "making layer error" . push def . mkMapStack $ bs
   LayerStack h <$> newMVar (M.empty)
   where
     mapTup f (c, a) = (c,) <$> f a

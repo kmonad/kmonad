@@ -15,7 +15,9 @@ LAYER
 @ll  = LT-ll
 @lr  = LT-lr
 @r   = LT-r
-@as  = TH 300 / lalt
+@as  = TH 200 / lalt
+@esp = LT-spanish
+@gsp = TH 200 g LT-spanish
 @xcp = TN esc lctl
 
 // Haskell aliases
@@ -43,10 +45,10 @@ SRC
 
 // The base colemak layer
 LAYER cole
-  q    w    f    p    g              j    l    u    y    ;
+  q    w    f    p    @gsp           j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
   z    x    c    v    b              k    m    ,    .    @as
-  tab  lalt @r   lsft lctl @l   esc  spc  lmet -    bspc ret
+  tab  lalt @r   lsft lctl @l   @xcp spc  lmet -    bspc ret
 
 // Various symbols and a numpad
 LAYER l
@@ -74,4 +76,12 @@ LAYER r
   caps +`   +~   _    _              _    pgup up   pgdn volu
   _    +"   _    _    _              _    left down rght vold
   _    +'   _    _    _              _    _    _    _    mute
+  _    _    _    _    _    _    _    _    _    _    _    _
+
+
+// Copy this out to create a template for a new layer
+LAYER spanish
+  _    _    _    _    _              _    _    ú    _    _
+  á    _    _    _    _              _    ñ    é    í    ó
+  _    _    _    _    _              _    _    _    ¡    ¿
   _    _    _    _    _    _    _    _    _    _    _    _
