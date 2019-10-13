@@ -62,19 +62,19 @@ llHook = BracketIO
 -- | Ask windows to install a hook and allocate the reading-buffer
 llOpen :: CanKeyIO e m => m LLHook
 llOpen = liftIO $ do
-  putStrLn "starting llOpen"
+  --putStrLn "starting llOpen"
   tid <- forkIO (void grab_kb)
   buf <- mallocBytes $ sizeOf (undefined :: WinKeyEvent)
   tst <- time_since_start
-  putStrLn "started llOpen"
+  --putStrLn "started llOpen"
   return $ LLHook tid buf (mkTime 0 0) -- ^ Add time tracking later
 
 -- | Kill the thread and free the data-buffer
 llClose :: CanKeyIO e m => LLHook -> m ()
 llClose ll = liftIO $ do
-  putStrLn "running release_kb"
+  --putStrLn "running release_kb"
   _ <- release_kb
-  putStrLn "freeing buffer"
+  --putStrLn "freeing buffer"
   free $ ll^.buffer
 
 -- | Prompt windows to write the next event into the buffer, then read and return it.
@@ -82,10 +82,10 @@ llRead :: CanKeyIO e m => LLHook -> m KeyEvent
 llRead ll = do
   liftIO . wait_key $ ll^.buffer
   we <- liftIO . peek $ ll^.buffer
-  liftIO . putStrLn $ "got key event"
-  liftIO . print $ we
+  --liftIO . putStrLn $ "got key event"
+  --liftIO . print $ we
   ee <- case we^?_KeyEvent of
-          Just e  -> (liftIO $ putStrLn ("returning " <> show e)) >> return e
+          Just e  -> return e
           Nothing -> error "Couldn't parse event" -- llRead ll
   return ee
   

@@ -37,7 +37,7 @@ void last_error()
                 (LPTSTR) &lpMsgBuf,
                 0, NULL);
 
-  printf("C:  Error: %s", lpMsgBuf);
+  //printf("C:  Error: %s", lpMsgBuf);
   exit(dw);
 }
 
@@ -105,6 +105,13 @@ int grab_kb()
   while (GetMessage(&msg, NULL, 0, 0))
     { TranslateMessage(&msg);
       DispatchMessage(&msg); }
+
+  DWORD dwRead;
+  int sig;
+
+  ReadFile(readKillPipe, &sig, sizeof(sig), &dwRead, NULL);
+  return(0);
+>>>>>>> origin/win-support
 }
 
 // Uninstall the keyboard hook and kill the process
@@ -121,7 +128,6 @@ DWORD time_since_start() { GetTickCount(); }
 // Send key to the OS
 void sendKey(struct KeyEvent* e)
 {
-  /* struct KeyEvent e = *ep; */
   INPUT ip;
 
   // Standard stuff we don't use
