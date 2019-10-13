@@ -53,8 +53,10 @@ import Control.Exception
 import Control.Lens
 import Control.Monad.Except
 import Control.Monad.ST
+import Data.Containers.ListUtils (nubOrd)
 import Data.Foldable (toList)
 import Data.Hashable
+import Data.List ((\\))
 import Data.Maybe
 import Data.STRef
 
@@ -91,6 +93,7 @@ data ConfigError
   | AnchorNotFound      KeyCode Name
   | AlignmentError      Coor    ButtonSymbol Name
   | AliasNotFound       Symbol  Name
+  | LayerNotFound       [Name]
   deriving Exception
 
 instance Show ConfigError where
@@ -138,6 +141,8 @@ instance Show ConfigError where
       , " not found in layer: "
       , show l
       ]
+  show (LayerNotFound ks)
+    = "Layer(s) not found: " <> show ks
 
 -- | Classy Prisms used to speak generally about 'ConfigError's
 makeClassyPrisms ''ConfigError
@@ -201,12 +206,33 @@ interpret (ConfigToken srcs lyrs alss is os)
       -- extract maps from all the provided layers
       ls <- mapM (\l -> (l^.layerName,) <$> extractMap src as l) lyrs
 
+      -- Extract layer names from aliases and button maps, checking for
+      -- non-existent names
+      let layerNames = nubOrd . concatMap getLayerName
+            $ M.elems as ++ concatMap (map snd . snd) ls
+          unknownNames = layerNames \\ map (^.layerName) lyrs
+      unless (null unknownNames) $
+        throwError $ _LayerNotFound # unknownNames
+
       pure $ Config
         { _mappings = ls
         , _input    = is !! 0
         , _output   = os !! 0
         , _entry    = (last $ lyrs) ^. layerName
         }
+
+-- | Extract named layers of a given button token
+getLayerName :: ButtonToken -> [Name]
+getLayerName bToken =
+  case bToken of
+    BLayerAdd n     -> [n]
+    BLayerRem n     -> [n]
+    BLayerToggle n  -> [n]
+    BTapHold _ b b' -> getLayerName b ++ getLayerName b'
+    BTapNext b b'   -> getLayerName b ++ getLayerName b'
+    BModded _ b     -> getLayerName b
+    BMultiTap msb   -> concatMap (getLayerName . snd) msb
+    _               -> []
 
 -- | Coregister a matrix of buttons to the source matrix
 extractMap :: CanComp e m
