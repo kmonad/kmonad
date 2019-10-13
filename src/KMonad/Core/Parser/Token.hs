@@ -61,12 +61,13 @@ data InputDecoder
 -- | A token describing which input IO to use
 data InputToken
   = LinuxDeviceSource InputDecoder FilePath -- ^ The standard, Linux 64-bit input device
+  | WindowsLLHook                           -- ^ The initial, simple Windows hook
   deriving (Eq, Show)
 
 -- | A token describing which output to use
--- TODO: Add the ability to give a custom name to your uinput keyboard
 data OutputToken
   = UinputDevice (Maybe Text) (Maybe Text) -- ^ A Linux uinput device
+  | WindowsSendEventSink                   -- ^ API using windows SendEvent calls internally
   deriving (Eq, Show)
 
 --------------------------------------------------------------------------------

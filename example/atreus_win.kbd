@@ -1,6 +1,6 @@
 // IO
-INPUT  = LINUX_DEVICE L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd
-OUTPUT = UINPUT_SINK "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt"
+INPUT  = WINDOWS_LL_HOOK
+OUTPUT = SEND_EVENT_SINK
 
 /* Copy this out to create a template for a new layer
 LAYER

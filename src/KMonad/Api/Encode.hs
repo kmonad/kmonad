@@ -36,20 +36,23 @@ import KMonad.Api.KeyIO.Linux.DeviceSource
 import KMonad.Api.KeyIO.Linux.UinputSink
 #endif
 
+-- Windows only import
 #ifdef mingw32_HOST_OS
 import KMonad.Api.KeyIO.Windows.SendEventSink
 import KMonad.Api.KeyIO.Windows.LowLevelHookSource
 #endif
 
--- Windows only import
 
--- Linux dispatch
+--------------------------------------------------------------------------------
+--                                ***Linux***                                 --
+--------------------------------------------------------------------------------
 
 #ifdef linux_HOST_OS
 
 -- | Translate an 'InputToken' to a 'KeySource' object
 pickInputIO :: InputToken -> KeySource
 pickInputIO (LinuxDeviceSource L64 pth) = deviceSource64 pth
+pickInputIO d = error $ "This device is not supported on Linux: " <> show d
 
 -- | Translate an 'OutputToken' to a 'KeySink' object
 pickOutputIO :: OutputToken -> KeySink
@@ -58,15 +61,22 @@ pickOutputIO (UinputDevice nm pi) = let def = defUinputCfg in
     { _keyboardName = fromMaybe (def^.keyboardName) (T.unpack <$> nm)
     , _postInit     = T.unpack <$> pi
     }
+pickOutputIO d = error $ "This device is not supported on Linux" <> show d
 
 #endif
+
+
+--------------------------------------------------------------------------------
+--                               ***Windows***                                --
+--------------------------------------------------------------------------------
 
 #ifdef mingw32_HOST_OS
 
 pickInputIO :: InputToken -> KeySource
-pickInputIO _ = llHook
+pickInputIO WindowsLLHook = llHook
+pickInputIO d = error $ "This device is not supported on Windows: " <> show d
 
 pickOutputIO :: OutputToken -> KeySink
-pickOutputIO _ = sendEventKeySink
+pickOutputIO d = error $ "This device is not supported on Windows: " <> show d
 
 #endif

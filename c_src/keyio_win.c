@@ -1,6 +1,6 @@
 // Necessary to get mingw to compile for some reason
-#define WINVER 0x0601
-#define _WIN32_WINNT 0x0601
+/* #define WINVER 0x0601 */
+/* #define _WIN32_WINNT 0x0601 */
 
 #include <windows.h>
 #include <stdbool.h>
@@ -21,8 +21,6 @@ struct KeyEvent {
 // Variables we need to access globally
 HANDLE readPipe  = NULL;
 HANDLE writePipe = NULL;
-HANDLE readKillPipe = NULL;
-HANDLE writeKillPipe = NULL;
 HHOOK hookHandle;
 
 // Print last error and exit program
@@ -82,82 +80,48 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   // Write the event to the pipe
   DWORD dwWritten;
   WriteFile(writePipe, &ev, sizeof(ev), &dwWritten, NULL);
-
-  // Comment this out when ready for final
-  //return CallNextHookEx(hookHandle, nCode, wParam, lParam);
 }
 
-// When called, get the next event from the pipe
+// Read a file from the pipe and write it to the provided pointer
 void wait_key(struct KeyEvent* e)
 {
-  printf("C:  waiting for key\n");
   DWORD dwRead;
-  //struct KeyEvent* e;
-
   ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
-  printf("C:  got key, returning\n");
   return;
 }
-
-
 
 // Insert the keyboard hook and start the monitoring process
 int grab_kb()
 {
-  printf("C:  grabbing kb\n");
   // Insert the hook, error on failure
   hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
   if (hookHandle == NULL) last_error();
 
   // Create the pipe, error on failure
   if ( !CreatePipe(&readPipe, &writePipe, NULL, 0) ) last_error();
-  if ( !CreatePipe(&readKillPipe, &writeKillPipe, NULL, 0) ) last_error();
 
-  // Wait for a write to the kill-pipe
+  // This *never* triggers, but if not included the program doesn't run..?
   MSG msg;
-  printf("starting loop"); 
-  GetMessage(&msg, NULL, 0, 0);
-  /*while (GetMessage(&msg, NULL, 0, 0))
-    { printf("got a message");
-      TranslateMessage(&msg);
-      DispatchMessage(&msg); } */
-
-  printf("C:  waiting for kill\n");
-  DWORD dwRead;
-  int sig;
-  //struct KeyEvent* e;
-
-  ReadFile(readKillPipe, &sig, sizeof(sig), &dwRead, NULL);
-  // Cleanup and close
-  //UnhookWindowsHookEx(hookHandle);
-  return(0);
+  while (GetMessage(&msg, NULL, 0, 0))
+    { TranslateMessage(&msg);
+      DispatchMessage(&msg); }
 }
 
+// Uninstall the keyboard hook and kill the process
 int release_kb()
 {
-  printf("C:  releasing kb\n");
   UnhookWindowsHookEx(hookHandle);
   PostQuitMessage(0);
-
-	  // Construct the KeyEvent to write to the pipe
-
-  int sig = 1;
-
-  // Write the event to the pipe
-  DWORD dwWritten;
-  WriteFile(writeKillPipe, &sig, sizeof(sig), &dwWritten, NULL);
-	
   return(0);
 }
 
-// Return ms since system-start
+// Return ms since system-start: needed for dealing with timestamps later.
 DWORD time_since_start() { GetTickCount(); }
 
 // Send key to the OS
-void sendKey(struct KeyEvent* ep)
+void sendKey(struct KeyEvent* e)
 {
-  printf("C:  sending key\n");
-  struct KeyEvent e = *ep;
+  /* struct KeyEvent e = *ep; */
   INPUT ip;
 
   // Standard stuff we don't use
@@ -165,9 +129,8 @@ void sendKey(struct KeyEvent* ep)
   ip.ki.wScan       = 0;
   ip.ki.time        = 0;
   ip.ki.dwExtraInfo = 0;
-
-  // Insert the KeyUp or KeyDown flag
-  switch (e.type) {
+  ip.ki.wVk         = e->keycode;
+  switch (e->type) {
       case 0:
         ip.ki.dwFlags = 0;
         break;
@@ -177,15 +140,11 @@ void sendKey(struct KeyEvent* ep)
         break;
     }
 
-  // Insert the raw keycode
-  ip.ki.wVk = e.keycode;
-
   // Emit the event to the OS
   SendInput(1, &ip, sizeof(INPUT));
 }
 
 
-//int main() { grab_kb(); }
 
 
 // OLD STUFF FOR FUTURE REFERENCE

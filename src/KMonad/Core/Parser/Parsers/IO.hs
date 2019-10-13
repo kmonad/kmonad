@@ -30,6 +30,7 @@ decoderNames =
 inputNames :: Named (Parser InputToken)
 inputNames =
   [ ("LINUX_DEVICE", ldevP)
+  , ("LL_KEYBOARD_HOOK", pure WindowsLLHook)
   ]
 
 -- | Parse a LinuxDeviceSource
@@ -53,7 +54,8 @@ inputP = do
 -- | Correspondence between names and 'OutputToken' values.
 outputNames :: Named (Parser OutputToken)
 outputNames =
-  [ ("UINPUT_SINK", uinputP) ]
+  [ ("UINPUT_SINK", uinputP)
+  , ("SEND_EVENT_SINK", pure WindowsSendEventSink) ]
 
 -- | Parse a UinputToken
 uinputP :: Parser OutputToken
