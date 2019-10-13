@@ -259,3 +259,11 @@ but it might even be the case that different startup-orders could result in
 different behavior. I have no experience with AHK at all, and rarely use
 Windows. If you run into any issues, please file them, and I'm sure that in time
 we can resolve everything.
+
+### Why can't I remap the Fn key on my laptop?
+Many laptops have a Fn key that mimics some of the functionality that KMonad
+tries to offer: it changes the mapping of certain keys, like creating a numpad
+in the middle of the laptop keyboard. This remapping happens in the hardware,
+before any event is ever registered with the operating system, therefore KMonad
+has no way to 'get' at any of those events. This means that we cannot remap them
+in any way.
