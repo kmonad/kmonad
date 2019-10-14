@@ -776,3 +776,50 @@ Here:
 
 For info on getting special character support working, consult [the
 README](../README.md). 
+
+### Sequencing buttons
+For those buttons that make sense in the context of 'only tapping' (i.e., not
+TapHold buttons, or multi-tap buttons), there exists the possibility of
+sequencing them. This is conceptually different from a Macro button in the
+following way: A macro is 1 button that gets 1 press and then emits a sequence
+of outputs.  Sequencing buttons turns 1 physical press of a button into a number
+of virtual taps of any number of buttons.
+
+For this reason, for example, it is currently impossible to include
+layer-toggling functionality in a Macro (macros only sequence outputs). To
+support sequencing arbitrary actions we provide an 'after' button that is
+created like this:
+
+```
+@ab  = >> a b      // Tap an emit-a button, then an emit-b button
+@abc = >> a >> b c // Tap an emit-a, emit-b, and an emit-c button
+```
+
+This can be especially useful if you want to have a layer with various actions
+that you 'switch into', but then want to switch out of that layer automatically
+after 1 such action is completed. For example:
+
+```
+...
+
+@to  = LT-test
+
+@foo = (( M-w 1 ))            // Performs macro
+@bar = >> (( M-w 2 )) LR-test // Performs macro and leaves layer
+@baz = >> (( M-w 3 )) LA-more // Performs macro and adds other layer
+
+// from the stack
+
+SRC 
+  a    s    d
+
+LAYER base
+  @to  _    _
+
+LAYER test
+  @foo @bar @baz
+
+LAYER more
+  XX   XX   XX
+
+```
