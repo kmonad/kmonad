@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Domain.Button.Around
+module KMonad.Domain.Button.After
   ( mkAfter
   , mkAfterM
   )

@@ -54,6 +54,7 @@ library
       KMonad.Core.Time
       KMonad.Core.Types
       KMonad.Domain.Button
+      KMonad.Domain.Button.After
       KMonad.Domain.Button.Around
       KMonad.Domain.Button.Block
       KMonad.Domain.Button.Emit

@@ -50,6 +50,7 @@ buttonP = choice
   , tapHold
   , tapNext
   , macro
+  , afterP
   ]
 
 -- | Parse a 'ButtonSymbol' by matching either a 'ButtonToken', an 'AliasRef',

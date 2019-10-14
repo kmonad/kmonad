@@ -18,6 +18,7 @@ module.
 module KMonad.Domain.Button
   ( encode
 
+  , module KMonad.Domain.Button.After
   , module KMonad.Domain.Button.Around
   , module KMonad.Domain.Button.Block
   , module KMonad.Domain.Button.Emit
@@ -40,6 +41,8 @@ import KMonad.Core.Button
 import KMonad.Core.Parser
 import KMonad.Domain.Effect (CanButton)
 
+
+import KMonad.Domain.Button.After
 import KMonad.Domain.Button.Around
 import KMonad.Domain.Button.Block
 import KMonad.Domain.Button.Emit
@@ -57,6 +60,7 @@ import KMonad.Domain.Button.TapNext
 
 -- | Turn a ButtonToken into a Button operation
 encode :: (CanButton m, MonadIO n) => ButtonToken -> n (Button m)
+encode (BAfter a b) = mkAfter <$> encode a <*> encode b
 encode (BEmit kc)     = mkEmitM kc
 encode (BEmitSpecial ss) = mkEmitSpecialM ss
 encode (BEmitDeadKey dk) = mkEmitDeadKeyM dk
