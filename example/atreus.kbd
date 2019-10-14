@@ -39,6 +39,8 @@ LAYER
 // Testing 'after button'
 @dbz = TH 200 z LA-debug // Switch to debug layer
 @db1 = >> (( C-x 8 ret 1 2 3 4 ret )) LR-debug
+@db2 = >> a >> b >> c d
+//@db2 = a
 
 // The raw input for my Atreus in 'raw' mode
 SRC
@@ -93,7 +95,7 @@ LAYER spanish
 
 // Testing 'after button'
 LAYER debug
-  _    _    _    _    @db1           _    _    _    _    _
+  _    _    _    @db2 @db1           _    _    _    _    _
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _

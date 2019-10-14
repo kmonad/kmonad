@@ -38,6 +38,7 @@ buttonP :: Parser ButtonToken
 buttonP = choice
   [ lockOnP
   , lockOffP
+  , afterP
   , lockToggleP  -- This has to happen before emit, we are shadowing 'caps' etc.
   , block
   , emit
@@ -50,7 +51,6 @@ buttonP = choice
   , tapHold
   , tapNext
   , macro
-  , afterP
   ]
 
 -- | Parse a 'ButtonSymbol' by matching either a 'ButtonToken', an 'AliasRef',
@@ -81,7 +81,7 @@ trans = Transparent <$ (string "transparent" <|> "trans" <|> "_")
 -- | Compound parser for buttons that are 'simple', i.e. that can fill the 'tap'
 -- field of any compound 'tap/hold' style button
 tapper :: Parser ButtonToken
-tapper = emit <|> macro <|> locker <|> layerAdd <|> layerRem
+tapper = choice [afterP, macro, locker, layerAdd, layerRem, emit]
 
 -- | Compound parser for any button that does lock manipulation
 locker :: Parser ButtonToken
