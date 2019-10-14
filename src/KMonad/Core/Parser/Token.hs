@@ -74,7 +74,9 @@ data OutputToken
 
 -- | A token describing a button
 data ButtonToken
-  = BEmit KeyCode               -- ^ Corresponds to "KMonad.Domain.Button.Emit"
+  = BAfter ButtonToken ButtonToken
+    -- ^ Corresponds to "KMonad.Domain.Button.After"
+  | BEmit KeyCode               -- ^ Corresponds to "KMonad.Domain.Button.Emit"
   | BModded KeyCode ButtonToken -- ^ Corresponds to "KMonad.Domain.Button.Around"
   | BLayerToggle Name        -- ^ Corresponds to "KMonad.Domain.Button.LayerToggle"
   | BTapHold Milliseconds ButtonToken ButtonToken

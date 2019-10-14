@@ -80,7 +80,7 @@ trans = Transparent <$ (string "transparent" <|> "trans" <|> "_")
 -- | Compound parser for buttons that are 'simple', i.e. that can fill the 'tap'
 -- field of any compound 'tap/hold' style button
 tapper :: Parser ButtonToken
-tapper = emit <|> macro <|> locker
+tapper = emit <|> macro <|> locker <|> layerAdd <|> layerRem
 
 -- | Compound parser for any button that does lock manipulation
 locker :: Parser ButtonToken
@@ -97,6 +97,14 @@ lockOffP = BLockOff <$> (string "LOFF-" >> lockkeyP)
 -- | Parse a button that toggles a lock
 lockToggleP :: Parser ButtonToken
 lockToggleP = BLockToggle <$> lockkeyP
+
+-- | Parse an 'after' button that sequences two buttons
+afterP :: Parser ButtonToken
+afterP = do
+  _ <- symbol ">>"
+  a <- lexemeSameLine tapper
+  b <- tapper
+  pure $ BAfter a b
 
 -- | Parse an emit by reading the name of a keycode
 emit :: Parser ButtonToken
