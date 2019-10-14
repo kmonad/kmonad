@@ -807,8 +807,7 @@ after 1 such action is completed. For example:
 @foo = (( M-w 1 ))            // Performs macro
 @bar = >> (( M-w 2 )) LR-test // Performs macro and leaves layer
 @baz = >> (( M-w 3 )) LA-more // Performs macro and adds other layer
-
-// from the stack
+                              // to the stack
 
 SRC 
   a    s    d
