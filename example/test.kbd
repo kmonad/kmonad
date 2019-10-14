@@ -1,0 +1,23 @@
+// IO
+INPUT  = LINUX_DEVICE L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd
+OUTPUT = UINPUT_SINK "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt"
+
+@to  = LT-test
+
+@foo = (( M-w 1 ))            // Performs macro
+@bar = >> (( M-w 2 )) LR-test // Performs macro and leaves layer
+@baz = >> (( M-w 3 )) LA-more // Performs macro and adds other layer
+
+// from the stack
+
+SRC
+  a    s    d
+
+LAYER base
+  @to  _    _
+
+LAYER test
+  @foo @bar @baz
+
+LAYER more
+  XX   XX   XX
