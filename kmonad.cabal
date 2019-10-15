@@ -1,11 +1,5 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.32.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 8e1456f1261b2ebad01c59b6285b1707278d46b9b3c20e3dbda2c31750b4fe0d
-
 name:           kmonad
 version:        0.2.0
 synopsis:       Advanced keyboard remapping utility
@@ -70,7 +64,6 @@ library
       KMonad.Domain.Button.TapNext
       KMonad.Domain.Effect
       KMonad.Domain.Loop
-      --Test
   if os(linux)
     exposed-modules:
       KMonad.Api.KeyIO.Linux.DeviceSource
@@ -86,7 +79,49 @@ library
       Paths_kmonad
   hs-source-dirs:
       src
-  default-extensions: AutoDeriveTypeable BangPatterns BinaryLiterals ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DoAndIfThenElse EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MonadFailDesugaring MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeOperators TypeFamilies TypeSynonymInstances ViewPatterns
+  default-extensions:
+      AutoDeriveTypeable
+      BangPatterns
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveDataTypeable
+      DeriveFoldable
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      DoAndIfThenElse
+      EmptyDataDecls
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      KindSignatures
+      LambdaCase
+      MonadFailDesugaring
+      MultiParamTypeClasses
+      MultiWayIf
+      NamedFieldPuns
+      OverloadedStrings
+      PartialTypeSignatures
+      PatternGuards
+      PolyKinds
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeOperators
+      TypeFamilies
+      TypeSynonymInstances
+      ViewPatterns
   if os(linux)
     c-sources:
       c_src/keyio.c
@@ -98,6 +133,7 @@ library
     , bytestring
     , cereal
     , containers
+    , dhall
     , exceptions
     , hashable
     , lens
@@ -123,7 +159,10 @@ executable kmonad
       Paths_kmonad
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:
+      -threaded
+      -rtsopts
+      -with-rtsopts=-N
   build-depends:
       base
     , kmonad
