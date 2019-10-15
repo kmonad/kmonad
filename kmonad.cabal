@@ -133,11 +133,11 @@ library
     , bytestring
     , cereal
     , containers
-    , dhall
     , exceptions
     , hashable
     , lens
     , megaparsec
+    , monad-logger
     , mtl
     , optparse-applicative
     , process
