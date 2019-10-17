@@ -64,6 +64,10 @@ newtype App a = App
     , MonadError AppError
     )
 
+-- | Deal with Buttons using the IO Monad
+instance MonadButton App where
+  runButton b x = join $ runButtonIO b x
+
 -- | Emit keys by sending them to the OS through the emitter
 instance MonadEmit App where
   emitKey e = view emitter >>= \f -> liftIO $ f =<< (withNow $ actAtTime e)

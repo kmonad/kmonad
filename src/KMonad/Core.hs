@@ -14,8 +14,7 @@ import lists.
 -}
 module KMonad.Core
   ( -- * Reexports
-    module KMonad.Core.Button
-  , module KMonad.Core.Config
+    module KMonad.Core.Config
   , module KMonad.Core.Event
   , module KMonad.Core.Keyboard
   , module KMonad.Core.KeyCode
@@ -29,7 +28,6 @@ module KMonad.Core
   )
 where
 
-import KMonad.Core.Button
 import KMonad.Core.Config
 import KMonad.Core.Event
 import KMonad.Core.Keyboard

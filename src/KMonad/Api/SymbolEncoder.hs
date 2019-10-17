@@ -7,6 +7,7 @@ import Control.Monad.Reader
 import UnliftIO.MVar
 
 import KMonad.Core
+import KMonad.Domain.Button
 import KMonad.Domain.Effect
 
 
@@ -16,10 +17,10 @@ type SymbolEncoder  = SpecialSymbol -> Maybe KeySequence
 type DeadKeyEncoder = DeadKey       -> Maybe KeySequence
 
 composeSymbol :: SymbolEncoder
-composeSymbol ss = (tap KeyRightAlt <>) <$> (ss^.composeSeq)
+composeSymbol ss = (mkKeyTap KeyRightAlt <>) <$> (ss^.composeSeq)
 
 composeDeadKey :: DeadKeyEncoder
-composeDeadKey dk = (tap KeyRightAlt <>) <$> (dk^.composeSeq)
+composeDeadKey dk = (mkKeyTap KeyRightAlt <>) <$> (dk^.composeSeq)
 
 data SymbolEncoderRing = SymbolEncoderRing
   { _seEncoders :: M.HashMap Name SymbolEncoder
@@ -47,7 +48,6 @@ mkSymbolEncoderRing ses dks
     , _currentDK  = cdk
     }
 
-
 -- | Encode a symbol using the current encoder
 encodeSymbol :: (HasSymbolEncoderRing r, MonadReader r m, MonadIO m)
   => SpecialSymbol         -- ^ The symbol to encode
@@ -59,6 +59,3 @@ encodeDeadKey :: (HasSymbolEncoderRing r, MonadReader r m, MonadIO m)
   => DeadKey               -- ^ The DeadKey to encode
   -> m (Maybe KeySequence) -- ^ The sequence encoding this symbol
 encodeDeadKey dk = view currentDK >>= readMVar >>= \f -> pure $ f dk
-
-
--- TODO: expand here to allow switching encoders

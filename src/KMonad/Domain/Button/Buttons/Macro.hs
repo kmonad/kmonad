@@ -8,22 +8,23 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
+A button that emits a sequence of keypresses when pressed
+
 -}
 module KMonad.Domain.Button.Buttons.Macro
   ( mkMacro
-  , mkMacroM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
 -- | Return a button that emits a series of events upon press
-mkMacro :: MonadEmit m => KeySequence -> Button m
+mkMacro :: (MonadIO io, MonadEmit m)
+  => KeySequence   -- ^ The `KeySequence` to emit
+  -> io (Button m) -- ^ The resulting button
 mkMacro es = mkButton $ \case
-  Engaged   -> emitSeq es
+  Engaged    -> emitSeq es
   Disengaged -> pure ()
-
--- | Return a button that emits a series of events upon press from some arbitrary Monad
-mkMacroM :: (Monad n, MonadEmit m) => KeySequence -> n (Button m)
-mkMacroM = pure . mkMacro

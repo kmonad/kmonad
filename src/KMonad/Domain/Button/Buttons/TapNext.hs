@@ -21,17 +21,17 @@ module KMonad.Domain.Button.Buttons.TapNext
 where
 
 import Control.Lens
-import Control.Monad.Trans
-
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
 -- | Return a new TapNext button
-mkTapNext :: CanButton m
+mkTapNext :: (MonadIO io, CanButton m)
   => KeyCode   -- ^ The keycode that triggers this TapNext
   -> Button m  -- ^ The button to use for taps
   -> Button m  -- ^ The button to use for holds
-  -> Button m
+  -> io (Button m)
 mkTapNext c t h = mkButton $ \case
   Disengaged -> release h    -- Release the hold button, does nothing if hold was never pressed
   Engaged    -> do

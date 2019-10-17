@@ -16,72 +16,12 @@ module.
 
 -}
 module KMonad.Domain.Button
-  ( encode
-
-  , module KMonad.Domain.Button.Buttons.After
-  , module KMonad.Domain.Button.Buttons.Around
-  , module KMonad.Domain.Button.Buttons.Block
-  , module KMonad.Domain.Button.Buttons.Emit
-  , module KMonad.Domain.Button.Buttons.EmitDeadKey
-  , module KMonad.Domain.Button.Buttons.EmitSpecial
-  , module KMonad.Domain.Button.Buttons.LayerAdd
-  , module KMonad.Domain.Button.Buttons.LayerRem
-  , module KMonad.Domain.Button.Buttons.LayerToggle
-  , module KMonad.Domain.Button.Buttons.Lockers
-  , module KMonad.Domain.Button.Buttons.Macro
-  , module KMonad.Domain.Button.Buttons.MultiTap
-  , module KMonad.Domain.Button.Buttons.TapHold
-  , module KMonad.Domain.Button.Buttons.TapNext
+  ( module KMonad.Domain.Button.Button
+  , module KMonad.Domain.Button.Buttons
+  , module KMonad.Domain.Button.Encode
   )
 where
 
-import Control.Monad.Trans
-
-import KMonad.Core.Button
-import KMonad.Core.Parser
-import KMonad.Domain.Effect (CanButton)
-
-
-import KMonad.Domain.Button.Buttons.After
-import KMonad.Domain.Button.Buttons.Around
-import KMonad.Domain.Button.Buttons.Block
-import KMonad.Domain.Button.Buttons.Emit
-import KMonad.Domain.Button.Buttons.EmitDeadKey
-import KMonad.Domain.Button.Buttons.EmitSpecial
-import KMonad.Domain.Button.Buttons.LayerAdd
-import KMonad.Domain.Button.Buttons.LayerRem
-import KMonad.Domain.Button.Buttons.LayerToggle
-import KMonad.Domain.Button.Buttons.Lockers
-import KMonad.Domain.Button.Buttons.Macro
-import KMonad.Domain.Button.Buttons.MultiTap
-import KMonad.Domain.Button.Buttons.TapHold
-import KMonad.Domain.Button.Buttons.TapNext
-
-
--- | Turn a ButtonToken into a Button operation
-encode :: (CanButton m, MonadIO n) => KeyCode -> ButtonToken -> n (Button m)
-encode _ (BAfter a b) = mkAfter <$> encode a <*> encode b
-encode _ (BEmit kc)     = mkEmitM kc
-encode _ (BEmitSpecial ss) = mkEmitSpecialM ss
-encode _ (BEmitDeadKey dk) = mkEmitDeadKeyM dk
-encode _ (BModded kc b) = do
-  x <- mkEmitM kc
-  y <- encode  b
-  mkAroundM x y
-encode _ BBlock = mkBlockM
-encode _ (BLayerToggle lid) = mkLayerToggleM kc lid
-encode _ (BLayerAdd lid) = mkLayerAddM lid
-encode _ (BLayerRem lid) = mkLayerRemM lid
-encode c (BTapHold ms bt bh) = do
-  btap <- encode bt
-  bhld <- encode bh
-  mkTapHold c ms btap bhld
-encode c (BTapNext bt bh) = do
-  btap <- encode bt
-  bhld <- encode bh
-  mkTapNext c btap bhld
-encode _ (BMacro bs) = mkMacroM bs
-encode _ (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
-encode _ (BLockOn lk) = mkLockOnM lk
-encode _ (BLockOff lk) = mkLockOffM lk
-encode _ (BLockToggle lk) = mkLockToggleM lk
+import KMonad.Domain.Button.Button
+import KMonad.Domain.Button.Buttons
+import KMonad.Domain.Button.Encode

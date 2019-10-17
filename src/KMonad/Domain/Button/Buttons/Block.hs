@@ -15,17 +15,13 @@ include it in the layer, but define it as a 'mkBlock' 'Button'.
 -}
 module KMonad.Domain.Button.Buttons.Block
   ( mkBlock
-  , mkBlockM
   )
 where
 
-import KMonad.Core.Button
-
+import Control.Monad.IO.Class
+import KMonad.Core
+import KMonad.Domain.Button.Button
 
 -- | Create a Button that does nothing
-mkBlock :: Monad m => Button m
-mkBlock = mkButton . const $ return ()
-
--- | Return a Button that does nothing from an arbitrary Monad
-mkBlockM :: (Monad m, Monad n) => n (Button m)
-mkBlockM = return mkBlock
+mkBlock :: (MonadIO io, MonadButton m) => io (Button m)
+mkBlock = mkButton . const $ pure ()

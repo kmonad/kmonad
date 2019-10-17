@@ -1,0 +1,51 @@
+module KMonad.Domain.Button.Button
+
+where
+
+import Control.Lens
+import UnliftIO
+
+import KMonad.Core
+
+
+--------------------------------------------------------------------------------
+-- $types
+
+-- | Buttons are actions in a particular context that are triggered by
+-- switch-states.
+--
+-- @since 0.1.0
+newtype Button m = Button { unButton :: (SwitchState -> m (), MVar SwitchState)}
+
+-- | Create a new 'Button' from an effectful function from 'SwitchState'
+--
+-- @since 0.1.0
+mkButton :: (MonadIO io, Monad m) => (SwitchState -> m ()) -> io (Button m)
+mkButton f = Button . (f,) <$> liftIO (newMVar Disengaged)
+
+runButtonIO :: (MonadIO io, Monad m) => Button m -> SwitchState -> io (m ())
+runButtonIO b x = do
+  let (f, v) = unButton b
+  st <- takeMVar v
+  case (st, x) of
+    (Engaged, Disengaged) -> putMVar v Disengaged >> pure (f Disengaged)
+    (Disengaged, Engaged) -> putMVar v Engaged    >> pure (f Engaged)
+    _                     -> putMVar v st         >> pure (pure ())
+
+
+
+
+--------------------------------------------------------------------------------
+
+class Monad m => MonadButton m where
+  runButton :: Button m -> SwitchState -> m ()
+
+press :: MonadButton m => Button m -> m ()
+press b = runButton b Engaged
+
+release :: MonadButton m => Button m -> m ()
+release b = runButton b Disengaged
+
+tap :: MonadButton m => Button m -> m ()
+tap b = press b *> release b
+

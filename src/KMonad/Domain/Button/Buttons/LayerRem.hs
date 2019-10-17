@@ -13,21 +13,17 @@ Permanently remove a layer from the stack
 -}
 module KMonad.Domain.Button.Buttons.LayerRem
   ( mkLayerRem
-  , mkLayerRemM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
-mkLayerRem :: (MonadTrace m, MonadStackManip m)
-  => Name -- ^ The ID of the layer to add to the stack
-  -> Button m
+mkLayerRem :: (MonadIO io, MonadTrace m, MonadStackManip m)
+  => Name          -- ^ The ID of the layer to add to the stack
+  -> io (Button m) -- ^ The resulting button
 mkLayerRem lid = mkButton $ \case
   Engaged   -> trace ("popping layer: " <> lid) >> popL lid
   Disengaged -> pure ()
-
-mkLayerRemM :: (MonadTrace m, MonadStackManip m, Monad n)
-  => Name -- ^ The ID of the layer to remove from the stack
-  -> n (Button m)
-mkLayerRemM = pure . mkLayerRem

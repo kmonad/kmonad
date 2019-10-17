@@ -1,54 +1,48 @@
+{-|
+Module      : KMonad.Domain.Button.Buttons.Lockers
+Description : A button that adds a layer to the top of the stack
+Copyright   : (c) David Janssen, 2019
+License     : MIT
+
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
+
+Buttons to toggle the 3 `locking` style buttons.
+
+-}
 module KMonad.Domain.Button.Buttons.Lockers
   ( mkLockOn
-  , mkLockOnM
   , mkLockOff
-  , mkLockOffM
   , mkLockToggle
-  , mkLockToggleM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
 -- | Return a button that turns a lock On
-mkLockOn :: (MonadLock m)
+mkLockOn :: (MonadIO io, MonadLock m)
   => LockKey
-  -> Button m
+  -> io (Button m)
 mkLockOn lk = mkButton $ \case
-  Engaged   -> lockOn lk
+  Engaged    -> lockOn lk
   Disengaged -> pure ()
 
--- | Return a button that turns a lock On
-mkLockOnM :: (MonadLock m, Monad n)
-  => LockKey
-  -> n (Button m)
-mkLockOnM = pure . mkLockOn
-
 -- | Return a button that turns a lock Off
-mkLockOff :: (MonadLock m)
+mkLockOff :: (MonadIO io, MonadLock m)
   => LockKey
-  -> Button m
+  -> io (Button m)
 mkLockOff lk = mkButton $ \case
-  Engaged   -> lockOff lk
+  Engaged    -> lockOff lk
   Disengaged -> pure ()
 
--- | Return a button that turns a lock Off
-mkLockOffM :: (MonadLock m, Monad n)
-  => LockKey
-  -> n (Button m)
-mkLockOffM = pure . mkLockOff
-
 -- | Return a button that toggles a lock
-mkLockToggle :: (MonadLock m)
+mkLockToggle :: (MonadIO io, MonadLock m)
   => LockKey
-  -> Button m
+  -> io (Button m)
 mkLockToggle lk = mkButton $ \case
-  Engaged   -> lockToggle lk
+  Engaged    -> lockToggle lk
   Disengaged -> pure ()
-
--- | Return a button that toggles a lock
-mkLockToggleM :: (MonadLock m, Monad n)
-  => LockKey
-  -> n (Button m)
-mkLockToggleM = pure . mkLockToggle

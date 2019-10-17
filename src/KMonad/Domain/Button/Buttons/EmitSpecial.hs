@@ -8,26 +8,23 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
+A button that emits a macro for special symbols.
+
 -}
 module KMonad.Domain.Button.Buttons.EmitSpecial
   ( mkEmitSpecial
-  , mkEmitSpecialM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
 -- | Return a button that emits a special symbol on Press (does nothing on Release)
-mkEmitSpecial :: (MonadSymbol m)
-  => SpecialSymbol
-  -> Button m
+mkEmitSpecial :: (MonadIO io, MonadSymbol m)
+  => SpecialSymbol -- ^ The SpecialSymbol to emit
+  -> io (Button m) -- ^ The resulting button
 mkEmitSpecial kc = mkButton $ \case
-  Engaged   -> emitSymbol kc
+  Engaged    -> emitSymbol kc
   Disengaged -> pure ()
-
--- | Return a button that emits a mkEmitSpecial button from an arbitrary Monad
-mkEmitSpecialM :: (MonadSymbol m, Monad n)
-  => SpecialSymbol
-  -> n (Button m)
-mkEmitSpecialM = pure . mkEmitSpecial

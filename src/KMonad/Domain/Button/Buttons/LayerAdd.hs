@@ -13,21 +13,18 @@ Permanently add a layer to the top of the layer stack
 -}
 module KMonad.Domain.Button.Buttons.LayerAdd
   ( mkLayerAdd
-  , mkLayerAddM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
-mkLayerAdd :: (MonadTrace m, MonadStackManip m)
-  => Name -- ^ The ID of the layer to add to the stack
-  -> Button m
+-- | Return a 'Button' that adds a layer to the stack when pressed.
+mkLayerAdd :: (MonadIO io, MonadTrace m, MonadStackManip m)
+  => Name          -- ^ The ID of the layer to add to the stack
+  -> io (Button m) -- ^ The resulting button
 mkLayerAdd lid = mkButton $ \case
-  Engaged   -> trace ("pushing layer: " <> lid) >> pushL lid
+  Engaged    -> trace ("pushing layer: " <> lid) >> pushL lid
   Disengaged -> pure ()
-
-mkLayerAddM :: (MonadTrace m, MonadStackManip m, Monad n)
-  => Name -- ^ The ID of the layer to remove from the stack
-  -> n (Button m)
-mkLayerAddM = pure . mkLayerAdd

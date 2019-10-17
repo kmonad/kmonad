@@ -9,30 +9,24 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 The 'mkEmit' 'Button' is the standard "this is a button that types a letter"
-style button. When pressed, it emits a 'Press' 'KeyEvent' for its 'KeyCode', and
-when released, a 'Release' type event.
+style button. When pressed, it emits a press for its 'KeyCode', when released it
+emits a release for its 'KeyCode'.
 
 -}
 module KMonad.Domain.Button.Buttons.Emit
   ( mkEmit
-  , mkEmitM
   )
 where
 
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
-
+import KMonad.Domain.Button.Button
 
 -- | Return an Emit button
-mkEmit :: (MonadEmit m)
-  => KeyCode  -- ^ The keycode to emit on manipulation
-  -> Button m -- ^ The resulting button
+mkEmit :: (MonadIO io, MonadEmit m)
+  => KeyCode       -- ^ The keycode to emit on manipulation
+  -> io (Button m) -- ^ The resulting button
 mkEmit kc = mkButton $ \case
-  Engaged   -> emitPress kc
+  Engaged    -> emitPress kc
   Disengaged -> emitRelease kc
-
--- | Return an Emit button from within some Monad
-mkEmitM :: (MonadEmit m, Monad n)
-  => KeyCode      -- ^ The keycode to emit on manipulation
-  -> n (Button m) -- ^ The resulting button
-mkEmitM = return . mkEmit

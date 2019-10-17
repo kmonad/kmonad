@@ -106,6 +106,7 @@ module KMonad.Domain.Effect
 
     -- * Reexports
   , module Control.Monad.Logger
+  , module KMonad.Domain.Button.Button -- MonadButton
   )
 where
 
@@ -122,6 +123,7 @@ import qualified Data.Text    as T
 import qualified Data.Text.IO as T
 
 import KMonad.Core
+import KMonad.Domain.Button.Button (MonadButton(..))
 
 --------------------------------------------------------------------------------
 -- $collection
@@ -135,7 +137,8 @@ import KMonad.Core
 -- 'Button's that wrap other 'Button's (like TapHold or Around), you will need
 -- to include all effects.
 type CanButton m =
-  ( MonadEmit       m
+  ( MonadButton     m
+  , MonadEmit       m
   , MonadFork       m
   , MonadFuture     m
   , MonadHold       m

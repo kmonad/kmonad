@@ -30,21 +30,18 @@ module KMonad.Domain.Button.Buttons.TapHold
 where
 
 import Control.Lens
-import Control.Monad.Reader
-
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
-
---------------------------------------------------------------------------------
--- Setup the running environment and Monad for TapMod buttons
+import KMonad.Domain.Button.Button
 
 -- | Return a new TapHold button
-mkTapHold :: CanButton m
+mkTapHold :: (MonadIO io, CanButton m)
   => KeyCode      -- ^ The keycode that triggers this taphold
   -> Milliseconds -- ^ The time to 'wait' for the next event in milliseconds
   -> Button m     -- ^ The button to use when tapped
   -> Button m     -- ^ The button to use when held
-  -> Button m
+  -> io (Button m)
 mkTapHold c d t h = mkButton $ \case
   Disengaged -> release h      -- Release the hold button, does nothing if hold was never pressed
   Engaged    -> do

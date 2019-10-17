@@ -12,50 +12,44 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 module KMonad.Domain.Button.Buttons.MultiTap
   ( mkMultiTap
-  , mkMultiTapM
   )
 where
 
 import Control.Lens
-import Control.Monad (void)
-import Control.Monad.Trans
-
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
+import KMonad.Domain.Button.Button
 
 -- | Return a button that does changes behavior based on how often it is tapped.
 --
 -- Each potential
-mkMultiTap :: CanButton m
-  => [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
-  -> Button m
-mkMultiTap bs = mkButton $ \case
-  Engaged   -> hPress bs
+mkMultiTap :: (MonadIO io, CanButton m)
+  => KeyCode                    -- ^ The 'KeyCode' to which this button is mapped
+  -> [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
+  -> io (Button m)
+mkMultiTap c bs = mkButton $ \case
   Disengaged -> pure ()
+  Engaged    -> do
+    hold True
+    unmask <- maskInput
+    nxt    <- waitNext
+    fork $ do
+      recurse c nxt bs
+      unmask
+      hold False
 
-
-mkMultiTapM :: (CanButton m, Monad n)
-  => [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
-  -> n (Button m)
-mkMultiTapM = pure . mkMultiTap
-
-
-hPress :: CanButton m => [(Microseconds, Button m)] -> m ()
-hPress bs = do
-  hold True
-  unmask <- maskInput
-  nxt    <- pinComparison
-  fork $ recurse nxt bs >> unmask >> hold False
-
+-- | Await taps until the button is decided
 recurse :: CanButton m
-  => m EventComparison
-  -> [(Microseconds, Button m)]
+  => KeyCode                    -- ^ The keycode to which this button is mapped
+  -> m KeyEvent                 -- ^ Action that fetches the next-event
+  -> [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
   -> m ()
-recurse _   []          = pure () -- Only reachable if empty button is provided
-recurse _   ((_, b):[]) = tap b  -- Last button: press immediately
-recurse nxt ((d, b):bs) = do      -- Recurse deeper when we encounter a press of the same code, or tap when delay runs out
+recurse _ _   []          = pure () -- Only reachable if empty button is provided
+recurse _ _   ((_, b):[]) = tap b   -- Last button: press immediately
+recurse c nxt ((d, b):bs) = do      -- Recurse deeper when we encounter a press of the same code, or tap when delay runs out
   race (wait d) (waitForWith pred nxt) >>= \case
     Left  _ -> tap b
-    Right _ -> recurse nxt bs
+    Right _ -> recurse c nxt bs
   where
-    pred cmp = cmp^.sameCode && cmp^._type == Press
+    pred e = (e^.keyCode == c) && (e^.switchState == Engaged)

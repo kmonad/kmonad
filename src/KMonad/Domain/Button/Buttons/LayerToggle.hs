@@ -12,48 +12,25 @@ Temporarily switch to a layer on press, and switch back on release.
 
 -}
 module KMonad.Domain.Button.Buttons.LayerToggle
-  ( LTCtx
-  , mkLayerToggleM
+  ( mkLayerToggle
   )
 where
 
 import Control.Lens
-import Control.Monad.Reader
-
+import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect
-
--- | The context required by LayerToggle buttons
-type LTCtx m =
-  ( MonadTrace      m
-  , MonadVar        m
-  , MonadStackManip m
-  )
-
-data BState
-  = Unpressed
-  | Pressed
-  deriving (Eq, Show)
+import KMonad.Domain.Button.Button
 
 -- | Return a 'Button' that pushes a layer onto the stack when pressed, and pops
 -- it when released.
-mkLayerToggleM :: (LTCtx m, MonadIO n) => Name -> n (Button m)
-mkLayerToggleM lid = runVar Unpressed $ \st ->
-                       mkButton $ \x -> go st lid x
-
-go :: LTCtx m => Var BState -> Name -> SwitchState -> m ()
-go st lid x = do
-  v <- getVar st
-  case (v, x) of
-    -- Pressing an unpressed button
-    (Unpressed, Engaged) -> do
-      putVar Pressed st
-      trace $ "pushing layer: " <> lid
-      pushL lid
-    -- Releasing a pressed button
-    (Pressed, Disengaged) -> do
-      putVar Unpressed st
-      trace $ "popping layer: " <> lid
-      popL lid
-    -- Anything else
-    _                   -> putVar v st
+mkLayerToggle :: (MonadIO io, MonadLogger m, MonadStackManip m)
+  => Name          -- ^ The ID of the layer to toggle to
+  -> io (Button m) -- ^ The resulting button
+mkLayerToggle lid = mkButton $ \case
+  Engaged -> do
+    $(logInfo) $ "pushing layer: " <> lid
+    pushL lid
+  Disengaged -> do
+    $(logInfo) $ "popping layer: " <> lid
+    popL lid
