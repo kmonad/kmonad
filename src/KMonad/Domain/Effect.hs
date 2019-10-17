@@ -43,6 +43,8 @@ module KMonad.Domain.Effect
   , MonadFuture(..)
   , waitFor
   , waitForWith
+  , waitForM
+  , waitForWithM
 
     -- * MonadHandler
     -- $handler
@@ -139,6 +141,7 @@ type CanButton m =
   , MonadHold       m
   , MonadInject     m
   , MonadLock       m
+  , MonadLogger     m
   , MonadMaskInput  m
   , MonadNext       m
   , MonadNow        m
@@ -226,6 +229,9 @@ class Monad m => MonadFuture m where
 waitFor :: MonadFuture m => (EventComparison -> Bool) -> m ()
 waitFor p = pinComparison >>= waitForWith p
 
+waitForM :: MonadFuture m => (EventComparison -> m Bool) -> m ()
+waitForM p = pinComparison >>= waitForWithM p
+
 -- | Like waitFor, but using an already pinned action
 --
 -- `waitFor p` is equivalent to `pinComparison >>= waitForWith p`
@@ -234,6 +240,14 @@ waitForWith :: Monad m
   -> m a         -- ^ The action that generates comparisons
   -> m ()
 waitForWith p nxt = nxt >>= \cmp -> if p cmp then pure () else waitForWith p nxt
+
+waitForWithM :: Monad m
+  => (a -> m Bool) -- ^ The effectful operation to use for matching
+  -> m a           -- ^ The action that generates comparisons
+  -> m ()
+waitForWithM p nxt = nxt >>= \cmp -> p cmp >>= \case
+  True  -> pure ()
+  False -> waitForWithM p nxt
 
 
 --------------------------------------------------------------------------------
