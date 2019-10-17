@@ -7,3 +7,9 @@ packages:
 #   Currently not required. Leaving this comment in case static-haskell-nix has
 #   problems in the future. If it cannot find packages, perhaps adding them here
 #   can fix this.
+
+
+# Pass a --nix flag to stack to use nix to install required packages for you (if
+# you have nix installed.)
+nix:
+  packages: [zlib]

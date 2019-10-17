@@ -18,6 +18,7 @@ import Control.Concurrent (threadDelay, forkIO)
 import Control.Exception
 import Control.Lens
 import Control.Monad.Except
+import Control.Monad.Logger
 import Control.Monad.Reader
 import qualified Data.Text.IO as T
 
@@ -52,11 +53,12 @@ instance AsConfigError AppError where
 
 -- | Define the App Monad in which we will run our IO Api
 newtype App a = App
-  { unApp :: ReaderT AppEnv (ExceptT AppError IO) a
+  { unApp :: LoggingT (ReaderT AppEnv (ExceptT AppError IO)) a
   } deriving newtype
     ( Functor
     , Applicative
     , Monad
+    , MonadLogger
     , MonadReader AppEnv
     , MonadIO
     , MonadError AppError
@@ -97,6 +99,9 @@ instance MonadLock App where
   lockOn     lk = trace ("Engaging:  "  <> tshow lk) >> lmLockOn lk
   lockOff    lk = trace ("Releasing: " <> tshow lk) >> lmLockOff lk
   lockToggle lk = trace ("Toggling:  "  <> tshow lk) >> lmLockToggle lk
+
+-- instance MonadLogger App where
+--   monadLoggerLog loc src lvl msg = lift $ monadLoggerLog loc src lvl msg
 
 -- | Deal with masking input through the EventTracker object
 instance MonadMaskInput App where
@@ -145,7 +150,7 @@ instance MonadWait App where
 
 -- | Run an App action and deal with errors using Either
 runApp :: App a -> AppEnv -> IO (Either AppError a)
-runApp m env = runExceptT $ runReaderT (unApp m) env
+runApp m env = runExceptT $ runReaderT (runStdoutLoggingT $ unApp m) env
 
 -- | Run an App action and deal with errors by throwing Exceptions
 runAppIO :: App a -> AppEnv -> IO a
