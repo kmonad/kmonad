@@ -27,7 +27,7 @@ configuration file into a valid 'Config' record.
 module KMonad.Core.Config
   ( -- * The basic types and lenses for 'Config' data
     -- $types
-    Config
+    Config(..)
   , ButtonMap
   , LayerMap
   , input, output, mappings, entry

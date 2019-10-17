@@ -21,9 +21,19 @@ module KMonad
 where
 -- import Test
 -- import           System.Environment (getArgs)
+
+import           Control.Lens
+import           Data.Maybe
+
 import           KMonad.Api.App     (startAppIO)
 import           KMonad.Api.Args
-import           KMonad.Core.Config (loadConfig)
+import           KMonad.Core.Config
+
+updateConfig :: CmdLineArgs -> Config -> Config
+updateConfig arg cfg = cfg
+  { _input = fromMaybe (cfg^.input) (arg^.inputDevice)
+  }
+
 
 
 -- | Get the command-line arguments, parse a config, and start the App-loop
@@ -33,5 +43,6 @@ runKMonad :: IO ()
 runKMonad = do
   -- test
   args <- getArgs
-  cfg  <- loadConfig (configFile args)
+  cfg  <- updateConfig args <$> loadConfig (args^.configFile)
+
   startAppIO cfg

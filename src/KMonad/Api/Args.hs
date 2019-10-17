@@ -2,7 +2,7 @@ module KMonad.Api.Args
 
 where
 
--- import Control.Lens hiding (argument)
+import Control.Lens hiding (argument)
 import Options.Applicative
 import Text.Read
 
@@ -12,12 +12,12 @@ import KMonad.Core.Parser.Token
 
 
 data CmdLineArgs = CmdLineArgs
-  { configFile   :: FilePath
+  { _configFile   :: FilePath
   -- , restartDelay :: Maybe Milliseconds
-  -- , inputDevice  :: Maybe InputToken
+  , _inputDevice  :: Maybe InputToken
   -- , outputDevice :: Maybe OutputToken
   }
--- makeLenses ''CmdLineArgs
+makeLenses ''CmdLineArgs
 
 getArgs :: IO CmdLineArgs
 getArgs = execParser opts
@@ -28,7 +28,7 @@ getArgs = execParser opts
      <> header   "KMonad - an advanced keyboard utility")
 
 allArgs :: Parser CmdLineArgs
-allArgs = CmdLineArgs <$> configFileA
+allArgs = CmdLineArgs <$> configFileA <*> inputDeviceA
 
 configFileA :: Parser FilePath
 configFileA = argument str $
@@ -56,17 +56,17 @@ configFileA = argument str $
 
 -- --------------------------------------------------------------------------------
 
--- -- | Argument for optional input device
--- inputDeviceA :: Parser (Maybe InputToken)
--- inputDeviceA = option toInputDeviceA $
---     long "input"
---  <> short 'i'
---  <> metavar "KEY_INPUT"
---  <> value Nothing
---  <> help "Optionally provide the input device to capture"
+-- | Argument for optional input device
+inputDeviceA :: Parser (Maybe InputToken)
+inputDeviceA = option toInputDeviceA $
+    long "input"
+ <> short 'i'
+ <> metavar "KEY_INPUT"
+ <> value Nothing
+ <> help "Optionally provide the input device to capture"
 
--- toInputDeviceA :: ReadM (Maybe InputToken)
--- toInputDeviceA = maybeReader $ \s -> undefined
+toInputDeviceA :: ReadM (Maybe InputToken)
+toInputDeviceA = maybeReader $ \s -> Just (Just (LinuxDeviceSource L64 s))
 
 
 -- outputDeviceA :: Parser (Maybe OutputToken)
