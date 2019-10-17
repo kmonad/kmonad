@@ -101,12 +101,16 @@ module KMonad.Domain.Effect
     -- * MonadWait
     -- $wait
   , MonadWait(..)
+
+    -- * Reexports
+  , module Control.Monad.Logger
   )
 where
 
 import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad.Except
+import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Writer
 import Data.Text

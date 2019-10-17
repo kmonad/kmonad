@@ -1,0 +1,7 @@
+* Changes to make
+** TODO Unify BPress/Press and release
+** TODO Completely remove 'repeat' events from internal processing
+** TODO Move any type of repeat behavior to the front of KMonad
+** TODO Make switches unable to be pressed or released twice
+** TODO Switch to MonadLogger
+** TODO Create general macros
