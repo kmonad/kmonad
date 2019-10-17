@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.EmitSpecial
+Module      : KMonad.Domain.Button.Buttons.EmitSpecial
 Description : A button that emits special-symbol macros on press
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Domain.Button.EmitSpecial
+module KMonad.Domain.Button.Buttons.EmitSpecial
   ( mkEmitSpecial
   , mkEmitSpecialM
   )

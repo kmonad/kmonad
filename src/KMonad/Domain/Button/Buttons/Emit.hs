@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.Emit
+Module      : KMonad.Domain.Button.Buttons.Emit
 Description : A button that emits a 'KeyEvent' on 'Engaged' and 'Disengaged'
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -13,7 +13,7 @@ style button. When pressed, it emits a 'Press' 'KeyEvent' for its 'KeyCode', and
 when released, a 'Release' type event.
 
 -}
-module KMonad.Domain.Button.Emit
+module KMonad.Domain.Button.Buttons.Emit
   ( mkEmit
   , mkEmitM
   )

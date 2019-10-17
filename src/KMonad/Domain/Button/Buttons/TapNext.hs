@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.TapNext
+Module      : KMonad.Domain.Button.Buttons.TapNext
 Description : A button that behaves differently depending on the next keypress
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -15,7 +15,7 @@ When the next keypress is a release of the same key, we register one key, when
 it is something else, we behave as if we are being held.
 
 -}
-module KMonad.Domain.Button.TapNext
+module KMonad.Domain.Button.Buttons.TapNext
   ( mkTapNext
   )
 where

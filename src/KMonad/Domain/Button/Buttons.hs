@@ -8,17 +8,9 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
-This module reexports all of the different 'Button' implementations from the
-"KMonad.Domain.Button" submodule, and provides a function that translates a
-'KMonad.Core.Parser.Token.ButtonToken' to a concrete implementation. For
-anything that uses 'Button's, it should be sufficient to simply import this
-module.
-
 -}
-module KMonad.Domain.Button
-  ( encode
-
-  , module KMonad.Domain.Button.Buttons.After
+module KMonad.Domain.Button.Buttons
+  ( module KMonad.Domain.Button.Buttons.After
   , module KMonad.Domain.Button.Buttons.Around
   , module KMonad.Domain.Button.Buttons.Block
   , module KMonad.Domain.Button.Buttons.Emit
@@ -34,13 +26,6 @@ module KMonad.Domain.Button
   , module KMonad.Domain.Button.Buttons.TapNext
   )
 where
-
-import Control.Monad.Trans
-
-import KMonad.Core.Button
-import KMonad.Core.Parser
-import KMonad.Domain.Effect (CanButton)
-
 
 import KMonad.Domain.Button.Buttons.After
 import KMonad.Domain.Button.Buttons.Around
@@ -58,30 +43,3 @@ import KMonad.Domain.Button.Buttons.TapHold
 import KMonad.Domain.Button.Buttons.TapNext
 
 
--- | Turn a ButtonToken into a Button operation
-encode :: (CanButton m, MonadIO n) => KeyCode -> ButtonToken -> n (Button m)
-encode _ (BAfter a b) = mkAfter <$> encode a <*> encode b
-encode _ (BEmit kc)     = mkEmitM kc
-encode _ (BEmitSpecial ss) = mkEmitSpecialM ss
-encode _ (BEmitDeadKey dk) = mkEmitDeadKeyM dk
-encode _ (BModded kc b) = do
-  x <- mkEmitM kc
-  y <- encode  b
-  mkAroundM x y
-encode _ BBlock = mkBlockM
-encode _ (BLayerToggle lid) = mkLayerToggleM kc lid
-encode _ (BLayerAdd lid) = mkLayerAddM lid
-encode _ (BLayerRem lid) = mkLayerRemM lid
-encode c (BTapHold ms bt bh) = do
-  btap <- encode bt
-  bhld <- encode bh
-  mkTapHold c ms btap bhld
-encode c (BTapNext bt bh) = do
-  btap <- encode bt
-  bhld <- encode bh
-  mkTapNext c btap bhld
-encode _ (BMacro bs) = mkMacroM bs
-encode _ (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
-encode _ (BLockOn lk) = mkLockOnM lk
-encode _ (BLockOff lk) = mkLockOffM lk
-encode _ (BLockToggle lk) = mkLockToggleM lk

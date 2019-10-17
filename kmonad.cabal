@@ -48,20 +48,20 @@ library
       KMonad.Core.Time
       KMonad.Core.Types
       KMonad.Domain.Button
-      KMonad.Domain.Button.After
-      KMonad.Domain.Button.Around
-      KMonad.Domain.Button.Block
-      KMonad.Domain.Button.Emit
-      KMonad.Domain.Button.EmitDeadKey
-      KMonad.Domain.Button.EmitSpecial
-      KMonad.Domain.Button.LayerAdd
-      KMonad.Domain.Button.LayerRem
-      KMonad.Domain.Button.LayerToggle
-      KMonad.Domain.Button.Lockers
-      KMonad.Domain.Button.Macro
-      KMonad.Domain.Button.MultiTap
-      KMonad.Domain.Button.TapHold
-      KMonad.Domain.Button.TapNext
+      KMonad.Domain.Button.Buttons.After
+      KMonad.Domain.Button.Buttons.Around
+      KMonad.Domain.Button.Buttons.Block
+      KMonad.Domain.Button.Buttons.Emit
+      KMonad.Domain.Button.Buttons.EmitDeadKey
+      KMonad.Domain.Button.Buttons.EmitSpecial
+      KMonad.Domain.Button.Buttons.LayerAdd
+      KMonad.Domain.Button.Buttons.LayerRem
+      KMonad.Domain.Button.Buttons.LayerToggle
+      KMonad.Domain.Button.Buttons.Lockers
+      KMonad.Domain.Button.Buttons.Macro
+      KMonad.Domain.Button.Buttons.MultiTap
+      KMonad.Domain.Button.Buttons.TapHold
+      KMonad.Domain.Button.Buttons.TapNext
       KMonad.Domain.Effect
       KMonad.Domain.Loop
   if os(linux)

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.LayerToggle
+Module      : KMonad.Domain.Button.Buttons.LayerToggle
 Description : A button that toggles a layer on and off
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -11,7 +11,7 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 Temporarily switch to a layer on press, and switch back on release.
 
 -}
-module KMonad.Domain.Button.LayerToggle
+module KMonad.Domain.Button.Buttons.LayerToggle
   ( LTCtx
   , mkLayerToggleM
   )

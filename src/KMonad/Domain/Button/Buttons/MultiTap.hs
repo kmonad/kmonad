@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.MultiTap
+Module      : KMonad.Domain.Button.Buttons.MultiTap
 Description : A button that does different things depending on how often it is tapped
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -10,7 +10,7 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 
 -}
-module KMonad.Domain.Button.MultiTap
+module KMonad.Domain.Button.Buttons.MultiTap
   ( mkMultiTap
   , mkMultiTapM
   )

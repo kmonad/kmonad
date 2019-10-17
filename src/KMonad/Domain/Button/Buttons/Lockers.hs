@@ -1,4 +1,4 @@
-module KMonad.Domain.Button.Lockers
+module KMonad.Domain.Button.Buttons.Lockers
   ( mkLockOn
   , mkLockOnM
   , mkLockOff

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.TapHold
+Module      : KMonad.Domain.Button.Buttons.TapHold
 Description : A button that behaves differently when tapped or held
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -24,7 +24,7 @@ Results in: Tap a, Tap b, Tap c
 Results in: Press Shift, Tap b, Tap c. When th is released, so will be the Shift.
 
 -}
-module KMonad.Domain.Button.TapHold
+module KMonad.Domain.Button.Buttons.TapHold
   ( mkTapHold
   )
 where

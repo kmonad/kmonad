@@ -75,28 +75,21 @@ data OutputToken
 -- | A token describing a button
 data ButtonToken
   = BAfter ButtonToken ButtonToken
-    -- ^ Corresponds to "KMonad.Domain.Button.After"
-  | BEmit KeyCode               -- ^ Corresponds to "KMonad.Domain.Button.Emit"
-  | BModded KeyCode ButtonToken -- ^ Corresponds to "KMonad.Domain.Button.Around"
-  | BLayerToggle Name        -- ^ Corresponds to "KMonad.Domain.Button.LayerToggle"
+  | BEmit KeyCode
+  | BModded KeyCode ButtonToken
+  | BLayerToggle Name
   | BTapHold Milliseconds ButtonToken ButtonToken
-    -- ^ Corresponds to "KMonad.Domain.Button.TapHold"
   | BTapNext ButtonToken ButtonToken
-    -- ^ Corresponds to "KMonad.Domain.Button.TapNext"
-  | BMacro KeySequence     -- ^ Corresponds to "KMoand.Domain.Button.Macro"
+  | BMacro KeySequence
   | BMultiTap [(Microseconds, ButtonToken)]
-    -- ^ Corresponds to "KMonad.Domain.Button.MultiTap"
-  | BBlock                      -- ^ Corresponds to "KMonad.DOmain.Button.Block"
-  | BLayerAdd Name           -- ^ Add a layer to the top of the stack
-  | BLayerRem Name           -- ^ Remove a layer from the stack
-  | BLockOn LockKey             -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
-  | BLockOff LockKey            -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
-  | BLockToggle LockKey         -- ^ Corresponds to "KMonad.Domain.Button.Lockers"
+  | BBlock
+  | BLayerAdd Name
+  | BLayerRem Name
+  | BLockOn LockKey
+  | BLockOff LockKey
+  | BLockToggle LockKey
   | BEmitSpecial SpecialSymbol
   | BEmitDeadKey DeadKey
-  -- | BUnicode Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
-  -- | BCompose Unicode            -- ^ Corresponds to "KMonad.Domain.Button.SpecialSymbol"
-
   deriving (Eq, Ord, Show)
 
 -- | A token describing anything that can be interpreted as a 'ButtonToken'

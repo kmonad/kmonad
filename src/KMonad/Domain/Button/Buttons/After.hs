@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.After
+Module      : KMonad.Domain.Button.Buttons.ButtonsAfter
 Description : A button that performs 2 button taps in a row
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,14 +9,13 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Domain.Button.After
+module KMonad.Domain.Button.Buttons.After
   ( mkAfter
   , mkAfterM
   )
 where
 
-
-import KMonad.Core.Button
+import KMonad.Core
 
 -- | Return a button that manages two other buttons, A and B, and turns a Press
 -- into TapA >> TapB and does nothing on release

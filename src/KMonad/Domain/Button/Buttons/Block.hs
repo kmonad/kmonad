@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.Block
+Module      : KMonad.Domain.Button.Buttons.Block
 Description : A button that captures the Event but does nothing
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -13,7 +13,7 @@ down the stack into further layers, so if you want to block a key explicitly,
 include it in the layer, but define it as a 'mkBlock' 'Button'.
 
 -}
-module KMonad.Domain.Button.Block
+module KMonad.Domain.Button.Buttons.Block
   ( mkBlock
   , mkBlockM
   )

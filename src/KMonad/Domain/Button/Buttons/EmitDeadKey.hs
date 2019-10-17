@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.EmitDeadKey
+Module      : KMonad.Domain.Button.Buttons.EmitDeadKey
 Description : A button that emits deadkey encoding macros
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Domain.Button.EmitDeadKey
+module KMonad.Domain.Button.Buttons.EmitDeadKey
   ( mkEmitDeadKey
   , mkEmitDeadKeyM
   )

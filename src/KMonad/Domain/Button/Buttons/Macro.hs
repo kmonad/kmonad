@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Domain.Button.Macro
+Module      : KMonad.Domain.Button.Buttons.Macro
 Description : A button that emits a series of events on press
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Domain.Button.Macro
+module KMonad.Domain.Button.Buttons.Macro
   ( mkMacro
   , mkMacroM
   )
