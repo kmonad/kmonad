@@ -24,6 +24,7 @@ import Control.Monad.Trans
 
 import KMonad.Core.Keyboard
 import KMonad.Core.KeyCode
+import KMonad.Core.Switch
 import KMonad.Core.Time
 import KMonad.Core.Types
 
@@ -46,16 +47,15 @@ instance Pretty Time where
                  ns' = fromIntegral $ t^.ns :: Int
              in tshow s' <> ":" <> tshow ns'
 
-instance Pretty KeyActionType where
-  pretty Press   = "P"
-  pretty Release = "R"
-  pretty Repeat  = "E"
+instance Pretty SwitchState where
+  pretty Engaged    = "P" -- for Press
+  pretty Disengaged = "R" -- for Release
 
 
 instance Pretty KeyEvent where
   pretty e = pretty (e^.time)
           <> "   "
-          <> pretty (e^._type)
+          <> pretty (e^.switchState)
           <> "   "
           <> tshow (e^.keyCode)
 
