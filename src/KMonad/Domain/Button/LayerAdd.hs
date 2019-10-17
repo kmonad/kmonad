@@ -24,8 +24,8 @@ mkLayerAdd :: (MonadTrace m, MonadStackManip m)
   => Name -- ^ The ID of the layer to add to the stack
   -> Button m
 mkLayerAdd lid = mkButton $ \case
-  BPress   -> trace ("pushing layer: " <> lid) >> pushL lid
-  BRelease -> pure ()
+  Engaged   -> trace ("pushing layer: " <> lid) >> pushL lid
+  Disengaged -> pure ()
 
 mkLayerAddM :: (MonadTrace m, MonadStackManip m, Monad n)
   => Name -- ^ The ID of the layer to remove from the stack

@@ -16,8 +16,8 @@ mkLockOn :: (MonadLock m)
   => LockKey
   -> Button m
 mkLockOn lk = mkButton $ \case
-  BPress   -> lockOn lk
-  BRelease -> pure ()
+  Engaged   -> lockOn lk
+  Disengaged -> pure ()
 
 -- | Return a button that turns a lock On
 mkLockOnM :: (MonadLock m, Monad n)
@@ -30,8 +30,8 @@ mkLockOff :: (MonadLock m)
   => LockKey
   -> Button m
 mkLockOff lk = mkButton $ \case
-  BPress   -> lockOff lk
-  BRelease -> pure ()
+  Engaged   -> lockOff lk
+  Disengaged -> pure ()
 
 -- | Return a button that turns a lock Off
 mkLockOffM :: (MonadLock m, Monad n)
@@ -44,8 +44,8 @@ mkLockToggle :: (MonadLock m)
   => LockKey
   -> Button m
 mkLockToggle lk = mkButton $ \case
-  BPress   -> lockToggle lk
-  BRelease -> pure ()
+  Engaged   -> lockToggle lk
+  Disengaged -> pure ()
 
 -- | Return a button that toggles a lock
 mkLockToggleM :: (MonadLock m, Monad n)

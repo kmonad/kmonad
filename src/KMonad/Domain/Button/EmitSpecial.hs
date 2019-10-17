@@ -23,8 +23,8 @@ mkEmitSpecial :: (MonadSymbol m)
   => SpecialSymbol
   -> Button m
 mkEmitSpecial kc = mkButton $ \case
-  BPress   -> emitSymbol kc
-  BRelease -> pure ()
+  Engaged   -> emitSymbol kc
+  Disengaged -> pure ()
 
 -- | Return a button that emits a mkEmitSpecial button from an arbitrary Monad
 mkEmitSpecialM :: (MonadSymbol m, Monad n)

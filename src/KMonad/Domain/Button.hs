@@ -59,29 +59,29 @@ import KMonad.Domain.Button.TapNext
 
 
 -- | Turn a ButtonToken into a Button operation
-encode :: (CanButton m, MonadIO n) => ButtonToken -> n (Button m)
-encode (BAfter a b) = mkAfter <$> encode a <*> encode b
-encode (BEmit kc)     = mkEmitM kc
-encode (BEmitSpecial ss) = mkEmitSpecialM ss
-encode (BEmitDeadKey dk) = mkEmitDeadKeyM dk
-encode (BModded kc b) = do
+encode :: (CanButton m, MonadIO n) => KeyCode -> ButtonToken -> n (Button m)
+encode _ (BAfter a b) = mkAfter <$> encode a <*> encode b
+encode _ (BEmit kc)     = mkEmitM kc
+encode _ (BEmitSpecial ss) = mkEmitSpecialM ss
+encode _ (BEmitDeadKey dk) = mkEmitDeadKeyM dk
+encode _ (BModded kc b) = do
   x <- mkEmitM kc
   y <- encode  b
   mkAroundM x y
-encode BBlock = mkBlockM
-encode (BLayerToggle lid) = mkLayerToggleM lid
-encode (BLayerAdd lid) = mkLayerAddM lid
-encode (BLayerRem lid) = mkLayerRemM lid
-encode (BTapHold ms bt bh) = do
+encode _ BBlock = mkBlockM
+encode _ (BLayerToggle lid) = mkLayerToggleM kc lid
+encode _ (BLayerAdd lid) = mkLayerAddM lid
+encode _ (BLayerRem lid) = mkLayerRemM lid
+encode c (BTapHold ms bt bh) = do
   btap <- encode bt
   bhld <- encode bh
-  mkTapHold ms btap bhld
-encode (BTapNext bt bh) = do
+  mkTapHold c ms btap bhld
+encode c (BTapNext bt bh) = do
   btap <- encode bt
   bhld <- encode bh
-  mkTapNext btap bhld
-encode (BMacro bs) = mkMacroM bs
-encode (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
-encode (BLockOn lk) = mkLockOnM lk
-encode (BLockOff lk) = mkLockOffM lk
-encode (BLockToggle lk) = mkLockToggleM lk
+  mkTapNext c btap bhld
+encode _ (BMacro bs) = mkMacroM bs
+encode _ (BMultiTap bs) = mkMultiTapM =<< mapM (\(t, b) -> (t,) <$> encode b) bs
+encode _ (BLockOn lk) = mkLockOnM lk
+encode _ (BLockOff lk) = mkLockOffM lk
+encode _ (BLockToggle lk) = mkLockToggleM lk

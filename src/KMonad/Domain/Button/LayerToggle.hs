@@ -41,17 +41,17 @@ mkLayerToggleM :: (LTCtx m, MonadIO n) => Name -> n (Button m)
 mkLayerToggleM lid = runVar Unpressed $ \st ->
                        mkButton $ \x -> go st lid x
 
-go :: LTCtx m => Var BState -> Name -> ButtonSignal -> m ()
+go :: LTCtx m => Var BState -> Name -> SwitchState -> m ()
 go st lid x = do
   v <- getVar st
   case (v, x) of
     -- Pressing an unpressed button
-    (Unpressed, BPress) -> do
+    (Unpressed, Engaged) -> do
       putVar Pressed st
       trace $ "pushing layer: " <> lid
       pushL lid
     -- Releasing a pressed button
-    (Pressed, BRelease) -> do
+    (Pressed, Disengaged) -> do
       putVar Unpressed st
       trace $ "popping layer: " <> lid
       popL lid

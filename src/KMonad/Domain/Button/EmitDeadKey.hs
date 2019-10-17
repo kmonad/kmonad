@@ -23,8 +23,8 @@ mkEmitDeadKey :: (MonadSymbol m)
   => DeadKey
   -> Button m
 mkEmitDeadKey dk = mkButton $ \case
-  BPress   -> emitDeadKey dk
-  BRelease -> pure ()
+  Engaged   -> emitDeadKey dk
+  Disengaged -> pure ()
 
 -- | Return a button that emits a mkEmitDeadKey button from an arbitrary Monad
 mkEmitDeadKeyM :: (MonadSymbol m, Monad n)

@@ -62,7 +62,7 @@ handleWith e ls
         Nothing -> return ()
         Just b  -> do
           liftIO . modifyMVar_ (mapRelease ls) $ return . M.insert kc b
-          bPress b
+          press b
   | isRelease e = do -- Handle releases by finding the key that initiated the press
       let kc = e^.keyCode
       rels <- takeMVar (mapRelease ls)
@@ -70,7 +70,7 @@ handleWith e ls
         Nothing -> putMVar (mapRelease ls) rels
         Just b  -> do
           putMVar (mapRelease ls) (M.delete kc rels)
-          bRelease b
+          release b
   | otherwise = pure ()
 
 

@@ -1,6 +1,6 @@
 {-|
 Module      : KMonad.Domain.Button.Emit
-Description : A button that emits a 'KeyEvent' on 'BPress' and 'BRelease'
+Description : A button that emits a 'KeyEvent' on 'Engaged' and 'Disengaged'
 Copyright   : (c) David Janssen, 2019
 License     : MIT
 
@@ -28,8 +28,8 @@ mkEmit :: (MonadEmit m)
   => KeyCode  -- ^ The keycode to emit on manipulation
   -> Button m -- ^ The resulting button
 mkEmit kc = mkButton $ \case
-  BPress   -> emitPress kc
-  BRelease -> emitRelease kc
+  Engaged   -> emitPress kc
+  Disengaged -> emitRelease kc
 
 -- | Return an Emit button from within some Monad
 mkEmitM :: (MonadEmit m, Monad n)

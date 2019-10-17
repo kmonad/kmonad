@@ -38,66 +38,22 @@ import KMonad.Domain.Effect
 --------------------------------------------------------------------------------
 -- Setup the running environment and Monad for TapMod buttons
 
--- | The state of the button
-data BState
-  = Unpressed
-  | Pressed
-  deriving (Eq, Show)
-
-
--- | The runtime environment of a TapMod
-data THEnv m = THEnv
-  { _delay     :: Microseconds -- ^ Delay between pushing and switch to held, in us
-  , _tapB      :: Button m     -- ^ Handler to use for tap events
-  , _holdB     :: Button m     -- ^ Handler to use for hold events
-  , _bState    :: Var BState   -- ^ The current phase of the button
-  }
-makeClassy ''THEnv
-
-type TH m = ReaderT (THEnv m) m
-
-putS :: MonadVar m => BState -> TH m ()
-putS st = lift . putVar st =<< view bState
-
-getS :: MonadVar m => TH m BState
-getS = lift . getVar =<< view bState
-
-
 -- | Return a new TapHold button
-mkTapHold :: (CanButton m, MonadIO n)
-  => Milliseconds -- ^ The time to 'wait' for the next event in milliseconds
+mkTapHold :: CanButton m
+  => KeyCode      -- ^ The keycode that triggers this taphold
+  -> Milliseconds -- ^ The time to 'wait' for the next event in milliseconds
   -> Button m     -- ^ The button to use when tapped
   -> Button m     -- ^ The button to use when held
-  -> n (Button m)
-mkTapHold d t h = runVar Unpressed $ \st -> do
-  let env = THEnv { _delay  = fromIntegral $ d * 1000
-                  , _tapB   = t
-                  , _holdB  = h
-                  , _bState = st
-                  }
-  mkButton $ \x -> runReaderT (go x) env
-
--- | Process a 'ButtonSignal'
-go :: CanButton m => ButtonSignal -> TH m ()
-go x = getS >>= \bs ->
-  case (bs, x) of
-    (Unpressed, BPress) -> putS Pressed   >> hPress
-    (Pressed, BRelease) -> putS Unpressed >> hRelease
-    _                   -> putS bs
-
--- | Start monitoring the future to decide what to do
-hPress :: CanButton m => TH m ()
-hPress = ask >>= \env -> lift  $ do
-  hold True
-  fork $ do
-    race (wait $ env^.delay) (waitFor (view sameCode)) >>= \case
-      Left _  -> bPress $ env^.holdB -- If we outwaited the delay
-      Right _ -> do                  -- If we encountered a release first
-        bTap $ env^.tapB
-        void . swapVar Unpressed $ env^.bState
-    hold False
-
--- | Release the holdB button
-hRelease :: CanButton m => TH m ()
-hRelease = view holdB >>= lift . bRelease
-
+  -> Button m
+mkTapHold c d t h = mkButton $ \case
+  Disengaged -> release h      -- Release the hold button, does nothing if hold was never pressed
+  Engaged    -> do
+    hold True
+    fork $ do
+      race (wait us) (waitFor myRel) >>= \case
+        Left  _ -> press h -- If we outwaited the delay
+        Right _ -> tap t   -- If we encountered a release first
+      hold False
+  where
+    us      = fromIntegral (d * 1000)
+    myRel e = (e^.keyCode == c) && (e^.switchState == Disengaged)

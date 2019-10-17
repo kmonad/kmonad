@@ -30,8 +30,8 @@ mkMultiTap :: CanButton m
   => [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
   -> Button m
 mkMultiTap bs = mkButton $ \case
-  BPress   -> hPress bs
-  BRelease -> pure ()
+  Engaged   -> hPress bs
+  Disengaged -> pure ()
 
 
 mkMultiTapM :: (CanButton m, Monad n)
@@ -52,10 +52,10 @@ recurse :: CanButton m
   -> [(Microseconds, Button m)]
   -> m ()
 recurse _   []          = pure () -- Only reachable if empty button is provided
-recurse _   ((_, b):[]) = bTap b  -- Last button: press immediately
+recurse _   ((_, b):[]) = tap b  -- Last button: press immediately
 recurse nxt ((d, b):bs) = do      -- Recurse deeper when we encounter a press of the same code, or tap when delay runs out
   race (wait d) (waitForWith pred nxt) >>= \case
-    Left  _ -> bTap b
+    Left  _ -> tap b
     Right _ -> recurse nxt bs
   where
     pred cmp = cmp^.sameCode && cmp^._type == Press

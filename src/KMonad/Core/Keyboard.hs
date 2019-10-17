@@ -46,7 +46,7 @@ module KMonad.Core.Keyboard
     -- * Creating sequences of KeyEvents
     -- $seqs
   , KeySequence
-  , press, release, tap
+  , mkKeyPress, mkKeyRelease, mkKeyTap
   , kR, kP, around
 
     -- * Comparing events
@@ -166,7 +166,7 @@ codeForLock CapsLock   = KeyCapsLock
 
 -- | Tap a lock key
 tapLock :: LockKey -> KeySequence
-tapLock = tap . codeForLock
+tapLock = mkKeyTap . codeForLock
 
 -- | Switch a lock to on, or do nothing if already on
 addLock :: LockKey -> LockState -> LockUpdate
@@ -196,18 +196,18 @@ type KeySequence =  [KeyAction]
 -- one e c = \t -> [KeyEvent e c t]
 
 -- | Create a KeyAction with the provided KeyCode
-press, release :: KeyCode -> KeyAction
-press   = KeyAction Engaged
-release = KeyAction Disengaged
+mkKeyPress, mkKeyRelease :: KeyCode -> KeyAction
+mkKeyPress   = KeyAction Engaged
+mkKeyRelease = KeyAction Disengaged
 
--- | Aliases for `press` and `release` that return sequences
+-- | Aliases for `mkKeyPress` and `mkKeyRelease` that return sequences
 kP, kR :: KeyCode -> KeySequence
-kP = (:[]) . press
-kR = (:[]) . release
+kP = (:[]) . mkKeyPress
+kR = (:[]) . mkKeyRelease
 
 -- | Create a 'KeyEvent' sequence that presses and then releases a button
-tap :: KeyCode -> KeySequence
-tap c = [press c, release c]
+mkKeyTap :: KeyCode -> KeySequence
+mkKeyTap c = [mkKeyPress c, mkKeyRelease c]
 
 around :: KeyCode -> KeySequence -> KeySequence
 around kc sq = kP kc <> sq <> kR kc

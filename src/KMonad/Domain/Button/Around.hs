@@ -26,8 +26,8 @@ mkAround :: Monad m
   -> Button m -- ^ The button on the /inside/
   -> Button m -- ^ The resulting button
 mkAround a b = mkButton $ \case
-  BPress   -> bPress a   >> bPress b
-  BRelease -> bRelease b >> bRelease a
+  Engaged   -> press a   >> press b
+  Disengaged -> release b >> release a
 
 -- | Return a button that manages two other buttons, A and B, and turns a Press
 -- into PressA >> PressB and a Release into ReleaseB >> ReleaseA. Return it from

@@ -18,7 +18,6 @@ where
 
 import KMonad.Core.Button
 
-
 -- | Return a button that manages two other buttons, A and B, and turns a Press
 -- into TapA >> TapB and does nothing on release
 mkAfter :: Monad m
@@ -26,8 +25,8 @@ mkAfter :: Monad m
   -> Button m -- ^ The button to run second
   -> Button m -- ^ The resulting button
 mkAfter a b = mkButton $ \case
-  BPress   -> bTap a >> bTap b
-  BRelease -> pure ()
+  Engaged   -> tap a >> tap b
+  Disengaged -> pure ()
 
 -- | Like mkAfter, but return from any arbitrary Monad
 mkAfterM :: (Monad m, Monad n)

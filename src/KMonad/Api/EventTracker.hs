@@ -72,19 +72,11 @@ update ke tr = liftIO $ do
   -- Return whether this event should be handled
   (not . S.member (fromEnum $ ke^.keyCode)) <$> readMVar (tr^.masked)
 
--- | Request an action that pins the current event as e0. Then, when executed,
--- will block until the next event, e1, occurs and returns an 'EventComparison'
--- between e0 and e1. If the action is executed again, it will block until the
--- next event, e2, occurs, and return a comparison of e0 vs e2, andsoforth. To
--- update the event against which we are comparing, simply request a new 'pin'.
-pin :: MonadIO m => EventTracker -> m (m (EventComparison))
+-- | Return an action that provides a blocking read for the next event
+pin :: MonadIO m => EventTracker -> m (m KeyEvent)
 pin tr = do
-  ce <- readMVar $ tr^.curEvent
-  -- pprint $ "Pinning to: " <> pretty ce
   oc <- liftIO . dupChan $ tr^.inChan
-  pure $ do
-    e <- liftIO $ readChan oc
-    pure $ compareEvent ce e
+  pure $ liftIO $ readChan oc
 
 -- | Add the current keycode to the mask and return the action to unmask again
 maskEvent :: MonadIO m => EventTracker -> m (m ())

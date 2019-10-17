@@ -22,10 +22,7 @@ import Control.Lens
 import Foreign.C.Types (CInt)
 import Foreign.C.String (CString)
 
-import KMonad.Core.KeyCode
-import KMonad.Core.Keyboard
-import KMonad.Core.Time
-import KMonad.Core.Types
+import KMonad.Core
 
 fi :: Integral a => a -> CInt
 fi = fromIntegral
@@ -86,9 +83,8 @@ fromLinuxKeyEvent (LinuxKeyEvent (s', ns', typ, c, val))
   where
     t   = mkTime s' ns'
     et  = case val of
-            0 -> Release
-            1 -> Press
-            2 -> Repeat
+            0 -> Disengaged
+            1 -> Engaged
             v -> error $ "Unparseable value: " <> show v
 
 -- | Translate LinuxKeyEvents to KeyEvents for reading
@@ -96,10 +92,9 @@ toLinuxKeyEvent :: KeyEvent -> LinuxKeyEvent
 toLinuxKeyEvent e = LinuxKeyEvent (fi $ e^.time.s, fi $ e^.time.ns, 1, c, val)
   where
     c, val :: CInt
-    (c, val) = (fromIntegral . fromEnum $ e^.keyCode, case e^._type of
-        Release -> 0
-        Press   -> 1
-        Repeat  -> 2)
+    (c, val) = ( fromIntegral . fromEnum $ e^.keyCode
+               , case e^.switchState of Disengaged -> 0
+                                        Engaged    -> 1)
 
 instance AsKeyEvent LinuxKeyEvent where
   _KeyEvent = prism' toLinuxKeyEvent fromLinuxKeyEvent

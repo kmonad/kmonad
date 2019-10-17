@@ -24,8 +24,8 @@ mkLayerRem :: (MonadTrace m, MonadStackManip m)
   => Name -- ^ The ID of the layer to add to the stack
   -> Button m
 mkLayerRem lid = mkButton $ \case
-  BPress   -> trace ("popping layer: " <> lid) >> popL lid
-  BRelease -> pure ()
+  Engaged   -> trace ("popping layer: " <> lid) >> popL lid
+  Disengaged -> pure ()
 
 mkLayerRemM :: (MonadTrace m, MonadStackManip m, Monad n)
   => Name -- ^ The ID of the layer to remove from the stack

@@ -8,116 +8,75 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
-
-'Button's function as event-handlers that exist in a contextual vacuum. That is
-to say, they are expressly isolated from knowing what event they are handling,
-or the state of any other 'Button's. They only know whether they are being
-'BPress'ed or 'BRelease'd.
-
-When being triggered, a 'Button' will provide some sort of effectful action @m
-()@. Where @m@ is the 'Monad' on which 'Button' is parametrized. There are a
-variety of effects in 'KMonad.Domain.Effect'.
-
-It is assumed, but not enforced, that when a 'Button' is pressed or released
-twice in a row, that the second occurence of the same trigger has no effect. If
-you extend KMonad by adding your own 'Button's, you must ensure that this
-invariant holds.
-
-prop> bPress b *> bPress b = bPress b
-prop> bRelease b *> bRelease b = bRelease b
+FIXME: Update documentation
 
 -}
 module KMonad.Core.Button
   ( -- * Core types and constructors
     -- $types
-    ButtonSignal(..)
-  , Button
+    Button
   , mkButton
   , runButton
 
     -- * Utilities for working with Buttons
     -- $util
-  , asSignal
-  , withSignal
-  , bPress
-  , bRelease
-  , bTap
+  , press, release, tap
   )
 where
 
 
 import Control.Lens
+import Control.Monad.State
 import KMonad.Core.Keyboard
+import KMonad.Core.Switch
 import KMonad.Core.Types
 
 --------------------------------------------------------------------------------
 -- $types
 
--- | The two signals that are passed to 'Button's.
+-- | Buttons are actions in a particular context that are triggered by
+-- switch-states.
 --
 -- @since 0.1.0
-data ButtonSignal = BPress | BRelease
-  deriving (Eq, Show)
+newtype Button m = Button { unButton :: SwitchState -> m ()}
 
--- | The basic type of a button, parametrized on the type of action it provides.
+-- | Create a new 'Button' from an effectful function from 'SwitchState'
 --
 -- @since 0.1.0
-newtype Button m = Button { unButton :: ButtonSignal -> m ()}
-
--- | Create a new 'Button' from an effectful function from 'ButtonSignal'
---
--- @since 0.1.0
-mkButton :: (ButtonSignal -> m ()) -> Button m
+mkButton :: (SwitchState -> m ()) -> Button m
 mkButton = Button
 
--- | Run a 'Button' with the provided 'ButtonSignal'
+-- | Create a new 'Button' registered to a particular KeyCode from an effectful
+-- function 'SwitchState'
+
+-- | Run a 'Button' with the provided 'SwitchState'
 --
 -- @since 0.1.0
-runButton :: Button m -> ButtonSignal -> m ()
+runButton :: Button m -> SwitchState -> m ()
 runButton = unButton
 
 
 --------------------------------------------------------------------------------
 -- $util
 
--- | Translate a 'KeyEvent' into 'Maybe' a 'ButtonSignal' by ignoring all
--- 'Repeat' events.
---
--- @since 0.1.0
-asSignal :: (HasType a KeyActionType) => a -> Maybe ButtonSignal
-asSignal e = case e^._type of
-  Repeat  -> Nothing
-  Press   -> Just BPress
-  Release -> Just BRelease
 
--- | Context-creating combinator that runs a function only on valid signals.
--- This makes it easy to run 'Button's on 'KeyEvent's.
---
--- For example:
---
--- >>> withSignal keyEvent $ \signal -> runButton button signal
+-- | Trigger a 'Button' by passing a 'Engaged'
 --
 -- @since 0.1.0
-withSignal :: (Monoid a, Monad m)
-  => KeyEvent
-  -> (ButtonSignal -> m a)
-  -> m a
-withSignal e f = maybe (return mempty) f (asSignal e)
+press :: Button m -> m ()
+press = ($ Engaged) . runButton
 
--- | Trigger a 'Button' by passing a 'BPress'
+-- | Trigger a 'Button' by passing a 'Disengaged'
 --
 -- @since 0.1.0
-bPress :: Button m -> m ()
-bPress = ($ BPress) . runButton
+release :: Button m -> m ()
+release = ($ Disengaged) . runButton
 
--- | Trigger a 'Button' by passing a 'BRelease'
+-- | Trigger a 'Button' twice, first with a 'Engaged', then with a 'Disengaged'
 --
 -- @since 0.1.0
-bRelease :: Button m -> m ()
-bRelease = ($ BRelease) . runButton
+tap :: Applicative m => Button m -> m ()
+tap b = press b *> release b
 
--- | Trigger a 'Button' twice, first with a 'BPress', then with a 'BRelease'
---
--- @since 0.1.0
-bTap :: Applicative m => Button m -> m ()
-bTap b   = bPress b *> bRelease b
+
+--------------------------------------------------------------------------------

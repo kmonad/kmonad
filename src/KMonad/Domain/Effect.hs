@@ -184,10 +184,10 @@ emitSeq :: (MonadEmit m) => KeySequence -> m ()
 emitSeq = mapM_ emitKey
 
 emitPress :: MonadEmit m => KeyCode -> m ()
-emitPress = emitKey . press
+emitPress = emitKey . mkKeyPress
 
 emitRelease :: MonadEmit m => KeyCode -> m ()
-emitRelease = emitKey . release
+emitRelease = emitKey . mkKeyRelease
 
 --------------------------------------------------------------------------------
 -- $fork
@@ -200,22 +200,9 @@ class Monad m => MonadFork m where
 --------------------------------------------------------------------------------
 -- $future
 
--- | For certain button functionality, we need to know what will happen in the
--- future before we decide what action to take. For example, a
--- 'KMonad.Core.Parser.Token.BTapHold' button decides to become a "tapper" if it
--- encounters its own release within a certain interval, and otherwise switches
--- to a "held" state. 'Button's, however, are isolated from knowing what
--- 'KeyEvent' triggers them. But they can get access to 'EventComparison' data
--- through the this typeclass.
---
--- It provides the ability to request an action that pins the current event as
--- e0. Then, when executed, will block until the next event, e1, occurs and
--- returns an 'EventComparison' between e0 and e1. If the action is executed
--- again, it will block until the next event, e2, occurs, and return a
--- comparison of e0 vs e2, andsoforth. To update the event against which we are
--- comparing, simply request a new 'pinComparison'.
+-- | FIXME: documentation
 class Monad m => MonadFuture m where
-  pinComparison :: m (m EventComparison)
+  waitNext :: m (m KeyEvent)
 
 -- | Given a predicate on EventComparisons, return () once the predicate is
 -- satisfied.
@@ -226,11 +213,11 @@ class Monad m => MonadFuture m where
 --
 -- >>> race (wait 1000000) (waitFor (\c -> (c^.eventType == Release)) >> doThing)
 --
-waitFor :: MonadFuture m => (EventComparison -> Bool) -> m ()
-waitFor p = pinComparison >>= waitForWith p
+waitFor :: MonadFuture m => (KeyEvent-> Bool) -> m ()
+waitFor p = waitNext >>= waitForWith p
 
-waitForM :: MonadFuture m => (EventComparison -> m Bool) -> m ()
-waitForM p = pinComparison >>= waitForWithM p
+waitForM :: MonadFuture m => (KeyEvent-> m Bool) -> m ()
+waitForM p = waitNext >>= waitForWithM p
 
 -- | Like waitFor, but using an already pinned action
 --
