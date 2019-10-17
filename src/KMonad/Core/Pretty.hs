@@ -59,6 +59,12 @@ instance Pretty KeyEvent where
           <> "   "
           <> tshow (e^.keyCode)
 
+instance Pretty T.Text where
+  pretty = tshow
+
+instance Pretty String where
+  pretty = tshow
+
 --------------------------------------------------------------------------------
 -- $util
 
