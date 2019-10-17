@@ -61,6 +61,7 @@ mkEventTracker = uncurry EventTracker <$> liftIO newChan
 -- | Send an 'EventComparison' to all registered trackers
 update :: MonadIO m => KeyEvent -> EventTracker -> m Bool
 update ke tr = liftIO $ do
+  -- pprint $ "Updating to: " <> pretty ke
   -- Update the internal 'current event'
   _ <- swapMVar (tr^.curEvent) ke
 
@@ -79,6 +80,7 @@ update ke tr = liftIO $ do
 pin :: MonadIO m => EventTracker -> m (m (EventComparison))
 pin tr = do
   ce <- readMVar $ tr^.curEvent
+  -- pprint $ "Pinning to: " <> pretty ce
   oc <- liftIO . dupChan $ tr^.inChan
   pure $ do
     e <- liftIO $ readChan oc
