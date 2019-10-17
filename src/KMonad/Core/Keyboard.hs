@@ -24,9 +24,7 @@ deal with how to generate repeating events.
 -}
 module KMonad.Core.Keyboard
   ( -- * Types for KeyActions
-    KeyActionType(..)
-  , KeyAction(..)
-  , AsKeyActionType(..)
+    KeyAction(..)
 
     -- * Types and lenses for KeyEvents
     -- $types
@@ -48,14 +46,14 @@ module KMonad.Core.Keyboard
     -- * Creating sequences of KeyEvents
     -- $seqs
   , KeySequence
-  , press, release, repeat, tap
+  , press, release, tap
   , kR, kP, around
 
     -- * Comparing events
     -- $comps
-  , EventComparison
-  , compareEvent
-  , since, sameCode
+  -- , EventComparison
+  -- , compareEvent
+  -- , since, sameCode
   )
 where
 
@@ -64,6 +62,7 @@ import Prelude hiding (repeat)
 import Control.Lens
 
 import KMonad.Core.KeyCode
+import KMonad.Core.Switch
 import KMonad.Core.Time
 import KMonad.Core.Types
 
@@ -73,28 +72,23 @@ import qualified Data.Set as S
 --------------------------------------------------------------------------------
 -- $action
 
--- | The KeyActionType that distinguishes press, release and repeat events
-data KeyActionType
-  = Press
-  | Release
-  | Repeat
-  deriving (Eq, Ord, Show, Enum)
-makeClassyPrisms ''KeyActionType
+-- | A KeyAction is either a press or release of a keycode
 
--- | A KeyAction is a Press, Release, or Repeat of a KeyCode
 data KeyAction = KeyAction
-  { _kaType    :: KeyActionType
-  , _kaKeyCode :: KeyCode
+  { _kaSwitchState :: SwitchState -- ^ Switch-state after KeyAction is completed
+  , _kaKeyCode     :: KeyCode     -- ^ The corresponding KeyCode
   } deriving (Eq, Show)
 makeClassy ''KeyAction
 
 instance Ord KeyAction where
-  a `compare` b = case (a^._type) `compare` (b^._type) of
+  a `compare` b = case (a^.switchState) `compare` (b^.switchState) of
     EQ -> (a^.keyCode) `compare` (b^.keyCode)
     x  -> x
 
-instance HasType KeyAction KeyActionType where
-  _type = kaType
+
+instance HasSwitchState KeyAction where
+  switchState = kaSwitchState
+
 instance HasKeyCode KeyAction where
   keyCode = kaKeyCode
 
@@ -110,13 +104,13 @@ data KeyEvent = KeyEvent
 makeClassy ''KeyEvent
 
 -- Hook up all the classy lenses
-instance HasKeyAction KeyEvent          where keyAction = evKeyAction
-instance HasType KeyEvent KeyActionType where _type = keyAction._type
-instance HasKeyCode KeyEvent            where keyCode = keyAction.keyCode
-instance HasTime KeyEvent               where time = evTime
+instance HasKeyAction   KeyEvent where keyAction   = evKeyAction
+instance HasSwitchState KeyEvent where switchState = keyAction.switchState
+instance HasKeyCode     KeyEvent where keyCode     = keyAction.keyCode
+instance HasTime        KeyEvent where time        = evTime
 
 -- | Create a KeyEvent
-mkKeyEvent :: KeyActionType -> KeyCode -> Time -> KeyEvent
+mkKeyEvent :: SwitchState -> KeyCode -> Time -> KeyEvent
 mkKeyEvent a c = KeyEvent (KeyAction a c)
 
 -- | Create a KeyEvent by running a KeyAction at a given time
@@ -136,11 +130,9 @@ instance AsKeyEvent KeyEvent where
 --------------------------------------------------------------------------------
 -- $util
 
-isPress, isRepeat, isRelease :: (HasType a KeyActionType) => a -> Bool
-isPress   x = x^._type == Press
-isRelease x = x^._type == Release
-isRepeat  x = x^._type == Repeat
-
+isPress, isRelease :: (HasSwitchState a) => a -> Bool
+isPress   x = x^.switchState == Engaged
+isRelease x = x^.switchState == Disengaged
 
 --------------------------------------------------------------------------------
 -- $locks
@@ -161,7 +153,7 @@ type LockState = S.Set LockKey
 
 -- | The update required to update both the OS and the internal LockState
 -- representation
-type LockUpdate = (KeySequence , LockState)
+type LockUpdate = (KeySequence, LockState)
 
 emptyLockState :: LockState
 emptyLockState = S.empty
@@ -204,10 +196,9 @@ type KeySequence =  [KeyAction]
 -- one e c = \t -> [KeyEvent e c t]
 
 -- | Create a KeyAction with the provided KeyCode
-press, release, repeat :: KeyCode -> KeyAction
-press   = KeyAction Press
-release = KeyAction Release
-repeat  = KeyAction Repeat
+press, release :: KeyCode -> KeyAction
+press   = KeyAction Engaged
+release = KeyAction Disengaged
 
 -- | Aliases for `press` and `release` that return sequences
 kP, kR :: KeyCode -> KeySequence
@@ -233,20 +224,20 @@ around kc sq = kP kc <> sq <> kR kc
 -- buttons get access to data of the 'EventComparison' type.
 
 -- | The EventComparison record
-data EventComparison = EventComparison
-  { _sameCode     :: Bool          -- ^ Whether or not both 'KeyEvent's share the same 'KeyCode'
-  , _since        :: Nanoseconds   -- ^ The time between the two events
-  , _cmpEventType :: KeyActionType -- ^ The event-type of the second event
-  } deriving (Eq, Show)
-makeClassy ''EventComparison
+-- data EventComparison = EventComparison
+--   { _sameCode     :: Bool          -- ^ Whether or not both 'KeyEvent's share the same 'KeyCode'
+--   , _since        :: Nanoseconds   -- ^ The time between the two events
+--   , _cmpEventType :: KeyActionType -- ^ The event-type of the second event
+--   } deriving (Eq, Show)
+-- makeClassy ''EventComparison
 
-instance HasType EventComparison KeyActionType where _type = cmpEventType
+-- instance HasType EventComparison KeyActionType where _type = cmpEventType
 
--- | Return an 'EventComparison' between two events, if the first event occured
--- before the second, the 'since' value will be positive, otherwise negative.
-compareEvent :: KeyEvent -> KeyEvent -> EventComparison
-compareEvent a b = EventComparison
-  { _sameCode     = a^.keyCode == b^.keyCode
-  , _since        = (a^.time) `tminus` (b^.time)
-  , _cmpEventType = b^._type
-  }
+-- -- | Return an 'EventComparison' between two events, if the first event occured
+-- -- before the second, the 'since' value will be positive, otherwise negative.
+-- compareEvent :: KeyEvent -> KeyEvent -> EventComparison
+-- compareEvent a b = EventComparison
+--   { _sameCode     = a^.keyCode == b^.keyCode
+--   , _since        = (a^.time) `tminus` (b^.time)
+--   , _cmpEventType = b^._type
+--   }
