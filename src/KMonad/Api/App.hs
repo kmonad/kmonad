@@ -67,10 +67,6 @@ newtype App a = App
 -- | Emit keys by sending them to the OS through the emitter
 instance MonadEmit App where
   emitKey e = view emitter >>= \f -> liftIO $ f =<< (withNow $ actAtTime e)
-    -- f <- view emitter
-    -- withNow $ actAtTime e
-    -- view emitter >>= \f -> liftIO $ f e
-
 
 -- | Deal with fork requests by using forkIO
 instance MonadFork App where
@@ -99,9 +95,6 @@ instance MonadLock App where
   lockOn     lk = trace ("Engaging:  "  <> tshow lk) >> lmLockOn lk
   lockOff    lk = trace ("Releasing: " <> tshow lk) >> lmLockOff lk
   lockToggle lk = trace ("Toggling:  "  <> tshow lk) >> lmLockToggle lk
-
--- instance MonadLogger App where
---   monadLoggerLog loc src lvl msg = lift $ monadLoggerLog loc src lvl msg
 
 -- | Deal with masking input through the EventTracker object
 instance MonadMaskInput App where
@@ -150,7 +143,10 @@ instance MonadWait App where
 
 -- | Run an App action and deal with errors using Either
 runApp :: App a -> AppEnv -> IO (Either AppError a)
-runApp m env = runExceptT $ runReaderT (runStdoutLoggingT $ unApp m) env
+runApp m env = runExceptT $ runReaderT (runLog $ unApp m) env
+  where
+    runLog    = runStdoutLoggingT . filterLogger f
+    f src lvl = lvl /= LevelDebug
 
 -- | Run an App action and deal with errors by throwing Exceptions
 runAppIO :: App a -> AppEnv -> IO a
