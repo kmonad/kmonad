@@ -53,7 +53,7 @@ class MonadIO m => HasLayerStack r m where
   layerStack :: Lens' r (LayerStack m)
 
 -- | Use a LayerStack to handle a single key event
-handleWith :: MonadIO m => KeyEvent -> LayerStack m -> m ()
+handleWith :: (MonadButton m, MonadIO m) => KeyEvent -> LayerStack m -> m ()
 handleWith e ls
   | isPress e = do -- Handle presses by looking up the key in the layerstack
       let kc = e^.keyCode
@@ -71,7 +71,6 @@ handleWith e ls
         Just b  -> do
           putMVar (mapRelease ls) (M.delete kc rels)
           release b
-  | otherwise = pure ()
 
 
 myFromJust :: String -> Maybe a -> a
@@ -99,8 +98,9 @@ mkLayerStack :: (CanButton m, MonadIO n)
   -> n (LayerStack m)
 mkLayerStack ts def = do
   -- There is probably a much prettier lensy way of doing this
-  bs <- mapM (mapTup (mapM (mapTup encode))) ts
+  bs <- mapM (mapTup (mapM (mapTupB encode))) ts
   h  <- newMVar . myFromJust "making layer error" . push def . mkMapStack $ bs
   LayerStack h <$> newMVar (M.empty)
   where
-    mapTup f (c, a) = (c,) <$> f a
+    mapTup  f (c, a) = (c,) <$> f a
+    mapTupB f (c, a) = (c,) <$> f c a

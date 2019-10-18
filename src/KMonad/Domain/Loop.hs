@@ -21,8 +21,8 @@ import KMonad.Domain.Effect
 
 -- | Loop over events, pass 'Press' and 'Release' events to the handler while
 -- ignoring 'Repeat' events. Break the loop on a 'Quit' event.
-loop :: (MonadNext m, MonadTrace m, MonadHandler m, MonadLogger m) => m ()
+loop :: (MonadNext m, MonadHandler m, MonadLogger m) => m ()
 loop = $(logInfo) "Starting event loop" >> loop'
   where loop' = nextEvent >>= \case
-          Quit          -> trace "Exiting"
-          InputEvent e  -> handle e
+          Quit          -> $(logInfo)  "Exiting"
+          InputEvent e  -> $(logDebug) "Handling" >> handle e >> loop'

@@ -51,7 +51,7 @@ utfString c = showIntAtBase 16 intToDigit (fromEnum c) $ ""
 
 -- | Return the 'KeySequence' required to perform the UTF-code entry for a char
 utfSequence :: Char -> KeySequence
-utfSequence = concatMap (tap . fromJust . kcFromChar) . utfString
+utfSequence = concatMap (mkKeyTap . fromJust . kcFromChar) . utfString
   -- fromJust is justified here because 'utfString' is always a hex-string, and
   -- we know that we have full correspondence between letters/numbers and
   -- keycodes

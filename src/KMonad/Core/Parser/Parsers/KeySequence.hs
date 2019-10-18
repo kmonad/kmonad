@@ -62,11 +62,11 @@ rawSeq = concat <$> many (lexemeSameLine $ choice [pressSeqP, releaseSeqP, tapP]
 
 -- | Parse a Press action
 pressP :: Parser KeyAction
-pressP = char 'P' *> (press <$> keycodeP)
+pressP = char 'P' *> (mkKeyPress <$> keycodeP)
 
 -- | Parse a Release action
 releaseP :: Parser KeyAction
-releaseP = char 'R' *> (release <$> keycodeP)
+releaseP = char 'R' *> (mkKeyRelease <$> keycodeP)
 
 -- | Parse a Press action as a sequence of 1
 pressSeqP :: Parser KeySequence
@@ -78,7 +78,7 @@ releaseSeqP = (:[]) <$> releaseP
 
 -- | Parse a Tap as a press and release
 tapP :: Parser KeySequence
-tapP = (\c -> [press c, release c]) <$> keycodeP
+tapP = (\c -> [mkKeyPress c, mkKeyRelease c]) <$> keycodeP
 
 --------------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ modded = do
 shifted :: Parser KeySequence
 shifted = (fromNamed m <* notFollowedBy alphaNumChar)
   where
-    s kc = kP KeyLeftShift <> tap kc <> kR KeyLeftShift
+    s kc = kP KeyLeftShift <> mkKeyTap kc <> kR KeyLeftShift
     m = [ ( "!",  s Key1)
         , ( "@",  s Key2)
         , ( "#",  s Key3)

@@ -71,21 +71,25 @@ sync t = LinuxKeyEvent (fi $ t^.s :: CInt, fi $ t^.ns :: CInt, n, n, n)
 --         for sync: always 0
 
 -- | Translate KeyEvents to LinuxKeyEvents for writing
+--
+-- Unsupported event types
+-- 0:  Sync events
+-- 4:  Scan events
+-- 17: FF_STATUS, occurs after engaging CapsLock for example
+-- Perhaps others
+--
+-- Ignored event value:
+-- 2: Repeat
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (s', ns', typ, c, val))
-  | typ == 1  = Just $ mkKeyEvent et (toEnum . fromIntegral $ c) t
+  | typ == 1  = kev <$> et
   | otherwise = Nothing
-    -- Unsupported events:
-    -- 0:  Sync events
-    -- 4:  Scan events
-    -- 17: FF_STATUS, occurs after engaging CapsLock for example
-    -- Perhaps others
   where
-    t   = mkTime s' ns'
+    kev e = mkKeyEvent e (toEnum . fromIntegral $ c) (mkTime s' ns')
     et  = case val of
-            0 -> Disengaged
-            1 -> Engaged
-            v -> error $ "Unparseable value: " <> show v
+            0 -> Just Disengaged
+            1 -> Just Engaged
+            _ -> Nothing
 
 -- | Translate LinuxKeyEvents to KeyEvents for reading
 toLinuxKeyEvent :: KeyEvent -> LinuxKeyEvent

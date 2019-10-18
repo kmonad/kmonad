@@ -23,8 +23,9 @@ import Control.Monad.Reader
 import qualified Data.Text.IO as T
 
 import KMonad.Core
-import KMonad.Domain.Loop
+import KMonad.Domain.Button
 import KMonad.Domain.Effect
+import KMonad.Domain.Loop
 import KMonad.Api.Encode
 import KMonad.Api.EventTracker
 import KMonad.Api.KeyIO
@@ -80,7 +81,7 @@ instance MonadFork App where
 
 -- | Deal with future requests by pinning the current event to a channel
 instance MonadFuture App where
-  pinComparison = view eventTracker >>= pin
+  waitNext = view eventTracker >>= pin
 
 -- | Handle events using the handleApp function
 instance MonadHandler App where
@@ -170,6 +171,7 @@ runAppIO m env = runApp m env >>= \case
 -- the layerStack handling will not run.
 handleApp :: KeyEvent -> App ()
 handleApp ke = do
+  $(logInfo) "handling"
   -- Broadcast event and decide whether to handle
   b <- update ke =<< view eventTracker
 

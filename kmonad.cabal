@@ -23,7 +23,6 @@ library
       KMonad.Api.Sluice
       KMonad.Api.SymbolEncoder
       KMonad.Core
-      KMonad.Core.Button
       KMonad.Core.Config
       KMonad.Core.Event
       KMonad.Core.Keyboard
@@ -45,9 +44,12 @@ library
       KMonad.Core.Parser.Utility
       KMonad.Core.Pretty
       KMonad.Core.SpecialSymbol
+      KMonad.Core.Switch
       KMonad.Core.Time
       KMonad.Core.Types
       KMonad.Domain.Button
+      KMonad.Domain.Button.Button
+      KMonad.Domain.Button.Buttons
       KMonad.Domain.Button.Buttons.After
       KMonad.Domain.Button.Buttons.Around
       KMonad.Domain.Button.Buttons.Block
@@ -62,6 +64,7 @@ library
       KMonad.Domain.Button.Buttons.MultiTap
       KMonad.Domain.Button.Buttons.TapHold
       KMonad.Domain.Button.Buttons.TapNext
+      KMonad.Domain.Button.Encode
       KMonad.Domain.Effect
       KMonad.Domain.Loop
   if os(linux)
