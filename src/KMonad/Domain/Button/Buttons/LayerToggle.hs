@@ -28,9 +28,5 @@ mkLayerToggle :: (MonadIO io, MonadLogger m, MonadStackManip m)
   => Name          -- ^ The ID of the layer to toggle to
   -> io (Button m) -- ^ The resulting button
 mkLayerToggle lid = mkButton $ \case
-  Engaged -> do
-    $(logInfo) $ "pushing layer: " <> lid
-    pushL lid
-  Disengaged -> do
-    $(logInfo) $ "popping layer: " <> lid
-    popL lid
+  Engaged    -> pushL lid
+  Disengaged -> popL  lid

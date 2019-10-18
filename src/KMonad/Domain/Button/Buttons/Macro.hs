@@ -25,6 +25,4 @@ import KMonad.Domain.Button.Button
 mkMacro :: (MonadIO io, MonadEmit m)
   => KeySequence   -- ^ The `KeySequence` to emit
   -> io (Button m) -- ^ The resulting button
-mkMacro es = mkButton $ \case
-  Engaged    -> emitSeq es
-  Disengaged -> pure ()
+mkMacro es = onPress $ emitSeq es

@@ -23,6 +23,13 @@ newtype Button m = Button { unButton :: (SwitchState -> m (), MVar SwitchState)}
 mkButton :: (MonadIO io, Monad m) => (SwitchState -> m ()) -> io (Button m)
 mkButton f = Button . (f,) <$> liftIO (newMVar Disengaged)
 
+-- | Create a new 'Button' that performs an action when pressed and does nothing
+-- when released
+onPress :: (MonadIO io, Monad m) => m () -> io (Button m)
+onPress a = mkButton $ \case
+  Engaged    -> a
+  Disengaged -> pure ()
+
 runButtonIO :: (MonadIO io, Monad m) => Button m -> SwitchState -> io (m ())
 runButtonIO b x = do
   let (f, v) = unButton b

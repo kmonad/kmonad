@@ -25,6 +25,4 @@ import KMonad.Domain.Button.Button
 mkLayerAdd :: (MonadIO io, MonadTrace m, MonadStackManip m)
   => Name          -- ^ The ID of the layer to add to the stack
   -> io (Button m) -- ^ The resulting button
-mkLayerAdd lid = mkButton $ \case
-  Engaged    -> trace ("pushing layer: " <> lid) >> pushL lid
-  Disengaged -> pure ()
+mkLayerAdd lid = onPress $ pushL lid

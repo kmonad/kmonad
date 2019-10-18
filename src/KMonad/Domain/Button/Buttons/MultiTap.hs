@@ -28,16 +28,14 @@ mkMultiTap :: (MonadIO io, CanButton m)
   => KeyCode                    -- ^ The 'KeyCode' to which this button is mapped
   -> [(Microseconds, Button m)] -- ^ A list of (delay, button) tuples
   -> io (Button m)
-mkMultiTap c bs = mkButton $ \case
-  Disengaged -> pure ()
-  Engaged    -> do
-    hold True
-    unmask <- maskInput
-    nxt    <- waitNext
-    fork $ do
-      recurse c nxt bs
-      unmask
-      hold False
+mkMultiTap c bs = onPress $ do
+  hold True
+  unmask <- maskInput
+  nxt    <- waitNext
+  fork $ do
+    recurse c nxt bs
+    unmask
+    hold False
 
 -- | Await taps until the button is decided
 recurse :: CanButton m

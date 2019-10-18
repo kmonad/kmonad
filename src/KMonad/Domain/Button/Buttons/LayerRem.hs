@@ -21,9 +21,7 @@ import KMonad.Core
 import KMonad.Domain.Effect
 import KMonad.Domain.Button.Button
 
-mkLayerRem :: (MonadIO io, MonadTrace m, MonadStackManip m)
+mkLayerRem :: (MonadIO io, MonadStackManip m)
   => Name          -- ^ The ID of the layer to add to the stack
   -> io (Button m) -- ^ The resulting button
-mkLayerRem lid = mkButton $ \case
-  Engaged   -> trace ("popping layer: " <> lid) >> popL lid
-  Disengaged -> pure ()
+mkLayerRem lid = onPress $ popL lid

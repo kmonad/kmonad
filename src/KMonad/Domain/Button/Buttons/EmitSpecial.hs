@@ -25,6 +25,4 @@ import KMonad.Domain.Button.Button
 mkEmitSpecial :: (MonadIO io, MonadSymbol m)
   => SpecialSymbol -- ^ The SpecialSymbol to emit
   -> io (Button m) -- ^ The resulting button
-mkEmitSpecial kc = mkButton $ \case
-  Engaged    -> emitSymbol kc
-  Disengaged -> pure ()
+mkEmitSpecial kc = onPress $ emitSymbol kc

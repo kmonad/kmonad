@@ -27,22 +27,16 @@ import KMonad.Domain.Button.Button
 mkLockOn :: (MonadIO io, MonadLock m)
   => LockKey
   -> io (Button m)
-mkLockOn lk = mkButton $ \case
-  Engaged    -> lockOn lk
-  Disengaged -> pure ()
+mkLockOn lk = onPress $ lockOn lk
 
 -- | Return a button that turns a lock Off
 mkLockOff :: (MonadIO io, MonadLock m)
   => LockKey
   -> io (Button m)
-mkLockOff lk = mkButton $ \case
-  Engaged    -> lockOff lk
-  Disengaged -> pure ()
+mkLockOff lk = onPress $ lockOff lk
 
 -- | Return a button that toggles a lock
 mkLockToggle :: (MonadIO io, MonadLock m)
   => LockKey
   -> io (Button m)
-mkLockToggle lk = mkButton $ \case
-  Engaged    -> lockToggle lk
-  Disengaged -> pure ()
+mkLockToggle lk = onPress $ lockToggle lk

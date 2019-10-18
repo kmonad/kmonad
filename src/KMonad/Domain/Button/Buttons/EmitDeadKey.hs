@@ -21,11 +21,8 @@ import KMonad.Core
 import KMonad.Domain.Effect
 import KMonad.Domain.Button.Button
 
--- | Return a button that emits a special symbol on Press (does nothing on Release)
+-- | Return a button that emits a special symbol on Press
 mkEmitDeadKey :: (MonadIO io, MonadSymbol m)
   => DeadKey       -- ^ The DeadKey to emit
   -> io (Button m) -- ^ The resulting button
-mkEmitDeadKey dk = mkButton $ \case
-  Engaged    -> emitDeadKey dk
-  Disengaged -> pure ()
-
+mkEmitDeadKey dk = onPress $ emitDeadKey dk

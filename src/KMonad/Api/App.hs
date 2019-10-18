@@ -121,8 +121,12 @@ instance MonadRace App where
 
 -- | Handle StackManip by operating on the LayerStack
 instance MonadStackManip App where
-  pushL lid = view layerStack >>= pushLS lid
-  popL  lid = view layerStack >>= popLS  lid
+  pushL lid = do
+    $(logInfo) $ "Pushing layer: " <> lid
+    view layerStack >>= pushLS lid
+  popL  lid = do
+    $(logInfo) $ "Popping layer: " <> lid
+    view layerStack >>= popLS  lid
 
 -- | Dead with special symbols by looking them up using the encoder ring
 instance MonadSymbol App where
@@ -171,8 +175,8 @@ runAppIO m env = runApp m env >>= \case
 -- the layerStack handling will not run.
 handleApp :: KeyEvent -> App ()
 handleApp ke = do
-  $(logInfo) "handling"
   -- Broadcast event and decide whether to handle
+  $(logDebug) "Running handler"
   b <- update ke =<< view eventTracker
 
   -- When handling, feed the action of handling the key-event into the sluice
