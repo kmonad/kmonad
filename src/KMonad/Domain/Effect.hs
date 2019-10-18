@@ -89,11 +89,6 @@ module KMonad.Domain.Effect
     -- $symbol
   , MonadSymbol(..)
 
-    -- * MonadTrace
-    -- $trace
-  , MonadTrace(..)
-  , showTrace
-
     -- * MonadVar
     -- $var
   , MonadVar(..)
@@ -151,7 +146,6 @@ type CanButton m =
   , MonadRace       m
   , MonadStackManip m
   , MonadSymbol     m
-  , MonadTrace      m
   , MonadVar        m
   , MonadWait       m
   )
@@ -347,7 +341,6 @@ class Monad m => MonadStackManip m where
   pushL :: Name -> m ()
   popL  :: Name -> m ()
 
-
 --------------------------------------------------------------------------------
 -- $symbol
 
@@ -357,24 +350,6 @@ class Monad m => MonadStackManip m where
 class  MonadEmit m => MonadSymbol m where
   emitSymbol  :: SpecialSymbol -> m ()
   emitDeadKey :: DeadKey -> m ()
-
-
---------------------------------------------------------------------------------
--- $trace
-
--- | This effect simply allows text to be written to stdout
-class Monad m => MonadTrace m where
-  trace :: Text -> m ()
-
--- | Output the 'show' of a value
-showTrace :: (MonadTrace m, Show a) => a -> m ()
-showTrace = trace . T.pack . show
-
-
-instance MonadTrace IO where
-  trace t = liftIO $ T.putStrLn t >> return mempty
-instance Monad m => MonadTrace (WriterT [Text] m) where
-  trace = tell . (:[])
 
 
 --------------------------------------------------------------------------------

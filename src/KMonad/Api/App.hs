@@ -97,9 +97,15 @@ instance MonadInject App where
 
 -- | Handle lock events using the LockManager
 instance MonadLock App where
-  lockOn     lk = trace ("Engaging:  "  <> tshow lk) >> lmLockOn lk
-  lockOff    lk = trace ("Releasing: " <> tshow lk) >> lmLockOff lk
-  lockToggle lk = trace ("Toggling:  "  <> tshow lk) >> lmLockToggle lk
+  lockOn lk = do
+    $(logInfo) $"Engaging: " <> tshow lk
+    lmLockOn lk
+  lockOff lk = do
+    $(logInfo) $ "Releasing: " <> tshow lk
+    lmLockOff lk
+  lockToggle lk = do
+    $(logInfo) $ "Toggling: " <> tshow lk
+    lmLockToggle lk
 
 -- | Deal with masking input through the EventTracker object
 instance MonadMaskInput App where
@@ -136,10 +142,6 @@ instance MonadSymbol App where
   emitDeadKey dk = encodeDeadKey dk >>= \case
     Just ks -> emitSeq ks
     Nothing -> pure ()
-
--- | Traces are written to stdout
-instance MonadTrace App where
-  trace t = liftIO $ T.putStrLn t >> return mempty
 
 -- | Deal with var-requests simply through IO
 instance MonadVar App where

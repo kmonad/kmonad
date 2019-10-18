@@ -22,7 +22,8 @@ import KMonad.Domain.Effect
 import KMonad.Domain.Button.Button
 
 -- | Return a 'Button' that adds a layer to the stack when pressed.
-mkLayerAdd :: (MonadIO io, MonadTrace m, MonadStackManip m)
+mkLayerAdd :: (MonadIO io, MonadStackManip m)
   => Name          -- ^ The ID of the layer to add to the stack
   -> io (Button m) -- ^ The resulting button
 mkLayerAdd lid = onPress $ pushL lid
+
