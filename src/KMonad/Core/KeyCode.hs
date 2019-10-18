@@ -38,7 +38,6 @@ import Data.Char
 import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
 
-import qualified Data.Text as T
 import qualified Data.IntMap.Strict as M
 
 -- | The 'KeyCode' type and its constructors. Essentially a gigantic 'Enum'

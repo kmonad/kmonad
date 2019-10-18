@@ -16,7 +16,6 @@ module KMonad.Domain.Button.Buttons.LayerToggle
   )
 where
 
-import Control.Lens
 import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Effect

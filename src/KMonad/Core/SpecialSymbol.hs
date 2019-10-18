@@ -5,14 +5,12 @@ where
 import Control.Lens
 import Data.Char (intToDigit)
 import Data.Maybe (fromJust)
-import Data.Text (Text)
 import Numeric
 
 import KMonad.Core.Keyboard
 import KMonad.Core.KeyCode
 import KMonad.Core.Types
 
-import qualified Data.Text as T
 
 class HasChr a where
   chr :: Lens' a Char

@@ -174,10 +174,10 @@ fromNamed as = case sortNamed as of
 findDuplicates :: (Foldable f, Ord a) => f a -> S.Set a
 findDuplicates xs = go (toList xs) S.empty S.empty
   where
-    go []     old dups = dups
-    go (x:xs) old dups = if S.member x old
-       then go xs (S.insert x old) (S.insert x dups)
-       else go xs (S.insert x old) dups
+    go []     _   dups = dups
+    go (x:rest) old dups = if S.member x old
+       then go rest (S.insert x old) (S.insert x dups)
+       else go rest (S.insert x old) dups
 
 
     -- f ((k, v):xs') mRef = do

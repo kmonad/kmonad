@@ -19,7 +19,6 @@ module KMonad.Domain.Button.Buttons.Block
 where
 
 import Control.Monad.IO.Class
-import KMonad.Core
 import KMonad.Domain.Button.Button
 
 -- | Create a Button that does nothing

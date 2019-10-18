@@ -32,9 +32,6 @@ import KMonad.Domain.Effect (nowIO)
 import KMonad.Api.KeyIO.Types
 import KMonad.Api.KeyIO.Linux.Types
 
-import qualified Data.Text as T
-
-
 --------------------------------------------------------------------------------
 -- $cfg
 
@@ -107,22 +104,22 @@ instance HasUinputCfg UinputSink where uinputCfg = cfg
 
 -- | Return a new uinput 'KeySink' with extra options
 mkUinputSink :: UinputCfg -> KeySink
-mkUinputSink cfg = BracketIO
-  { _open  = usOpen cfg
+mkUinputSink cfg' = BracketIO
+  { _open  = usOpen cfg'
   , _close = usClose
   , _use   = usWrite
   }
 
 -- | Create a new UinputSink
 usOpen :: CanKeyIO e m => UinputCfg -> m UinputSink
-usOpen cfg = do
+usOpen cfg' = do
   let flgs = OpenFileFlags False False False True False
   fd  <- liftIO $ openFd "/dev/uinput" WriteOnly Nothing flgs
-  ret <- liftIO $ acquire_uinput_keysink fd cfg
+  ret <- liftIO $ acquire_uinput_keysink fd cfg'
   when (ret == -1) $ throwError (_SinkCreationError # "/dev/uinput")
-  maybe (pure ()) (liftIO . void . forkIO . callCommand) (cfg^.postInit)
+  maybe (pure ()) (liftIO . void . forkIO . callCommand) (cfg'^.postInit)
 
-  UinputSink cfg <$> liftIO (newMVar fd)
+  UinputSink cfg' <$> liftIO (newMVar fd)
 
 -- | Close keysink
 usClose :: UinputSink -> IO ()

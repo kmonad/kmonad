@@ -67,7 +67,7 @@ update ke tr = liftIO $ do
 
   -- Transmit current-event comparisons to all active `pin`s
   writeChan (tr^.inChan) ke
-  readChan  (tr^.outChan) -- Make sure the original outchan gets emptied: NOTE is this necessary?
+  void $ readChan  (tr^.outChan) -- Make sure the original outchan gets emptied: NOTE is this necessary?
 
   -- Return whether this event should be handled
   (not . S.member (fromEnum $ ke^.keyCode)) <$> readMVar (tr^.masked)

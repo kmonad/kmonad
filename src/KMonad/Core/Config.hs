@@ -69,7 +69,6 @@ import KMonad.Core.Parser.Parsers.Config
 import qualified Data.HashMap.Strict  as M
 import qualified Data.Set             as S
 import qualified Data.Text.Encoding   as T
-import qualified Data.Text.IO         as T
 import qualified Data.ByteString      as B
 
 

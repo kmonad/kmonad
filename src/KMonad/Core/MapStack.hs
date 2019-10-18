@@ -60,10 +60,10 @@ makeLenses ''MapStack
 mkMapStack :: CanMS ik mk
   => [(mk, [(ik, v)])] -- ^ An alist of mapkey to alist of itemkey to item.
   -> MapStack mk ik v
-mkMapStack items = MapStack
+mkMapStack items' = MapStack
   { _stack = []
-  , _maps  = S.fromList $ map fst items
-  , _items = foldl' fOuter M.empty items }
+  , _maps  = S.fromList $ map fst items'
+  , _items = foldl' fOuter M.empty items' }
   where
     fOuter    acc (mk, xs) = foldl' (fInner mk) acc xs
     fInner mk acc (ik, v)  = M.insert (mk, ik) v acc

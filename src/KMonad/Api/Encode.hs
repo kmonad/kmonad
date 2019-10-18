@@ -56,10 +56,10 @@ pickInputIO d = error $ "This device is not supported on Linux: " <> show d
 
 -- | Translate an 'OutputToken' to a 'KeySink' object
 pickOutputIO :: OutputToken -> KeySink
-pickOutputIO (UinputDevice nm pi) = let def = defUinputCfg in
+pickOutputIO (UinputDevice nm post) = let def = defUinputCfg in
   mkUinputSink $ def
     { _keyboardName = fromMaybe (def^.keyboardName) (T.unpack <$> nm)
-    , _postInit     = T.unpack <$> pi
+    , _postInit     = T.unpack <$> post
     }
 pickOutputIO d = error $ "This device is not supported on Linux" <> show d
 

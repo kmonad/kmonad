@@ -20,7 +20,6 @@ where
 
 import Control.Lens
 import Foreign.C.Types (CInt)
-import Foreign.C.String (CString)
 
 import KMonad.Core
 

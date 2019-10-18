@@ -52,7 +52,7 @@ configP = scn *> (toCfg . sepSections <$> some section) <* eof
 -- | Seperate all the different sections into their own list of definitions.
 -- NOTE: This could probably be done *much* prettier, maybe using lenses?
 sepSections :: [Section] -> ([SourceToken], [LayerToken], [AliasDef], [InputToken], [OutputToken])
-sepSections ss = (foldl' f ([], [], [], [], []) ss)
+sepSections ss' = (foldl' f ([], [], [], [], []) ss')
   where f (ss, ls, as, is, os) (SSource s) = (s:ss, ls, as, is, os)
         f (ss, ls, as, is, os) (SLayer  l) = (ss, l:ls, as, is, os)
         f (ss, ls, as, is, os) (SAlias  a) = (ss, ls, a:as, is, os)

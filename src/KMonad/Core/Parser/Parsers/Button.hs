@@ -21,7 +21,6 @@ module KMonad.Core.Parser.Parsers.Button
   )
 where
 
-import KMonad.Core.KeyCode
 import KMonad.Core.Time
 import KMonad.Core.Parser.Parsers.KeyCode
 import KMonad.Core.Parser.Parsers.KeySequence

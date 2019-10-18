@@ -5,11 +5,9 @@ module KMonad.Core.Parser.Parsers.SpecialSymbol
 where
 
 import Control.Lens
-import Data.Char (isSpace)
 
 import KMonad.Core.Keyboard
 import KMonad.Core.SpecialSymbol
-import KMonad.Core.Parser.Parsers.KeyCode
 import KMonad.Core.Parser.Parsers.KeySequence
 import KMonad.Core.Parser.Utility
 

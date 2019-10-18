@@ -15,7 +15,6 @@ module KMonad.Domain.Loop
 where
 
 import Control.Monad.Logger
-import Control.Lens
 import KMonad.Core
 import KMonad.Domain.Effect
 

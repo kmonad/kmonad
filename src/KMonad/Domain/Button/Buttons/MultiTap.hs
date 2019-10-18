@@ -46,8 +46,8 @@ recurse :: CanButton m
 recurse _ _   []          = pure () -- Only reachable if empty button is provided
 recurse _ _   ((_, b):[]) = tap b   -- Last button: press immediately
 recurse c nxt ((d, b):bs) = do      -- Recurse deeper when we encounter a press of the same code, or tap when delay runs out
-  race (wait d) (waitForWith pred nxt) >>= \case
+  race (wait d) (waitForWith p nxt) >>= \case
     Left  _ -> tap b
     Right _ -> recurse c nxt bs
   where
-    pred e = (e^.keyCode == c) && (e^.switchState == Engaged)
+    p e = (e^.keyCode == c) && (e^.switchState == Engaged)

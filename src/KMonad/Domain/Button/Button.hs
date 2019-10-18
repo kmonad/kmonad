@@ -2,7 +2,6 @@ module KMonad.Domain.Button.Button
 
 where
 
-import Control.Lens
 import UnliftIO
 
 import KMonad.Core

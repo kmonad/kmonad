@@ -25,8 +25,7 @@ module KMonad.Core.Parser.Parsers.KeyCode
   )
 where
 
-import Control.Arrow ((&&&), second)
-import Data.Char
+import Control.Arrow ((&&&))
 import Data.Foldable (foldl')
 import Data.Maybe (catMaybes)
 

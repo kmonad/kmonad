@@ -56,10 +56,6 @@ keySequenceOld = do
 seqElem :: Parser KeySequence
 seqElem = choice [try pressSeqP, try releaseSeqP, tapP, shifted, modded]
 
--- | Parse a raw sequence consisting only of basic tokens
-rawSeq :: Parser KeySequence
-rawSeq = concat <$> many (lexemeSameLine $ choice [pressSeqP, releaseSeqP, tapP])
-
 -- | Parse a Press action
 pressP :: Parser KeyAction
 pressP = char 'P' *> (mkKeyPress <$> keycodeP)
@@ -88,18 +84,18 @@ tapP = (\c -> [mkKeyPress c, mkKeyRelease c]) <$> keycodeP
 -- is recursive, so "C-S-button" works fine too
 modded :: Parser KeySequence
 modded = do
-  mod <- choice [ KeyLeftShift  <$ string "S-"
-                , KeyLeftCtrl   <$ string "C-"
-                , KeyLeftAlt    <$ string "A-"
-                , KeyLeftMeta   <$ string "M-"
-                , KeyRightShift <$ string "RS-"
-                , KeyRightCtrl  <$ string "RC-"
-                , KeyRightAlt   <$ string "RA-"
-                , KeyRightMeta  <$ string "RM-"
-                , KeyCompose    <$ string "CMP-"
-                ] <?> "Mod sequence"
+  mod' <- choice [ KeyLeftShift  <$ string "S-"
+                 , KeyLeftCtrl   <$ string "C-"
+                 , KeyLeftAlt    <$ string "A-"
+                 , KeyLeftMeta   <$ string "M-"
+                 , KeyRightShift <$ string "RS-"
+                 , KeyRightCtrl  <$ string "RC-"
+                 , KeyRightAlt   <$ string "RA-"
+                 , KeyRightMeta  <$ string "RM-"
+                 , KeyCompose    <$ string "CMP-"
+                 ] <?> "Mod sequence"
   rest <- keySequence <|> modded <|> shifted <|> tapP <|> pressSeqP <|> releaseSeqP
-  return $ around mod rest
+  return $ around mod' rest
 
 -- | Parse a number of special characters as "the shifted sequence to push
 -- them". So "!" gets parsed to a shifted 1, for example. This does not include

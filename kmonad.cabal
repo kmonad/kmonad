@@ -10,6 +10,8 @@ license-file:   LICENSE
 build-type:     Simple
 
 library
+  ghc-options:
+    -Wall
   exposed-modules:
       KMonad
       KMonad.Api.App

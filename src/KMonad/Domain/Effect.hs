@@ -109,13 +109,7 @@ import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Logger
-import Control.Monad.Reader
-import Control.Monad.Writer
-import Data.Text
 import Data.Time.Clock.System (getSystemTime)
-
-import qualified Data.Text    as T
-import qualified Data.Text.IO as T
 
 import KMonad.Core
 import KMonad.Domain.Button.Button (MonadButton(..))

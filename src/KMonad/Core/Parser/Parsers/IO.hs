@@ -61,10 +61,10 @@ outputNames =
 uinputP :: Parser OutputToken
 uinputP = do
   let f = maybe Nothing (\s -> if T.null s then Nothing else Just s)
-  name <- f <$> (optional $ lexemeSameLine someString)
-  post <- f <$> (optional $ lexemeSameLine someString)
+  name' <- f <$> (optional $ lexemeSameLine someString)
+  post  <- f <$> (optional $ lexemeSameLine someString)
 
-  pure $ UinputDevice name post
+  pure $ UinputDevice name' post
 
 -- | Parse an 'OutputToken'
 outputP :: Parser OutputToken

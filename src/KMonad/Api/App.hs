@@ -20,7 +20,6 @@ import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Logger
 import Control.Monad.Reader
-import qualified Data.Text.IO as T
 
 import KMonad.Core
 import KMonad.Domain.Button
@@ -157,7 +156,7 @@ runApp :: App a -> AppEnv -> IO (Either AppError a)
 runApp m env = runExceptT $ runReaderT (runLog $ unApp m) env
   where
     runLog    = runStdoutLoggingT . filterLogger f
-    f src lvl = lvl /= LevelDebug
+    f _ lvl = lvl /= LevelDebug
 
 -- | Run an App action and deal with errors by throwing Exceptions
 runAppIO :: App a -> AppEnv -> IO a

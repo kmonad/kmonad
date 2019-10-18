@@ -7,9 +7,6 @@ import Control.Monad.Reader
 import UnliftIO.MVar
 
 import KMonad.Core
-import KMonad.Domain.Button
-import KMonad.Domain.Effect
-
 
 import qualified Data.HashMap.Strict as M
 

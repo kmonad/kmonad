@@ -4,9 +4,6 @@ where
 
 import Control.Lens hiding (argument)
 import Options.Applicative
-import Text.Read
-
-import KMonad.Core
 import KMonad.Core.Parser.Token
 
 
@@ -66,7 +63,7 @@ inputDeviceA = option toInputDeviceA $
  <> help "Optionally provide the input device to capture"
 
 toInputDeviceA :: ReadM (Maybe InputToken)
-toInputDeviceA = maybeReader $ \s -> Just (Just (LinuxDeviceSource L64 s))
+toInputDeviceA = maybeReader $ \x -> Just (Just (LinuxDeviceSource L64 x))
 
 
 -- outputDeviceA :: Parser (Maybe OutputToken)

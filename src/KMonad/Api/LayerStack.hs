@@ -55,7 +55,8 @@ class MonadIO m => HasLayerStack r m where
 -- | Use a LayerStack to handle a single key event
 handleWith :: (MonadButton m, MonadIO m) => KeyEvent -> LayerStack m -> m ()
 handleWith e ls
-  | isPress e = do -- Handle presses by looking up the key in the layerstack
+  -- Handle presses by looking up the key in the layerstack
+  | isPress e = do
       let kc = e^.keyCode
       ms  <- readMVar . mapStack $ ls
       case S.lookup (e^.keyCode) ms of
@@ -63,7 +64,9 @@ handleWith e ls
         Just b  -> do
           liftIO . modifyMVar_ (mapRelease ls) $ return . M.insert kc b
           press b
-  | isRelease e = do -- Handle releases by finding the key that initiated the press
+
+  -- Handle releases by finding the key that initiated the press
+  | isRelease e = do
       let kc = e^.keyCode
       rels <- takeMVar (mapRelease ls)
       case M.lookup kc rels of
@@ -72,9 +75,12 @@ handleWith e ls
           putMVar (mapRelease ls) (M.delete kc rels)
           release b
 
+  -- This should be unreachable
+  | otherwise = pure ()
+
 
 myFromJust :: String -> Maybe a -> a
-myFromJust s = fromMaybe (error s)
+myFromJust = fromMaybe . error
 
 -- | Push a LayerID to the top of the stack NOTE: the monads do not necessarily
 -- have to line up, maybe change this? FIXME: Add error handling and remove the

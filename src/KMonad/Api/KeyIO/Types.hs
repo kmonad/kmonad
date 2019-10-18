@@ -51,14 +51,11 @@ import Prelude hiding (read)
 import Control.Exception (Exception, throw)
 import Control.Lens
 import Control.Monad.Except
-import Control.Monad.Reader
 import Data.Text (unpack)
 
 import UnliftIO as U
 
-
 import KMonad.Core
-import KMonad.Domain.Effect
 
 
 
@@ -84,20 +81,20 @@ instance Show KeyIOError where
     = "Could not perform IOCTL grab on: " <> pth
   show (IOCtlReleaseError pth)
     = "Could not perform IOCTL release on: " <> pth
-  show (EventParseError pth s)
+  show (EventParseError pth snk)
     = concat [ "Error parsing event when reading from "
              , pth
              , ": "
-             , s ]
-  show (SinkCreationError s)
-    = "Error instantiating KeySink of type: " <> s
-  show (SinkDeletionError s)
-    = "Error deleting KeySink of type: " <> s
-  show (SinkWriteError s e)
+             , snk ]
+  show (SinkCreationError snk)
+    = "Error instantiating KeySink of type: " <> snk
+  show (SinkDeletionError snk)
+    = "Error deleting KeySink of type: " <> snk
+  show (SinkWriteError snk e)
     = concat [ "Error writing event '"
              , unpack $ pretty e
              , "'to KeySink: "
-             , s ]
+             , snk ]
 
 -- | Classy Prisms to create and throw 'KeyIOError's
 makeClassyPrisms ''KeyIOError
@@ -124,7 +121,6 @@ data BracketIO a = forall r. BracketIO
   { _open  :: IO r
   , _close :: r -> IO ()
   , _use   :: r -> a }
-makeClassy ''BracketIO
 
 -- | Run an action that requires a managed /a/ by bracketting it with acquiring
 -- and releasing the resource.

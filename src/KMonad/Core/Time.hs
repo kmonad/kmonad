@@ -49,7 +49,7 @@ mkTime :: (Integral a, Integral b)
   => a    -- ^ The seconds part of system time
   -> b    -- ^ The nanoseconds part of system time
   -> Time -- ^ The Time value
-mkTime s ns = Time $ MkSystemTime (fromIntegral s) (fromIntegral ns)
+mkTime s' ns' = Time $ MkSystemTime (fromIntegral s') (fromIntegral ns')
 
 -- | An Iso between 'Time' and 'SystemTime'
 isoSystemTime :: Iso' Time SystemTime

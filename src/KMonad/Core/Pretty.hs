@@ -23,10 +23,8 @@ import Control.Lens
 import Control.Monad.Trans
 
 import KMonad.Core.Keyboard
-import KMonad.Core.KeyCode
 import KMonad.Core.Switch
 import KMonad.Core.Time
-import KMonad.Core.Types
 
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
