@@ -211,33 +211,3 @@ mkKeyTap c = [mkKeyPress c, mkKeyRelease c]
 
 around :: KeyCode -> KeySequence -> KeySequence
 around kc sq = kP kc <> sq <> kR kc
-
-
---------------------------------------------------------------------------------
--- $comps
---
--- For some 'KMonad.Core.Button.Button' actions we need to be able to know
--- whether the next 'KeyEvent' is a release of the same button, or perhaps the
--- press of another. But since buttons are expressly isolated from their
--- context, we provide a mechanism for gathering information about future
--- 'KeyEvent's. Using the 'KMonad.Domain.Effect.Future.MonadFuture' class,
--- buttons get access to data of the 'EventComparison' type.
-
--- | The EventComparison record
--- data EventComparison = EventComparison
---   { _sameCode     :: Bool          -- ^ Whether or not both 'KeyEvent's share the same 'KeyCode'
---   , _since        :: Nanoseconds   -- ^ The time between the two events
---   , _cmpEventType :: KeyActionType -- ^ The event-type of the second event
---   } deriving (Eq, Show)
--- makeClassy ''EventComparison
-
--- instance HasType EventComparison KeyActionType where _type = cmpEventType
-
--- -- | Return an 'EventComparison' between two events, if the first event occured
--- -- before the second, the 'since' value will be positive, otherwise negative.
--- compareEvent :: KeyEvent -> KeyEvent -> EventComparison
--- compareEvent a b = EventComparison
---   { _sameCode     = a^.keyCode == b^.keyCode
---   , _since        = (a^.time) `tminus` (b^.time)
---   , _cmpEventType = b^._type
---   }
