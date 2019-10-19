@@ -34,7 +34,7 @@ import UnliftIO
 import KMonad.Core
 import KMonad.Core.Parser.Token
 import KMonad.Domain.Button
-import KMonad.Domain.Effect (CanButton)
+import KMonad.Domain.Effect
 
 import qualified KMonad.Core.MapStack as S
 import qualified Data.HashMap.Strict  as M
