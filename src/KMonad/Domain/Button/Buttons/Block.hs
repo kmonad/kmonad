@@ -22,5 +22,5 @@ import Control.Monad.IO.Class
 import KMonad.Domain.Button.Button
 
 -- | Create a Button that does nothing
-mkBlock :: (MonadIO io, MonadButton m) => io (Button m)
+mkBlock :: (MonadIO io, Monad m) => io (Button m)
 mkBlock = mkButton . const $ pure ()

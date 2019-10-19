@@ -19,6 +19,7 @@ where
 import Control.Monad.IO.Class
 import KMonad.Core
 import KMonad.Domain.Button.Button
+import KMonad.Domain.Effect
 
 -- | Return a button that manages two other buttons, A and B, and turns a Press
 -- into PressA >> PressB and a Release into ReleaseB >> ReleaseA.
