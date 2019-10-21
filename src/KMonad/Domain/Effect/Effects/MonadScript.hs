@@ -1,4 +1,4 @@
-module KMonad.Domain.Script
+module KMonad.Domain.Effect.Effects.MonadScript
 
 where
 
@@ -9,6 +9,8 @@ import System.IO
 import System.Process
 
 import KMonad.Core
+
+import KMonad.Domain.Effect.Effects.MonadNow
 
 import qualified Data.ByteString as B
 
@@ -28,7 +30,7 @@ actions to the keyboard manager. The following options should exist:
 -}
 
 type CanScript m =
-  ( MonadTime m
+  ( MonadNow m
   , MonadIO   m
   )
 
@@ -43,6 +45,8 @@ terminate = ScriptMsg Nothing
 keyMsg :: KeyEvent -> ScriptMsg
 keyMsg = ScriptMsg . Just
 
+keyMsgNow :: MonadNow m => SwitchState -> KeyCode -> m ScriptMsg
+keyMsgNow x c = withNow $ \t -> (ScriptMsg . Just $ mkKeyEvent x c t)
 
 data ScriptMode
   = RunOnly           -- ^ Start a script and forget about it
@@ -115,18 +119,10 @@ sendScriptIO io msg = liftIO $ B.hPut (io^.hIn) (toBytes msg)
 
 -- | Receive a 'ScriptMsg' from a managed script
 recvScriptIO :: MonadIO m => ScriptIO -> m (Maybe ScriptMsg)
-recvScriptIO io = liftIO $ do
-  a <- hGet 1 $ io^.hOut
+recvScriptIO io = let getOne = B.head <$> B.hGet (io^.hOut) 1 in liftIO $ do
+  a <- getOne
+  c <- toEnum . fromIntegral <$> getOne -- This should only read if evaluated.. right?
   if | a == 0 -> pure . Just $ terminate
-     | a == 1 -> pure . Just $ keyMsg
-  -- if a == 0
-  --   then pure Nothing
-  --   else do
-  --     c <- hGet 1 $ io^.hOut
-  --     pure . Just $ undefined
-
--- | Translate a series of bytes into Maybe a Maybe KeyEvent
--- fromBytes :: B.ByteString -> Maybe ScriptMsg
--- fromBytes bs
---   | B.null bs = Nothing
---   | B.length == 1 = undefined
+     | a == 1 -> Just <$> keyMsgNow Engaged    c
+     | a == 2 -> Just <$> keyMsgNow Disengaged c
+     | True   -> pure Nothing

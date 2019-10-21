@@ -68,6 +68,24 @@ library
       KMonad.Domain.Button.Buttons.TapNext
       KMonad.Domain.Button.Encode
       KMonad.Domain.Effect
+      KMonad.Domain.Effect.Effects
+      KMonad.Domain.Effect.Effects.MonadButton
+      KMonad.Domain.Effect.Effects.MonadEmit
+      KMonad.Domain.Effect.Effects.MonadFork
+      KMonad.Domain.Effect.Effects.MonadFuture
+      KMonad.Domain.Effect.Effects.MonadHandler
+      KMonad.Domain.Effect.Effects.MonadHold
+      KMonad.Domain.Effect.Effects.MonadInject
+      KMonad.Domain.Effect.Effects.MonadLock
+      KMonad.Domain.Effect.Effects.MonadMaskInput
+      KMonad.Domain.Effect.Effects.MonadNext
+      KMonad.Domain.Effect.Effects.MonadNow
+      KMonad.Domain.Effect.Effects.MonadRace
+      KMonad.Domain.Effect.Effects.MonadScript
+      KMonad.Domain.Effect.Effects.MonadStackManip
+      KMonad.Domain.Effect.Effects.MonadSymbol
+      KMonad.Domain.Effect.Effects.MonadVar
+      KMonad.Domain.Effect.Effects.MonadWait
       KMonad.Domain.Loop
   if os(linux)
     exposed-modules:

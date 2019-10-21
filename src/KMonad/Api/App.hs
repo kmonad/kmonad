@@ -120,9 +120,7 @@ instance MonadNow App where
 
 -- | Race items using the Async library
 instance MonadRace App where
-  race a b = do
-    env <- ask
-    liftIO $ A.race (runAppIO a env) (runAppIO b env)
+  race a b = ask >>= \env -> liftIO $ A.race (runAppIO a env) (runAppIO b env)
 
 -- | Handle StackManip by operating on the LayerStack
 instance MonadStackManip App where

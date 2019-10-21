@@ -28,12 +28,12 @@ module KMonad.Api.KeyIO.Types
   , Receiver
   , CanKeyIO
 
-    -- * Wrapped KeySource that allows injecting events
-    -- $esrc
-  , EventSource
-  , mkEventSource
-  , readEvent
-  , writeEvent
+  --   -- * Wrapped KeySource that allows injecting events
+  --   -- $esrc
+  -- , EventSource
+  -- , mkEventSource
+  -- , readEvent
+  -- , writeEvent
 
     -- * Collection of things that can go wrong with KeyIO
     -- $err
@@ -42,7 +42,7 @@ module KMonad.Api.KeyIO.Types
 
     -- * Classy lenses and monad instances for KeyIO
   , HasEmitter(..)
-  , HasEventSource(..)
+  -- , HasEventSource(..)
   )
 where
 
@@ -152,28 +152,28 @@ withKeySource = withBracketIO
 -- KMonad's event-loop.
 
 -- | An object that manages a KeySource and allows async injecting of other events
-data EventSource = EventSource
-  { _waitKey :: Receiver
-  , _injectV :: MVar Event
-  }
--- | A classy lens to having an 'EventSource'
-makeClassy ''EventSource
+-- data EventSource = EventSource
+--   { _waitKey :: Receiver
+--   , _injectV :: MVar Event
+--   }
+-- -- | A classy lens to having an 'EventSource'
+-- makeClassy ''EventSource
 
--- | Create a new EventSource by wrapping a receiver
-mkEventSource :: MonadIO m => Receiver -> m EventSource
-mkEventSource nextKey = EventSource nextKey <$> newEmptyMVar
+-- -- | Create a new EventSource by wrapping a receiver
+-- mkEventSource :: MonadIO m => Receiver -> m EventSource
+-- mkEventSource nextKey = EventSource nextKey <$> newEmptyMVar
 
--- | Await the next event from an EventSource, this blocks until an event occurs
-readEvent :: MonadIO m => EventSource -> m Event
-readEvent es =
-  liftIO $ U.race (InputEvent <$> es^.waitKey) (takeMVar $ es^.injectV) >>= \case
-    Left e  -> return e
-    Right e -> return e
+-- -- | Await the next event from an EventSource, this blocks until an event occurs
+-- readEvent :: MonadIO m => EventSource -> m Event
+-- readEvent es =
+--   liftIO $ U.race (InputEvent <$> es^.waitKey) (takeMVar $ es^.injectV) >>= \case
+--     Left e  -> return e
+--     Right e -> return e
 
--- | Inject a new event into the EventSource, can block if the events aren't
--- being handled fast enough.
-writeEvent :: MonadIO m => Event -> EventSource -> m ()
-writeEvent e es = liftIO . putMVar (es^.injectV) $ e
+-- -- | Inject a new event into the EventSource, can block if the events aren't
+-- -- being handled fast enough.
+-- writeEvent :: MonadIO m => Event -> EventSource -> m ()
+-- writeEvent e es = liftIO . putMVar (es^.injectV) $ e
 
 
 
