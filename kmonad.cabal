@@ -18,6 +18,7 @@ library
       KMonad.Api.Args
       KMonad.Api.Encode
       KMonad.Api.EventTracker
+      KMonad.Api.InputDispatch
       KMonad.Api.KeyIO
       KMonad.Api.KeyIO.Types
       KMonad.Api.LayerStack
@@ -152,7 +153,8 @@ library
     c-sources:
       c_src/keyio_win.c
   build-depends:
-      base
+      async
+    , base
     , bytestring
     , cereal
     , containers

@@ -27,6 +27,7 @@ import KMonad.Domain.Effect
 import KMonad.Domain.Loop
 import KMonad.Api.Encode
 import KMonad.Api.EventTracker
+import KMonad.Api.InputDispatch
 import KMonad.Api.KeyIO
 import KMonad.Api.LayerStack
 import KMonad.Api.LockManager
@@ -92,7 +93,7 @@ instance MonadHold App where
 
 -- | Inject events by writing them to the eventSource's injectV
 instance MonadInject App where
-  injectEvent e = writeEvent e =<< view eventSource
+  injectEvent e = writeEvent e =<< view inputDispatch
 
 -- | Handle lock events using the LockManager
 instance MonadLock App where
@@ -112,7 +113,7 @@ instance MonadMaskInput App where
 
 -- | Await new events by polling the eventSource
 instance MonadNext App where
-  nextEvent = readEvent =<< view eventSource
+  nextEvent = readEvent =<< view inputDispatch
 
 -- | Get the time from the OS
 instance MonadNow App where
@@ -212,7 +213,7 @@ interpretConfig us cfg = AppCfg
 -- | The AppEnv reader environment that all App actions have access to.
 data AppEnv = AppEnv
   { _appEmitter       :: KeyEvent -> IO () -- ^ An action that emits keys to the OS
-  , _appEventSource   :: EventSource       -- ^ The entrypoint for events
+  , _appInputDispatch :: InputDispatch     -- ^ The entrypoint for events
   , _appEventTracker  :: EventTracker      -- ^ Tracking and masking events
   , _appSluice        :: Sluice App ()     -- ^ Sluice to enable holding processing
   , _appLayerStack    :: LayerStack App    -- ^ LayerStack to manage the layers
@@ -224,7 +225,7 @@ makeClassy ''AppCfg
 makeClassy ''AppEnv
 
 -- | Various ClassyLenses plugging in
-instance HasEventSource       AppEnv          where eventSource       = appEventSource
+instance HasInputDispatch     AppEnv          where inputDispatch     = appInputDispatch
 instance HasEmitter           AppEnv          where emitter           = appEmitter
 instance HasEventTracker      AppEnv          where eventTracker      = appEventTracker
 instance HasSluice            AppEnv App ()   where sluice            = appSluice
@@ -243,7 +244,7 @@ runOnce cfg = do
     withKeySink (cfg^.cfgKeySink) $ \snk -> do
 
       -- Initialize the AppEnv variable
-      esrc <- mkEventSource src
+      idsp <- mkInputDispatch src
       etrc <- mkEventTracker
       slce <- mkSluice
       stck <- mkLayerStack (cfg^.cfgLayerStack) (cfg^.cfgEntry)
@@ -255,7 +256,7 @@ runOnce cfg = do
 
       let env = AppEnv
             { _appEmitter       = snk
-            , _appEventSource   = esrc
+            , _appInputDispatch = idsp
             , _appEventTracker  = etrc
             , _appSluice        = slce
             , _appLayerStack    = stck
