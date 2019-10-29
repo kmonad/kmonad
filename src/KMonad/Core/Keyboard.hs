@@ -25,6 +25,7 @@ deal with how to generate repeating events.
 module KMonad.Core.Keyboard
   ( -- * Types for KeyActions
     KeyAction(..)
+  , keyAction
 
     -- * Types and lenses for KeyEvents
     -- $types
@@ -109,7 +110,7 @@ instance HasSwitchState KeyEvent where switchState = keyAction.switchState
 instance HasKeyCode     KeyEvent where keyCode     = keyAction.keyCode
 instance HasTime        KeyEvent where time        = evTime
 
--- | Create a KeyEvent
+-- | Create a KeyEvent from all separate parameters
 mkKeyEvent :: SwitchState -> KeyCode -> Time -> KeyEvent
 mkKeyEvent a c = KeyEvent (KeyAction a c)
 
