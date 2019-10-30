@@ -1,3 +1,17 @@
+# Where is the architect?
+
+The architect is on holiday! I will be back in the middle of November. If you
+have any issues or pull requests, you are not going to get any response from me
+until then, but I'll be sure to get back to you when I do return.
+
+When I come back, the planned changes/extensions to KMonad include:
+- A better macro system / redesign of the config language
+- Daemon-mode with command-line interface operations to change state (like
+  switching to a layer)
+- Launching and interacting with external scripts
+
+After that, bug-fixes and a 1.0.0 release. Onwards and upwards!
+
 # KMonad
 
 Welcome to KMonad! If you are currently running Linux and want to experiment
