@@ -83,11 +83,17 @@ for an overview of different button-types.
 
 ## Getting KMonad
 
-KMonad is written in Haskell (with a tiny bit of C). You can either compile it
-yourself using the instructions mentioned below. Alternatively, the lovely
-people over at https://github.com/nh2/static-haskell-nix have helped me figure
-how to compile a static binary that should work basically on any standard 64-bit
-Linux system. You can find the most recent release [on the releases
+### On Void Linux
+You can install `kmonad` via `xbps-install`:
+``` shell
+xbps-install -S kmonad
+```
+
+### Binaries
+KMonad is written in Haskell (with a tiny bit of C). The lovely people over at
+https://github.com/nh2/static-haskell-nix have helped me figure how to compile a
+static binary that should work basically on any standard 64-bit Linux
+system. You can find the most recent release [on the releases
 page](https://github.com/david-janssen/kmonad/releases).
 
 ### Compiling
