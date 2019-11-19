@@ -1,7 +1,53 @@
-* Changes to make
-** TODO Unify BPress/Press and release
-** TODO Completely remove 'repeat' events from internal processing
-** TODO Move any type of repeat behavior to the front of KMonad
-** TODO Make switches unable to be pressed or released twice
-** TODO Switch to MonadLogger
-** TODO Create general macros
+* Roadmap
+For the 1.0.0 release of KMonad I want to achieve the following things:
+
+- Revamp the configuration lanuage
+- Add external script-support
+- Do a thorough code cleaning/commenting/haddock-coverage sweep
+
+After that, we release 1.0.0 and move on to a bug-fix/support role for a while,
+until other needs pop up again.
+
+** Config-language revamp
+The current configuration language is very ad-hoc, and comes with many warts. I
+want to be able to support 'action-macros'. The most elegant and powerful method
+is to simply abstract the entire KMonad action-language as a something that can
+be interfaced with through some external scripting language.
+
+Basically I want to parse an AST with very few syntax constructs, but with a
+number of primitive actions supported by KMonad. If the scripting language is
+powerful enough to add things like 'tap-mods', then I will have achieved my
+goal.
+
+One of the easiest languages to parse is Lisp, so to make life easy on myself,
+and also to immediately hook into all of the existing editor-support for Lisps,
+I will write a parser for a lispish language that evaluates to KMonad actions.
+
+** External script support
+People have expressed a desire to hook KMonad up to external scripts, which does
+sound very unixy to me. KMonad can be the amazingly awesome keyboard manager
+that only does keyboard management. If you then want to add AHK-like automation
+behavior, we don't support that, but we do allow you to capture and pipe all key
+events to some external script, and provide you with a way to insert key-events
+back into the OS in a very simple way. Then you can do your scripting any which
+way you like.
+
+I can think of three different script-launching methods:
+1. Fire and forget, don't even maintain a link (just a launcher).
+2. Start and send a copy of all input events to script but keep running KMonad
+   (for a keylogger for example).
+3. Start and send all events to script, and don't process them through KMonad
+   until the script is finished (for some kind of Hydra launcher, for example).
+
+* Next actions
+I want to do the scripting language first, so that when I do add scripts, I can
+do that using the new language's functions.
+** Language revamp
+*** NEXT Get a lisp-like nested-list syntax parser running
+*** TODO Add support for named actions like 'fork'
+*** TODO Add support for a small set of syntax-constructs
+*** TODO Implement standard buttons in scripting-language
+*** TODO Add macro-support
+*** TODO Update documentation/readme/deprecation warning for old-style
+** Script support
+Later
