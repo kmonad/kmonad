@@ -26,7 +26,7 @@ import           Control.Lens
 import           Data.Maybe
 
 import           KMonad.Api.App     (startAppIO)
-import           KMonad.Api.Args
+import           KMonad.CLI.Args
 import           KMonad.Core.Config
 
 updateConfig :: CmdLineArgs -> Config -> Config
