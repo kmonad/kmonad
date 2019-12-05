@@ -36,6 +36,7 @@ where
 import Control.Lens
 import Data.Char
 import Data.Hashable (Hashable)
+import Data.Serialize
 import GHC.Generics (Generic)
 
 import qualified Data.Text as T
@@ -310,6 +311,7 @@ class HasKeyCode a where
 instance HasKeyCode KeyCode where
   keyCode = id
 
+instance Serialize KeyCode
 
 -- | There is no easy correspondence between characters and keycodes, but it is
 -- sometimes nice to be able to refer to keycodes by their letter or number.

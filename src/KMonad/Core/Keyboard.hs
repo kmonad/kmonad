@@ -62,6 +62,8 @@ where
 import Prelude hiding (repeat)
 
 import Control.Lens
+import Data.Serialize
+import GHC.Generics
 
 import KMonad.Core.KeyCode
 import KMonad.Core.Time
@@ -78,14 +80,14 @@ data KeyActionType
   = Press
   | Release
   | Repeat
-  deriving (Eq, Ord, Show, Enum)
+  deriving (Eq, Ord, Show, Enum, Generic)
 makeClassyPrisms ''KeyActionType
 
 -- | A KeyAction is a Press, Release, or Repeat of a KeyCode
 data KeyAction = KeyAction
   { _kaType    :: KeyActionType
   , _kaKeyCode :: KeyCode
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 makeClassy ''KeyAction
 
 instance Ord KeyAction where
@@ -98,6 +100,8 @@ instance HasType KeyAction KeyActionType where
 instance HasKeyCode KeyAction where
   keyCode = kaKeyCode
 
+instance Serialize KeyActionType
+instance Serialize KeyAction
 
 --------------------------------------------------------------------------------
 -- $event
@@ -106,7 +110,7 @@ instance HasKeyCode KeyAction where
 data KeyEvent = KeyEvent
   { _evKeyAction :: KeyAction
   , _evTime      :: Time
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 makeClassy ''KeyEvent
 
 -- Hook up all the classy lenses
@@ -114,6 +118,8 @@ instance HasKeyAction KeyEvent          where keyAction = evKeyAction
 instance HasType KeyEvent KeyActionType where _type = keyAction._type
 instance HasKeyCode KeyEvent            where keyCode = keyAction.keyCode
 instance HasTime KeyEvent               where time = evTime
+
+instance Serialize KeyEvent
 
 -- | Create a KeyEvent
 mkKeyEvent :: KeyActionType -> KeyCode -> Time -> KeyEvent

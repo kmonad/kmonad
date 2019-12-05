@@ -15,10 +15,15 @@ module KMonad.Core.Event
   )
 where
 
+import Data.Serialize
+import GHC.Generics
+
 import KMonad.Core.Keyboard
 
 -- | An 'Event' is either a 'KeyEvent' or a signal to shutdown
 data Event
   = InputEvent KeyEvent
   | Quit
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+instance Serialize Event
