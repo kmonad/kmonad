@@ -1,0 +1,27 @@
+// IO
+INPUT  = LINUX_DEVICE L64 /dev/input/by-id/usb-Topre_Corporation_HHKB_Professional-event-kbd
+OUTPUT = UINPUT_SINK "My Keyboard"
+
+/* Copy this out to create a template for a new layer
+LAYER
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _
+*/
+
+// The RAW Input
+SRC
+  esc  1    2    3    4    5    6    7    8    9    0    -    =    \    `
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    bspc
+  lctl a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lalt lmet spc  rmet ralt
+
+LAYER base
+  esc  1    2    3    4    5    6    7    8    9    0    -    =    \    `
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    bspc
+  lctl a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lalt lmet spc  rmet ralt

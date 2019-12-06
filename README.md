@@ -69,11 +69,11 @@ for an overview of different button-types.
 
 ## Getting KMonad
 
-KMonad is written in Haskell (with a tiny bit of C). You can either compile it
-yourself using the instructions mentioned below. Alternatively, the lovely
-people over at https://github.com/nh2/static-haskell-nix have helped me figure
-how to compile a static binary that should work basically on any standard 64-bit
-Linux system. You can find the most recent release [on the releases
+### Binaries
+KMonad is written in Haskell (with a tiny bit of C). The lovely people over at
+https://github.com/nh2/static-haskell-nix have helped me figure how to compile a
+static binary that should work basically on any standard 64-bit Linux
+system. You can find the most recent release [on the releases
 page](https://github.com/david-janssen/kmonad/releases).
 
 ### Compiling
@@ -110,6 +110,39 @@ Linux, i.e.:
 
 ``` powershell
 stack build
+```
+
+### Packaged on various distros
+
+#### On Void Linux
+You can install `kmonad` via `xbps-install`:
+``` shell
+xbps-install -S kmonad
+```
+
+#### Guix
+You can install `kmonad` via the `guix` package manager. You will need to copy
+the udev rules into place manually.
+
+``` shell
+guix install kmonad
+sudo cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/
+```
+
+If you use the Guix System to manage your entire machine, you will instead want
+to install udev rules using something like this in your `config.scm`
+
+``` scheme
+(use-modules (gnu packages haskell-apps))
+
+(operating-system
+ ;; ...
+ (services
+  (modify-services %desktop-services
+    (udev-service-type config =>
+      (udev-configuration (inherit config)
+       (rules (cons kmonad
+                    (udev-configuration-rules config))))))))
 ```
 
 ## Running

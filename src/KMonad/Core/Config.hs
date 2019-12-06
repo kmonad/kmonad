@@ -53,7 +53,8 @@ import Control.Exception
 import Control.Lens
 import Control.Monad.Except
 import Control.Monad.ST
-import Data.Containers.ListUtils (nubOrd)
+-- Temporarily commented out until wider adoption of ghc8.6
+-- import Data.Containers.ListUtils (nubOrd)
 import Data.Foldable (toList)
 import Data.Hashable
 import Data.List ((\\))
@@ -304,3 +305,41 @@ loadConfigToken pth = do
   bst <- liftIO $ B.readFile pth 
   pure . parseE configP . T.decodeUtf8 $ bst
   
+
+
+
+--------------------------------------------------------------------------------
+-- Temporary: this is part of Data.Containers.ListUtil, but comes with a
+-- dependency on ghc 8.6, which isn't supported everywhere just yet. In a couple
+-- of months when adoption is wider, we can just move to importing this
+-- directly.
+
+-- @ nubIntOn fromEnum xs @
+nubOrd :: Ord a => [a] -> [a]
+nubOrd = nubOrdOn id
+{-# INLINE nubOrd #-}
+
+-- | The @nubOrdOn@ function behaves just like 'nubOrd' except it performs
+-- comparisons not on the original datatype, but a user-specified projection
+-- from that datatype.
+--
+-- ==== Strictness
+--
+-- @nubOrdOn@ is strict in the values of the function applied to the
+-- elements of the list.
+nubOrdOn :: Ord b => (a -> b) -> [a] -> [a]
+-- For some reason we need to write an explicit lambda here to allow this
+-- to inline when only applied to a function.
+nubOrdOn f = \xs -> nubOrdOnExcluding f S.empty xs
+{-# INLINE nubOrdOn #-}
+
+-- Splitting nubOrdOn like this means that we don't have to worry about
+-- matching specifically on Set.empty in the rewrite-back rule.
+nubOrdOnExcluding :: Ord b => (a -> b) -> S.Set b -> [a] -> [a]
+nubOrdOnExcluding f = go
+  where
+    go _ [] = []
+    go s (x:xs)
+      | fx `S.member` s = go s xs
+      | otherwise = x : go (S.insert fx s) xs
+      where !fx = f x
