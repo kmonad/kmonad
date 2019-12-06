@@ -16,6 +16,9 @@ module KMonad.Core.Event
   )
 where
 
+import Data.Serialize
+import GHC.Generics
+
 import KMonad.Core.Keyboard
 import KMonad.Core.Time
 
@@ -23,7 +26,6 @@ import KMonad.Core.Time
 data Event
   = InputEvent KeyEvent
   | Quit
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
-keyEventAt :: KeyAction -> Time -> Event
-keyEventAt a = InputEvent . actAtTime a
+instance Serialize Event

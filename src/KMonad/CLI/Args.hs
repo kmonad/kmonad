@@ -1,4 +1,4 @@
-module KMonad.Api.Args
+module KMonad.CLI.Args
 
 where
 

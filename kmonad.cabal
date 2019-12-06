@@ -15,7 +15,6 @@ library
   exposed-modules:
       KMonad
       KMonad.Api.App
-      KMonad.Api.Args
       KMonad.Api.Encode
       KMonad.Api.EventTracker
       KMonad.Api.InputDispatch
@@ -25,6 +24,7 @@ library
       KMonad.Api.LockManager
       KMonad.Api.Sluice
       KMonad.Api.SymbolEncoder
+      KMonad.CLI.Args
       KMonad.Core
       KMonad.Core.Config
       KMonad.Core.Event
@@ -164,6 +164,7 @@ library
     , megaparsec
     , monad-logger
     , mtl
+    , network
     , optparse-applicative
     , process
     , text

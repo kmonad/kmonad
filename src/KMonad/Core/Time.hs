@@ -23,8 +23,10 @@ module KMonad.Core.Time
   )
 where
 
-import           Control.Lens
-import           Data.Time.Clock.System
+import Control.Lens
+import Data.Time.Clock.System
+import Data.Serialize
+import GHC.Generics
 
 --------------------------------------------------------------------------------
 -- $types
@@ -36,7 +38,13 @@ newtype Microseconds = Microseconds Int deriving (Eq, Ord, Num, Real, Enum, Inte
 newtype Nanoseconds  = Nanoseconds  Int deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
 
 -- | The 'Time' datatype that expresses a time value in KMonad
-newtype Time = Time { unT :: SystemTime } deriving (Eq, Show)
+newtype Time = Time { unT :: SystemTime } deriving (Eq, Show, Generic)
+
+instance Serialize SystemTime where
+  put t = put (systemSeconds t, systemNanoseconds t)
+  get = (\(s, ns) -> MkSystemTime s ns) <$> get
+
+instance Serialize Time
 
 -- | A classy lens style typeclass to describe "having a time value"
 class HasTime a where

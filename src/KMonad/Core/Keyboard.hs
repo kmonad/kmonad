@@ -61,6 +61,8 @@ where
 import Prelude hiding (repeat)
 
 import Control.Lens
+import Data.Serialize
+import GHC.Generics
 
 import KMonad.Core.KeyCode
 import KMonad.Core.Switch
@@ -73,12 +75,18 @@ import qualified Data.Set as S
 --------------------------------------------------------------------------------
 -- $action
 
--- | A KeyAction is either a press or release of a keycode
+-- | The KeyActionType that distinguishes press, release and repeat events
+data KeyActionType
+  = Press
+  | Release
+  | Repeat
+  deriving (Eq, Ord, Show, Enum, Generic)
+makeClassyPrisms ''KeyActionType
 
 data KeyAction = KeyAction
-  { _kaSwitchState :: SwitchState -- ^ Switch-state after KeyAction is completed
-  , _kaKeyCode     :: KeyCode     -- ^ The corresponding KeyCode
-  } deriving (Eq, Show)
+  { _kaType    :: KeyActionType
+  , _kaKeyCode :: KeyCode
+  } deriving (Eq, Show, Generic)
 makeClassy ''KeyAction
 
 instance Ord KeyAction where
@@ -93,6 +101,8 @@ instance HasSwitchState KeyAction where
 instance HasKeyCode KeyAction where
   keyCode = kaKeyCode
 
+instance Serialize KeyActionType
+instance Serialize KeyAction
 
 --------------------------------------------------------------------------------
 -- $event
@@ -101,7 +111,7 @@ instance HasKeyCode KeyAction where
 data KeyEvent = KeyEvent
   { _evKeyAction :: KeyAction
   , _evTime      :: Time
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 makeClassy ''KeyEvent
 
 -- Hook up all the classy lenses
@@ -110,8 +120,15 @@ instance HasSwitchState KeyEvent where switchState = keyAction.switchState
 instance HasKeyCode     KeyEvent where keyCode     = keyAction.keyCode
 instance HasTime        KeyEvent where time        = evTime
 
+<<<<<<< HEAD
 -- | Create a KeyEvent from all separate parameters
 mkKeyEvent :: SwitchState -> KeyCode -> Time -> KeyEvent
+=======
+instance Serialize KeyEvent
+
+-- | Create a KeyEvent
+mkKeyEvent :: KeyActionType -> KeyCode -> Time -> KeyEvent
+>>>>>>> b99bb6eea09474321dbb996989857e59a3dc40fa
 mkKeyEvent a c = KeyEvent (KeyAction a c)
 
 -- | Create a KeyEvent by running a KeyAction at a given time

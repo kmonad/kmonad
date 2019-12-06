@@ -1,6 +1,8 @@
 resolver: lts-14.7
 packages:
 - .
+extra-deps:
+- network-3.1.1.0
 #extra-deps:
 #- Win32-2.8.3.0
 #
