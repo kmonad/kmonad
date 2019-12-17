@@ -13,92 +13,97 @@ library
   ghc-options:
     -Wall
   exposed-modules:
-      KMonad
-      KMonad.Api.App
-      KMonad.Api.Encode
-      KMonad.Api.EventTracker
-      KMonad.Api.InputDispatch
-      KMonad.Api.KeyIO
-      KMonad.Api.KeyIO.Types
-      KMonad.Api.LayerStack
-      KMonad.Api.LockManager
-      KMonad.Api.Sluice
-      KMonad.Api.SymbolEncoder
-      KMonad.CLI.Args
-      KMonad.Core
-      KMonad.Core.Config
-      KMonad.Core.Event
       KMonad.Core.Keyboard
-      KMonad.Core.KeyCode
-      KMonad.Core.MapStack
-      KMonad.Core.Matrix
-      KMonad.Core.Parser
-      KMonad.Core.Parser.Parsers.Alias
-      KMonad.Core.Parser.Parsers.Button
-      KMonad.Core.Parser.Parsers.Config
-      KMonad.Core.Parser.Parsers.IO
-      KMonad.Core.Parser.Parsers.KeyCode
-      KMonad.Core.Parser.Parsers.KeySequence
-      KMonad.Core.Parser.Parsers.Layer
-      KMonad.Core.Parser.Parsers.Matrix
-      KMonad.Core.Parser.Parsers.Source
-      KMonad.Core.Parser.Parsers.SpecialSymbol
-      KMonad.Core.Parser.Token
-      KMonad.Core.Parser.Utility
-      KMonad.Core.Pretty
-      KMonad.Core.SpecialSymbol
-      KMonad.Core.Switch
+      KMonad.Core.Keyboard.Keycode
+      KMonad.Core.Keyboard.Event
       KMonad.Core.Time
-      KMonad.Core.Types
-      KMonad.Domain.Button
-      KMonad.Domain.Button.Button
-      KMonad.Domain.Button.Buttons
-      KMonad.Domain.Button.Buttons.After
-      KMonad.Domain.Button.Buttons.Around
-      KMonad.Domain.Button.Buttons.Block
-      KMonad.Domain.Button.Buttons.Emit
-      KMonad.Domain.Button.Buttons.EmitDeadKey
-      KMonad.Domain.Button.Buttons.EmitSpecial
-      KMonad.Domain.Button.Buttons.LayerAdd
-      KMonad.Domain.Button.Buttons.LayerRem
-      KMonad.Domain.Button.Buttons.LayerToggle
-      KMonad.Domain.Button.Buttons.Lockers
-      KMonad.Domain.Button.Buttons.Macro
-      KMonad.Domain.Button.Buttons.MultiTap
-      KMonad.Domain.Button.Buttons.TapHold
-      KMonad.Domain.Button.Buttons.TapNext
-      KMonad.Domain.Button.Encode
-      KMonad.Domain.Effect
-      KMonad.Domain.Effect.Effects
-      KMonad.Domain.Effect.Effects.MonadButton
-      KMonad.Domain.Effect.Effects.MonadEmit
-      KMonad.Domain.Effect.Effects.MonadFork
-      KMonad.Domain.Effect.Effects.MonadFuture
-      KMonad.Domain.Effect.Effects.MonadHandler
-      KMonad.Domain.Effect.Effects.MonadHold
-      KMonad.Domain.Effect.Effects.MonadInject
-      KMonad.Domain.Effect.Effects.MonadLock
-      KMonad.Domain.Effect.Effects.MonadMaskInput
-      KMonad.Domain.Effect.Effects.MonadNext
-      KMonad.Domain.Effect.Effects.MonadNow
-      KMonad.Domain.Effect.Effects.MonadRace
-      KMonad.Domain.Effect.Effects.MonadScript
-      KMonad.Domain.Effect.Effects.MonadStackManip
-      KMonad.Domain.Effect.Effects.MonadSymbol
-      KMonad.Domain.Effect.Effects.MonadVar
-      KMonad.Domain.Effect.Effects.MonadWait
-      KMonad.Domain.Loop
-  if os(linux)
-    exposed-modules:
-      KMonad.Api.KeyIO.Linux.DeviceSource
-      KMonad.Api.KeyIO.Linux.Types
-      KMonad.Api.KeyIO.Linux.UinputSink
-  if os(windows)
-    exposed-modules:
-      KMonad.Api.KeyIO.Windows.LowLevelHookSource
-      KMonad.Api.KeyIO.Windows.SendEventSink
-      KMonad.Api.KeyIO.Windows.Types
-      Test
+      KMonad.Prelude
+  --     KMonad
+  --     KMonad.Api.App
+  --     KMonad.Api.Encode
+  --     KMonad.Api.EventTracker
+  --     KMonad.Api.InputDispatch
+  --     KMonad.Api.KeyIO
+  --     KMonad.Api.KeyIO.Types
+  --     KMonad.Api.LayerStack
+  --     KMonad.Api.LockManager
+  --     KMonad.Api.Sluice
+  --     KMonad.Api.SymbolEncoder
+  --     KMonad.CLI.Args
+  --     KMonad.Core
+  --     KMonad.Core.Config
+  --     KMonad.Core.Event
+  --     KMonad.Core.Keyboard
+  --     KMonad.Core.KeyCode
+  --     KMonad.Core.MapStack
+  --     KMonad.Core.Matrix
+  --     KMonad.Core.Parser
+  --     KMonad.Core.Parser.Parsers.Alias
+  --     KMonad.Core.Parser.Parsers.Button
+  --     KMonad.Core.Parser.Parsers.Config
+  --     KMonad.Core.Parser.Parsers.IO
+  --     KMonad.Core.Parser.Parsers.KeyCode
+  --     KMonad.Core.Parser.Parsers.KeySequence
+  --     KMonad.Core.Parser.Parsers.Layer
+  --     KMonad.Core.Parser.Parsers.Matrix
+  --     KMonad.Core.Parser.Parsers.Source
+  --     KMonad.Core.Parser.Parsers.SpecialSymbol
+  --     KMonad.Core.Parser.Token
+  --     KMonad.Core.Parser.Utility
+  --     KMonad.Core.Pretty
+  --     KMonad.Core.SpecialSymbol
+  --     KMonad.Core.Switch
+  --     KMonad.Core.Time
+  --     KMonad.Core.Types
+  --     KMonad.Domain.Button
+  --     KMonad.Domain.Button.Button
+  --     KMonad.Domain.Button.Buttons
+  --     KMonad.Domain.Button.Buttons.After
+  --     KMonad.Domain.Button.Buttons.Around
+  --     KMonad.Domain.Button.Buttons.Block
+  --     KMonad.Domain.Button.Buttons.Emit
+  --     KMonad.Domain.Button.Buttons.EmitDeadKey
+  --     KMonad.Domain.Button.Buttons.EmitSpecial
+  --     KMonad.Domain.Button.Buttons.LayerAdd
+  --     KMonad.Domain.Button.Buttons.LayerRem
+  --     KMonad.Domain.Button.Buttons.LayerToggle
+  --     KMonad.Domain.Button.Buttons.Lockers
+  --     KMonad.Domain.Button.Buttons.Macro
+  --     KMonad.Domain.Button.Buttons.MultiTap
+  --     KMonad.Domain.Button.Buttons.TapHold
+  --     KMonad.Domain.Button.Buttons.TapNext
+  --     KMonad.Domain.Button.Encode
+  --     KMonad.Domain.Effect
+  --     KMonad.Domain.Effect.Effects
+  --     KMonad.Domain.Effect.Effects.MonadButton
+  --     KMonad.Domain.Effect.Effects.MonadEmit
+  --     KMonad.Domain.Effect.Effects.MonadFork
+  --     KMonad.Domain.Effect.Effects.MonadFuture
+  --     KMonad.Domain.Effect.Effects.MonadHandler
+  --     KMonad.Domain.Effect.Effects.MonadHold
+  --     KMonad.Domain.Effect.Effects.MonadInject
+  --     KMonad.Domain.Effect.Effects.MonadLock
+  --     KMonad.Domain.Effect.Effects.MonadMaskInput
+  --     KMonad.Domain.Effect.Effects.MonadNext
+  --     KMonad.Domain.Effect.Effects.MonadNow
+  --     KMonad.Domain.Effect.Effects.MonadRace
+  --     KMonad.Domain.Effect.Effects.MonadScript
+  --     KMonad.Domain.Effect.Effects.MonadStackManip
+  --     KMonad.Domain.Effect.Effects.MonadSymbol
+  --     KMonad.Domain.Effect.Effects.MonadVar
+  --     KMonad.Domain.Effect.Effects.MonadWait
+  --     KMonad.Domain.Loop
+  -- if os(linux)
+  --   exposed-modules:
+  --     KMonad.Api.KeyIO.Linux.DeviceSource
+  --     KMonad.Api.KeyIO.Linux.Types
+  --     KMonad.Api.KeyIO.Linux.UinputSink
+  -- if os(windows)
+  --   exposed-modules:
+  --     KMonad.Api.KeyIO.Windows.LowLevelHookSource
+  --     KMonad.Api.KeyIO.Windows.SendEventSink
+  --     KMonad.Api.KeyIO.Windows.Types
+  --     Test
   other-modules:
       Paths_kmonad
   hs-source-dirs:
@@ -131,6 +136,7 @@ library
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
+      NoImplicitPrelude
       OverloadedStrings
       PartialTypeSignatures
       PatternGuards
@@ -153,25 +159,30 @@ library
     c-sources:
       c_src/keyio_win.c
   build-depends:
-      async
-    , base
-    , bytestring
+    --   async
+    -- , base
+    -- , bytestring
+    -- , cereal
+    -- , containers
+    -- , exceptions
+    -- , hashable
+    -- , lens
+    -- , megaparsec
+    -- , monad-logger
+    -- , mtl
+    -- , network
+    -- , optparse-applicative
+    -- , process
+    -- , text
+    -- , time
+    -- , unagi-chan
+    -- , unliftio
+    -- , unordered-containers
+      base
     , cereal
-    , containers
-    , exceptions
-    , hashable
     , lens
-    , megaparsec
-    , monad-logger
-    , mtl
-    , network
-    , optparse-applicative
-    , process
-    , text
+    , rio
     , time
-    , unagi-chan
-    , unliftio
-    , unordered-containers
   if os(linux)
      build-depends: unix
   if os(windows)
@@ -179,17 +190,17 @@ library
 
   default-language: Haskell2010
 
-executable kmonad
-  main-is: Main.hs
-  other-modules:
-      Paths_kmonad
-  hs-source-dirs:
-      app
-  ghc-options:
-      -threaded
-      -rtsopts
-      -with-rtsopts=-N
-  build-depends:
-      base
-    , kmonad
-  default-language: Haskell2010
+-- executable kmonad
+--   main-is: Main.hs
+--   other-modules:
+--       Paths_kmonad
+--   hs-source-dirs:
+--       app
+--   ghc-options:
+--       -threaded
+--       -rtsopts
+--       -with-rtsopts=-N
+--   build-depends:
+--       base
+--     , kmonad
+--   default-language: Haskell2010

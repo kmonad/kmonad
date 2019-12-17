@@ -1,4 +1,4 @@
-module KMonad.Core.SpecialSymbol
+module KMonad.Core.Keyboard.SpecialSymbol
 
 where
 

@@ -6,7 +6,6 @@ License     : MIT
 Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : portable
-
 -}
 module KMonad.Core.Time
   ( -- * Types and lenses
@@ -24,10 +23,10 @@ module KMonad.Core.Time
   )
 where
 
-import KMonad.Prelude
-
+import Control.Lens
 import Data.Time.Clock.System
 import Data.Serialize
+import GHC.Generics
 
 --------------------------------------------------------------------------------
 -- $types
@@ -41,9 +40,11 @@ newtype Nanoseconds  = Nanoseconds  Int deriving (Eq, Ord, Num, Real, Enum, Inte
 -- | The 'Time' datatype that expresses a time value in KMonad
 newtype Time = Time { unT :: SystemTime } deriving (Eq, Show, Generic)
 
-instance Serialize Time where
-  put = put . (systemSeconds &&& systemNanoseconds) . unT
-  get = Time . uncurry MkSystemTime <$> get
+instance Serialize SystemTime where
+  put t = put (systemSeconds t, systemNanoseconds t)
+  get = (\(s, ns) -> MkSystemTime s ns) <$> get
+
+instance Serialize Time
 
 -- | A classy lens style typeclass to describe "having a time value"
 class HasTime a where
@@ -74,6 +75,7 @@ ns = lens getter setter
   where getter = fromIntegral . systemNanoseconds . unT
         setter old ns' = mkTime (old^.s) ns'
 
+
 --------------------------------------------------------------------------------
 -- $util
 
@@ -82,3 +84,4 @@ tminus :: Time -> Time -> Nanoseconds
 tminus a b = let ds  = (a^.s)  - (b^.s)
                  dns = (a^.ns) - (b^.ns) in
                -(fromIntegral (10^(9::Int) * ds) + dns)
+
