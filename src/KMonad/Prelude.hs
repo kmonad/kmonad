@@ -18,11 +18,12 @@ though.
 module KMonad.Prelude
   ( module Control.Arrow
   , module Control.Lens
-  , module RIO )
+  , module RIO
+  )
 where
 
 import Control.Arrow ((&&&), (***))
 import Control.Lens
 import RIO hiding (view, ASetter, ASetter', Lens, Getting,
                    Lens', SimpleGetter, lens, over, set,
-                   sets, to, (^.))
+                   sets, to, (^.), handle)

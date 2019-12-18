@@ -181,8 +181,10 @@ library
       base
     , cereal
     , lens
+    , network
     , rio
     , time
+    , unliftio
   if os(linux)
      build-depends: unix
   if os(windows)

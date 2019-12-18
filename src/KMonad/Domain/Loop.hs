@@ -21,8 +21,6 @@ import KMonad.Domain.Event
 
 --------------------------------------------------------------------------------
 
-
-
 type CanLoop e = (HasAwaitEvent e, HasHandlerFunc e, HasLogFunc e)
 
 -- | The central app-loop of KMonad
@@ -33,6 +31,22 @@ loop = logInfo "Enterring app-loop" >> loop'
     loop' =
       do
         env <- ask
-        (liftIO $ env^.awaitEvent) >>= \case
-          Quit         -> logInfo "Exiting"
-          InputEvent e -> logInfo "Handling" >> (env^.handlerFunc $ e) >> loop'
+        (liftIO $ env^.awaitEvent) >>= handleEvent
+
+
+--------------------------------------------------------------------------------
+
+-- | Different handlers for all the different events
+handleEvent :: (HasHandlerFunc e, HasLogFunc e) => Event -> RIO e ()
+
+handleEvent Quit = do
+  logInfo "Exiting"
+  pure ()
+
+handleEvent (InputEvent e) = do
+  logInfo $ "Handling key event" <> fromString (show e)
+  handle e
+
+handleEvent (MessageEvent msg) = do
+  logInfo $ "Handling msg event" <> fromString (show msg)
+  undefined
