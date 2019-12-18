@@ -25,7 +25,7 @@ type CanLoop e = (HasAwaitEvent e, HasHandlerFunc e, HasLogFunc e)
 
 -- | The central app-loop of KMonad
 loop :: CanLoop e => RIO e ()
-loop = logInfo "Enterring app-loop" >> loop'
+loop = logInfo "Starting app-loop" >> loop'
   where
     loop' :: CanLoop e => RIO e ()
     loop' =

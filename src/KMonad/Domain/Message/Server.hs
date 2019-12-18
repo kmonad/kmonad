@@ -82,7 +82,7 @@ serve sock = do
     (conn, _) <- liftIO $ accept sock
     forkFinally (recvMsg conn) (const . liftIO $ gracefulClose conn 5000)
 
--- | Decode the next inject it into KMonad when it arrives
+-- | Decode the message from the Socket and inject it into KMonad
 recvMsg :: CanListen e => Socket -> RIO e ()
 recvMsg sock = do
   bytes <- liftIO $ recv sock 4096
