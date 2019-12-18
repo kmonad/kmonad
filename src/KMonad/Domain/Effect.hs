@@ -5,7 +5,7 @@ where
 import KMonad.Prelude
 
 import KMonad.Core
-import KMonad.Domain.Event
+import KMonad.Domain.Types
 
 
 

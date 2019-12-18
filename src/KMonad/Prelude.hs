@@ -24,6 +24,15 @@ where
 
 import Control.Arrow ((&&&), (***))
 import Control.Lens
-import RIO hiding (view, ASetter, ASetter', Lens, Getting,
-                   Lens', SimpleGetter, lens, over, set,
-                   sets, to, (^.), handle)
+import RIO hiding
+  ( -- Not the lens stuff, I will use the full lens library instead
+    view, ASetter, ASetter', Lens, Getting, Lens'
+  , SimpleGetter, lens, over, set, sets, to, (^.)
+
+    -- Not handle, it conflicts with my own handle
+  , handle
+
+    -- Not the chan stuff, I will use unagi-chan instead
+  , newChan, writeChan, dupChan, readChan
+
+  )

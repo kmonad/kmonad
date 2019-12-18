@@ -184,6 +184,7 @@ library
     , network
     , rio
     , time
+    , unagi-chan
     , unliftio
   if os(linux)
      build-depends: unix
