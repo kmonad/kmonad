@@ -1,5 +1,7 @@
 module KMonad.Domain.Dispatch
   ( Dispatch
+  , HasDispatch -- We don't export the field accessors
+  , dispatch
   , mkDispatch
   , injectEvent
   , awaitEvent
@@ -33,7 +35,8 @@ mkDispatch src = do
     -- Forever copy key-events into the input channel
     pipeEvents i = liftIO . forever $ do
       e <- awaitKeyWith src
-      writeChan i $ InputEvent e
+      writeChan i $ KIOEvent e
+
 
 -- | Write an event to the 'Dispatch' object
 injectEvent :: HasDispatch e => Event -> RIO e ()

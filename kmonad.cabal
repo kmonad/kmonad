@@ -182,6 +182,7 @@ library
     , cereal
     , lens
     , network
+    , resourcet
     , rio
     , time
     , unagi-chan

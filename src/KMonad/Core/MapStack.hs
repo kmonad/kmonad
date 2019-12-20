@@ -25,7 +25,6 @@ where
 
 import KMonad.Prelude hiding (lookup)
 
-import qualified RIO.List    as L
 import qualified RIO.HashMap as M
 import qualified RIO.HashSet as S
 
@@ -84,10 +83,12 @@ push mk ms | S.member mk $ ms^.maps = Just $ ms & stack %~ (mk <|)
            | otherwise              = Nothing
 
 -- | Return a new 'MapStack' with the first occurence of the provided map-key
--- removed from stack. If the key is not currently in the stack (or doesn't
--- exist at all) return the 'MapStack' unchanged.
-pop :: CanMS ik mk => mk -> MapStack mk ik v -> MapStack mk ik v
-pop mk ms = ms & stack %~ (L.delete mk)
+-- removed from stack. If the key cannot be found in the stack, then return
+-- 'Nothing'.
+pop :: CanMS ik mk => mk -> MapStack mk ik v -> Maybe (MapStack mk ik v)
+pop mk ms = case break (== mk) (ms^.stack) of
+  (_, [])  -> Nothing
+  (h, _:t) -> Just $ ms & stack .~ (h <> t)
 
 -- | Return a new 'MapStack' with all occurences of the provided map-key removed
 -- from the stack.

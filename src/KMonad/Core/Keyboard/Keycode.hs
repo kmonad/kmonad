@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Core.Keyboard.Keycode
 Description : An enumeration of keycodes
@@ -296,7 +297,7 @@ data Keycode
   | Missing253
   | Missing254
   | Missing255
-  deriving (Eq, Show, Bounded, Enum, Ord, Generic)
+  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
 -- | A `Has-style` typeclass to indicate whether some record contains a 'Keycode'
 class HasKeycode a where

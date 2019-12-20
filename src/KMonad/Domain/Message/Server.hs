@@ -15,6 +15,7 @@ for listening to incoming messages.
 -}
 module KMonad.Domain.Message.Server
   ( startMessageServer
+  , sendMsg
   )
 where
 
@@ -26,8 +27,7 @@ import Network.Socket.ByteString
 import UnliftIO.Concurrent
 
 import KMonad.Domain.Effect
-import KMonad.Domain.Event
-import KMonad.Domain.Message.Message
+import KMonad.Domain.Types
 
 import qualified RIO.List as L
 
@@ -36,27 +36,28 @@ import qualified RIO.List as L
 
 -- | Things that can go wrong with the Message server
 data ListenerError
-  = CouldNotResolvePort ServiceName
+  = CouldNotResolvePort Port
   | CouldNotDecodeMessage String
   deriving Show
 instance Exception ListenerError
 
 
 --------------------------------------------------------------------------------
+-- $serv
 
 -- | The functionality needed by the message server
 type CanListen e = (HasLogFunc e, HasInjectFunc e)
 
 -- | Start the message server on the provided port
-startMessageServer :: CanListen e => ServiceName -> RIO e ()
-startMessageServer p = bracket (getSock p) (liftIO . close) serve
+startMessageServer :: CanListen e => Port -> RIO e ()
+startMessageServer p = bracket (getServerSock p) (liftIO . close) serve
 
 -- | Open and configure a socket on the listening port
-getSock :: HasLogFunc e => ServiceName -> RIO e Socket
-getSock p = do
+getServerSock :: HasLogFunc e => Port -> RIO e Socket
+getServerSock p = do
   -- Get address info
   let hints = defaultHints { addrFlags      = [AI_PASSIVE]
-                            , addrSocketType = Stream }
+                           , addrSocketType = Stream }
   let addrs = liftIO $ getAddrInfo (Just hints) (Just "localhost") (Just p)
   addr <- L.headMaybe <$> addrs >>= \case
     Nothing -> do
@@ -93,3 +94,30 @@ recvMsg sock = do
     Right msg -> do
       logInfo $ "Injecting message: " <> fromString (show msg)
       inject $ MessageEvent msg
+
+--------------------------------------------------------------------------------
+-- $client
+
+getClientSocket :: HasLogFunc e => Port -> RIO e Socket
+getClientSocket p = do
+  -- Get address info
+  let hints = defaultHints { addrSocketType = Stream }
+  let addrs = liftIO $ getAddrInfo (Just hints) (Just "localhost") (Just p)
+  addr <- L.headMaybe <$> addrs >>= \case
+    Nothing -> do
+      logError $ "Could not resolve port: " <> fromString (show p)
+      throwIO  $ CouldNotResolvePort p
+    Just a -> pure a
+
+  -- Connect to the socket
+  liftIO $ do
+    sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+    connect sock $ addrAddress addr
+    pure sock
+
+
+-- | Send a message to the port
+sendMsg :: HasLogFunc e => Port -> Message -> RIO e ()
+sendMsg p msg = bracket (getClientSocket p) (liftIO . close) go
+  where
+    go sock = liftIO . sendAll sock $ encode msg

@@ -13,14 +13,21 @@ module KMonad.Core.Keyboard.Event
     -- $switch
     SwitchAction(..)
   , HasSwitchAction(..)
+  , isPress
+  , isRelease
+
 
     -- * Key actions
     -- $keyaction
   , KeyAction(..)
+  , HasKeyAction(..)
+  , pressKey
+  , releaseKey
 
     -- * Key events
     -- $keyevent
   , KeyEvent(..)
+  , HasKeyEvent(..)
   , mkKeyEvent
   )
 where
@@ -44,8 +51,19 @@ makeClassyPrisms ''SwitchAction
 
 instance Serialize SwitchAction
 
-class HasSwitchAction a where
-  switchAction :: Lens' a SwitchAction
+class HasSwitchAction e where
+  switchAction :: Lens' e SwitchAction
+
+instance HasSwitchAction SwitchAction where
+  switchAction = id
+
+-- | Test if a thing with a 'SwitchAction' is/has a 'Press'
+isPress :: HasSwitchAction a => a -> Bool
+isPress a = a^.switchAction == Press
+
+-- | Test if a thing with a 'SwitchAction' is/has a 'Release'
+isRelease :: HasSwitchAction a => a -> Bool
+isRelease a = a^.switchAction == Release
 
 
 --------------------------------------------------------------------------------
@@ -56,17 +74,30 @@ data KeyAction = KeyAction
   { _kaSwitchAction :: SwitchAction
   , _kaKeycode      :: Keycode
   } deriving (Eq, Show, Generic)
-makeClassy ''KeyAction
+makeLenses ''KeyAction
 
-instance Serialize KeyAction
+class (HasKeycode e, HasSwitchAction e) => HasKeyAction e where
+  keyAction :: Lens' e KeyAction
+
 instance HasSwitchAction KeyAction where switchAction = kaSwitchAction
 instance HasKeycode      KeyAction where keycode      = kaKeycode
+instance HasKeyAction    KeyAction where keyAction    = id
+
+instance Serialize KeyAction
 
 instance Ord KeyAction where
   a `compare` b = case (a^.switchAction) `compare` (b^.switchAction) of
     EQ -> (a^.keycode) `compare` (b^.keycode)
     x  -> x
 
+-- | Create a 'KeyAction' that represents pressing a key
+pressKey :: Keycode -> KeyAction
+pressKey = KeyAction Press
+
+
+-- | Create a 'KeyAction' that represents releaseing a key
+releaseKey :: Keycode -> KeyAction
+releaseKey = KeyAction Release
 
 --------------------------------------------------------------------------------
 -- $keyevent
@@ -76,19 +107,19 @@ data KeyEvent = KeyEvent
   { _evKeyAction :: KeyAction
   , _evTime      :: Time
   } deriving (Eq, Show, Generic)
-makeClassy ''KeyEvent
+makeLenses ''KeyEvent
 
+class (HasKeyAction e, HasTime e) => HasKeyEvent e where
+  keyEvent :: Lens' e KeyEvent
+
+instance HasKeycode      KeyEvent where keycode      = keyAction.keycode
+instance HasSwitchAction KeyEvent where switchAction = keyAction.switchAction
+instance HasKeyAction    KeyEvent where keyAction    = evKeyAction
+instance HasTime         KeyEvent where time         = evTime
+instance HasKeyEvent     KeyEvent where keyEvent     = id
 
 instance Serialize KeyEvent
-
--- | Hook up all the classy lenses
-instance HasKeyAction    KeyEvent where keyAction    = evKeyAction
--- instance HasSwitchAction KeyEvent where switchAction = keyAction.switchAction
--- instance HasKeycode      KeyEvent where keycode      = keyAction.keycode
-instance HasTime         KeyEvent where time         = evTime
 
 -- | Create a KeyEvent
 mkKeyEvent :: SwitchAction -> Keycode -> Time -> KeyEvent
 mkKeyEvent a c = KeyEvent (KeyAction a c)
-
-

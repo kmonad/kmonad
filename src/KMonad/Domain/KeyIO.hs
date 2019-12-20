@@ -79,7 +79,7 @@ emitKey k = emitKeyWith <$> view keySink >>= \emit -> liftIO (emit k)
 -- -- | Await the next event from an EventSource, this blocks until an event occurs
 -- readEvent :: MonadIO m => EventSource -> m Event
 -- readEvent es =
---   liftIO $ U.race (InputEvent <$> es^.waitKey) (takeMVar $ es^.injectV) >>= \case
+--   liftIO $ U.race (KIOEvent <$> es^.waitKey) (takeMVar $ es^.injectV) >>= \case
 --     Left e  -> return e
 --     Right e -> return e
 
