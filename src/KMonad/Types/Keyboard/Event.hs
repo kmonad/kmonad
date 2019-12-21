@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Types.Keyboard.Event
 Description : The basic hierarchy of Keyboard events
@@ -49,7 +50,7 @@ import Data.Serialize
 data SwitchAction
   = Press
   | Release
-  deriving (Eq, Ord, Show, Enum, Generic)
+  deriving (Eq, Ord, Show, Enum, Generic, Hashable)
 makeClassyPrisms ''SwitchAction
 
 instance Serialize SwitchAction
@@ -76,7 +77,7 @@ isRelease a = a^.switchAction == Release
 data KeyAction = KeyAction
   { _kaSwitchAction :: SwitchAction
   , _kaKeycode      :: Keycode
-  } deriving (Eq, Show, Generic)
+  } deriving (Eq, Show, Generic, Hashable)
 makeLenses ''KeyAction
 
 class (HasKeycode e, HasSwitchAction e) => HasKeyAction e where

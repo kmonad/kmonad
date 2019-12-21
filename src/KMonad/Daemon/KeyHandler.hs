@@ -28,6 +28,8 @@ instance Exception KeyMapError
 
 --------------------------------------------------------------------------------
 
+
+
 -- | The 'KeyHandler' is responsible for dispatching 'KeyEvent's to various
 -- 'Button' 'Action's. Presses and releases are handled asymetrically: A 'Press'
 -- is always looked up in the 'KeyMap', a 'MapStack' with a stateful stack. The
@@ -44,39 +46,81 @@ instance Exception KeyMapError
 -- a button is one layer, but then handling its release from another (with
 -- another 'Button').
 data KeyHandler = KeyHandler
-  { -- | The current mapping of 'Keycode' to 'Button'
-    _keyMap       :: MVar KeyMap
+  { -- | The 'ButtonEnv' created by this instance of KMonad
+    _khButtonEnv        :: ButtonEnv
+
+    -- | The current mapping of 'Keycode' to 'Button'
+  , _khKeyMap           :: MVar KeyMap
+
     -- | 'Button's stored to use as a release
-  , _releaseStore :: MVar (M.HashMap Keycode Button)
+  , _khReleaseStore     :: MVar (M.HashMap Keycode Button)
+
+    -- | A collection of priority handlers to check first
+  , _khPriorityHandlers :: MVar (M.HashMap KeyAction PriorityButton)
+
   }
-makeClassy ''KeyHandler
+makeLenses '' KeyHandler
+
+class HasButtonEnv e => HasKeyHandler e where
+  keyHandler :: Lens' e KeyHandler
+
+  keyMap :: Lens' e (MVar KeyMap)
+  keyMap = keyHandler . khKeyMap
+
+  releaseStore :: Lens' e (MVar (M.HashMap Keycode Button))
+  releaseStore = keyHandler . khReleaseStore
+
+  priorityHandlers :: Lens' e (MVar (M.HashMap KeyAction PriorityButton))
+  priorityHandlers = keyHandler . khPriorityHandlers
+
+instance HasButtonCfg KeyHandler where
+  buttonCfg = button.buttonCfg
+instance HasButton KeyHandler where
+  button = buttonEnv.button
+instance HasButtonEnv KeyHandler where
+  buttonEnv = khButtonEnv
+instance HasLogFunc KeyHandler where
+  logFuncL = buttonEnv . logFuncL
+
 
 -- | Create a 'KeyHandler' object from a 'KeyMap'
-mkKeyHandler :: MonadIO m => KeyMap -> m KeyHandler
-mkKeyHandler km = KeyHandler <$> newMVar km <*> newMVar M.empty
+mkKeyHandler :: MonadIO m => ButtonEnv -> KeyMap -> m KeyHandler
+mkKeyHandler be km = KeyHandler be <$> newMVar km <*> newMVar M.empty <*> newMVar M.empty
 
 -- | Handle a 'KeyAction' using the 'KeyHandler'
-handleKey :: (HasKeyAction a, HasKeyHandler e, CanButton e) => a -> RIO e ()
-handleKey a
-  -- Handle presses by looking them up in the keyMap
-  | isPress a = do
-      km <- readMVar =<< (view keyMap)
-      case S.lookup (a^.keycode) km of
-        Nothing -> pure ()
-        Just b  -> do
-          rs <- view releaseStore
-          modifyMVar_ rs $ pure . M.insert (a^.keycode) b
-          pressButton b
+handleKey :: (HasKeyAction a, HasKeyHandler e) => a -> RIO e ()
+handleKey a = do
+  -- See if 'a' matches any priority handler
+  priV <- view priorityHandlers
+  runP <- modifyMVar priV $ \pri -> do
+            case M.lookup (a^.keyAction) pri of
+              Nothing -> pure (pri, Nothing)
+              Just p  -> pure (M.delete (a^.keyAction) pri, Just p)
+  case runP of
+    Nothing -> nonPriority
+    Just p  -> runPriorityButton p
 
-  -- Handle releases by looking them up in the releaseStore
-  | otherwise = do
-      rsV <- view releaseStore
-      rs  <- takeMVar rsV
-      case M.lookup (a^.keycode) rs of
-        Nothing -> putMVar rsV rs
-        Just b  -> do
-          putMVar rsV $ M.delete (a^.keycode) rs
-          releaseButton b
+  where
+    nonPriority
+      -- Handle presses by looking them up in the keyMap
+      | isPress a = do
+          km <- readMVar =<< (view keyMap)
+          case S.lookup (a^.keycode) km of
+            Nothing -> pure ()
+            Just b  -> do
+              rs <- view releaseStore
+              modifyMVar_ rs $ pure . M.insert (a^.keycode) b
+              local (& button .~ b) $ pressButton
+
+      -- Handle releases by looking them up in the releaseStore
+      | otherwise = do
+          rsV <- view releaseStore
+          rs  <- takeMVar rsV
+          case M.lookup (a^.keycode) rs of
+            Nothing -> putMVar rsV rs
+            Just b  -> do
+              putMVar rsV $ M.delete (a^.keycode) rs
+              local (& button .~ b) $ releaseButton
 
 -- | Push a LayerId to the front of the 'KeyMap'. This throws an error if the
 -- provided 'Name' does not correspond to any map.
