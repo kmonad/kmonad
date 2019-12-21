@@ -1,6 +1,6 @@
 --{-# LANGUAGE UndecidableInstances #-}
 --{-# LANGUAGE IncoherentInstances  #-}
-module KMonad.Core.Keyboard.Test
+module KMonad.Types.Keyboard.Test
 
 where
 

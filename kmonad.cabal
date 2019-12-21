@@ -13,10 +13,10 @@ library
   ghc-options:
     -Wall
   exposed-modules:
-      KMonad.Core.Keyboard
-      KMonad.Core.Keyboard.Keycode
-      KMonad.Core.Keyboard.Event
-      KMonad.Core.Time
+      KMonad.Types.Keyboard
+      KMonad.Types.Keyboard.Keycode
+      KMonad.Types.Keyboard.Event
+      KMonad.Types.Time
       KMonad.Prelude
   --     KMonad
   --     KMonad.Api.App
@@ -31,30 +31,30 @@ library
   --     KMonad.Api.SymbolEncoder
   --     KMonad.CLI.Args
   --     KMonad.Core
-  --     KMonad.Core.Config
-  --     KMonad.Core.Event
-  --     KMonad.Core.Keyboard
-  --     KMonad.Core.KeyCode
-  --     KMonad.Core.MapStack
-  --     KMonad.Core.Matrix
-  --     KMonad.Core.Parser
-  --     KMonad.Core.Parser.Parsers.Alias
-  --     KMonad.Core.Parser.Parsers.Button
-  --     KMonad.Core.Parser.Parsers.Config
-  --     KMonad.Core.Parser.Parsers.IO
-  --     KMonad.Core.Parser.Parsers.KeyCode
-  --     KMonad.Core.Parser.Parsers.KeySequence
-  --     KMonad.Core.Parser.Parsers.Layer
-  --     KMonad.Core.Parser.Parsers.Matrix
-  --     KMonad.Core.Parser.Parsers.Source
-  --     KMonad.Core.Parser.Parsers.SpecialSymbol
-  --     KMonad.Core.Parser.Token
-  --     KMonad.Core.Parser.Utility
-  --     KMonad.Core.Pretty
-  --     KMonad.Core.SpecialSymbol
-  --     KMonad.Core.Switch
-  --     KMonad.Core.Time
-  --     KMonad.Core.Types
+  --     KMonad.Types.Config
+  --     KMonad.Types.Event
+  --     KMonad.Types.Keyboard
+  --     KMonad.Types.KeyCode
+  --     KMonad.Types.MapStack
+  --     KMonad.Types.Matrix
+  --     KMonad.Types.Parser
+  --     KMonad.Types.Parser.Parsers.Alias
+  --     KMonad.Types.Parser.Parsers.Button
+  --     KMonad.Types.Parser.Parsers.Config
+  --     KMonad.Types.Parser.Parsers.IO
+  --     KMonad.Types.Parser.Parsers.KeyCode
+  --     KMonad.Types.Parser.Parsers.KeySequence
+  --     KMonad.Types.Parser.Parsers.Layer
+  --     KMonad.Types.Parser.Parsers.Matrix
+  --     KMonad.Types.Parser.Parsers.Source
+  --     KMonad.Types.Parser.Parsers.SpecialSymbol
+  --     KMonad.Types.Parser.Token
+  --     KMonad.Types.Parser.Utility
+  --     KMonad.Types.Pretty
+  --     KMonad.Types.SpecialSymbol
+  --     KMonad.Types.Switch
+  --     KMonad.Types.Time
+  --     KMonad.Types.Types
   --     KMonad.Domain.Button
   --     KMonad.Domain.Button.Button
   --     KMonad.Domain.Button.Buttons

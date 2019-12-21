@@ -27,7 +27,7 @@ import           Data.Maybe
 
 import           KMonad.Api.App     (startAppIO)
 import           KMonad.CLI.Args
-import           KMonad.Core.Config
+import           KMonad.Types.Config
 
 updateConfig :: CmdLineArgs -> Config -> Config
 updateConfig arg cfg = cfg
