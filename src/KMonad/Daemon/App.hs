@@ -10,14 +10,18 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 module KMonad.Daemon.App
   ( startDaemon
-  , HasKApp(..)
+  , HasDaemonApp(..)
   )
 where
 
 import KMonad.Prelude
 
-import KMonad.Daemon.Types
+import KMonad.Daemon.Dispatch
 import KMonad.Daemon.KeyHandler
+import KMonad.Daemon.Types
+
+import KMonad.Types.Event
+import KMonad.Types.Keyboard.IO
 
 -- import KMonad.Domain.Dispatch
 -- import KMonad.Domain.KeyHandler
@@ -37,8 +41,6 @@ data DaemonApp = DaemonApp
 makeLenses ''DaemonApp
 
 instance HasMapCfg     DaemonApp where mapCfg     = daemonCfg . mapCfg
-instance HasRunCfg     DaemonApp where runCfg     = daemonCfg . runCfg
-instance HasPort       DaemonApp where port       = daemonCfg . port
 instance HasDaemonCfg  DaemonApp where daemonCfg  = kaDaemonCfg
 instance HasKeySink    DaemonApp where keySink    = kaKeySink
 instance HasDispatch   DaemonApp where dispatch   = kaDispatch

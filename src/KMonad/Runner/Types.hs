@@ -5,6 +5,7 @@ where
 import KMonad.Prelude
 
 import KMonad.Daemon.Types
+import KMonad.Types.Config
 import KMonad.Types.Message
 
 --------------------------------------------------------------------------------
@@ -24,9 +25,7 @@ data Command
 
 -- | 'RunCfg' is the minimum config with which KMonad is ever invoked.
 data RunCfg = RunCfg
-  { _LogLevel  :: !LogLevel -- ^ The minimum 'LogLevel' to display
-  , _LogHandle :: !Handle   -- ^ Where to output logging
-  , _Command   :: !Command  -- ^ The command used to invoke KMonad
-  , _Verbose   :: !Bool     -- ^ Whether to be verbose
+  { _Command      :: !Command  -- ^ The command used to invoke KMonad
+  , _rcLoggingCfg :: !LoggingCfg
   }
 makeClassy ''RunCfg

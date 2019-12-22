@@ -1,5 +1,6 @@
 module KMonad.Types.Event
-  ()
+  ( Event(..)
+  )
 where
 
 import KMonad.Prelude

@@ -1,4 +1,4 @@
-module KMonad.Domain.Dispatch
+module KMonad.Daemon.Dispatch
   ( Dispatch
   , HasDispatch -- We don't export the field accessors
   , dispatch
@@ -14,8 +14,8 @@ import KMonad.Prelude
 
 import Control.Concurrent.Chan.Unagi
 
-import KMonad.Domain.KeyIO
-import KMonad.Domain.Types
+import KMonad.Types.Event
+import KMonad.Types.Keyboard.IO
 
 data Dispatch = Dispatch
   { _inChan  ::  InChan Event
