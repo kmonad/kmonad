@@ -10,11 +10,18 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Keyboard.IO
-  ( KeySink(..)
+  ( -- * The basic types of Key IO
+    -- $types
+    KeySink(..)
+  , SinkId
   , KeySource(..)
 
-  -- , HasKeySink(..)
-  -- , HasKeySource(..)
+  , HasKeySink(..)
+  , emitKey
+
+    -- * A collection of things that can go wrong with Key IO
+    -- $err
+  , KeyIOError(..)
   )
 where
 
@@ -30,6 +37,7 @@ import KMonad.Util
 
 -- | An 'Emitter' is a function that emits 'KeyEvent's to the OS
 newtype KeySink = KeySink { emitKeyWith :: KeyAction -> IO () }
+makeClassy ''KeySink
 
 -- | A 'Receiver' is an action that awaits 'KeyEvent's from the OS
 newtype KeySource = KeySource { awaitKeyWith :: IO (Timed KeyAction)}
@@ -41,57 +49,44 @@ newtype KeySource = KeySource { awaitKeyWith :: IO (Timed KeyAction)}
 -- awaitKey :: HasKeySource e => RIO e KeyEvent
 -- awaitKey = liftIO =<< awaitKeyWith <$> view keySource
 
--- -- | Send a key action to the OS using the 'KeySink'
--- emitKey :: HasKeySink e => KeyAction -> RIO e ()
--- emitKey k = emitKeyWith <$> view keySink >>= \emit -> liftIO (emit k)
+-- | Send a key action to the OS using the 'KeySink'
+emitKey :: HasKeySink e => KeyAction -> RIO e ()
+emitKey k = emitKeyWith <$> view keySink >>= \emit -> liftIO (emit k)
 
 
+--------------------------------------------------------------------------------
+-- $err
+
+type SinkId = String
+
+-- | The type of things that can go wrong with KeyIO
+data KeyIOError
+  = IOCtlGrabError       FilePath
+  | IOCtlReleaseError    FilePath
+  | EventParseError      FilePath String
+  | SinkCreationError    SinkId
+  | SinkDeletionError    SinkId
+  | SinkTranslationError KeyEvent
+  | SinkWriteError       SinkId
 
 
+instance Exception KeyIOError
 
-
--- --------------------------------------------------------------------------------
--- -- $err
-
--- type SinkId = String
-
--- -- | The type of things that can go wrong with KeyIO
--- --
--- -- TODO: rewrap basic IO errors in a KeyIO error (stuff like "file not found")
--- data KeyIOError
---   = IOCtlGrabError    FilePath
---   | IOCtlReleaseError FilePath
---   | EventParseError   FilePath String
---   | SinkCreationError SinkId
---   | SinkDeletionError SinkId
---   | SinkWriteError    SinkId   KeyEvent
---   deriving Exception
-
--- instance Show KeyIOError where
---   show (IOCtlGrabError pth)
---     = "Could not perform IOCTL grab on: " <> pth
---   show (IOCtlReleaseError pth)
---     = "Could not perform IOCTL release on: " <> pth
---   show (EventParseError pth snk)
---     = concat [ "Error parsing event when reading from "
---              , pth
---              , ": "
---              , snk ]
---   show (SinkCreationError snk)
---     = "Error instantiating KeySink of type: " <> snk
---   show (SinkDeletionError snk)
---     = "Error deleting KeySink of type: " <> snk
---   show (SinkWriteError snk e)
---     = concat [ "Error writing event '"
---              , unpack $ pretty e
---              , "'to KeySink: "
---              , snk ]
-
--- -- | Classy Prisms to create and throw 'KeyIOError's
--- makeClassyPrisms ''KeyIOError
-
--- instance AsKeyIOError IOException where
---   _KeyIOError = prism' throw (const Nothing)
-
--- -- | They type of things that can perform KeyIO
--- type CanKeyIO e m = (AsKeyIOError e, MonadError e m, MonadIO m)
+instance Show KeyIOError where
+  show (IOCtlGrabError pth)
+    = "Could not perform IOCTL grab on: " <> pth
+  show (IOCtlReleaseError pth)
+    = "Could not perform IOCTL release on: " <> pth
+  show (EventParseError pth snk)
+    = concat [ "Error parsing event when reading from "
+             , pth
+             , ": "
+             , snk ]
+  show (SinkCreationError snk)
+    = "Error instantiating KeySink of type: " <> snk
+  show (SinkDeletionError snk)
+    = "Error deleting KeySink of type: " <> snk
+  show (SinkTranslationError e)
+    = "Could not translate event to OS-style: " <> show e
+  show (SinkWriteError snk)
+    = "Could not write to sink: " <> snk

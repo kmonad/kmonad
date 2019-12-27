@@ -19,11 +19,11 @@ module KMonad.Util
   , Nanoseconds
   , Time
   , HasTime(..)
+  , _SystemTime
   , mkTime
-  , s, ns
-  , AsTime(..)
   , Timed
   , atTime
+  , now
 
     -- * Overloaded fieldnames
     -- $thing
@@ -31,6 +31,7 @@ module KMonad.Util
 
     -- * Random utility helpers that have no better home
   , pop
+  , onErr
   )
 
 where
@@ -83,57 +84,47 @@ named n = Named n
 
 -- | Newtype wrappers around 'Int' to add typesafety to our units
 newtype Seconds      = Seconds      Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
 newtype Milliseconds = Milliseconds Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
 newtype Microseconds = Microseconds Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
 newtype Nanoseconds  = Nanoseconds  Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read)
-makeLenses ''Seconds
-makeLenses ''Milliseconds
-makeLenses ''Microseconds
-makeLenses ''Nanoseconds
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
+
+instance Serialize Seconds
+instance Serialize Nanoseconds
+
 
 -- | The 'Time' datatype that expresses a time value in KMonad
-newtype Time = Time { unT :: SystemTime } deriving (Eq, Show, Generic)
-makeLenses ''Time
+data Time = Time
+  { __s  :: Seconds
+  , __ns :: Nanoseconds
+  } deriving (Eq, Show, Generic)
+makeClassy ''Time
 
 -- | A 'Serialize' instance for time so we can encode and decode it easily.
 instance Serialize Time where
-  put = put . (systemSeconds &&& systemNanoseconds) . unT
-  get = Time . uncurry MkSystemTime <$> get
+  put = put . (__s &&& __ns)
+  get = uncurry Time <$> get
 
--- | A classy lens style typeclass to describe "having a time value"
-class HasTime a where
-  time :: Lens' a Time
-instance HasTime Time where
-  time = id
+-- | An Iso to map between Time and SystemTime values easily
+_SystemTime :: Iso' Time SystemTime
+_SystemTime = iso to' from'
+  where
+    to'   = uncurry MkSystemTime .
+      (fromIntegral . __s &&& fromIntegral . __ns)
+    from' = uncurry Time .
+      (fromIntegral . systemSeconds &&& fromIntegral . systemNanoseconds)
 
--- | A prism to describe being able to be cast to a 'Time' value
-class AsTime a where
-  _Time :: Prism' a Time
-instance AsTime Time where
-  _Time = id
+  -- where convert = uncurry Time . (fromIntegral . systemSeconds &&& fromIntegral . systemNanoseconds)
 
 -- | A smart constructor that creates Time values from Integrals
 mkTime :: (Integral a, Integral b)
   => a    -- ^ The seconds part of system time
   -> b    -- ^ The nanoseconds part of system time
   -> Time -- ^ The Time value
-mkTime s' ns' = Time $ MkSystemTime (fromIntegral s') (fromIntegral ns')
-
--- | A lens into the seconds field of a 'Time' value
-s :: Lens' Time Seconds
-s = lens getter setter
-  where getter = fromIntegral . systemSeconds . unT
-        setter old s' = mkTime s' (old^.ns)
-
--- | A lens into the nanoseconds field of a 'Time' value
-ns :: Lens' Time Nanoseconds
-ns = lens getter setter
-  where getter = fromIntegral . systemNanoseconds . unT
-        setter old ns' = mkTime (old^.s) ns'
+mkTime s ns = Time (fromIntegral s) (fromIntegral ns)
 
 -- | A datatype for things that happen at a certain type
 data Timed a = Timed
@@ -153,17 +144,12 @@ instance Serialize a => Serialize (Timed a) where
 atTime :: Time -> a -> Timed a
 atTime t = Timed t
 
+-- | Run a computation that requires a time now
+now :: MonadIO m => (Time -> a) -> m a
+now f = f . (view $ from _SystemTime) <$> liftIO getSystemTime
 
 --------------------------------------------------------------------------------
 -- $util
-
--- I don't think this is a lawful prism
--- _Popped :: (Eq k, Hashable k)
---   => k -> Prism' (M.HashMap k v) (v, M.HashMap k v)
--- _Popped k = prism' embed match
---   where
---     embed (v, m) = m & at k .~ v
---     match =
 
 -- | Try to look up a value in a Maplike. If it exists, return it and a new
 -- Maplike without that entry. Otherwise, return Nothing and the map unchanged.
@@ -173,3 +159,11 @@ pop :: At m => Index m -> m -> (Maybe (IxValue m), m)
 pop idx m = case m ^. at idx of
   Just v  -> (Just v, m & sans idx)
   Nothing -> (Nothing, m)
+
+-- | A helper function that helps to throw errors when a return code is -1.
+-- Easiest when used as infix like this:
+--
+-- >>> someFFIcall `onErr` MyCallFailedError someData
+--
+onErr :: (MonadUnliftIO m, Exception e) => m Int -> e -> m ()
+onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err

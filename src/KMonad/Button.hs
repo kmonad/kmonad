@@ -24,6 +24,7 @@ data Action
   -- | MaskInput Bool <-- Maybe make a 'register handler' function
   | Fork !Action
   | Pass
+  deriving Show
 
 
 --------------------------------------------------------------------------------
@@ -33,20 +34,42 @@ data Action
 data ButtonCfg = ButtonCfg
   { _pressAction   :: !Action -- ^ Action to take when pressed
   , _releaseAction :: !Action -- ^ Action to take when released
-  }
+  } deriving (Show)
 makeClassy ''ButtonCfg
 
 -- | The unique state identifying 1 'button'
 data Button = Button
-  { _beBinding    :: !Keycode             -- ^ The 'Keycode' to which the button is bound
-  , _beLastAction :: !(MVar SwitchAction) -- ^ State to keep track of last manipulation
+  { _binding    :: !Keycode             -- ^ The 'Keycode' to which the button is bound
   , _beButtonCfg  :: !ButtonCfg           -- ^ The configuration for this button
+  , _lastAction :: !(MVar SwitchAction) -- ^ State to keep track of last manipulation
   }
 makeLenses ''Button
 
-runButton :: KeyAction -> Button -> RIO e ()
-runButton = undefined
+instance HasButtonCfg Button where buttonCfg = beButtonCfg
 
+-- | Initialize a 'Button' from a 'ButtonCfg' and a binding
+initButton :: Keycode -> ButtonCfg -> RIO e Button
+initButton kc cfg = Button kc cfg <$> newMVar Release
+
+-- | Run a 'Button' on a 'SwitchAction' returning an 'Action' to be performed by
+-- the engine. This will only do something if a 'Press' followed a 'Release' or
+-- vice-versa, pressing or releasing more than once in sequence does nothing.
+runButton :: SwitchAction -> Button -> RIO e Action
+runButton a b = do
+  modifyMVar (b^.lastAction) $ \l -> pure $ case (a, l) of
+    (Press, Release) -> (Release, b^.pressAction)
+    (Release, Press) -> (Press, b^.releaseAction)
+    _                -> (a, Pass)
+
+-- | Press the 'Button'
+pressButton :: Button -> RIO e Action
+pressButton = runButton Press
+
+-- | Release the 'Button'
+releaseButton :: Button -> RIO e Action
+releaseButton = runButton Release
+
+ 
 --------------------------------------------------------------------------------
 -- $priority
 --
@@ -62,12 +85,6 @@ data PriorityButton = PriorityButton
   }
 makeClassy ''PriorityButton
 
-runPriorityButton :: PriorityButton -> RIO e ()
+runPriorityButton :: PriorityButton -> RIO e Action
 runPriorityButton = undefined
 
-
-
-data ButtonEnv e = ButtonEnv
-  { _emit :: KeyAction -> RIO e ()
-  , _this :: Button
-  }

@@ -9,6 +9,7 @@ module KMonad.Components.KeyHandler
   , Keymap
   , mkLayer
   , mkKeymap
+  , atKey
 
     -- * The KeyHandler environment
     -- $keyh
@@ -17,6 +18,7 @@ module KMonad.Components.KeyHandler
   , keyHandler
   , mkKeyHandler
   , handleKey
+  , displayKeyHandler
 
     -- * Stack manipulation
     -- $manip
@@ -31,6 +33,7 @@ import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Util
 import RIO.List (delete)
+import System.IO
 
 import qualified RIO.HashMap as M
 import qualified RIO.Set     as S
@@ -79,9 +82,12 @@ makeLenses ''Keymap
 -- We store all items in a single 'HashMap' under the (Name, Keycode) tuple,
 -- this way we only have to look up once per layer in the stack (instead of:
 -- lookup layer -> lookup key)
-mkKeymap :: M.HashMap Name (Layer a) -> Keymap a
-mkKeymap ls = Keymap
-  { _stack = []
+mkKeymap ::
+     Name                     -- ^ The map to load first
+  -> M.HashMap Name (Layer a) -- ^ The mappings from Name to Layer
+  -> Keymap a
+mkKeymap n ls = Keymap
+  { _stack = [n]
   , _maps  = S.fromList . M.keys $ ls
   , _items = M.fromList $ ls ^@.. ifolded <.> (to unLayer . ifolded)
   }
@@ -98,18 +104,18 @@ atKey c = folding $ \m -> m ^.. stack . folded . to (getK m) . folded
 -- | Add a layer to the front of the stack and return the new 'Keymap'. If the
 -- 'Layer' does not exist, return a 'KeymapError'.
 pushLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
-pushLayer' name keymap = if name `elem` keymap^.stack
-  then Right $ keymap & stack %~ (name:)
-  else Left  $ LayerNotFoundError name
+pushLayer' n keymap = if n `elem` keymap^.stack
+  then Right $ keymap & stack %~ (n:)
+  else Left  $ LayerNotFoundError n
 
 -- | Remove a layer from the stack. If the 'Name' does not exist on the stack,
 -- return a 'LayerNotOnStackError', if the 'Name' does not exist at all in the
 -- 'Keymap', return a 'LayerNotFoundError'.
 popLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
-popLayer' name keymap = if
-  | name `elem` keymap^.stack -> Right $ keymap & stack %~ delete name
-  | name `elem` keymap^.maps  -> Left  $ LayerNotOnStackError name
-  | True                      -> Left  $ LayerNotFoundError   name
+popLayer' n keymap = if
+  | n `elem` keymap^.stack -> Right $ keymap & stack %~ delete n
+  | n `elem` keymap^.maps  -> Left  $ LayerNotOnStackError n
+  | True                   -> Left  $ LayerNotFoundError n
 
 
 --------------------------------------------------------------------------------
@@ -150,13 +156,19 @@ data KeyHandler = KeyHandler
 makeClassy ''KeyHandler
 
 -- | Create a 'KeyHandler' object from a 'Keymap'
-mkKeyHandler :: MonadIO m
-  => Keymap ButtonCfg        -- ^ A 'Keymap' of all the button configurations
-  -> m KeyHandler            -- ^ The action that creates a 'KeyHandler'
+mkKeyHandler ::
+     Keymap ButtonCfg    -- ^ A 'Keymap' of all the button configurations
+  -> RIO e KeyHandler    -- ^ The action that creates a 'KeyHandler'
 mkKeyHandler km = do
-  bs <- initButtons km
+  bs <- km & items . itraversed %%@~ \(_, kc) -> initButton kc
   KeyHandler <$> newMVar (KhST bs M.empty M.empty)
-  where initButtons = undefined
+
+-- | Print out a representation of the KeyHandler state
+displayKeyHandler :: HasKeyHandler e => RIO e ()
+displayKeyHandler = view khST >>= \v -> withMVar v $ \st -> liftIO $ do
+  print $ st ^. keymap . stack
+  print . M.keys $ st ^. releaseStore
+
 
 -- | A helper datatype just used to extract the action to perform from the
 -- state. We extract the action from the state before running anything so we can
@@ -186,14 +198,14 @@ chooseHandler ka st = if
 
 -- | Handle a 'KeyAction' using the 'KeyHandler'
 handleKey :: (HasKeyHandler e, HasLogFunc e)
-  => KeyAction  -- ^ The 'KeyAction' to handle
-  -> RIO e ()   -- ^ The resulting action
+  => KeyAction     -- ^ The 'KeyAction' to handle
+  -> RIO e Action  -- ^ The resulting action
 handleKey a = do
-  logInfo $ "Handling: " <> (fromString . show $ a)
+  logDebug $ "Handling: " <> (fromString . show $ a)
   view khST >>= flip modifyMVar (pure . chooseHandler a) >>= \case
-    WithButton   b -> runButton a b
+    WithButton   b -> runButton (a^.switchAction) b
     WithPriority p -> runPriorityButton p
-    DoNotHandle    -> pure ()
+    DoNotHandle    -> pure Pass
 
 
 --------------------------------------------------------------------------------

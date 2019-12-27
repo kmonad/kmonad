@@ -15,6 +15,7 @@ module KMonad.Keyboard
   , releaseKey
   , isPress
   , isRelease
+  , KeyEvent
   )
 
 where
@@ -22,6 +23,8 @@ where
 import KMonad.Prelude
 
 import Data.Char (toLower)
+
+import KMonad.Util
 
 import qualified RIO.HashMap as M
 
@@ -388,9 +391,16 @@ releaseKey :: Keycode -> KeyAction
 releaseKey = KeyAction Release
 
 -- | Test if a thing with a 'SwitchAction' is/has a 'Press'
-isPress :: KeyAction -> Bool
+isPress :: HasKeyAction a => a -> Bool
 isPress a = a^.switchAction == Press
 
 -- | Test if a thing with a 'SwitchAction' is/has a 'Release'
-isRelease :: KeyAction -> Bool
+isRelease :: HasKeyAction a => a -> Bool
 isRelease a = a^.switchAction == Release
+
+--------------------------------------------------------------------------------
+-- $ev
+
+type KeyEvent = Timed KeyAction
+
+instance HasKeyAction KeyEvent where keyAction = thing

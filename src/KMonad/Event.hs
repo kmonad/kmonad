@@ -7,7 +7,6 @@ import KMonad.Prelude
 import KMonad.Keyboard
 import KMonad.Util
 
-type KeyEvent = Timed KeyAction
 type MsgEvent = Timed Message
 
 
