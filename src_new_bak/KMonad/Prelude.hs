@@ -17,7 +17,6 @@ where
 import Control.Arrow   as X ((&&&), (***))
 import Control.Lens    as X
 import Data.Acquire    as X
-import Data.Serialize  as X
 
 import RIO as X hiding
   (-- Not the lens stuff, I want more support for lenses

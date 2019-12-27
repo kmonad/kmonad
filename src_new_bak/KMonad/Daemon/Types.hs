@@ -4,7 +4,6 @@ where
 
 import KMonad.Prelude
 
-import KMonad.Types.Message
 import KMonad.Types.Keyboard.IO
 import KMonad.Types.Keymap
 
@@ -24,9 +23,9 @@ data MapCfg
 data DaemonCfg = DaemonCfg
   { _kcOpenKeySource :: !(Acquire KeySource)
   , _kcOpenKeySink   :: !(Acquire KeySink)
-  , _kcPort          :: !Port
   , _kcMapCfg        :: !MapCfg
   }
+
 
 makeClassy ''MapCfg
 makeLenses ''DaemonCfg
@@ -41,8 +40,4 @@ class HasMapCfg e => HasDaemonCfg e where
   openKeySink = daemonCfg . kcOpenKeySink
 
 instance HasMapCfg    DaemonCfg where mapCfg    = kcMapCfg
-instance HasPort      DaemonCfg where port      = kcPort
 instance HasDaemonCfg DaemonCfg where daemonCfg = id
-
-
-

@@ -12,6 +12,8 @@ build-type:     Simple
 library
   ghc-options:
     -Wall
+    -Wno-name-shadowing
+    -Wno-unused-imports
   exposed-modules:
       KMonad.Types.Keyboard
       KMonad.Types.Keyboard.Keycode

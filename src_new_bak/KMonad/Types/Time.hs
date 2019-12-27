@@ -16,7 +16,6 @@ module KMonad.Types.Time
   , HasTime(..)
   , mkTime
   , s, ns
-  , isoSystemTime
 
     -- * Operations on Time values
     -- $util
@@ -57,10 +56,6 @@ mkTime :: (Integral a, Integral b)
   -> b    -- ^ The nanoseconds part of system time
   -> Time -- ^ The Time value
 mkTime s' ns' = Time $ MkSystemTime (fromIntegral s') (fromIntegral ns')
-
--- | An Iso between 'Time' and 'SystemTime'
-isoSystemTime :: Iso' Time SystemTime
-isoSystemTime = iso unT Time
 
 -- | A lens into the seconds field of a 'Time' value
 s :: Lens' Time Seconds

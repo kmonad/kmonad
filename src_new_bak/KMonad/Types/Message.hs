@@ -1,7 +1,6 @@
 module KMonad.Types.Message
   ( Message(..)
   , Port
-  , HasPort(..)
   )
 where
 
@@ -34,6 +33,3 @@ instance Serialize Message
 -- Extra types to do with running the daemon server
 
 type Port = ServiceName
-
-class HasPort e where
-  port :: Lens' e Port

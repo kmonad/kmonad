@@ -65,6 +65,15 @@ mkMapStack items' = MapStack
     fOuter    acc (mk, xs) = foldl' (fInner mk) acc xs
     fInner mk acc (ik, v)  = M.insert (mk, ik) v acc
 
+type instance Index   (MapStack mk ik v) = ik
+type instance IxValue (MapStack mk ik v) = v
+
+-- instance Ixed (MapStack mk ik v) where
+--   ix k f ms = case lookup k ms of
+--     Nothing -> pure ms
+--     Just v  -> set
+--     where g ms = lookup
+
 
 --------------------------------------------------------------------------------
 -- $utils
