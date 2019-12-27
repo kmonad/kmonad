@@ -44,6 +44,8 @@ data Button = Button
   }
 makeLenses ''Button
 
+runButton :: KeyAction -> Button -> RIO e ()
+runButton = undefined
 
 --------------------------------------------------------------------------------
 -- $priority
@@ -60,6 +62,8 @@ data PriorityButton = PriorityButton
   }
 makeClassy ''PriorityButton
 
+runPriorityButton :: PriorityButton -> RIO e ()
+runPriorityButton = undefined
 
 
 

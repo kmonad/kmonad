@@ -1,17 +1,28 @@
 module KMonad.Components.KeyHandler
-  -- ( -- * Things that can go wrong with the 'KeyHandler'
-  --   -- $err
-  --   KeymapError(..)
+  ( -- * Things that can go wrong with Keymap operations
+    -- $err
+    KeymapError(..)
 
-  --   -- * The KeyHandler environment
-  --   -- $keyh
-  -- , KeyHandler
-  -- , HasKeyHandler(..)
-  -- , mkKeyHandler
-  -- , handleKey
-  -- , pushLayer
-  -- , removeLayer
-  -- )
+    -- * The pure implementation of 'Keymap' and 'Layer'
+    -- $keymap
+  , Layer
+  , Keymap
+  , mkLayer
+  , mkKeymap
+
+    -- * The KeyHandler environment
+    -- $keyh
+  , KeyHandler
+  , HasKeyHandler
+  , keyHandler
+  , mkKeyHandler
+  , handleKey
+
+    -- * Stack manipulation
+    -- $manip
+  , pushLayer
+  , popLayer
+  )
 where
 
 import KMonad.Prelude
@@ -49,6 +60,13 @@ instance Exception KeymapError
 newtype Layer a = Layer { unLayer :: M.HashMap Keycode a}
   deriving (Show, Eq, Ord, Functor)
 
+-- | Create a 'Layer' from an mapping between 'Keycode's and things
+mkLayer :: M.HashMap Keycode a -> Layer a
+mkLayer = Layer
+
+-- | The 'Keymap' type describes the different mappings between 'Keycode's and
+-- 'Button's, and provides functionality for stacking and overlapping those
+-- maps.
 data Keymap a = Keymap
   { _stack :: ![Name]                        -- ^ The current stack of layers
   , _maps  :: !(S.Set Name)                  -- ^ A set of all 'Layer' names
@@ -78,17 +96,17 @@ atKey c = folding $ \m -> m ^.. stack . folded . to (getK m) . folded
   where getK m n = fromMaybe [] (pure <$> M.lookup (n, c) (m^.items))
 
 -- | Add a layer to the front of the stack and return the new 'Keymap'. If the
--- 'Layer' does not exist, return a 'KeymapError'
-pushLayer :: Name -> Keymap a -> Either KeymapError (Keymap a)
-pushLayer name keymap = if name `elem` keymap^.stack
+-- 'Layer' does not exist, return a 'KeymapError'.
+pushLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
+pushLayer' name keymap = if name `elem` keymap^.stack
   then Right $ keymap & stack %~ (name:)
   else Left  $ LayerNotFoundError name
 
 -- | Remove a layer from the stack. If the 'Name' does not exist on the stack,
 -- return a 'LayerNotOnStackError', if the 'Name' does not exist at all in the
 -- 'Keymap', return a 'LayerNotFoundError'.
-popLayer :: Name -> Keymap a -> Either KeymapError (Keymap a)
-popLayer name keymap = if
+popLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
+popLayer' name keymap = if
   | name `elem` keymap^.stack -> Right $ keymap & stack %~ delete name
   | name `elem` keymap^.maps  -> Left  $ LayerNotOnStackError name
   | True                      -> Left  $ LayerNotFoundError   name
@@ -104,9 +122,9 @@ popLayer name keymap = if
 -- 1. First it checks for a 'PriorityButton' and uses that if it finds one
 --    (removing it from the priority-store in the process).
 -- 2. Otherwise, if it is a 'Press', it checks the current 'Keymap'. If it finds
--- one then it presses that button and puts it in the release-store.
+--    one then it presses that button and puts it in the release-store.
 -- 3. Otherwise, if it is a 'Release', it checks the release-store and uses the
--- 'Button' from there (removing it from the store in the process).
+--    'Button' from there (removing it from the store in the process).
 --
 -- This way 'Action's can short-circuit the handling of a particular 'KeyAction'
 -- by registering 'PriorityButton's. Additionally, it ensures that a 'Release'
@@ -126,123 +144,90 @@ data KhST = KhST
   }
 makeLenses ''KhST
 
--- handled :: KeyAction -> Traversal' KhST Action
-handled :: KeyAction -> Maybe (Action, KhST)
-handled ka st
-  | ka `M.member` st^.priorityStore ->
-
-a = undefined
-
-
--- handled :: KeyAction -> Fold KhST Action
--- handled a = folding $ \st ->
---   let v = st^..priorityStore.at a.folded.action
---        <> st^..
---   in v
-
 -- | All the environment and state required for 'KeyHandler' operations.
-data KeyHandler e = KeyHandler
-  { _buttonEnv :: Button -> ButtonEnv e
-  , _khST      :: !(MVar KhST)
-  }
-makeLenses ''KeyHandler
-
-class HasKeyHandler e where
-  keyHandler :: Lens' e (KeyHandler e)
-
-instance HasMST (KeyHandler e) KhST where
-  getMST = khST
+data KeyHandler = KeyHandler
+  { _khST      :: !(MVar KhST) }
+makeClassy ''KeyHandler
 
 -- | Create a 'KeyHandler' object from a 'Keymap'
 mkKeyHandler :: MonadIO m
-  => (Button -> ButtonEnv e) -- ^ The function used to generate 'ButtonEnv's
-  -> Keymap Button           -- ^ The keymap containing action bindings
-  -> m (KeyHandler e)        -- ^ The action that creates a 'KeyHandler'
-mkKeyHandler be km = KeyHandler be <$> newMVar (KhST km M.empty M.empty)
+  => Keymap ButtonCfg        -- ^ A 'Keymap' of all the button configurations
+  -> m KeyHandler            -- ^ The action that creates a 'KeyHandler'
+mkKeyHandler km = do
+  bs <- initButtons km
+  KeyHandler <$> newMVar (KhST bs M.empty M.empty)
+  where initButtons = undefined
 
+-- | A helper datatype just used to extract the action to perform from the
+-- state. We extract the action from the state before running anything so we can
+-- put the state MVar back before initiating the button action.
+data HandleAction
+  = WithButton   Button
+  | WithPriority PriorityButton
+  | DoNotHandle
+
+-- | Find the appropriate handler by looking it up in a 'KhST' record. Return
+-- both a 'HandleAction' describing what to do and a new, updated'KhST' record.
+chooseHandler :: KeyAction -> KhST -> (KhST, HandleAction)
+chooseHandler ka st = if
+  -- If ka exists in priorityStore, pop it from the store
+  | ka `M.member` (st^.priorityStore) ->
+    let (a, ps) = pop ka $ st^.priorityStore
+    in (st & priorityStore .~ ps, wrap WithPriority a)
+  -- If ka is a Press, look it up in Keymap and store it in the releaseStore
+  | isPress ka ->
+    let b = st ^? keymap . atKey (ka ^. keycode)
+    in (st & releaseStore . at (ka^.keycode) .~ b, wrap WithButton b)
+  -- If ka is a Release, pop it from the releaseStore
+  | True ->
+    let (b, rs) = pop (ka^.keycode) $ st^.releaseStore
+    in (st & releaseStore .~ rs, wrap WithButton b)
+  where wrap = maybe DoNotHandle
 
 -- | Handle a 'KeyAction' using the 'KeyHandler'
-handleKey :: HasKeyHandler e => KeyAction -> RIO e ()
-handleKey a = do undefined
-  -- b <- withMST $ \st -> undefined -- if
-  --   -- | a `elem` st^.priorityStore -> undefined
-  -- undefined
+handleKey :: (HasKeyHandler e, HasLogFunc e)
+  => KeyAction  -- ^ The 'KeyAction' to handle
+  -> RIO e ()   -- ^ The resulting action
+handleKey a = do
+  logInfo $ "Handling: " <> (fromString . show $ a)
+  view khST >>= flip modifyMVar (pure . chooseHandler a) >>= \case
+    WithButton   b -> runButton a b
+    WithPriority p -> runPriorityButton p
+    DoNotHandle    -> pure ()
 
 
---   -- See if 'a' matches any priority handler
+--------------------------------------------------------------------------------
+-- $manip
+--
+-- We provide 2 actions to manipulate the the layer-stack. One that adds a layer
+-- to the front, and one that pops the first occurence of a layer. Note that
+-- both of these actions can throw errors.
 
---   priV <- view priorityHandlers
---   runP <- modifyMVar priV $ \pri -> do
---             case M.lookup (a^.keyAction) pri of
---               Nothing -> pure (pri, Nothing)
---               Just p  -> pure (M.delete (a^.keyAction) pri, Just p)
---   case runP of
---     Nothing -> nonPriority
---     Just p  -> runPriorityButton p
+-- | Push a layer to the front of the stack. This throws an error if the
+-- provided 'Name' does not correspond to any map.
+pushLayer :: (HasKeyHandler e, HasLogFunc e) => Name -> RIO e ()
+pushLayer n =
+  view khST >>= flip modifyMVar (pure . go) >>= \case
+    Left e  -> do
+      logError $ "Error pushing layer: " <> display n
+      throwIO e
+    Right _ ->
+      logInfo $ "Pushed layer: " <> display n
+  where go st = case pushLayer' n $ st^.keymap of
+          Left e   -> (st, Left e)
+          Right km -> (st & keymap .~ km, Right ())
 
---   where
---     nonPriority
---       -- Handle presses by looking them up in the keyMap
---       | isPress a = do
---           km <- readMVar =<< (view keyMap)
---           case S.lookup (a^.keycode) km of
---             Nothing -> pure ()
---             Just b  -> do
---               rs <- view releaseStore
---               modifyMVar_ rs $ pure . M.insert (a^.keycode) b
---               local (& button .~ b) $ pressButton
-
---       -- Handle releases by looking them up in the releaseStore
---       | otherwise = do
---           rsV <- view releaseStore
---           rs  <- takeMVar rsV
---           case M.lookup (a^.keycode) rs of
---             Nothing -> putMVar rsV rs
---             Just b  -> do
---               putMVar rsV $ M.delete (a^.keycode) rs
---               local (& button .~ b) $ releaseButton
-
--- -- -- -- | Push a LayerId to the front of the 'Keymap'. This throws an error if the
--- -- -- -- provided 'Name' does not correspond to any map.
--- -- -- pushLayer :: (HasKeyHandler e, HasLogFunc e) => Name -> RIO e ()
--- -- -- pushLayer n = view keyMap >>= flip modifyMVar_ go
--- -- --   where
--- -- --     go km = case S.push n km of
--- -- --       Nothing -> do
--- -- --         logError $ "Tried to push non-existant layer: " <> fromString (show n)
--- -- --         throwIO $ LayerNotFoundError n
--- -- --       Just km' -> do
--- -- --         logInfo $ "Pushing layer to stack: " <> fromString (show n)
--- -- --         pure km'
-
--- -- -- -- | Remove a LayerId from the 'Keymap'. This throws an error is the provided
--- -- -- -- 'Name' does not currently exist in the layer stack.
--- -- -- removeLayer :: (HasKeyHandler e, HasLogFunc e) => Name -> RIO e ()
--- -- -- removeLayer n = view keyMap >>= flip modifyMVar_ go
--- -- --   where
--- -- --     go km = case S.pop n km of
--- -- --       Nothing -> do
--- -- --         logError $ "Tried to delete non-existant layer: " <> fromString (show n)
--- -- --         throwIO $ LayerNotFoundError n
--- -- --       Just km' -> do
--- -- --         logInfo $ "Deleting layer from stack: " <> fromString (show n)
--- -- --         pure km'
-
-
-
--- -- -- -- --------------------------------------------------------------------------------
--- -- -- -- -- Constructing a LayerStack from a set of tokens
-
--- -- -- -- -- | Turn a nested set of tokens into a layer stack of operations
--- -- -- -- mkLayerStack :: (CanButton m, MonadIO n)
--- -- -- --   => [(Name, [(KeyCode, ButtonToken)])]
--- -- -- --   -> Name
--- -- -- --   -> n (LayerStack m)
--- -- -- -- mkLayerStack ts def = do
--- -- -- --   -- There is probably a much prettier lensy way of doing this
--- -- -- --   bs <- mapM (mapTup (mapM (mapTupB encode))) ts
--- -- -- --   h  <- newMVar . myFromJust "making layer error" . push def . mkMapStack $ bs
--- -- -- --   LayerStack h <$> newMVar (M.empty)
--- -- -- --   where
--- -- -- --     mapTup  f (c, a) = (c,) <$> f a
--- -- -- --     mapTupB f (c, a) = (c,) <$> f c a
+-- | Pop a layer from the stack. This throws a 'LayerNotOnStackError' if the
+-- layer does not exist on the stack, or a 'LayerNotFoundError' if the layer
+-- does not exist in the keymap at all.
+popLayer :: (HasKeyHandler e, HasLogFunc e) => Name -> RIO e ()
+popLayer n =
+  view khST >>= flip modifyMVar (pure . go) >>= \case
+    Left e  -> do
+      logError $ "Error popping layer: " <> display n
+      throwIO e
+    Right _ ->
+      logInfo $ "Popped layer: " <> display n
+  where go st = case popLayer' n $ st^.keymap of
+          Left e   -> (st, Left e)
+          Right km -> (st & keymap .~ km, Right ())

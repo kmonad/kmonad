@@ -24,12 +24,10 @@ module KMonad.Util
   , AsTime(..)
   , Timed
   , atTime
-  , thing
 
-    -- * MVar state helpers
-    -- $mst
-  , HasMST(..)
-  , withMST
+    -- * Overloaded fieldnames
+    -- $thing
+  , HasThing(..)
 
     -- * Random utility helpers that have no better home
   , pop
@@ -41,7 +39,6 @@ import KMonad.Prelude
 
 import Data.Time.Clock.System
 
-import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $thing
@@ -52,6 +49,7 @@ import qualified RIO.HashMap as M
 
 class HasThing a t | a -> t where
   thing :: Lens' a t
+
 
 --------------------------------------------------------------------------------
 -- $name
@@ -155,31 +153,6 @@ instance Serialize a => Serialize (Timed a) where
 atTime :: Time -> a -> Timed a
 atTime t = Timed t
 
-
---------------------------------------------------------------------------------
--- $mst
---
--- It is a common pattern to have a reader environment containing various
--- configuration options and an MVar containing that environments stateful
--- variables. This is a utility class for working with those.
-
--- | A utility class for working with records of state stored inside a single
--- MVar inside a RIO environment.
-class HasMST e st where
-  getMST  :: Lens' e (MVar st)
-
-  takeMST :: RIO e st
-  takeMST = view getMST >>= takeMVar
-
-  putMST  :: st -> RIO e ()
-  putMST v = view getMST >>= flip putMVar v
-
-withMST :: HasMST e st => (st -> RIO e (a, st)) -> RIO e a
-withMST f = do
-  st       <- takeMST
-  (v, st') <- f st
-  putMST st'
-  pure v
 
 --------------------------------------------------------------------------------
 -- $util
