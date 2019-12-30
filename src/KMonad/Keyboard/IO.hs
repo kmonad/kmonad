@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.IO
 Description : The logic behind sending and receiving key events to the OS
@@ -14,18 +15,22 @@ module KMonad.Keyboard.IO
     -- $types
     KeySink(..)
   , SinkId
-  , KeySource(..)
+  , mkKeySink
+  , emitKeyWith
+
+  , KeySource
+  , mkKeySource
+  , awaitKeyWith
 
   , HasKeySink(..)
-  , emitKey
 
     -- * A collection of things that can go wrong with Key IO
     -- $err
-  , KeyIOError(..)
+    
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import KMonad.Keyboard
 import KMonad.Util
@@ -36,22 +41,48 @@ import KMonad.Util
 -- $types
 
 -- | An 'Emitter' is a function that emits 'KeyEvent's to the OS
-newtype KeySink = KeySink { emitKeyWith :: KeyAction -> IO () }
-makeClassy ''KeySink
+newtype KeySink = KeySink { _emitKeyWith :: KeyAction -> RIO RunEnv () }
 
--- | A 'Receiver' is an action that awaits 'KeyEvent's from the OS
-newtype KeySource = KeySource { awaitKeyWith :: IO (Timed KeyAction)}
+-- | Create a new 'KeySink'
+mkKeySink :: HasRunEnv e
+  => RIO RunEnv a                      -- ^ Action to open the keysink
+  -> (a -> RIO RunEnv ())              -- ^ Action to close the keysink
+  -> (a -> KeyAction -> RIO RunEnv ()) -- ^ Action to read from the keysink
+  -> RIO e (Acquire KeySink)
+mkKeySink open close write = do
+  renv <- view runEnv
+  pure $ KeySink . write <$> mkAcquire
+    (runRIO renv $ logInfo "Opening KeySink" >> open)
+    (runRIO renv . (\d -> logInfo "Closing KeySink" >> close d))
 
+-- | Send a key action to the OS using the 'KeySink'
+emitKeyWith :: HasRunEnv e => KeySink -> KeyAction -> RIO e ()
+emitKeyWith snk k = view runEnv >>= flip runRIO (_emitKeyWith snk k)
+
+-- | A 'KeySource' is an action that awaits 'KeyEvent's from the OS
+newtype KeySource = KeySource { _awaitKeyWith :: RIO RunEnv KeyEvent }
+
+-- | Create a new 'KeySource'
+mkKeySource :: HasRunEnv e
+  => RIO RunEnv a               -- ^ Action to acquire the keysource
+  -> (a -> RIO RunEnv ())       -- ^ Function to release the keysource
+  -> (a -> RIO RunEnv KeyEvent) -- ^ Function to read from the keysource
+  -> RIO e (Acquire KeySource)
+mkKeySource open close read = do
+  renv <- view runEnv
+  pure $ KeySource . read <$> mkAcquire
+    (runRIO renv $ logInfo "Opening KeySource" >> open)
+    (runRIO renv . (\d -> logInfo "Closing KeySource" >> close d))
+
+-- | Await a key action from the OS using the 'KeySource'
+awaitKeyWith :: HasRunEnv e => KeySource -> RIO e KeyEvent
+awaitKeyWith src = view runEnv >>= flip runRIO (_awaitKeyWith src)
 
 --------------------------------------------------------------------------------
 
--- -- | Wait for the next 'KeyEvent' to occur using the 'KeySource'
--- awaitKey :: HasKeySource e => RIO e KeyEvent
--- awaitKey = liftIO =<< awaitKeyWith <$> view keySource
+class HasRunEnv e => HasKeySink e where
+  keySink :: Lens' e KeySink
 
--- | Send a key action to the OS using the 'KeySink'
-emitKey :: HasKeySink e => KeyAction -> RIO e ()
-emitKey k = emitKeyWith <$> view keySink >>= \emit -> liftIO (emit k)
 
 
 --------------------------------------------------------------------------------
@@ -59,34 +90,3 @@ emitKey k = emitKeyWith <$> view keySink >>= \emit -> liftIO (emit k)
 
 type SinkId = String
 
--- | The type of things that can go wrong with KeyIO
-data KeyIOError
-  = IOCtlGrabError       FilePath
-  | IOCtlReleaseError    FilePath
-  | EventParseError      FilePath String
-  | SinkCreationError    SinkId
-  | SinkDeletionError    SinkId
-  | SinkTranslationError KeyEvent
-  | SinkWriteError       SinkId
-
-
-instance Exception KeyIOError
-
-instance Show KeyIOError where
-  show (IOCtlGrabError pth)
-    = "Could not perform IOCTL grab on: " <> pth
-  show (IOCtlReleaseError pth)
-    = "Could not perform IOCTL release on: " <> pth
-  show (EventParseError pth snk)
-    = concat [ "Error parsing event when reading from "
-             , pth
-             , ": "
-             , snk ]
-  show (SinkCreationError snk)
-    = "Error instantiating KeySink of type: " <> snk
-  show (SinkDeletionError snk)
-    = "Error deleting KeySink of type: " <> snk
-  show (SinkTranslationError e)
-    = "Could not translate event to OS-style: " <> show e
-  show (SinkWriteError snk)
-    = "Could not write to sink: " <> snk

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Prelude
+Module      : Prelude
 Description : Code that will be imported into every module
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,8 +9,9 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 
-module KMonad.Prelude
-  ( module X
+module Prelude
+  ( print
+  , module X
   )
 where
 
@@ -18,6 +19,8 @@ import Control.Arrow   as X ((&&&), (***))
 import Control.Lens    as X
 import Data.Acquire    as X
 import Data.Serialize  as X
+
+import qualified System.IO as S
 
 import RIO as X hiding
   (-- Not the lens stuff, I want more support for lenses
@@ -28,3 +31,6 @@ import RIO as X hiding
   , newChan, writeChan, dupChan, readChan
 
   )
+
+print :: (Show a, MonadIO m) => a -> m ()
+print = liftIO . S.print

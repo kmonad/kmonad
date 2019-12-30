@@ -1,24 +1,12 @@
 module KMonad.Components.KeyHandler
-  ( -- * Things that can go wrong with Keymap operations
-    -- $err
-    KeymapError(..)
-
-    -- * The pure implementation of 'Keymap' and 'Layer'
-    -- $keymap
-  , Layer
-  , Keymap
-  , mkLayer
-  , mkKeymap
-  , atKey
-
-    -- * The KeyHandler environment
+  ( -- * The KeyHandler environment
     -- $keyh
-  , KeyHandler
+    KeyHandler
+  , Keymap
   , HasKeyHandler
   , keyHandler
   , mkKeyHandler
   , handleKey
-  , displayKeyHandler
 
     -- * Stack manipulation
     -- $manip
@@ -27,16 +15,14 @@ module KMonad.Components.KeyHandler
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Util
-import RIO.List (delete)
-import System.IO
 
-import qualified RIO.HashMap as M
-import qualified RIO.Set     as S
+import qualified Data.LayerStack as Q
+import qualified RIO.HashMap     as M
 
 --------------------------------------------------------------------------------
 -- $err
@@ -46,77 +32,6 @@ data KeymapError
   deriving Show
 
 instance Exception KeymapError
-
---------------------------------------------------------------------------------
--- $keymap
---
--- The 'Keymap' part of the 'KeyHandler' is a pure implementation of a stack of
--- 'Layer's. 'Keymap's can only be created, there is no support for changing the
--- layers on the fly. The changes that are supported is adding layers to the
--- stack and deleting them from the stack again.
---
--- Items are looked up in a 'Keymap' by checking the map at the front of the
--- stack first, if it succeeds, that is the value that is returned. If that
--- fails, the next map in the stack is tried, etc.
-
--- | A 'Layer' is a mapping from 'Keycode's to some object
-newtype Layer a = Layer { unLayer :: M.HashMap Keycode a}
-  deriving (Show, Eq, Ord, Functor)
-
--- | Create a 'Layer' from an mapping between 'Keycode's and things
-mkLayer :: M.HashMap Keycode a -> Layer a
-mkLayer = Layer
-
--- | The 'Keymap' type describes the different mappings between 'Keycode's and
--- 'Button's, and provides functionality for stacking and overlapping those
--- maps.
-data Keymap a = Keymap
-  { _stack :: ![Name]                        -- ^ The current stack of layers
-  , _maps  :: !(S.Set Name)                  -- ^ A set of all 'Layer' names
-  , _items :: !(M.HashMap (Name, Keycode) a) -- ^ The map of all the bindings
-  } deriving (Show, Eq, Functor)
-makeLenses ''Keymap
-
--- | Create a new 'Keymap' from a HashMap of Names to Layers
---
--- We store all items in a single 'HashMap' under the (Name, Keycode) tuple,
--- this way we only have to look up once per layer in the stack (instead of:
--- lookup layer -> lookup key)
-mkKeymap ::
-     Name                     -- ^ The map to load first
-  -> M.HashMap Name (Layer a) -- ^ The mappings from Name to Layer
-  -> Keymap a
-mkKeymap n ls = Keymap
-  { _stack = [n]
-  , _maps  = S.fromList . M.keys $ ls
-  , _items = M.fromList $ ls ^@.. ifolded <.> (to unLayer . ifolded)
-  }
-
--- | Return a fold of all the items currently mapped to the 'Keycode'
---
--- This can be used with 'toListOf' to get an overview of all the items
--- currently mapped to a 'Keycode', or more usefully, with 'firstOf' to simply
--- try a lookup like this: `keymap ^? atKey KeyA`
-atKey :: Keycode -> Fold (Keymap a) a
-atKey c = folding $ \m -> m ^.. stack . folded . to (getK m) . folded
-  where getK m n = fromMaybe [] (pure <$> M.lookup (n, c) (m^.items))
-
--- | Add a layer to the front of the stack and return the new 'Keymap'. If the
--- 'Layer' does not exist, return a 'KeymapError'.
-pushLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
-pushLayer' n keymap = if n `elem` keymap^.stack
-  then Right $ keymap & stack %~ (n:)
-  else Left  $ LayerNotFoundError n
-
--- | Remove a layer from the stack. If the 'Name' does not exist on the stack,
--- return a 'LayerNotOnStackError', if the 'Name' does not exist at all in the
--- 'Keymap', return a 'LayerNotFoundError'.
-popLayer' :: Name -> Keymap a -> Either KeymapError (Keymap a)
-popLayer' n keymap = if
-  | n `elem` keymap^.stack -> Right $ keymap & stack %~ delete n
-  | n `elem` keymap^.maps  -> Left  $ LayerNotOnStackError n
-  | True                   -> Left  $ LayerNotFoundError n
-
 
 --------------------------------------------------------------------------------
 -- $keyh
@@ -139,6 +54,9 @@ popLayer' n keymap = if
 -- longer being able to release that button, because its location in the stack
 -- has been overwritten.
 
+
+type Keymap   a = Q.LayerStack Name Keycode a
+
 -- | The stateful aspect of a 'KeyHandler'. This will all be stored in 1 'MVar'.
 data KhST = KhST
   { _keymap        :: !(Keymap Button)
@@ -157,17 +75,17 @@ makeClassy ''KeyHandler
 
 -- | Create a 'KeyHandler' object from a 'Keymap'
 mkKeyHandler ::
-     Keymap ButtonCfg    -- ^ A 'Keymap' of all the button configurations
-  -> RIO e KeyHandler    -- ^ The action that creates a 'KeyHandler'
+     Keymap ButtonCfg -- ^ A 'Keymap' of all the button configurations
+  -> RIO e KeyHandler -- ^ The action that creates a 'KeyHandler'
 mkKeyHandler km = do
-  bs <- km & items . itraversed %%@~ \(_, kc) -> initButton kc
+  bs <- km & Q.items . itraversed %%@~ \(_, kc) -> initButton kc
   KeyHandler <$> newMVar (KhST bs M.empty M.empty)
 
 -- | Print out a representation of the KeyHandler state
-displayKeyHandler :: HasKeyHandler e => RIO e ()
-displayKeyHandler = view khST >>= \v -> withMVar v $ \st -> liftIO $ do
-  print $ st ^. keymap . stack
-  print . M.keys $ st ^. releaseStore
+-- displayKeyHandler :: HasKeyHandler e => RIO e ()
+-- displayKeyHandler = view khST >>= \v -> withMVar v $ \st -> liftIO $ do
+--   print $ st ^. keymap . stack
+--   print . M.keys $ st ^. releaseStore
 
 
 -- | A helper datatype just used to extract the action to perform from the
@@ -188,7 +106,7 @@ chooseHandler ka st = if
     in (st & priorityStore .~ ps, wrap WithPriority a)
   -- If ka is a Press, look it up in Keymap and store it in the releaseStore
   | isPress ka ->
-    let b = st ^? keymap . atKey (ka ^. keycode)
+    let b = st ^? keymap . Q.atKey (ka ^. keycode)
     in (st & releaseStore . at (ka^.keycode) .~ b, wrap WithButton b)
   -- If ka is a Release, pop it from the releaseStore
   | True ->
@@ -225,7 +143,7 @@ pushLayer n =
       throwIO e
     Right _ ->
       logInfo $ "Pushed layer: " <> display n
-  where go st = case pushLayer' n $ st^.keymap of
+  where go st = case Q.pushLayer n $ st^.keymap of
           Left e   -> (st, Left e)
           Right km -> (st & keymap .~ km, Right ())
 
@@ -240,6 +158,6 @@ popLayer n =
       throwIO e
     Right _ ->
       logInfo $ "Popped layer: " <> display n
-  where go st = case popLayer' n $ st^.keymap of
+  where go st = case Q.popLayer n $ st^.keymap of
           Left e   -> (st, Left e)
           Right km -> (st & keymap .~ km, Right ())

@@ -22,7 +22,7 @@ module KMonad.Types.Keyboard.SpecialSymbol
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import Data.Char (intToDigit)
 import Data.Maybe (fromJust)

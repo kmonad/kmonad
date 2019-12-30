@@ -19,7 +19,7 @@ module KMonad.Types.Keyboard.Lock
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import KMonad.Types.Keyboard.Keycode
 import KMonad.Types.Keyboard.KeySequence

@@ -24,25 +24,41 @@ module KMonad.Util
   , Timed
   , atTime
   , now
+  , stampNow
 
     -- * Overloaded fieldnames
-    -- $thing
+    -- $fields
   , HasThing(..)
+  , HasCfg(..)
+
+    -- * Support for pretty-printing
+    -- $pprint
+  , PrettyPrint(..)
 
     -- * Random utility helpers that have no better home
   , pop
   , onErr
+
+    -- * Configurations and environments: this needs to live somewhere else
+  , RunCfg(..)
+  , RunEnv(..)
+  , HasRunEnv
+  , runEnv
+  ,
   )
 
 where
 
-import KMonad.Prelude
+import Prelude
 
 import Data.Time.Clock.System
 
+import qualified RIO.HashMap as M
+import qualified RIO.HashSet as S
+
 
 --------------------------------------------------------------------------------
--- $thing
+-- $fields
 --
 -- Overloaded fieldname 'thing' for things that track some property like name or
 -- time alongside some 'thing'.
@@ -51,6 +67,8 @@ import Data.Time.Clock.System
 class HasThing a t | a -> t where
   thing :: Lens' a t
 
+class HasCfg a t | a -> t where
+  cfg :: Lens' a t
 
 --------------------------------------------------------------------------------
 -- $name
@@ -103,6 +121,7 @@ data Time = Time
   } deriving (Eq, Show, Generic)
 makeClassy ''Time
 
+
 -- | A 'Serialize' instance for time so we can encode and decode it easily.
 instance Serialize Time where
   put = put . (__s &&& __ns)
@@ -140,6 +159,9 @@ instance Serialize a => Serialize (Timed a) where
   put v = put (v^.time) >> put (v^.thing)
   get   = (get :: Get Time) >>= \t -> atTime t <$> get
 
+instance PrettyPrint a => PrettyPrint (Timed a) where
+  pprint a = pprint (a^.time) <> ": " <> pprint (a^.thing)
+
 -- | A smart constructor for 'Timed' values
 atTime :: Time -> a -> Timed a
 atTime t = Timed t
@@ -147,6 +169,23 @@ atTime t = Timed t
 -- | Run a computation that requires a time now
 now :: MonadIO m => (Time -> a) -> m a
 now f = f . (view $ from _SystemTime) <$> liftIO getSystemTime
+
+-- | Wrap a thing in a 'Timed' wrapper with the current time
+stampNow :: MonadIO m => a -> m (Timed a)
+stampNow a = now $ flip atTime a
+
+--------------------------------------------------------------------------------
+-- $pprint
+
+class PrettyPrint a where
+  pprint     :: a -> Text
+  pprintDisp :: a -> Utf8Builder
+  pprintDisp = display . pprint
+
+instance PrettyPrint Time where
+  pprint t = tshow (fromIntegral $ t^._s :: Int)
+          <> "."
+          <> tshow (fromIntegral $ t^._ns :: Int)
 
 --------------------------------------------------------------------------------
 -- $util
@@ -167,3 +206,25 @@ pop idx m = case m ^. at idx of
 --
 onErr :: (MonadUnliftIO m, Exception e) => m Int -> e -> m ()
 onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
+
+--------------------------------------------------------------------------------
+-- $cfg
+
+-- | The RunCfg describes those settings that apply to every part of KMonad.
+-- This currently only really has to do with logging configuration.
+data RunCfg = RunCfg {}
+
+-- | The RunEnv contains the environment that is present in all computations in
+-- KMonad. It currently only really describes logging.
+data RunEnv = RunEnv
+  { __cfg      :: RunCfg
+  , _reLogFunc :: LogFunc
+  }
+makeLenses ''RunEnv
+
+class HasLogFunc e => HasRunEnv e where
+  runEnv :: Lens' e RunEnv
+
+instance HasCfg RunEnv RunCfg where cfg = _cfg
+instance HasLogFunc RunEnv where logFuncL = reLogFunc
+instance HasRunEnv RunEnv where runEnv = id

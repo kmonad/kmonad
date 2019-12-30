@@ -2,7 +2,7 @@ module KMonad.Button
 
 where
 
-import KMonad.Prelude
+import Prelude
 
 import KMonad.Keyboard
 import KMonad.Util

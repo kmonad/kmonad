@@ -14,13 +14,13 @@ module KMonad.Components.InputDispatch
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import Control.Concurrent.Chan.Unagi
 
 import KMonad.Event
 import KMonad.Keyboard.IO
-
+import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $disp
@@ -38,12 +38,12 @@ data InputDispatch = InputDispatch
 makeClassy ''InputDispatch
 
 -- | Create a new 'InputDispatch' object
-mkInputDispatch :: MonadUnliftIO m => KeySource -> m InputDispatch
+mkInputDispatch :: (HasRunEnv e) => KeySource -> RIO e InputDispatch
 mkInputDispatch src = do
   (i, o) <- liftIO newChan
-  a <- async $ liftIO . forever $ do
+  a <- async . forever $ do
     e <- awaitKeyWith src
-    writeChan i $ KIOEvent e
+    liftIO . writeChan i $ KIOEvent e
   link a
   InputDispatch i <$> newMVar o
 

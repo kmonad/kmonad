@@ -19,7 +19,7 @@ library
       KMonad.Types.Keyboard.Keycode
       KMonad.Types.Keyboard.Event
       KMonad.Types.Time
-      KMonad.Prelude
+      Prelude
   --     KMonad
   --     KMonad.Api.App
   --     KMonad.Api.Encode

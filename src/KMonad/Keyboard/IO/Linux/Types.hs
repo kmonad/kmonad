@@ -27,7 +27,7 @@ module KMonad.Keyboard.IO.Linux.Types
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import Foreign.C.Types (CInt)
 import RIO.Partial (toEnum)
@@ -53,6 +53,15 @@ fi = fromIntegral
 
 -- | The LinuxKeyEvent datatype
 newtype LinuxKeyEvent = LinuxKeyEvent (CInt, CInt, CInt, CInt, CInt)
+  deriving Show
+
+instance PrettyPrint LinuxKeyEvent where
+  pprint (LinuxKeyEvent (s, ns, typ, c, val)) = mconcat
+         [ pprint $ mkTime s ns , ": "
+         , "type: ", tshow typ, ",  "
+         , "code: ", tshow c,   ",  "
+         , "val: ",  tshow val
+         ]
 
 -- | A smart constructor that casts from any integral
 linuxKeyEvent

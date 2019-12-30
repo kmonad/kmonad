@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.UinputSink
 Description : Using Linux's uinput interface to emit events
@@ -20,7 +21,7 @@ module KMonad.Keyboard.IO.Linux.UinputSink
   )
 where
 
-import KMonad.Prelude
+import Prelude
 
 import Foreign.C.String
 import Foreign.C.Types
@@ -33,15 +34,37 @@ import KMonad.Util
 
 
 --------------------------------------------------------------------------------
+-- $err
+
+data UinputSinkError
+  = UinputRegistrationError SinkId
+  | UinputReleaseError      SinkId
+  | SinkEncodeError         SinkId LinuxKeyEvent
+  deriving Exception
+
+instance Show UinputSinkError where
+  show (UinputRegistrationError snk) = "Could not register sink with OS: " <> snk
+  show (UinputReleaseError snk) = "Could not unregister sink with OS: " <> snk
+  show (SinkEncodeError snk a) = unwords
+    [ "Could not encode Keyaction"
+    , show a
+    , "to bytes for writing to"
+    , snk
+    ]
+
+makeClassyPrisms ''UinputSinkError
+
+
+--------------------------------------------------------------------------------
 -- $cfg
 
 -- | Configuration of the Uinput keyboard to instantiate
 data UinputCfg = UinputCfg
-  { _vendorCode     :: CInt
-  , _productCode    :: CInt
-  , _productVersion :: CInt
-  , _keyboardName   :: String
-  , _postInit       :: Maybe String
+  { _vendorCode     :: !CInt
+  , _productCode    :: !CInt
+  , _productVersion :: !CInt
+  , _keyboardName   :: !String
+  , _postInit       :: !(Maybe String)
   } deriving (Eq, Show)
 makeClassy ''UinputCfg
 
@@ -74,55 +97,75 @@ foreign import ccall "send_event"
   c_send_event :: CInt -> CInt -> CInt -> CInt -> CInt -> CInt -> IO Int
 
 -- | Create and acquire a Uinput device
-acquire_uinput_keysink :: Fd -> UinputCfg -> IO Int
-acquire_uinput_keysink (Fd h) cfg = do
+acquire_uinput_keysink :: MonadIO m => Fd -> UinputCfg -> m Int
+acquire_uinput_keysink (Fd h) cfg = liftIO $ do
   cstr <- newCString $ cfg^.keyboardName
-  c_acquire_uinput_keysink h cstr (cfg^.vendorCode) (cfg^.productCode) (cfg^.productVersion)
+  c_acquire_uinput_keysink h cstr
+    (cfg^.vendorCode) (cfg^.productCode) (cfg^.productVersion)
 
 -- | Release a Uinput device
-release_uinput_keysink :: Fd -> IO Int
-release_uinput_keysink (Fd h) = c_release_uinput_keysink h
+release_uinput_keysink :: MonadIO m => Fd -> m Int
+release_uinput_keysink (Fd h) = liftIO $ c_release_uinput_keysink h
 
 -- | Using a Uinput device, send a KeyEvent to the Linux kernel
-send_event :: Fd -> LinuxKeyEvent -> IO Int
-send_event (Fd h) (LinuxKeyEvent (s', ns', typ, c, val))
-  = c_send_event h typ c val s' ns'
-
+send_event :: HasRunEnv e
+  => UinputSink
+  -> Fd
+  -> LinuxKeyEvent
+  -> RIO e ()
+send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
+  logDebug $ "Emiting: " <> pprintDisp e
+  (liftIO $ c_send_event h typ c val s' ns')
+    `onErr` SinkEncodeError (u^.cfg.keyboardName) e
 
 --------------------------------------------------------------------------------
 -- UinputSink definition and implementation
 
 -- | UinputSink is an MVar to a filehandle
 data UinputSink = UinputSink
-  { _cfg :: UinputCfg
-  , _st  :: MVar Fd
+  { __cfg     :: UinputCfg
+  , _st      :: MVar Fd
   }
 makeLenses ''UinputSink
 
+instance HasCfg UinputSink UinputCfg where
+  cfg = _cfg
+
 -- | Return a new uinput 'KeySink' with extra options
-uinputSink :: UinputCfg -> Acquire KeySink
-uinputSink cfg = KeySink . usWrite <$> mkAcquire (usOpen cfg) usClose
+uinputSink :: HasRunEnv e => UinputCfg -> RIO e (Acquire KeySink)
+uinputSink c = mkKeySink (usOpen c) usClose usWrite
+
+
+--------------------------------------------------------------------------------
 
 -- | Create a new UinputSink
-usOpen :: UinputCfg -> IO UinputSink
-usOpen cfg = do
-  let flgs = OpenFileFlags False False False True False
-  fd  <- openFd "/dev/uinput" WriteOnly Nothing flgs
-  acquire_uinput_keysink fd cfg `onErr` SinkCreationError (cfg ^. keyboardName)
-  maybe (pure ()) (void . async . callCommand) (cfg^.postInit)
-  UinputSink cfg <$> newMVar fd
+usOpen :: HasRunEnv e => UinputCfg -> RIO e UinputSink
+usOpen c = do
+  fd <- liftIO . openFd "/dev/uinput" WriteOnly Nothing $
+    OpenFileFlags False False False True False
+  logInfo "Registering Uinput device"
+  acquire_uinput_keysink fd c `onErr` UinputRegistrationError (c ^. keyboardName)
+  flip (maybe $ pure ()) (c^.postInit) $ \cmd -> do
+    logInfo $ "Running UinputSink command: " <> displayShow cmd
+    void . async . callCommand $ cmd
+  UinputSink c <$> newMVar fd
 
--- | Close keysink
-usClose :: UinputSink -> IO ()
-usClose u = withMVar (u^.st) $ \fd -> do
-  finally (release_uinput_keysink fd) (closeFd fd)
-    `onErr` SinkDeletionError (u ^. cfg . keyboardName)
+-- | Close a 'UinputSink'
+usClose :: HasRunEnv e => UinputSink -> RIO e ()
+usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
+  where
+    release h = do
+      logInfo $ "Unregistering Uinput device"
+      release_uinput_keysink h
+        `onErr` UinputReleaseError (snk^.cfg.keyboardName)
+
+    close h = do
+      logInfo $ "Closing Uinput device file"
+      liftIO $ closeFd h
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
-usWrite :: UinputSink -> KeyAction -> IO ()
+usWrite :: HasRunEnv e => UinputSink -> KeyAction -> RIO e ()
 usWrite u a = withMVar (u^.st) $ \fd -> do
-  -- Translate the key action to a LinuxKeyEvent
-  e <- toLinuxKeyEvent <$> (now $ flip atTime a)
-  send_event fd e `onErr` SinkWriteError (u ^. cfg . keyboardName)
-  (now sync >>= send_event fd) `onErr` SinkWriteError (u ^. cfg . keyboardName)
+  send_event u fd =<< toLinuxKeyEvent <$> stampNow a
+  send_event u fd =<< now sync
