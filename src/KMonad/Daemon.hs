@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module KMonad.Daemon
 
 where
@@ -10,19 +12,21 @@ import KMonad.Components.KeyHandler
 import KMonad.Event
 import KMonad.Keyboard.IO
 import KMonad.Util
+import KMonad.Runner
 
 --------------------------------------------------------------------------------
 -- $env
 
-
+-- | All the configuration options for running a daemon
 data DaemonCfg = DaemonCfg
-  { _keySinkA   :: Acquire KeySink
-  , _keySourceA :: Acquire KeySource
-  , _keymap     :: Keymap ButtonCfg
-  , _port       :: ()
+  { _keySinkDev   :: Acquire KeySink
+  , _keySourceDev :: Acquire KeySource
+  , _keymap       :: Keymap ButtonCfg
+  , _port         :: ()
   }
 makeClassy ''DaemonCfg
 
+-- | The running environment of the Daemon
 data DaemonEnv = DaemonEnv
   { _deInputDispatch :: InputDispatch
   , _deKeyHandler    :: KeyHandler
@@ -32,23 +36,34 @@ data DaemonEnv = DaemonEnv
   }
 makeLenses ''DaemonEnv
 
-instance HasInputDispatch DaemonEnv where inputDispatch = deInputDispatch
-instance HasKeyHandler    DaemonEnv where keyHandler    = deKeyHandler
-instance HasLogFunc       DaemonEnv where logFuncL      = runEnv.logFuncL
-instance HasDaemonCfg     DaemonEnv where daemonCfg     = deDaemonCfg
-instance HasRunEnv        DaemonEnv where runEnv        = deRunEnv
-instance HasKeySink       DaemonEnv where keySink       = deKeySink
-
-class ( HasLogFunc e, HasInputDispatch e, HasKeyHandler e
-      , HasKeySink e, HasRunEnv e) => HasDaemonEnv e where
+-- | RIO constraints for being able to perform daemon actions
+class ( HasLogFunc e , HasInputDispatch e , HasKeyHandler e
+      , HasKeySink e , HasRunEnv e ) => HasDaemonEnv e where
   daemonEnv :: Lens' e DaemonEnv
+
 instance HasDaemonEnv DaemonEnv where daemonEnv = id
 
-startDaemon :: HasRunEnv e => DaemonCfg -> RIO e ()
-startDaemon dcfg = do
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasDaemonCfg e where
+  daemonCfg = daemonEnv . deDaemonCfg
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasRunEnv e where
+  runEnv = daemonEnv . deRunEnv
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeySink e where
+  keySink = daemonEnv . deKeySink
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasInputDispatch e where
+  inputDispatch = daemonEnv . deInputDispatch
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeyHandler e where
+  keyHandler = daemonEnv . deKeyHandler
+
+
+--------------------------------------------------------------------------------
+
+runDaemon :: HasRunEnv e => DaemonCfg -> RIO DaemonEnv a -> RIO e a
+runDaemon dcfg rio = do
   renv <- view runEnv
+
   logInfo "Acquiring Key IO"
-  with (liftA2 (,) (dcfg^.keySinkA) (dcfg^.keySourceA)) $ \(snk, src) -> do
+  with (liftA2 (,) (dcfg^.keySinkDev) (dcfg^.keySourceDev)) $ \(snk, src) -> do
+
     logInfo "Constructing components"
     dispatch <- mkInputDispatch src
     keyhdlr  <- mkKeyHandler $ dcfg^.keymap
@@ -60,8 +75,11 @@ startDaemon dcfg = do
           , _deKeySink       = snk
           , _deRunEnv        = renv
           }
-    logInfo "Starting app-loop"
-    runRIO env step
+    runRIO env rio
+
+
+startDaemon :: HasDaemonEnv e => RIO e ()
+startDaemon = logInfo "Starting app-loop" >> step
 
 step :: HasDaemonEnv e => RIO e ()
 step = do

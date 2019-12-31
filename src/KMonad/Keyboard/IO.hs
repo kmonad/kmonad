@@ -33,6 +33,7 @@ where
 import Prelude
 
 import KMonad.Keyboard
+import KMonad.Runner
 import KMonad.Util
 
 

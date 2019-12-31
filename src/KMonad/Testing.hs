@@ -13,6 +13,7 @@ import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Linux.UinputSink
 import KMonad.Keyboard.IO.Linux.DeviceSource
+import KMonad.Runner
 import KMonad.Util
 
 import qualified RIO.HashMap as M
@@ -43,33 +44,30 @@ kmap = let ls = mkLayerStack ["test"] $
 rstore :: M.HashMap Keycode Char
 rstore = M.empty
 
--- runTest :: IO ()
--- runTest = do
---   logOptions <- logOptionsHandle stdout False
---   withLogFunc logOptions $ \lf -> do
---     let cfg = DaemonCfg
---           { _keySinkA   = uinputSink (defUinputCfg & postInit .~ cmd)
---           , _keySourceA = deviceSource64 kbd
---           , _keymap     = kmap
---           , _logFunc    = lf
---           , _port       = ()
---           }
---     runRIO cfg startDaemon
---   where
---     cmd = Nothing
+runTest :: IO ()
+runTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
+
+  snkDev <- uinputSink defUinputCfg
+  srcDev <- deviceSource64 kbd
+
+  let dcfg = DaemonCfg
+        { _keySinkDev   = snkDev
+        , _keySourceDev = srcDev
+        , _keymap       = kmap
+        , _port         = ()
+        }
+  runDaemon dcfg $ startDaemon
+
 
 
 testKeyIO :: IO ()
-testKeyIO = do
-  logOptions <- logOptionsHandle stdout True
-  withLogFunc logOptions $ \lf -> runRIO (RunEnv RunCfg lf) $ do
-    srcR <- deviceSource64 kbd
-    snkR <- uinputSink defUinputCfg
-    with srcR $ \src -> with snkR $ \snk -> forever $ do
-      e <- awaitKeyWith src
-      logInfo $ pprintDisp e
-      -- traceIO $ pprint e
-      emitKeyWith snk (e^.thing)
+testKeyIO = run defRunCfg $ do
+  srcR <- deviceSource64 kbd
+  snkR <- uinputSink defUinputCfg
+  with srcR $ \src -> with snkR $ \snk -> forever $ do
+    e <- awaitKeyWith src
+    logInfo $ pprintDisp e
+    emitKeyWith snk (e^.thing)
 
 
       -- pure ()

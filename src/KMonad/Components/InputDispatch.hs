@@ -21,6 +21,7 @@ import Control.Concurrent.Chan.Unagi
 import KMonad.Event
 import KMonad.Keyboard.IO
 import KMonad.Util
+import KMonad.Runner
 
 --------------------------------------------------------------------------------
 -- $disp

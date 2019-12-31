@@ -38,13 +38,6 @@ module KMonad.Util
     -- * Random utility helpers that have no better home
   , pop
   , onErr
-
-    -- * Configurations and environments: this needs to live somewhere else
-  , RunCfg(..)
-  , RunEnv(..)
-  , HasRunEnv
-  , runEnv
-  ,
   )
 
 where
@@ -207,24 +200,3 @@ pop idx m = case m ^. at idx of
 onErr :: (MonadUnliftIO m, Exception e) => m Int -> e -> m ()
 onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 
---------------------------------------------------------------------------------
--- $cfg
-
--- | The RunCfg describes those settings that apply to every part of KMonad.
--- This currently only really has to do with logging configuration.
-data RunCfg = RunCfg {}
-
--- | The RunEnv contains the environment that is present in all computations in
--- KMonad. It currently only really describes logging.
-data RunEnv = RunEnv
-  { __cfg      :: RunCfg
-  , _reLogFunc :: LogFunc
-  }
-makeLenses ''RunEnv
-
-class HasLogFunc e => HasRunEnv e where
-  runEnv :: Lens' e RunEnv
-
-instance HasCfg RunEnv RunCfg where cfg = _cfg
-instance HasLogFunc RunEnv where logFuncL = reLogFunc
-instance HasRunEnv RunEnv where runEnv = id
