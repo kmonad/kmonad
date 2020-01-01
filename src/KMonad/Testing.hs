@@ -17,24 +17,24 @@ import KMonad.Runner
 import KMonad.Util
 
 import qualified RIO.HashMap as M
-import qualified RIO.Text    as T
 
-emitB :: Keycode -> ButtonCfg
-emitB c = ButtonCfg
-  { _pressAction   = Emit $ pressKey   c
-  , _releaseAction = Emit $ releaseKey c
-  }
 
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
-kmap :: Keymap ButtonCfg
-kmap = let ls = mkLayerStack ["test"] $
+kmap :: Keymap Button
+kmap = let sftB = modded KeyLeftShift . emitB
+           ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
                 , (KeyR, emitB KeyS)
                 , (KeyS, emitB KeyD)
-                , (KeyT, emitB KeyF) ])
+                , (KeyT, emitB KeyF)
+                , (KeyQ, sftB KeyA)
+                , (KeyW, sftB KeyS)
+                , (KeyF, sftB KeyD)
+                , (KeyP, sftB KeyF)
+                ])
             ]
        in case ls of
             Left _   -> error "boop"
@@ -44,8 +44,8 @@ kmap = let ls = mkLayerStack ["test"] $
 rstore :: M.HashMap Keycode Char
 rstore = M.empty
 
-runTest :: IO ()
-runTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
+runTest :: LogLevel -> IO ()
+runTest ll = run (defRunCfg & logLevel .~ ll) $ do
 
   snkDev <- uinputSink defUinputCfg
   srcDev <- deviceSource64 kbd
@@ -59,7 +59,6 @@ runTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
   runDaemon dcfg $ startDaemon
 
 
-
 testKeyIO :: IO ()
 testKeyIO = run defRunCfg $ do
   srcR <- deviceSource64 kbd
@@ -68,17 +67,3 @@ testKeyIO = run defRunCfg $ do
     e <- awaitKeyWith src
     logInfo $ pprintDisp e
     emitKeyWith snk (e^.thing)
-
-
-      -- pure ()
-    -- with srcR $ \src -> forever $ do
-    --   e <- awaitKeyWith src
-    --   liftIO $ print e
-    -- with (uinputSink defUinputCfg) $ \snk ->
-    --   with srcR $ \src -> forever $ do
-    --     e <- awaitKeyWith src
-    --     liftIO $ print e
-    --     liftIO $ emitKeyWith snk (e^.thing)
-    -- cmd = Just. unwords $ [ "/run/wrappers/bin/sudo "
-    --                       , "/run/current-system/sw/bin/modprobe"
-    --                       , "uinput" ]

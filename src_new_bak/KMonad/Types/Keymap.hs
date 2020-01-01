@@ -18,7 +18,7 @@ import qualified RIO.HashMap as M
 -- | A mapping from 'Keycode's to 'Button's
 data LayerCfg = LayerCfg
   { _lcName    :: !Name
-  , _lcButtons :: !(M.HashMap Keycode ButtonCfg)
+  , _lcButtons :: !(M.HashMap Keycode Button)
   }
 
 -- |

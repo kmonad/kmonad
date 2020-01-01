@@ -38,6 +38,7 @@ module KMonad.Util
     -- * Random utility helpers that have no better home
   , pop
   , onErr
+  , withReader
   )
 
 where
@@ -200,3 +201,7 @@ pop idx m = case m ^. at idx of
 onErr :: (MonadUnliftIO m, Exception e) => m Int -> e -> m ()
 onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 
+-- | A reimplementation of 'withReader' from MTL on top of RIO. It is like
+-- 'local' but changes the type of the environment.
+withReader :: (e' -> e) -> RIO e a -> RIO e' a
+withReader f a = ask >>= \env -> runRIO (f env) a

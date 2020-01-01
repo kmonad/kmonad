@@ -30,6 +30,8 @@ import RIO as X hiding
     -- Not the chan stuff, I will use unagi-chan instead
   , newChan, writeChan, dupChan, readChan
 
+    -- Want to have my own race alias
+  , race
   )
 
 print :: (Show a, MonadIO m) => a -> m ()

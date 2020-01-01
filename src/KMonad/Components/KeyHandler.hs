@@ -59,9 +59,9 @@ type Keymap   a = Q.LayerStack Name Keycode a
 
 -- | The stateful aspect of a 'KeyHandler'. This will all be stored in 1 'MVar'.
 data KhST = KhST
-  { _keymap        :: !(Keymap Button)
+  { _keymap        :: !(Keymap ButtonEnv)
     -- ^ The current mapping of keycodes to buttons
-  , _releaseStore  :: !(M.HashMap Keycode Button)
+  , _releaseStore  :: !(M.HashMap Keycode ButtonEnv)
     -- ^ The store of buttons to use to handle releases
   , _priorityStore :: !(M.HashMap KeyAction PriorityButton)
     -- ^ The store of buttons to check before anything else
@@ -75,10 +75,10 @@ makeClassy ''KeyHandler
 
 -- | Create a 'KeyHandler' object from a 'Keymap'
 mkKeyHandler ::
-     Keymap ButtonCfg -- ^ A 'Keymap' of all the button configurations
+     Keymap Button -- ^ A 'Keymap' of all the button configurations
   -> RIO e KeyHandler -- ^ The action that creates a 'KeyHandler'
 mkKeyHandler km = do
-  bs <- km & Q.items . itraversed %%@~ \(_, kc) -> initButton kc
+  bs <- km & Q.items . itraversed %%@~ \(_, kc) -> initButtonEnv kc
   KeyHandler <$> newMVar (KhST bs M.empty M.empty)
 
 -- | Print out a representation of the KeyHandler state
@@ -92,7 +92,7 @@ mkKeyHandler km = do
 -- state. We extract the action from the state before running anything so we can
 -- put the state MVar back before initiating the button action.
 data HandleAction
-  = WithButton   Button
+  = WithButton   ButtonEnv
   | WithPriority PriorityButton
   | DoNotHandle
 
@@ -106,13 +106,15 @@ chooseHandler ka st = if
     in (st & priorityStore .~ ps, wrap WithPriority a)
   -- If ka is a Press, look it up in Keymap and store it in the releaseStore
   | isPress ka ->
-    let b = st ^? keymap . Q.atKey (ka ^. keycode)
-    in (st & releaseStore . at (ka^.keycode) .~ b, wrap WithButton b)
+    let b   = st ^? keymap . Q.atKey (ka ^. keycode)
+        st' = st & releaseStore . at (ka ^. keycode) .~ b
+    in (st', wrap WithButton b)
   -- If ka is a Release, pop it from the releaseStore
   | True ->
     let (b, rs) = pop (ka^.keycode) $ st^.releaseStore
     in (st & releaseStore .~ rs, wrap WithButton b)
   where wrap = maybe DoNotHandle
+
 
 -- | Handle a 'KeyAction' using the 'KeyHandler'
 handleKey :: (HasKeyHandler e, HasLogFunc e)
@@ -120,10 +122,11 @@ handleKey :: (HasKeyHandler e, HasLogFunc e)
   -> RIO e Action  -- ^ The resulting action
 handleKey a = do
   logDebug $ "Handling: " <> (fromString . show $ a)
-  view khST >>= flip modifyMVar (pure . chooseHandler a) >>= \case
+  h <- flip modifyMVar (pure . chooseHandler a) =<< view khST
+  case h of
     WithButton   b -> runButton (a^.switchAction) b
     WithPriority p -> runPriorityButton p
-    DoNotHandle    -> pure Pass
+    DoNotHandle    -> pure $ Action (pure ())
 
 
 --------------------------------------------------------------------------------

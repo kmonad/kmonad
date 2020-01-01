@@ -105,8 +105,8 @@ sync t = LinuxKeyEvent (fi $ t^._s, fi $ t^._ns, 0, 0, 0)
 -- | Translate a 'LinuxKeyEvent' to a kmonad 'KeyEvent'
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (s, ns, typ, c, val))
-  | typ == 1 && val == 0 = Just . atTime t $ releaseKey kc
-  | typ == 1 && val == 1 = Just . atTime t $ pressKey   kc
+  | typ == 1 && val == 0 = Just . atTime t $ keyRelease kc
+  | typ == 1 && val == 1 = Just . atTime t $ keyPress   kc
   | otherwise = Nothing
   where
     t  = mkTime s ns

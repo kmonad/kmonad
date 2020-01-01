@@ -4,10 +4,9 @@ module KMonad.Keyboard
     -- $keyaction
     SwitchAction(..)
   , KeyAction
-  , switchAction
-  , keycode
-  , pressKey
-  , releaseKey
+  , HasKeyAction(..)
+  , keyPress
+  , keyRelease
   , isPress
   , isRelease
   , KeyEvent
@@ -56,12 +55,12 @@ instance Ord KeyAction where
     x  -> x
 
 -- | Create a 'KeyAction' that represents pressing a key
-pressKey :: Keycode -> KeyAction
-pressKey = KeyAction Press
+keyPress :: Keycode -> KeyAction
+keyPress = KeyAction Press
 
 -- | Create a 'KeyAction' that represents releaseing a key
-releaseKey :: Keycode -> KeyAction
-releaseKey = KeyAction Release
+keyRelease :: Keycode -> KeyAction
+keyRelease = KeyAction Release
 
 -- | Test if a thing with a 'SwitchAction' is/has a 'Press'
 isPress :: HasKeyAction a => a -> Bool

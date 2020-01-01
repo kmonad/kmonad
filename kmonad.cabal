@@ -24,7 +24,7 @@ library
   --     KMonad.Api.App
   --     KMonad.Api.Encode
   --     KMonad.Api.EventTracker
-  --     KMonad.Api.InputDispatch
+  --     KMonad.Api.Dispatch
   --     KMonad.Api.KeyIO
   --     KMonad.Api.KeyIO.Types
   --     KMonad.Api.LayerStack
@@ -182,7 +182,9 @@ library
     -- , unordered-containers
       base
     , cereal
+    , free
     , lens
+    , mtl
     , network
     , resourcet
     , rio

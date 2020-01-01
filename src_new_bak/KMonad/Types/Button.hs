@@ -33,11 +33,11 @@ data Action
 -- $button
 
 -- | The configurable aspects of a 'Button'
-data ButtonCfg = ButtonCfg
+data Button = Button
   { _pressAction   :: !Action -- ^ Action to take when pressed
   , _releaseAction :: !Action -- ^ Action to take when released
   }
-makeClassy ''ButtonCfg
+makeClassy ''Button
 
 -- | The unique state identifying 1 'button'
 data Button = Button

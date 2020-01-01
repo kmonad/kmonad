@@ -24,8 +24,8 @@ module KMonad.Types.Keyboard.Event2
   -- --   -- $keyaction
   -- -- , KeyAction(..)
   -- -- , HasKeyAction(..)
-  -- -- , pressKey
-  -- -- , releaseKey
+  -- -- , keyPress
+  -- -- , keyRelease
 
   -- --   -- * Key events
   -- --   -- $keyevent
@@ -103,13 +103,13 @@ instance Ord KeyAction where
     x  -> x
 
 -- | Create a 'KeyAction' that represents pressing a key
-pressKey :: Keycode -> KeyAction
-pressKey = KeyAction Press
+keyPress :: Keycode -> KeyAction
+keyPress = KeyAction Press
 
 
 -- | Create a 'KeyAction' that represents releaseing a key
-releaseKey :: Keycode -> KeyAction
-releaseKey = KeyAction Release
+keyRelease :: Keycode -> KeyAction
+keyRelease = KeyAction Release
 
 --------------------------------------------------------------------------------
 -- $keyevent
