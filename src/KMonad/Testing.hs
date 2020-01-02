@@ -4,6 +4,7 @@ where
 
 import Prelude
 
+import Control.Monad.Cont
 import Data.LayerStack
 
 import KMonad.Button
@@ -22,8 +23,26 @@ import qualified RIO.HashMap as M
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
+holdWhile :: Button
+holdWhile = mkButton p (traceIO "releasing")
+  where
+    p :: forall m. MonadButton m => m ()
+    p = do
+      traceIO "hold ON before"
+      hold True
+      traceIO "hold ON after"
+      void . fork $ do
+        traceIO "forked"
+        within 500 (awaitMy Release) >>= \case
+          Nothing -> traceIO "timeout"
+          Just _  -> traceIO "action"
+        traceIO "hold off"
+        hold False
+        traceIO "done"
+
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
+           th   = tapHold 500 (emitB KeyLeftShift) (emitB KeyZ)
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
@@ -34,6 +53,7 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyW, sftB KeyS)
                 , (KeyF, sftB KeyD)
                 , (KeyP, sftB KeyF)
+                , (KeyZ, holdWhile)
                 ])
             ]
        in case ls of
@@ -44,8 +64,8 @@ kmap = let sftB = modded KeyLeftShift . emitB
 rstore :: M.HashMap Keycode Char
 rstore = M.empty
 
-runTest :: LogLevel -> IO ()
-runTest ll = run (defRunCfg & logLevel .~ ll) $ do
+runTest' :: LogLevel -> IO ()
+runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
 
   snkDev <- uinputSink defUinputCfg
   srcDev <- deviceSource64 kbd
@@ -58,6 +78,11 @@ runTest ll = run (defRunCfg & logLevel .~ ll) $ do
         }
   runDaemon dcfg $ startDaemon
 
+runTest :: IO ()
+runTest = runTest' LevelInfo
+
+testCfg :: RunCfg
+testCfg = defRunCfg & logLevel .~ LevelInfo
 
 testKeyIO :: IO ()
 testKeyIO = run defRunCfg $ do
@@ -67,3 +92,4 @@ testKeyIO = run defRunCfg $ do
     e <- awaitKeyWith src
     logInfo $ pprintDisp e
     emitKeyWith snk (e^.thing)
+

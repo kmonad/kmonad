@@ -78,7 +78,7 @@ mkKeyHandler ::
      Keymap Button -- ^ A 'Keymap' of all the button configurations
   -> RIO e KeyHandler -- ^ The action that creates a 'KeyHandler'
 mkKeyHandler km = do
-  bs <- km & Q.items . itraversed %%@~ \(_, kc) -> initButtonEnv kc
+  bs <- km & Q.items . traversed %%~ initButtonEnv
   KeyHandler <$> newMVar (KhST bs M.empty M.empty)
 
 -- | Print out a representation of the KeyHandler state

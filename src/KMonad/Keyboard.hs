@@ -5,6 +5,7 @@ module KMonad.Keyboard
     SwitchAction(..)
   , KeyAction
   , HasKeyAction(..)
+  , mkKeyAction
   , keyPress
   , keyRelease
   , isPress
@@ -53,6 +54,9 @@ instance Ord KeyAction where
   a `compare` b = case (a^.switchAction) `compare` (b^.switchAction) of
     EQ -> (a^.keycode) `compare` (b^.keycode)
     x  -> x
+
+mkKeyAction :: SwitchAction -> Keycode -> KeyAction
+mkKeyAction = KeyAction
 
 -- | Create a 'KeyAction' that represents pressing a key
 keyPress :: Keycode -> KeyAction

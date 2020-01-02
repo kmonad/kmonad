@@ -1,30 +1,35 @@
 module KMonad.Components.Dispatch
-  -- ( -- * The Dispatch component
-  --   -- $disp
-  --   Dispatch
-  -- , HasDispatch
-  -- , mkDispatch
-  -- , inputDispatch
+  (
+    -- * The Dispatch component
+    -- $disp
+    Dispatch
+  , HasDispatch
+  , withDispatch
+  , dispatch
 
-  --   -- * Working with input
-  -- , injectEvent
-  -- , awaitEvent
-  -- , copyStream
-  -- , captureStream
-  -- )
+    -- * Working with input
+  , StreamLoc(..)
+  , injectEvent
+  , awaitEvent
+  , pauseStream
+  , intercept
+  , copyStream
+  , captureStream
+  )
 where
 
 import Prelude
 
 import Control.Concurrent.Chan.Unagi
 
-import KMonad.Button
 import KMonad.Event
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
 import KMonad.Runner
 
+
+import qualified Data.CChan  as C
 import qualified Data.Sluice as L
 
 
@@ -42,146 +47,159 @@ import qualified Data.Sluice as L
 -- automatically unregistered. If any intercept matches, the key event is no
 -- longer propagated through KMonad.
 
+-- | A 'Callback' is some effectful function on a KeyEvent that returns the
+-- KeyEvent when finished.
+
+
+-- | I wonder if this can be done without the MVar...
 data Intercept = Intercept
   { _predicate :: KeyEvent -> Bool
-  , _callback  :: KeyEvent -> Action
+  , _comms     :: MVar KeyEvent
   }
+makeLenses ''Intercept
 
---------------------------------------------------------------------------------
--- $chan
---
--- A 'CChan' is a 'Chan'-style data-type that provides a mechanism for someone
--- to either copy or capture the data-stream. A `capture` will return an action
--- that reads events from the channel, and an action to `uncapture` it again
---
---
+mkIntercept :: MonadUnliftIO m => (KeyEvent -> Bool) -> m Intercept
+mkIntercept p = Intercept p <$> newEmptyMVar
 
-data Capture ...
-   { read
-   , release
-   }
-etc
 
-CONTINUE HERE
-
--- 'CChan' (capture-chan) is a simple wrapper over 'Chan' with support for
--- copying or capturing the output stream. A blocking read of this 'CChan' will
-
--- | The 'CChan' datatype
-data CChan a = CChan
-  { _cIn  :: !(InChan a)
-  , _cOut :: !(MVar (OutChan a))
-  }
-makeLenses ''CChan
-
--- | Create a new 'CChan'
-mkCChan :: MonadUnliftIO m => m (CChan a)
-mkCChan = do
-  (i, o) <- liftIO newChan
-  CChan i <$> newMVar o
-
--- | Turn an OutChan into an action that reads from an OutChan, this way we can
--- hide the Chan implementation completely inside CChan
-reading :: MonadUnliftIO m => OutChan a -> m a
-reading = liftIO . readChan
-
--- | Inject a new thing into the front of the 'CChan'
-writeCChan :: MonadUnliftIO m => a -> CChan a -> m ()
-writeCChan a = liftIO . flip writeChan a . view cIn
-
--- | Blocking raid awaiting the arrival of a thing from the 'CChan'
-readCChan :: MonadUnliftIO m => CChan a -> m a
-readCChan = (flip withMVar $ liftIO . readChan) . view cOut
-
--- | Get a copy of the output stream
-copyStream :: MonadUnliftIO m => CChan a -> m (m a)
-copyStream c = do
-  mo <- liftIO . dupChan $ c^.cIn
-  pure $ reading mo
-
--- | Capture the stream, giving an OutChan to read from,
-captureStream :: MonadUnliftIO m => CChan a -> m (m a, m ())
-captureStream c = do
-  o <- takeMVar $ c^.cOut
-  pure (reading o, putMVar (c^.cOut) o)
-
+-- | Check all the Intercept predicates against a KeyEvent. Separating those
+-- that match it from those that don't.
+runIntercepts :: KeyEvent -> [Intercept] -> ([MVar KeyEvent], [Intercept])
+runIntercepts e = partitionEithers . map f
+  where f i = if (i^.predicate $ e) then trace "Left!" . Left $ i^.comms else Right i
 
 --------------------------------------------------------------------------------
 -- $disp
 --
--- The 'Dispatch' component is responsible for managing the inputs coming
--- in from the OS'es keyboard. It provides numerous functionalities:
---   - injecting events into KMonad
---   - copying or capturing input streams
---   - blocking or unblocking processing
---   - handling input-short circuiting
 
-
--- | The environment for 'Dispatch' functionality.
---
--- The 'Dispatch' functions thusly:
--- 1. KeyEvents from the OS are written to 'keyIn'
--- 2. KeyEvents are read from keyOut. This channel can be copied or captured.
--- 3. KeyEvents are checked against intercepts, maybe capturing them.
--- 4. KeyEvents are written to the Sluice, which can be blocked or open
--- 5. Once the sluice is open, all events are written to eventIn
--- 6. Events can also be injected into eventIn
--- 7. Events are read from eventOut to the app-loop, this channel can be copied
---    or captured.
---   
-
+-- | The Dispatch type that contains all the information needed to keep track of
+-- the various event blocking, filtering, and capturing that is provided by
+-- KMonad.
 data Dispatch = Dispatch
-  { _keyChan        :: CChan KeyEvent
-  , _helpChan       :: CChan KeyEvent
-  , _eventChan      :: CChan Event
+  { _rawChan        :: !(C.CChan KeyEvent)
+  , _blockChan      :: !(C.CChan KeyEvent)
+  , _evInChan       :: !(InChan Event)
+  , _evOutChan      :: !(OutChan Event)
+  , _sluice         :: !(L.Sluice KeyEvent)
   , _interceptStore :: !(MVar [Intercept])
-  , _sluice         :: !(MVar (L.Sluice KeyEvent))
   }
 makeClassy ''Dispatch
 
+withDispatch :: (HasRunEnv e)
+  => KeySource
+  -> ContT r (RIO e) Dispatch
+withDispatch src = do
+  -- Initialize the components of a dispatch
+  (eI, eO) <- lift $ liftIO newChan
+  ics      <- lift $ newMVar []
+  slc      <- lift $ L.mkSluice
+  raw      <- C.mkCChan
+  blk      <- C.mkCChan
 
--- | Create a new 'Dispatch' object
-mkDispatch :: (HasRunEnv e)
-  => KeySource      -- ^ The source from which we read OS 'KeyEvent's
-  -> RIO e Dispatch
-mkDispatch src = do
-  -- Initialize all the components
-  dsp <- Dispatch <$> mkCChan <*> mkCChan <*> mkCChan <*> newMVar [] <*> newMVar L.empty
+  -- Fireup the internal 'copy-over' threads
+  launch "dispatch:keyio-thread" $
+    awaitKeyWith src >>= flip C.write raw
+  launch "dispatch:sluice-thread" $ do
+    C.read raw >>= tryIntercept ics >>= \case
+      Nothing -> pure ()
+      Just e' -> L.write e' slc
+  launch "dispatch:blocking-thread" $
+    L.read slc >>= flip C.write blk
+  launch "dispatch:output-thread" $
+    C.read blk >>= (\k -> liftIO . writeChan eI $ KIOEvent k)
 
-  -- Launch the thread that writes Key IO to keyChan
-  a <- async . forever $ do
-    e <- awaitKeyWith src
-    writeCChan e (dsp^.keyChan)
-  link a      -- <-- If reading ever crashes, so do we
+  -- Return the dispatch
+  pure $ Dispatch raw blk eI eO slc ics
 
-  -- Launch the thread that writes
 
-  pure dsp
+-- | Run all 'Intercept's on a KeyEvent. Any 'Intercept' that succeeds has their
+-- callback performed and is removed from the store. If any 'Intercept'
+-- succeeds, then this returns Nothing, indicating the 'KeyEvent' should not be
+-- processed further.
+tryIntercept :: MonadUnliftIO m => MVar [Intercept] -> KeyEvent -> m (Maybe KeyEvent)
+tryIntercept icpt e = do
+  traceIO "catching intercepts"
+  -- icpt <- view interceptStore
+  modifyMVar icpt $ \st -> do
+    case runIntercepts e st of
+      ([], _)   -> pure (st, Just e)
+      (ms, st') -> do
+        traceIO "caught one"
+        traverse_ (flip putMVar e) ms
+        pure (st', Nothing)
 
--- | Inject an event into KMonad's app-loop
+
+
+    -- let (matches, st') = runIntercepts e st
+    -- if null matches
+    --   then pure (st', Just e)
+    --   else traverse_ (liftIO . ($ e)) callbacks >> pure (st', Nothing)
+
+
+--------------------------------------------------------------------------------
+-- $ops
+--
+-- Operations inside an environment that has a 'Dispatch' in its envirmonment
+
+-- | Inject an event into KMonad's app-loop. Injected events completely bypass
+-- all blocking or capturing mechanisms and are only visible from within KMonad.
 injectEvent :: HasDispatch e => Event -> RIO e ()
-injectEvent e = view eventChan >>= writeCChan e
+injectEvent e = view evInChan >>= liftIO . flip writeChan e
 
--- | Wait for an event to occur and then return it
+-- | Wait for an event to occur and then return it. This will return any
+-- injected event, or any Key IO event that has not been blocked or intercepted.
 awaitEvent :: HasDispatch e => RIO e Event
-awaitEvent = view eventChan >>= readCChan
+awaitEvent = view evOutChan >>= liftIO . readChan
 
-data CopyType = Copy | Capture deriving (Eq, Show)
-data
+-- | Pause or unpause event processing (the pause occurs after callbacks, so any
+-- callback will still register immediately.)
+pauseStream :: HasDispatch e => Bool -> RIO e ()
+pauseStream b = do
+  traceIO "pausing inside dispatch"
+  traceShowIO b
+  view sluice >>= \s -> if b then L.block s else L.unblock s
+  traceIO "finished pausing"
+-- | The 'StreamLoc' datatype distinguishes between 2 locations where a stream
+-- of events can be either copied or captured. The 'Early' location occurs
+-- immediately after a KeyEvent is written to KMonad by the OS. This completely
+-- bypasses all callback handling and blocking behavior. The 'Late' location
+-- occurs after both the callbacks and the blocking behavior has been performed,
+-- so that stream will be filtered of callbacks and will be paused and unpaused
+-- when KMonad pauses and unpauses.
+data StreamLoc = Early | Late deriving (Eq, Show)
 
--- -- | Get a copy of the event-stream
--- copyStream :: HasDispatch e => RIO e (OutChan Event)
--- copyStream = view inChan >>= liftIO . dupChan
+-- | Intercept a 'KeyEvent' matching a predicate just after the 'Early' capture
+-- node. This will block until the predicate is matched.
+intercept :: HasDispatch e
+  => (KeyEvent -> Bool)  -- ^ The predicate to match against 'KeyEvent'
+  -> RIO e KeyEvent      -- ^ Return the waiting action.
+intercept p = do
+  traceIO $ "registering intercerpt"
+  v <- view interceptStore
+  i <- mkIntercept p
+  modifyMVar_ v (\is -> pure (i:is))
+  takeMVar (i^.comms)
 
--- -- | Capture the event-stream. This will block any and all processing of events
--- -- in KMonad until the release action is performed. This returns the channel
--- -- from which to read events, and the action to release the channel again.
--- --
--- -- Note: this does not stop any copies of the main stream from functioning. That
--- -- functionality is not supported.
--- --
--- captureStream :: HasDispatch e => RIO e (OutChan Event, RIO e ())
--- captureStream = do
---   oV <- view outChan
---   o  <- takeMVar oV
---   pure $ (o, putMVar oV o)
+
+-- | Capture either the `early` or `late` stream.
+--
+-- All 'KeyEvent's from the chosen location onwards will be redirected to the
+-- 'Captured' until 'release' is called on it.
+captureStream :: HasDispatch e
+  => StreamLoc                   -- ^ Whether to capture the early or late stream
+  -> RIO e (C.Captured KeyEvent) -- ^ An action that returns the requested stream
+captureStream loc = C.captureStream =<< case loc of
+    Early -> view rawChan
+    Late  -> view blockChan
+
+-- | Get a copy of either the `early` or `late` stream (see 'StreamLoc' for more
+-- explanation on the difference). Copies of input streams do not interfere with
+-- the other streams at all. When the stream copied by 'copyStream' is later
+-- captured in some other location by 'captureStream' the copy will also block
+-- until the capture is released.
+copyStream :: HasDispatch e
+  => StreamLoc
+  -> RIO e (RIO e KeyEvent)
+copyStream loc = C.copyStream =<< case loc of
+  Early -> view rawChan
+  Late  -> view blockChan

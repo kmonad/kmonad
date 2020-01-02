@@ -12,18 +12,21 @@ import KMonad.Util
 --
 -- 'Action's describe those operations that can be triggered by button events
 -- (presses or releases). Most of KMonad is written in RIO style, but 'Action's
--- are purposefully written in a 'MonadButton' (of which RIO 'DaemonEnv' is an
--- instance) to put a clear constraint on the supported capabilities of button
--- actions.
+-- are purposefully written in a 'MonadButton' (of which RIO 'DaemonEnv' with an
+-- additional 'Keycode' is an instance) to put a clear constraint on the
+-- supported capabilities of button actions.
 --
 -- This restriction allows us to then expose a programmable interface to the
 -- user, allowing users to define their own button actions and extend KMonad
--- locally, without ever having to muss about with the code.
+-- locally, without ever having to muss about with the code (or even have
+-- Haskell installed).
 --
 -- However much the internal implementation of KMonad might change, the exposed
 -- 'MonadButton' interface should be left unmolested.
 
-class Monad m => MonadButton m where
+-- MonadIO should only be enabled during debugging, for traceIO statements and such
+-- class Monad m => MonadButton m where
+class MonadIO m => MonadButton m where
   -- | Emit a KeyAction to the OS
   emit      :: KeyAction -> m ()
   -- | Pause the current thread for n milliseconds
@@ -36,9 +39,8 @@ class Monad m => MonadButton m where
   fork      :: m a -> m (Async a)
   -- | Access the keycode to which this button is bound
   myBinding :: m Keycode
-  -- | Wait for a 'KeyEvent' that matches a predicate, capturing
-  -- it in the process and short-circuiting regular processing
-  capture   :: (KeyEvent -> Bool) -> m KeyEvent
+  -- | Register an intercept callback
+  await     :: (KeyEvent -> Bool) -> m KeyEvent
 
 -- | An 'Action' is a wrapper around a monadic computation that is guaranteed to
 -- use only 'MonadButton' functionality.
@@ -55,9 +57,6 @@ instance Monoid Action where
   mempty = Action $ pure ()
 
 
-
-
-
 --------------------------------------------------------------------------------
 -- $button
 --
@@ -65,7 +64,6 @@ instance Monoid Action where
 -- when released. 'Button's are further designed thusly that an effect will only
 -- occur if a press follows a release or vice versa. Repeatedly pressing or
 -- releasing a button will only trigger the associated action once.
---
 --
 
 -- | The configurable aspects of a 'Button'
@@ -82,23 +80,22 @@ mkButton ::
   -> Button
 mkButton p r = Button (Action p) (Action r)
 
--- | The unique state identifying 1 'button'
+onPress :: (forall m. MonadButton m => m ()) -> Button
+onPress p = mkButton p (pure ())
+
+-- | The configuration of a 'Button' with some additional state to keep track of
+-- the last 'SwitchAction'
 data ButtonEnv = ButtonEnv
-  { __binding    :: !Keycode             -- ^ The 'Keycode' to which the button is bound
-  , _beButton  :: !Button           -- ^ The configuration for this button
+  { _beButton  :: !Button               -- ^ The configuration for this button
   , _lastAction :: !(MVar SwitchAction) -- ^ State to keep track of last manipulation
   }
 makeLenses ''ButtonEnv
 
-class HasBinding e where binding :: Lens' e Keycode
-instance HasBinding ButtonEnv where binding = _binding
-
-
 instance HasButton ButtonEnv where button = beButton
 
 -- | Initialize a 'Button' from a 'Button' and a binding
-initButtonEnv :: Keycode -> Button -> RIO e ButtonEnv
-initButtonEnv kc cfg = ButtonEnv kc cfg <$> newMVar Release
+initButtonEnv :: Button -> RIO e ButtonEnv
+initButtonEnv b = ButtonEnv b <$> newMVar Release
 
 -- | Run a 'Button' on a 'SwitchAction' returning an 'Action' to be performed by
 -- the engine. This will only do something if a 'Press' followed a 'Release' or
@@ -109,7 +106,6 @@ runButton a b = do
     (Press, Release) -> (Press,   b^.pressAction)
     (Release, Press) -> (Release, b^.releaseAction)
     _                -> (a,       mempty)
-
 
 -- | Press the 'Button'
 pressButton :: ButtonEnv-> RIO e Action
@@ -152,8 +148,8 @@ pass = pure ()
 -- return its result. Otherwise interrupt the action and return Nothing.
 within :: MonadButton m => Milliseconds -> m a -> m (Maybe a)
 within ms a = race (pause ms, a) $ \case
-  Left  _ -> pure $ Nothing
-  Right r -> pure $ Just r
+  Left  _ -> traceIO "timer" >> (pure $ Nothing)
+  Right r -> traceIO "action" >> (pure $ Just r)
 
 -- | Perform both the press and release of a button in sequence
 tap :: MonadButton m => Button -> m ()
@@ -167,10 +163,11 @@ press = runAction . view pressAction
 release :: MonadButton m => Button -> m ()
 release = runAction . view releaseAction
 
--- | Return the 'KeyAction' that corresponds to the 'Release' of the currently
--- processing 'Button'
-myRelease :: MonadButton m => m KeyAction
-myRelease = keyRelease <$> myBinding
+-- | Wait for either the 'Press' or 'Release' of this 'Button'
+awaitMy :: MonadButton m => SwitchAction -> m ()
+awaitMy s = do
+  p <- (\c e -> e^.keyAction == mkKeyAction s c) <$> myBinding
+  void . await $ p
 
 tapHold :: Milliseconds -> Button -> Button -> Button
 tapHold ms t h = Button p (Action $ release h)
@@ -179,8 +176,7 @@ tapHold ms t h = Button p (Action $ release h)
     p = Action $ do
       hold True
       void . fork $ do
-        released <- (\a e -> a == e^.keyAction) <$> myRelease
-        within ms (capture released) >>= \case
+        within ms (awaitMy Release) >>= \case
           Nothing -> press h
           Just _  -> tap   t
         hold  False

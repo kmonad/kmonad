@@ -6,16 +6,18 @@ where
 
 import Prelude
 
-import qualified UnliftIO.Async as A
 
 import KMonad.Button
-import KMonad.Components.Dispatch
-import KMonad.Components.KeyHandler
 import KMonad.Event
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
 import KMonad.Runner
+
+
+import qualified UnliftIO.Async as A
+import qualified KMonad.Components.Dispatch   as D
+import qualified KMonad.Components.KeyHandler as K
 
 --------------------------------------------------------------------------------
 -- $env
@@ -24,23 +26,23 @@ import KMonad.Runner
 data DaemonCfg = DaemonCfg
   { _keySinkDev   :: Acquire KeySink
   , _keySourceDev :: Acquire KeySource
-  , _keymap       :: Keymap Button
+  , _keymap       :: K.Keymap Button
   , _port         :: ()
   }
 makeClassy ''DaemonCfg
 
 -- | The running environment of the Daemon
 data DaemonEnv = DaemonEnv
-  { _deDispatch :: Dispatch
-  , _deKeyHandler    :: KeyHandler
-  , _deDaemonCfg     :: DaemonCfg
-  , _deKeySink       :: KeySink
-  , _deRunEnv        :: RunEnv
+  { _deDispatch   :: D.Dispatch
+  , _deKeyHandler :: K.KeyHandler
+  , _deDaemonCfg  :: DaemonCfg
+  , _deKeySink    :: KeySink
+  , _deRunEnv     :: RunEnv
   }
 makeLenses ''DaemonEnv
 
 -- | RIO constraints for being able to perform daemon actions
-class ( HasLogFunc e , HasDispatch e , HasKeyHandler e
+class ( HasLogFunc e , D.HasDispatch e , K.HasKeyHandler e
       , HasKeySink e , HasRunEnv e ) => HasDaemonEnv e where
   daemonEnv :: Lens' e DaemonEnv
 
@@ -52,68 +54,69 @@ instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasRunEnv e where
   runEnv = daemonEnv . deRunEnv
 instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeySink e where
   keySink = daemonEnv . deKeySink
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasDispatch e where
-  inputDispatch = daemonEnv . deDispatch
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeyHandler e where
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => D.HasDispatch e where
+  dispatch = daemonEnv . deDispatch
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => K.HasKeyHandler e where
   keyHandler = daemonEnv . deKeyHandler
 
-instance HasDaemonEnv e => HasDaemonEnv (e, a) where
-  daemonEnv = _1 . daemonEnv
-instance HasBinding (a, Keycode) where
-  binding = _2
 
 --------------------------------------------------------------------------------
 -- $mbut
+--
+-- We satisfy all of the different capabilities of MonadButton using the
+-- different components of the daemon. The only additional thing we have to pass
+-- in is the keycode of the currently processing button (which can't be part of
+-- the DaemonEnv, because sometimes we aren't processing a button).
 
-instance (HasDaemonEnv e) => MonadButton (RIO (e, Keycode)) where
-  emit ka   = view keySink >>= flip emitKeyWith ka
-  pause     = threadDelay . (*1000) . fromIntegral
-  race ts f = uncurry A.race ts >>= f
-  hold      = undefined
-  fork      = async
-  waitFor   = undefined
-  boundTo   = undefined
+instance HasDaemonEnv e => HasDaemonEnv (e, a) where daemonEnv = _1 . daemonEnv
+
+instance HasDaemonEnv e => MonadButton (RIO (e, Keycode)) where
+  emit ka     = view keySink >>= flip emitKeyWith ka
+  pause       = threadDelay . (*1000) . fromIntegral
+  race ts f   = uncurry A.race ts >>= f
+  hold b      = traceShowIO b >> D.pauseStream b
+  fork        = async
+  await p     = D.intercept p
+  myBinding   = view _2
+
 
 --------------------------------------------------------------------------------
 
+-- | Turn a RIO action that requires a 'DaemonEnv' into one that only requires a
+-- 'RunEnv' by instantiating a 'DaemonEnv' using the 'DaemonCfg' and running the
+-- provided action inside it.
 runDaemon :: HasRunEnv e => DaemonCfg -> RIO DaemonEnv a -> RIO e a
-runDaemon dcfg rio = do
-  renv <- view runEnv
+runDaemon dfg rio = do
+  rnv <- view runEnv
+  flip runContT id $ do
 
-  with (liftA2 (,) (dcfg^.keySinkDev) (dcfg^.keySourceDev)) $ \(snk, src) -> do
+    lift $ logInfo "Constructing components"
 
-    logInfo "Constructing components"
-    dispatch <- mkDispatch src
-    keyhdlr  <- mkKeyHandler $ dcfg^.keymap
+    snk <- using $ dfg^.keySinkDev
+    src <- using $ dfg^.keySourceDev
+    dsp <- D.withDispatch src
+    kyh <- lift $ K.mkKeyHandler (dfg^.keymap)
 
     let env = DaemonEnv
-          { _deDispatch = dispatch
-          , _deKeyHandler    = keyhdlr
-          , _deDaemonCfg     = dcfg
-          , _deKeySink       = snk
-          , _deRunEnv        = renv
+          { _deDispatch   = dsp
+          , _deKeyHandler = kyh
+          , _deDaemonCfg  = dfg
+          , _deKeySink    = snk
+          , _deRunEnv     = rnv
           }
-    runRIO env rio
-
+    pure $ runRIO env rio
 
 startDaemon :: HasDaemonEnv e => RIO e ()
 startDaemon = logInfo "Starting app-loop" >> step
 
 step :: HasDaemonEnv e => RIO e ()
 step = do
-  e <- awaitEvent
+  e <- D.awaitEvent
   case e of
     KIOEvent a -> do
       logDebug $ "Handling key event: " <> pprintDisp a
-      act <- handleKey (a^.thing)
+      act <- K.handleKey (a^.thing)
       withReader (, a^.keycode) $ runAction act
       step
     Quit       -> pure ()
     _          -> undefined
-
--- runActi
-
--- runAction :: HasDaemonEnv e => Action -> RIO e ()
--- runAction (Emit a) = view keySink >>= \snk -> emitKeyWith snk a
--- runAction Pass     = pure ()
--- runAction _ = undefined

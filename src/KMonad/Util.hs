@@ -39,12 +39,16 @@ module KMonad.Util
   , pop
   , onErr
   , withReader
+  , withThread
+  , launch
+  , using
   )
 
 where
 
 import Prelude
 
+import Control.Monad.Cont
 import Data.Time.Clock.System
 
 import qualified RIO.HashMap as M
@@ -181,6 +185,7 @@ instance PrettyPrint Time where
           <> "."
           <> tshow (fromIntegral $ t^._ns :: Int)
 
+
 --------------------------------------------------------------------------------
 -- $util
 
@@ -205,3 +210,24 @@ onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 -- 'local' but changes the type of the environment.
 withReader :: (e' -> e) -> RIO e a -> RIO e' a
 withReader f a = ask >>= \env -> runRIO (f env) a
+
+-- | Embed the action of using an 'Acquire' in a continuation monad
+using :: Acquire a -> ContT r (RIO e) a
+using dat = ContT $ (\next -> with dat $ \a -> next a)
+
+withThread :: HasLogFunc e
+  => Name    -- ^ The name of this thread (for logging purposes only)
+  -> RIO e a -- ^ The action to repeat forever in the background
+  -> RIO e b -- ^ The foreground action to run
+  -> RIO e b -- ^ The resulting action
+withThread n a f = do
+  logInfo $ "Launching thread: " <> display n
+  withAsync
+   (forever a `finally` (logInfo $ "Closing thread: " <> display n))
+   (\a' -> link a' >> f)
+
+launch :: HasLogFunc e
+  => Name
+  -> RIO e a
+  -> ContT r (RIO e) ()
+launch n a = ContT $ (\next -> withThread n a (next ()))

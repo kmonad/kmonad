@@ -15,10 +15,11 @@ module Prelude
   )
 where
 
-import Control.Arrow   as X ((&&&), (***))
-import Control.Lens    as X
-import Data.Acquire    as X
-import Data.Serialize  as X
+import Control.Arrow      as X ((&&&), (***))
+import Control.Lens       as X
+import Control.Monad.Cont as X
+import Data.Acquire       as X
+import Data.Serialize     as X
 
 import qualified System.IO as S
 
