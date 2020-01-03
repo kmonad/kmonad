@@ -23,26 +23,26 @@ import qualified RIO.HashMap as M
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
-holdWhile :: Button
-holdWhile = mkButton p (traceIO "releasing")
-  where
-    p :: forall m. MonadButton m => m ()
-    p = do
-      traceIO "hold ON before"
-      hold True
-      traceIO "hold ON after"
-      void . fork $ do
-        traceIO "forked"
-        within 500 (awaitMy Release) >>= \case
-          Nothing -> traceIO "timeout"
-          Just _  -> traceIO "action"
-        traceIO "hold off"
-        hold False
-        traceIO "done"
+-- holdWhile :: Button
+-- holdWhile = mkButton p (traceIO "releasing")
+--   where
+--     p :: forall m. MonadButton m => m ()
+--     p = do
+--       traceIO "hold ON before"
+--       hold True
+--       traceIO "hold ON after"
+--       void . fork $ do
+--         traceIO "forked"
+--         within 500 (awaitMy Release) >>= \case
+--           Nothing -> traceIO "timeout"
+--           Just _  -> traceIO "action"
+--         traceIO "hold off"
+--         hold False
+--         traceIO "done"
 
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
-           th   = tapHold 500 (emitB KeyLeftShift) (emitB KeyZ)
+           th   = tapHold2 500  (emitB KeyZ) (emitB KeyLeftShift)
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
@@ -53,7 +53,7 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyW, sftB KeyS)
                 , (KeyF, sftB KeyD)
                 , (KeyP, sftB KeyF)
-                , (KeyZ, holdWhile)
+                , (KeyZ, th)
                 ])
             ]
        in case ls of

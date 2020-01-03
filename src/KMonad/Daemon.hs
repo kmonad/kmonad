@@ -74,9 +74,9 @@ instance HasDaemonEnv e => MonadButton (RIO (e, Keycode)) where
   emit ka     = view keySink >>= flip emitKeyWith ka
   pause       = threadDelay . (*1000) . fromIntegral
   race ts f   = uncurry A.race ts >>= f
-  hold b      = traceShowIO b >> D.pauseStream b
+  hold        = D.pauseStream
   fork        = async
-  await p     = D.intercept p
+  await       = D.intercept
   myBinding   = view _2
 
 

@@ -66,7 +66,7 @@ mkIntercept p = Intercept p <$> newEmptyMVar
 -- that match it from those that don't.
 runIntercepts :: KeyEvent -> [Intercept] -> ([MVar KeyEvent], [Intercept])
 runIntercepts e = partitionEithers . map f
-  where f i = if (i^.predicate $ e) then trace "Left!" . Left $ i^.comms else Right i
+  where f i = if (i^.predicate $ e) then Left $ i^.comms else Right i
 
 --------------------------------------------------------------------------------
 -- $disp
@@ -92,7 +92,7 @@ withDispatch src = do
   -- Initialize the components of a dispatch
   (eI, eO) <- lift $ liftIO newChan
   ics      <- lift $ newMVar []
-  slc      <- lift $ L.mkSluice
+  slc      <- L.mkSluice
   raw      <- C.mkCChan
   blk      <- C.mkCChan
 
@@ -118,8 +118,6 @@ withDispatch src = do
 -- processed further.
 tryIntercept :: MonadUnliftIO m => MVar [Intercept] -> KeyEvent -> m (Maybe KeyEvent)
 tryIntercept icpt e = do
-  traceIO "catching intercepts"
-  -- icpt <- view interceptStore
   modifyMVar icpt $ \st -> do
     case runIntercepts e st of
       ([], _)   -> pure (st, Just e)
@@ -154,11 +152,8 @@ awaitEvent = view evOutChan >>= liftIO . readChan
 -- | Pause or unpause event processing (the pause occurs after callbacks, so any
 -- callback will still register immediately.)
 pauseStream :: HasDispatch e => Bool -> RIO e ()
-pauseStream b = do
-  traceIO "pausing inside dispatch"
-  traceShowIO b
-  view sluice >>= \s -> if b then L.block s else L.unblock s
-  traceIO "finished pausing"
+pauseStream b = view sluice >>= \s -> if b then L.block s else L.unblock s
+
 -- | The 'StreamLoc' datatype distinguishes between 2 locations where a stream
 -- of events can be either copied or captured. The 'Early' location occurs
 -- immediately after a KeyEvent is written to KMonad by the OS. This completely
@@ -174,7 +169,6 @@ intercept :: HasDispatch e
   => (KeyEvent -> Bool)  -- ^ The predicate to match against 'KeyEvent'
   -> RIO e KeyEvent      -- ^ Return the waiting action.
 intercept p = do
-  traceIO $ "registering intercerpt"
   v <- view interceptStore
   i <- mkIntercept p
   modifyMVar_ v (\is -> pure (i:is))

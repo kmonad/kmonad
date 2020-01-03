@@ -148,8 +148,8 @@ pass = pure ()
 -- return its result. Otherwise interrupt the action and return Nothing.
 within :: MonadButton m => Milliseconds -> m a -> m (Maybe a)
 within ms a = race (pause ms, a) $ \case
-  Left  _ -> traceIO "timer" >> (pure $ Nothing)
-  Right r -> traceIO "action" >> (pure $ Just r)
+  Left  _ -> pure Nothing
+  Right r -> pure $ Just r
 
 -- | Perform both the press and release of a button in sequence
 tap :: MonadButton m => Button -> m ()
@@ -170,18 +170,24 @@ awaitMy s = do
   void . await $ p
 
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = Button p (Action $ release h)
+tapHold ms t h = mkButton p (trace "releasing" release h)
   where
-    p :: Action
-    p = Action $ do
+    p :: forall m. MonadButton m => m ()
+    p = do
       hold True
       void . fork $ do
         within ms (awaitMy Release) >>= \case
-          Nothing -> press h
-          Just _  -> tap   t
+          Nothing -> trace "pressing" press h
+          Just _  -> trace "tapping"  tap   t
         hold  False
 
-
+tapHold2 :: Milliseconds -> Button -> Button -> Button
+tapHold2 ms t h = onPress $ do
+  hold True
+  let rel = awaitMy Release
+  void . fork . race (pause ms, rel) $ \case
+    Left _  -> press h >> hold False >> rel >> release h
+    Right _ -> tap t >> hold False
 --------------------------------------------------------------------------------
 -- $buttons
 --
