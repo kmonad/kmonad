@@ -1,20 +1,19 @@
 module KMonad.Button
-  -- ( onPress
+  ( onPress
 
-  -- , runButton
-  -- , pressButton
-  -- , releaseButton
+  , mkButtonEnv
+  , HasButtonEnv(..)
+  , around
+  , tapOn
 
-  -- , around
-  -- , tapOn
+  , tapHold
+  , multiTap
+  , tapNext
+  , emitB
+  , modded
 
-  -- , tapHold
-  -- , multiTap
-  -- , tapNext
-
-  -- , module KMonad.Button.Keymap
-  -- , module KMonad.Button.Types
-  -- )
+  , module KMonad.Button.Action
+  )
 where
 
 import Prelude
@@ -24,7 +23,7 @@ import KMonad.Button.Action
 import KMonad.Keyboard
 import KMonad.Util
 
-import qualified RIO.NonEmpty as N
+-- import qualified RIO.NonEmpty as N
 
 --------------------------------------------------------------------------------
 -- $button

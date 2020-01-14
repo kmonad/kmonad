@@ -1,132 +1,100 @@
 module KMonad.Daemon.Dispatch
-
+  ( Dispatch
+  , HasDispatch
+  , dispatch
+  , mkDispatch
+  , pull
+  , rerun
+  , captureInput
+  , releaseInput
+  )
 where
 
 import Prelude
 
-import Control.Monad.Except
-import Data.Semigroup (Any(..))
-import Data.Unique
-import GHC.Conc (orElse)
-
-import KMonad.Event
 import KMonad.Keyboard
 import KMonad.Util
 
-import qualified KMonad.Button.Action as Ac
-
--- TODO: potential improvement:
---   - replace rerunBuf with a TVar of Sequence instead of a TChan.
---   - replace blockBuf with a check on 'blocked'
-
+import RIO.Seq (Seq(..), (><))
+import qualified RIO.Seq as Seq
 
 
 --------------------------------------------------------------------------------
+-- $env
+--
+--
+
 
 data Dispatch = Dispatch
-  { _keysIn       :: TChan KeyEvent
-    -- ^ Where raw KeyIO gets written to
-  , _rerunBuf     :: TChan KeyEvent
-    -- ^ Used to rerun events after a block is released
-  , _capturePoint :: TMVar (KeyEvent -> IO ())
-    -- ^ Used to capture the event stream for external processes
-  , _callbacks    :: TVar [Callback]
-    -- ^ Used to provide 'catchNext' and 'catchWithin' behavior
-  , _blocked      :: TVar Bool
-    -- ^ Used to block and unblock processing
-  , _blockBuf     :: TVar [KeyEvent]
-    -- ^ Used to temporarily store events while blocked
-  , _injectV      :: TMVar Event
-    -- ^ Used to inject events into the eventloop
+  { _keyChan  :: TChan KeyEvent
+  , _rerunBuf :: TVar (Seq KeyEvent)
+  , _redirect :: TMVar (KeyEvent -> IO ())
   }
 makeClassy ''Dispatch
 
-runCallbacks = undefined
+mkDispatch :: HasLogFunc e => RIO e KeyEvent -> ContT r (RIO e) Dispatch
+mkDispatch src = do
+  -- Initialize variables
+  kch <- lift . atomically $ newTChan
+  rrb <- lift . atomically $ newTVar Seq.empty
+  rdr <- lift . atomically $ newEmptyTMVar
 
+  -- Launch thread that copies keys from OS into Chan
+  launch_ "dispatch:keyIO-copy" $
+    src >>= \e -> atomically (writeTChan kch e)
 
--- | getKey is an STM transaction across the state stored in the Daemon. It
--- attempts to read in a new KeyEvent, an attempt that might fail if:
+  -- Return the initialized 'Dispatch' object
+  pure $ Dispatch kch rrb rdr
+
+-- | Try to read a KeyEvent.
 --
--- 1. The input is currently captured by a process
--- 2. The input is captured by some callback
--- 3. We are in a 'blocked' state
+-- If there are any events on the 'rerunBuf', those are consumed head first.
+-- Afterwards, we try to pull events from the TChan of raw OS input. If no
+-- capturing process is registered, this function returns a 'Left KeyEvent',
+-- otherwise it returns a 'Right IO ()'. This IO action needs to be executed to
+-- dispatch the 'KeyEvent' to the capturing process.
+step :: HasDispatch e => RIO e (Either KeyEvent (IO ()))
+step = view dispatch >>= \d -> atomically $ do
+
+  let pullRR = readTVar (d^.rerunBuf) >>= \case
+        Seq.Empty -> retrySTM
+        (e :<| b) -> do
+          writeTVar (d^.rerunBuf) b
+          pure e
+
+  e <- pullRR `orElse` readTChan (d^.keyChan)
+
+  tryTakeTMVar (d^.redirect) >>= \case
+    Nothing -> pure . Left  $ e
+    Just f  -> pure . Right $ f e
+
+-- | Keep trying to read a KeyEvent until it succeeds.
+pull :: HasDispatch e => RIO e KeyEvent
+pull = step >>= \case
+  Left e   -> pure e
+  Right io -> liftIO io >> pull
+
+-- | Add a list of 'KeyEvent's to the front of the rerun-buffer. These events
+-- will be taken before any new events are read from the OS. The list is
+-- consumed head-first.
+rerun :: HasDispatch e => [KeyEvent] -> RIO e ()
+rerun es = do
+  rr <- view rerunBuf
+  atomically $ modifyTVar rr (Seq.fromList es ><)
+
+-- | Register a capturing process with the 'Dispatch'
 --
--- This call will block until an input event is available (either immediately
--- from the rerunBuf, or until the OS registers a keyboard event). It will
--- subsequently return a Maybe KeyEvent (Nothing means that it was captured
--- somewhere in the above-mentioned steps). Additionally, it returns an IO
--- action that is to be executed upon returning. It contains all IO operations
--- requested by the callbacks.
-getKey :: Dispatch -> STM (Maybe KeyEvent, IO ())
-getKey d = do
-  -- Read from the rerunBuf first, failing that, wait for new input.
-  e <- readTChan (d^.rerunBuf) `orElse` readTChan (d^.keysIn)
-
-  -- If any 'event-capture' function is registered, use that to dispatch the
-  -- event and don't return it.
-  let checkCapture = ExceptT $ do
-        tryTakeTMVar (d^.capturePoint) >>= \case
-          Just f  -> pure . Left  $ f e
-          Nothing -> pure . Right $ (pure () :: IO ())
-
-  -- Try all callbacks, updating the store and collecting all actions. If any
-  -- callback captures, don't return the event.
-  let checkCallbacks = ExceptT $ do
-        (isCap, cs, io) <- runCallbacks e <$> (readTVar $ d^.callbacks)
-        writeTVar (d^.callbacks) cs
-        if getAny isCap
-          then pure . Left  $ io
-          else pure . Right $ io
-
-  -- Check to see if we are blocked. If so, then add event to blockBuf.
-  -- Otherwise return the event. Either way, pass on the action from
-  -- checkCallbacks.
-  let checkBlocked io = ExceptT $ do
-        readTVar (d^.blocked) >>= \case
-          True -> do modifyTVar (d^.blockBuf) (e:)
-                     pure . Left $ io
-          False -> pure . Right $ io
-
-  -- Chain all the actions and dispatch on the results
-  runExceptT (checkCapture >> checkCallbacks >>= checkBlocked) >>= \case
-    Left  io -> pure (Nothing, io)
-    Right io -> pure (Just e,  io)
-
-
---------------------------------------------------------------------------------
--- $ops
+-- NOTE: This blocks if the input is already captured by a different process.
 --
+captureInput :: HasDispatch e => (KeyEvent -> RIO e ()) -> RIO e ()
+captureInput f = do
+  u   <- askRunInIO
+  rdr <- view redirect
+  atomically $ putTMVar rdr (u . f)
 
--- | Pause or unpause the stream
+-- | Remove the registered capture from the 'Dispatch'
 --
--- If we pause the stream, we simply put the 'Sluice' into blocked mode, any new
--- events will be stored in the sluice until we unblock it.
+-- NOTE: This blocks if there is no registered process capturing the input.
 --
--- If we unpause the stream, in the same atomic action we unblock the sluice and
--- prepend any stored events to rerunBuffer. The next sluice-read event will
--- then pull from the head of the rerunBuffer again.
-hold :: HasDispatch e => Bool -> RIO e ()
-hold True  = view blocked >>= \b -> atomically $ writeTVar b True
-hold False = view dispatch >>= \d -> atomically $ do
-  writeTVar (d^.blocked) True
-  es <- swapTVar (d^.blockBuf) []
-  traverse_ (unGetTChan $ d^.rerunBuf) es
-
-catchNext :: HasDispatch e => Milliseconds -> Ac.MatchFun m -> Ac.OnMatch m -> RIO e ()
-catchNext ms p f = do
-  undefined
-
-
-
--- -- | Inject an event into the Dispatch object
--- inject :: HasDispatch e => Event -> RIO e ()
--- inject e = view injectP >>= flip Ip.inject e
-
--- -- | Register a 'KeyEvent' intercept
--- intercept :: HasDispatch e
---   => B.Callback -> RIO e ()
--- intercept c = view cReg >>= flip modifyMVar_ (pure . (c:))
-
--- -- | Wait for the next Event
--- awaitEvent :: HasDispatch e => RIO e Event
--- awaitEvent = view injectP >>= Ip.read
+releaseInput :: HasDispatch e => RIO e ()
+releaseInput = view redirect >>= \rdr -> void . atomically $ takeTMVar rdr

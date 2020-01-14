@@ -11,8 +11,8 @@ where
 import Prelude
 
 import Control.Monad.Except
-import GHC.Conc (orElse)
 import Data.Semigroup (Any(..))
+
 
 import KMonad.Button
 import KMonad.Event
@@ -21,8 +21,12 @@ import KMonad.Keyboard.IO
 import KMonad.Util
 import KMonad.Runner
 
-import qualified UnliftIO.Async           as A
-import qualified RIO.Seq                  as Q
+import qualified KMonad.Daemon.Dispatch     as Di
+import qualified KMonad.Daemon.HookStore    as Hs
+import qualified KMonad.Daemon.InjectPoint  as Ip
+import qualified KMonad.Daemon.Sluice       as Sl
+import qualified UnliftIO.Async             as A
+import qualified RIO.Seq                    as Q
 
 
 --------------------------------------------------------------------------------
@@ -33,7 +37,7 @@ import qualified RIO.Seq                  as Q
 data DaemonCfg = DaemonCfg
   { _keySinkDev   :: Acquire KeySink
   , _keySourceDev :: Acquire KeySource
-  , _keymapCfg    :: Keymap Button
+  -- , _keymapCfg    :: Keymap Button
   , _port         :: ()
   }
 makeClassy ''DaemonCfg
@@ -41,14 +45,26 @@ makeClassy ''DaemonCfg
 -- | The runtime environment of the daemon
 data DaemonEnv = DaemonEnv
   { -- KeyEvent input handling
-
+    _deDaemonCfg   :: DaemonCfg
+  , _deRunEnv      :: RunEnv
+  , _deKeySink     :: KeySink
+  , _deDispatch    :: Di.Dispatch
+  , _deInjectPoint :: Ip.InjectPoint
+  , _deHookStore   :: Hs.HookStore
+  , _deSluice      :: Sl.Sluice
     -- Buttonmap
-  , _buttonMap    :: TVar (Keymap ButtonEnv)
-  }
+  -- , _buttonMap    :: TVar (Keymap ButtonEnv)
+  } 
 makeLenses ''DaemonEnv
 
 -- | RIO constraints for being able to perform daemon actions
-class ( HasLogFunc e, HasKeymap e, HasKeySink e , HasRunEnv e )
+-- class ( HasLogFunc e, HasKeymap e, HasKeySink e , HasRunEnv e )
+--   => HasDaemonEnv e where
+--   daemonEnv :: Lens' e DaemonEnv
+
+
+class ( HasLogFunc e, HasKeySink e , HasRunEnv e , Di.HasDispatch e
+      , Hs.HasHookStore e, Sl.HasSluice e, Ip.HasInjectPoint e)
   => HasDaemonEnv e where
   daemonEnv :: Lens' e DaemonEnv
 
@@ -60,8 +76,14 @@ instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasRunEnv e where
   runEnv = daemonEnv . deRunEnv
 instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeySink e where
   keySink = daemonEnv . deKeySink
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeymap e where
-  keymap = daemonEnv . deKeymap
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => Di.HasDispatch e where
+  dispatch = daemonEnv . deDispatch
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => Hs.HasHookStore e where
+  hookStore = daemonEnv . deHookStore
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => Sl.HasSluice e where
+  sluice = daemonEnv . deSluice
+instance {-# OVERLAPS #-} (HasDaemonEnv e) => Ip.HasInjectPoint e where
+  injectPoint = daemonEnv . deInjectPoint
 
 
 --------------------------------------------------------------------------------
@@ -72,21 +94,21 @@ instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeymap e where
 -- | Return the next 'Event' that reaches the app-loop. This can either be an
 -- injected event or an event received from the keyboard. This action will keep
 -- retrying getKey and running its IO actions until one succeeds.
-nextEvent :: HasDaemonEnv e => RIO e Event
-nextEvent = do
-  d <- view daemonEnv
-  let next = atomically $ (Left  <$> takeTMVar (d^.injectV))
-                 `orElse` (Right <$> getKey d)
-  next >>= \case
-    Left  e             -> pure e
-    Right (Nothing, io) -> liftIO io >> nextEvent
-    Right (Just e,  io) -> liftIO io >> (pure . KeyIOEvent $ e)
+-- nextEvent :: HasDaemonEnv e => RIO e Event
+-- nextEvent = do
+--   d <- view daemonEnv
+--   let next = atomically $ (Left  <$> takeTMVar (d^.injectV))
+--                  `orElse` (Right <$> getKey d)
+--   next >>= \case
+--     Left  e             -> pure e
+--     Right (Nothing, io) -> liftIO io >> nextEvent
+--     Right (Just e,  io) -> liftIO io >> (pure . KeyIOEvent $ e)
 
 
-step :: HasDaemonEnv e => RIO e ()
-step = do
-  e <- nextEvent
-  undefined
+-- step :: HasDaemonEnv e => RIO e ()
+-- step = do
+--   e <- nextEvent
+--   undefined
 
 --------------------------------------------------------------------------------
 -- $ops
@@ -112,8 +134,8 @@ instance (HasDaemonEnv e, HasButtonEnv e) => MonadButton (RIO e) where
   pause       = threadDelay . (*1000) . fromIntegral
   hold        = mbHold
   myBinding   = view binding
-  catchNext   = mbCatchNext
-  catchWithin = mbCatchWithin
+  hookNext    = Hs.hookNext
+  hookWithin  = Hs.hookWithin
 
 -- runButtonEnv :: HasDaemonEnv e
 --   => ButtonEnv
