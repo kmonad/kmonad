@@ -10,6 +10,7 @@ module KMonad.Keyboard
   , keyRelease
   , isPress
   , isRelease
+  , kaEq
   , KeyEvent
 
   , module KMonad.Keyboard.Keycode
@@ -73,6 +74,11 @@ isPress a = a^.switchAction == Press
 -- | Test if a thing with a 'SwitchAction' is/has a 'Release'
 isRelease :: HasKeyAction a => a -> Bool
 isRelease a = a^.switchAction == Release
+
+-- | Run a predicate over the 'KeyAction' part of a structure
+kaEq :: (HasKeyAction a, HasKeyAction b) => a -> b -> Bool
+kaEq a b = (a^.keyAction) == (b^.keyAction)
+
 
 --------------------------------------------------------------------------------
 -- $ev

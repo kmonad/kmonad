@@ -182,7 +182,7 @@ library
     -- , unordered-containers
       base
     , cereal
-    , free
+    , hspec
     , lens
     , mtl
     , network

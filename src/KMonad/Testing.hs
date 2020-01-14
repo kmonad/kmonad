@@ -9,7 +9,6 @@ import Data.LayerStack
 
 import KMonad.Button
 import KMonad.Daemon
-import KMonad.Components.KeyHandler
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Linux.UinputSink
@@ -42,7 +41,7 @@ kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
-           th   = tapHold2 500  (emitB KeyZ) (emitB KeyLeftShift)
+           -- th   = tapHold2 500  (emitB KeyZ) (emitB KeyLeftShift)
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
@@ -53,7 +52,7 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyW, sftB KeyS)
                 , (KeyF, sftB KeyD)
                 , (KeyP, sftB KeyF)
-                , (KeyZ, th)
+                -- , (KeyZ, th)
                 ])
             ]
        in case ls of

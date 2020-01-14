@@ -1,204 +1,104 @@
 module KMonad.Button
+  -- ( onPress
 
+  -- , runButton
+  -- , pressButton
+  -- , releaseButton
+
+  -- , around
+  -- , tapOn
+
+  -- , tapHold
+  -- , multiTap
+  -- , tapNext
+
+  -- , module KMonad.Button.Keymap
+  -- , module KMonad.Button.Types
+  -- )
 where
 
 import Prelude
 
+import KMonad.Button.Action
+-- import KMonad.Button.Types
 import KMonad.Keyboard
 import KMonad.Util
 
---------------------------------------------------------------------------------
--- $action
---
--- 'Action's describe those operations that can be triggered by button events
--- (presses or releases). Most of KMonad is written in RIO style, but 'Action's
--- are purposefully written in a 'MonadButton' (of which RIO 'DaemonEnv' with an
--- additional 'Keycode' is an instance) to put a clear constraint on the
--- supported capabilities of button actions.
---
--- This restriction allows us to then expose a programmable interface to the
--- user, allowing users to define their own button actions and extend KMonad
--- locally, without ever having to muss about with the code (or even have
--- Haskell installed).
---
--- However much the internal implementation of KMonad might change, the exposed
--- 'MonadButton' interface should be left unmolested.
-
--- MonadIO should only be enabled during debugging, for traceIO statements and such
--- class Monad m => MonadButton m where
-class MonadIO m => MonadButton m where
-  -- | Emit a KeyAction to the OS
-  emit      :: KeyAction -> m ()
-  -- | Pause the current thread for n milliseconds
-  pause     :: Milliseconds -> m ()
-  -- | Race two actions, pass the winner to a function
-  race      :: (m a, m b) -> (Either a b -> m c) -> m c
-  -- | Pause or unpause event processing
-  hold      :: Bool -> m ()
-  -- | Fork an action to the background and keep running
-  fork      :: m a -> m (Async a)
-  -- | Access the keycode to which this button is bound
-  myBinding :: m Keycode
-  -- | Register an intercept callback
-  await     :: (KeyEvent -> Bool) -> m KeyEvent
-
--- | An 'Action' is a wrapper around a monadic computation that is guaranteed to
--- use only 'MonadButton' functionality.
-newtype Action = Action {unAction :: forall m . MonadButton m => m ()}
-
--- | Unwrap an action and perform it
-runAction :: MonadButton m => Action -> m ()
-runAction = unAction
-
--- | Combine actions by sequencing them
-instance Semigroup Action where
-  (Action a) <> (Action b) = Action $ a >> b
-instance Monoid Action where
-  mempty = Action $ pure ()
-
+import qualified RIO.NonEmpty as N
 
 --------------------------------------------------------------------------------
 -- $button
 --
--- A button is a collection of 2 actions: 1 to take when pressed, and 1 to take
--- when released. 'Button's are further designed thusly that an effect will only
--- occur if a press follows a release or vice versa. Repeatedly pressing or
--- releasing a button will only trigger the associated action once.
---
+
 
 -- | The configurable aspects of a 'Button'
 data Button = Button
-  { _pressAction   :: !Action -- ^ Action to take when pressed
-  , _releaseAction :: !Action -- ^ Action to take when released
+  { _pressAction   :: !(Action ()) -- ^ Action to take when pressed
+  , _releaseAction :: !(Action ()) -- ^ Action to take when released
   }
 makeClassy ''Button
 
--- | Create a new button
-mkButton ::
-     (forall m. MonadButton m => m ())
-  -> (forall n. MonadButton n => n ())
-  -> Button
-mkButton p r = Button (Action p) (Action r)
+-- | Create a 'Button' out of a press and release action
+mkButton :: MB () -> MB () -> Button
+mkButton a b = Button (mkAction a) (mkAction b)
 
-onPress :: (forall m. MonadButton m => m ()) -> Button
+-- | Create a new button with only a 'Press' action
+onPress :: MB () -> Button
 onPress p = mkButton p (pure ())
+
 
 -- | The configuration of a 'Button' with some additional state to keep track of
 -- the last 'SwitchAction'
 data ButtonEnv = ButtonEnv
-  { _beButton  :: !Button               -- ^ The configuration for this button
+  { _beButton   :: !Button              -- ^ The configuration for this button
+  , _binding    :: !Keycode             -- ^ The 'Keycode' to which this button is bound
   , _lastAction :: !(MVar SwitchAction) -- ^ State to keep track of last manipulation
   }
-makeLenses ''ButtonEnv
+makeClassy ''ButtonEnv
+
+-- | Initialize a 'Button' from a 'Button' and a binding
+mkButtonEnv :: Button -> Keycode -> RIO e ButtonEnv
+mkButtonEnv b c = ButtonEnv b c <$> newMVar Release
 
 instance HasButton ButtonEnv where button = beButton
 
--- | Initialize a 'Button' from a 'Button' and a binding
-initButtonEnv :: Button -> RIO e ButtonEnv
-initButtonEnv b = ButtonEnv b <$> newMVar Release
 
--- | Run a 'Button' on a 'SwitchAction' returning an 'Action' to be performed by
--- the engine. This will only do something if a 'Press' followed a 'Release' or
--- vice-versa, pressing or releasing more than once in sequence does nothing.
-runButton :: SwitchAction -> ButtonEnv-> RIO e Action
-runButton a b = do
-  modifyMVar (b^.lastAction) $ \l -> pure $ case (a, l) of
-    (Press, Release) -> (Press,   b^.pressAction)
-    (Release, Press) -> (Release, b^.releaseAction)
-    _                -> (a,       mempty)
 
--- | Press the 'Button'
-pressButton :: ButtonEnv-> RIO e Action
-pressButton = runButton Press
 
--- | Release the 'Button'
-releaseButton :: ButtonEnv-> RIO e Action
-releaseButton = runButton Release
+-- -- | Run a 'Button' on a 'SwitchAction' returning an 'Action' to be performed by
+-- -- the engine. This will only do something if a 'Press' is followed a 'Release'
+-- -- or vice-versa, pressing or releasing more than once in sequence does nothing.
+-- runButton :: SwitchAction -> ButtonEnv -> RIO e Action
+-- runButton a b = do
+--   modifyMVar (b^.lastAction) $ \l -> pure $ case (a, l) of
+--     (Press, Release) -> (Press,   b^.pressAction)
+--     (Release, Press) -> (Release, b^.releaseAction)
+--     _                -> (a,       pure ())
 
- 
---------------------------------------------------------------------------------
--- $priority
---
--- The 'PriorityButton' is a special button that doesn't live in the standard
--- 'KeyMap', instead it is checked before any 'KeyMap' lookup is attempted. This
--- allows 'Button's to bypass the normal lookup behavior to pause and resume
--- processing.
+-- -- | Press the 'Button'
+-- pressButton :: ButtonEnv -> RIO e Action
+-- pressButton = runButton Press
 
-data PriorityButton = PriorityButton
-  { _trigger     :: KeyAction
-  , _action    :: Action
-  -- , _phButton :: Button
-  }
-makeClassy ''PriorityButton
+-- -- | Release the 'Button'
+-- releaseButton :: ButtonEnv -> RIO e Action
+-- releaseButton = runButton Release
 
-runPriorityButton :: PriorityButton -> RIO e Action
-runPriorityButton = undefined
 
 
 --------------------------------------------------------------------------------
--- $acomb
---
--- A collection of simple action combinators
+-- $running
 
--- | Do nothing
-pass :: MonadButton m => m ()
-pass = pure ()
-
--- | Try a certain action, and if it succeeds before the timeout is complete,
--- return its result. Otherwise interrupt the action and return Nothing.
-within :: MonadButton m => Milliseconds -> m a -> m (Maybe a)
-within ms a = race (pause ms, a) $ \case
-  Left  _ -> pure Nothing
-  Right r -> pure $ Just r
-
--- | Perform both the press and release of a button in sequence
+-- | Perform both the press and release of a button immediately
 tap :: MonadButton m => Button -> m ()
-tap b = press b >> release b
+tap b = do
+  runAction $ b^.pressAction
+  runAction $ b^.releaseAction
 
--- | Perform the press action of a Button
+-- | Perform the press action of a Button and register its release callback
 press :: MonadButton m => Button -> m ()
-press = runAction . view pressAction
-
--- | Perform the release action of a Button
-release :: MonadButton m => Button -> m ()
-release = runAction . view releaseAction
-
--- | Wait for either the 'Press' or 'Release' of this 'Button'
-awaitMy :: MonadButton m => SwitchAction -> m ()
-awaitMy s = do
-  p <- (\c e -> e^.keyAction == mkKeyAction s c) <$> myBinding
-  void . await $ p
-
-tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = mkButton p (trace "releasing" release h)
-  where
-    p :: forall m. MonadButton m => m ()
-    p = do
-      hold True
-      void . fork $ do
-        within ms (awaitMy Release) >>= \case
-          Nothing -> trace "pressing" press h
-          Just _  -> trace "tapping"  tap   t
-        hold  False
-
-tapHold2 :: Milliseconds -> Button -> Button -> Button
-tapHold2 ms t h = onPress $ do
-  hold True
-  let rel = awaitMy Release
-  void . fork . race (pause ms, rel) $ \case
-    Left _  -> press h >> hold False >> rel >> release h
-    Right _ -> tap t >> hold False
---------------------------------------------------------------------------------
--- $buttons
---
--- A variety of preconfigured buttons and button combinators
-
--- | A button that emits a Press of a keycode when pressed, and a release when
--- released.
-emitB :: Keycode -> Button
-emitB c = mkButton
-  (emit $ keyPress c)
-  (emit $ keyRelease c)
+press b = do
+  runAction $ b^.pressAction
+  onRelease (const . runAction $ b^.releaseAction :: KeyEvent -> MB ())
 
 
 --------------------------------------------------------------------------------
@@ -214,16 +114,8 @@ around ::
   -> Button -- ^ The inner 'Button'
   -> Button -- ^ The resulting nested 'Button'
 around outer inner = Button
-  (outer^.pressAction   <> inner^.pressAction)
-  (inner^.releaseAction <> outer^.releaseAction)
-
--- | Create a new button first presses a 'Keycode' before running an inner
--- button, releasing the 'Keycode' again after the inner 'Button' is released.
-modded ::
-     Keycode
-  -> Button
-  -> Button
-modded kc = around (emitB kc)
+  (outer^.pressAction   *> inner^.pressAction)
+  (inner^.releaseAction *> outer^.releaseAction)
 
 -- | Create a new button that performs both a press and release of the input
 -- button on just a press or release
@@ -231,5 +123,55 @@ tapOn ::
      SwitchAction -- ^ Which 'SwitchAction' should trigger the tap
   -> Button       -- ^ The 'Button' to tap
   -> Button       -- ^ The tapping 'Button'
-tapOn s b = let f = if s == Press then Button else flip Button in
-  f (b^.pressAction <> b^.releaseAction) mempty
+tapOn Press   b = mkButton (tap b)   (pure ())
+tapOn Release b = mkButton (pure ()) (tap b)
+
+-- | Create a 'Button' that performs a tap of one button if it is released
+-- within an interval. If the interval is exceeded, press the other button (and
+-- release it when a release is detected).
+tapHold :: Milliseconds -> Button -> Button -> Button
+tapHold ms t h = onPress $ catchWithinHeld ms (matchMy Release) $ \case
+    Match _ -> tap t
+    NoMatch -> press h
+
+-- | Create a 'Button' that contains a number of delays and 'Button's. As long
+-- as the next press is registered before the timeout, the multiTap descends
+-- into its list. The moment a delay is exceeded or immediately upon reaching
+-- the last button, that button is pressed.
+multiTap :: (Button, [(Milliseconds, Button)]) -> Button
+multiTap bs' = onPress $ go bs'
+  where
+    go :: (Button, [(Milliseconds, Button)]) -> MB ()
+    go (l, []) = press l
+    go (l, (ms, b):bs) = catchWithinHeld ms (matchMy Press) $ \case
+        Match _ -> go (l, bs)
+        NoMatch -> press b
+
+-- | Create a 'Button' that performs a tap of one button if the next event is
+-- its own release, or else it presses another button (and releases it when a
+-- release is detected).
+tapNext :: Button -> Button -> Button
+tapNext t h = onPress $ catchNext (matchMy Release) $ \case
+    Match _ -> tap t
+    NoMatch -> press h
+
+
+--------------------------------------------------------------------------------
+-- $simple
+--
+-- A collection of simple buttons
+
+-- | A button that emits a Press of a keycode when pressed, and a release when
+-- released.
+emitB :: Keycode -> Button
+emitB c = mkButton
+  (emit $ keyPress c)
+  (emit $ keyRelease c)
+
+-- | Create a new button first presses a 'Keycode' before running an inner
+-- button, releasing the 'Keycode' again after the inner 'Button' is released.
+modded ::
+     Keycode -- ^ The 'Keycode' to `wrap around` the inner button
+  -> Button  -- ^ The button to nest inside `being modded`
+  -> Button
+modded modder = around (emitB modder)

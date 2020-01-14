@@ -39,8 +39,10 @@ module KMonad.Util
   , pop
   , onErr
   , withReader
-  , withThread
+  , withLaunch
   , launch
+  , withLaunch_
+  , launch_
   , using
   )
 
@@ -215,12 +217,23 @@ withReader f a = ask >>= \env -> runRIO (f env) a
 using :: Acquire a -> ContT r (RIO e) a
 using dat = ContT $ (\next -> with dat $ \a -> next a)
 
-withThread :: HasLogFunc e
+withLaunch :: HasLogFunc e
+  => Name                   -- ^ The name of this thread (for logging purposes only)
+  -> RIO e a                -- ^ The action to repeat forever in the background
+  -> ((Async a) -> RIO e b) -- ^ The foreground action to run
+  -> RIO e b                -- ^ The resulting action
+withLaunch n a f = do
+  logInfo $ "Launching thread: " <> display n
+  withAsync
+   (forever a `finally` (logInfo $ "Closing thread: " <> display n))
+   (\a' -> link a' >> f a')
+
+withLaunch_ :: HasLogFunc e
   => Name    -- ^ The name of this thread (for logging purposes only)
   -> RIO e a -- ^ The action to repeat forever in the background
   -> RIO e b -- ^ The foreground action to run
   -> RIO e b -- ^ The resulting action
-withThread n a f = do
+withLaunch_ n a f = do
   logInfo $ "Launching thread: " <> display n
   withAsync
    (forever a `finally` (logInfo $ "Closing thread: " <> display n))
@@ -229,5 +242,11 @@ withThread n a f = do
 launch :: HasLogFunc e
   => Name
   -> RIO e a
+  -> ContT r (RIO e) (Async a)
+launch n = ContT . withLaunch n
+
+launch_ :: HasLogFunc e
+  => Name
+  -> RIO e a
   -> ContT r (RIO e) ()
-launch n a = ContT $ (\next -> withThread n a (next ()))
+launch_ n a = ContT $ \next -> withLaunch_ n a (next ())

@@ -32,7 +32,7 @@ instance Serialize Message
 
 -- | 'Event' is the sum of all events that can be given to KMonad
 data Event
-  = KIOEvent     !KeyEvent -- ^ A 'KeyEvent' is registered from the 'KeySource'
+  = KeyIOEvent     !KeyEvent -- ^ A 'KeyEvent' is registered from the 'KeySource'
   | MessageEvent !MsgEvent -- ^ A 'Message' is received through the network socket
   | Quit                   -- ^ A 'Quit' event is sent from somewhere inside KMonad
   deriving (Eq, Show, Generic)
