@@ -217,6 +217,9 @@ withReader f a = ask >>= \env -> runRIO (f env) a
 using :: Acquire a -> ContT r (RIO e) a
 using dat = ContT $ (\next -> with dat $ \a -> next a)
 
+-- | Launch a thread that repeats an action indefinitely. If an error ever
+-- occurs, print it and rethrow it. Ensure the thread is cleaned up upon error
+-- and/or shutdown.
 withLaunch :: HasLogFunc e
   => Name                   -- ^ The name of this thread (for logging purposes only)
   -> RIO e a                -- ^ The action to repeat forever in the background
@@ -226,8 +229,9 @@ withLaunch n a f = do
   logInfo $ "Launching thread: " <> display n
   withAsync
    (forever a
-    `catch` (\e -> do logError $ "Encountered error in: "
+    `catch` (\e -> do logError $ "Encountered error in <"
                                <> display n
+                               <> ">: "
                                <> display (e :: SomeException)
                       throwIO e)
     `finally` (logInfo $ "Closing thread: " <> display n))

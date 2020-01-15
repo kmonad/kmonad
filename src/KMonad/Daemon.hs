@@ -176,7 +176,7 @@ pressButton :: RIO KEnv ()
 pressButton = do
   runButton Press >>= maybe (pure ()) (\a -> do
       runAction a
-      onRelease_ releaseButton)
+      matchRelease_ releaseButton)
 
 -- | Release the current 'Button'
 --

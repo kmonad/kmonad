@@ -16,23 +16,37 @@ import KMonad.Util
 type MB a = forall m. MonadButton m => m a
 
 data Match
-  = Match KeyEvent
-  | NoMatch
+  = Match KeyEvent -- Match but no capture
+  | Catch KeyEvent -- Match and capture
+  | NoMatch        -- No match
 
 matched :: Getter Match Bool
 matched = to $ \case
-  Match _ -> True
+  NoMatch -> False
+  _       -> True
+
+caught :: Getter Match Bool
+caught = to $ \case
+  Catch _ -> True
   _       -> False
 
 type HookPred = KeyEvent -> Match
 
--- | Turn a simple Predicate on KeyEvent into a HookPred
-match :: (KeyEvent -> Bool) -> HookPred
-match p = \e -> bool NoMatch (Match e) $ p e
+-- | Turn a simple predicate into a HookPred that matches a KeyEvent.
+matchKey :: (KeyEvent -> Bool) -> HookPred
+matchKey p = \e -> bool NoMatch (Match e) $ p e
+
+-- | Turn a simple predicate into a HookPred that captures a KeyEvent.
+catchKey :: (KeyEvent -> Bool) -> HookPred
+catchKey p = \e -> bool NoMatch (Catch e) $ p e
 
 -- | Create a HookPred that matches the Press or Release of the calling button.
 matchMy :: MonadButton m => SwitchAction -> m HookPred
-matchMy a = my a >>= \b -> pure $ \e -> bool NoMatch (Match e)  (e `kaEq` b)
+matchMy a = my a >>= \b -> pure $ \e -> bool NoMatch (Match e) (e `kaEq` b)
+
+-- | Create a HookPred that catches the Press or Release of the calling button.
+catchMy :: MonadButton m => SwitchAction -> m HookPred
+catchMy a = my a >>= \b -> pure $ \e -> bool NoMatch (Catch e) (e `kaEq` b)
 
 -- | A HookFun is a function that is run on the result of trying to 'Match'
 type HookFun m = Match -> m ()
@@ -94,6 +108,7 @@ my a = mkKeyAction a <$> myBinding
 await :: MonadButton m => m HookPred -> (KeyEvent -> m ()) -> m ()
 await p f = catchNext p $ \case
   Match e -> f e
+  Catch e -> f e
   NoMatch -> await p f
 
 -- | Monadic counterpart of hookNext where the predicate runs in MonadButton
@@ -105,12 +120,20 @@ catchWithin :: MonadButton m => Milliseconds -> m HookPred -> HookFun m -> m ()
 catchWithin ms p f = p >>= \p' -> hookWithin ms p' f
 
 -- | Run an action on the first occurence of the release of the current button
-onRelease :: MonadButton m => (KeyEvent -> m ()) -> m ()
-onRelease f = await (matchMy Release) f
+catchRelease :: MonadButton m => (KeyEvent -> m ()) -> m ()
+catchRelease f = await (catchMy Release) f
 
 -- | A version of 'onRelease' where the action does not depend on the 'KeyEvent'
-onRelease_ :: MonadButton m => m () -> m ()
-onRelease_ = onRelease . const
+catchRelease_ :: MonadButton m => m () -> m ()
+catchRelease_ = catchRelease . const
+
+-- | Run an action on the first occurence of the release of the current button
+matchRelease :: MonadButton m => (KeyEvent -> m ()) -> m ()
+matchRelease f = await (matchMy Release) f
+
+-- | Run an action on the first occurence of the release of the current button
+matchRelease_ :: MonadButton m => m () -> m ()
+matchRelease_ = matchRelease . const
 
 -- | A 'catchWithin' action which executes its attempt to catch in the context
 -- of a paused input stream. This unpauses the input stream the moment

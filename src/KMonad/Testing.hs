@@ -4,7 +4,6 @@ where
 
 import Prelude
 
-import Control.Monad.Cont
 import Data.LayerStack
 
 import KMonad.Button
@@ -18,14 +17,15 @@ import KMonad.Util
 
 import qualified RIO.HashMap as M
 
-
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
-
 
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
            th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
+           tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
+           mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
+           cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
@@ -37,6 +37,9 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyF, sftB KeyD)
                 , (KeyP, sftB KeyF)
                 , (KeyZ, th)
+                , (KeyC, tn)
+                , (KeyV, mt)
+                , (KeyB, cs)
                 ])
             ]
        in case ls of
@@ -61,14 +64,11 @@ runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
         }
   runDaemon dcfg loop
 
-
-
-launchTest :: LogLevel -> IO ()
-launchTest ll = run (defRunCfg & logLevel .~ ll) $ do
-  flip (withLaunch_ "testing") (threadDelay 20000) $ do
+launchTest :: IO ()
+launchTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
+  flip (withLaunch_ "testing") (threadDelay 200000) $ do
       threadDelay 10000
       throwString "hello"
-
 
 runTest :: IO ()
 runTest = runTest' LevelInfo

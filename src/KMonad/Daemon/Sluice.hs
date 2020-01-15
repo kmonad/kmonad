@@ -47,12 +47,12 @@ pull = step >>= maybe pull pure
 
 -- | Set the Sluice to blocked mode.
 block :: HasSluice e => RIO e ()
-block = trace "blocking" view blocked >>= \b -> atomically $ writeTVar b True
+block = view blocked >>= \b -> atomically $ writeTVar b True
 
 -- | Set the Sluice to unblocked mode, return a list of all the stored events
 -- that should be rerun, in the correct order (head was first-in, etc).
 unblock :: HasSluice e => RIO e [KeyEvent]
-unblock = trace "unblocking" $ do
+unblock = do
   s <- view sluice
   es <- atomically $ do
     writeTVar (s^.blocked) False

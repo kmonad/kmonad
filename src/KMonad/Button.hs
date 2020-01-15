@@ -79,7 +79,7 @@ tap b = do
 press :: MonadButton m => Button -> m ()
 press b = do
   runAction $ b^.pressAction
-  onRelease_ . runAction $ b^.releaseAction
+  catchRelease_ . runAction $ b^.releaseAction
 
 
 --------------------------------------------------------------------------------
@@ -111,30 +111,30 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = onPress $ catchWithinHeld ms (matchMy Release) $ \case
-    Match _ -> tap t
-    NoMatch -> press h
+tapHold ms t h = onPress $ catchWithinHeld ms (catchMy Release) $ \case
+    Catch _ -> tap t
+    _       -> press h
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
 -- into its list. The moment a delay is exceeded or immediately upon reaching
 -- the last button, that button is pressed.
-multiTap :: (Button, [(Milliseconds, Button)]) -> Button
-multiTap bs' = onPress $ go bs'
+multiTap :: Button -> [(Milliseconds, Button)] -> Button
+multiTap l bs = onPress $ go bs
   where
-    go :: (Button, [(Milliseconds, Button)]) -> MB ()
-    go (l, []) = press l
-    go (l, (ms, b):bs) = catchWithinHeld ms (matchMy Press) $ \case
-        Match _ -> go (l, bs)
-        NoMatch -> press b
+    go :: [(Milliseconds, Button)] -> MB ()
+    go []             = press l
+    go ((ms, b'):bs') = catchWithinHeld ms (catchMy Press) $ \case
+        Catch _ -> go bs'
+        _       -> press b'
 
 -- | Create a 'Button' that performs a tap of one button if the next event is
 -- its own release, or else it presses another button (and releases it when a
 -- release is detected).
 tapNext :: Button -> Button -> Button
-tapNext t h = onPress $ catchNext (matchMy Release) $ \case
-    Match _ -> tap t
-    NoMatch -> press h
+tapNext t h = onPress $ catchNext (catchMy Release) $ \case
+    Catch _ -> tap t
+    _       -> press h
 
 
 --------------------------------------------------------------------------------

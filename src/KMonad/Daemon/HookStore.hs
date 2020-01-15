@@ -45,7 +45,7 @@ instance Monoid KHRes where
 runKH :: KH -> KeyEvent -> KHRes
 runKH kh e = do
   let m = kh^.pred $ e
-  KHRes $ (m^.matched, kh^.act $ m)
+  KHRes $ (m^.caught, kh^.act $ m)
 
 --------------------------------------------------------------------------------
 -- $env
@@ -53,7 +53,8 @@ runKH kh e = do
 -- | The different components of the HookStore runtime environment
 data HookStore = HookStore
   { _pullSrc    :: IO KeyEvent
-  , _injectP    :: TMVar (Either Unique KeyEvent)
+  , _injectSrc  :: TMVar KeyEvent
+  , _injectTmr  :: TMVar Unique
   , _nextHooks  :: TVar [KH]
   , _timerHooks :: TVar (M.HashMap Unique KH)
   }
@@ -62,10 +63,11 @@ makeClassy ''HookStore
 -- | Initialize a new 'HookStore' environment
 mkHookStore' :: MonadUnliftIO m => m KeyEvent -> m HookStore
 mkHookStore' src = withRunInIO $ \u -> do
-  ijp <- atomically $ newEmptyTMVar
+  isr <- atomically $ newEmptyTMVar
+  itr <- atomically $ newEmptyTMVar
   nxh <- atomically $ newTVar []
   trh <- atomically $ newTVar M.empty
-  pure $ HookStore (u src) ijp nxh trh
+  pure $ HookStore (u src) isr itr nxh trh
 
 mkHookStore :: MonadUnliftIO m => m KeyEvent -> ContT r m HookStore
 mkHookStore = lift . mkHookStore'
@@ -99,10 +101,10 @@ runHooks e = do
   nh  <- view nextHooks
 
   -- FIXME: Delete me when done debugging
-  traceShowIO =<< do
-    cbs <- (atomically $ readTVar nh :: RIO e [KH])
-    let khs = map (flip runKH e) cbs
-    pure $ map (\(KHRes (b, _)) -> b) khs
+  -- traceShowIO =<< do
+  --   cbs <- (atomically $ readTVar nh :: RIO e [KH])
+  --   let khs = map (flip runKH e) cbs
+  --   pure $ map (\(KHRes (b, _)) -> b) khs
 
   (KHRes (mtch, io))  <- atomically $ do
     nRes <- foldMap (flip runKH e) <$> swapTVar nh []
@@ -129,19 +131,23 @@ runHooks e = do
 -- occur. No 2 events will ever be processed at the same time.
 step :: HasHookStore e => RIO e (Maybe KeyEvent)
 step = do
-  v <- view injectP
+  iSrc <- view injectSrc
+  iTmr <- view injectTmr
 
   -- Asynchronously start a thread that will write 1 event from the event-source
   -- to the inject-point TMVar
   void . async $ do
     e <- liftIO =<< view pullSrc
-    atomically . putTMVar v $ Right e
+    atomically . putTMVar iSrc $ e
 
-  -- Read from the inject-point, as long as we receive timer events, cancel the
-  -- corresponding hooks. Run all hooks on the first 'KeyEvent' we encounter.
-  let read = atomically (takeTMVar v) >>= \case
-        Right e -> runHooks e
+  -- Handle any timer event first, and then try to read from the source
+  let next = (Left <$> takeTMVar iTmr) `orElse` (Right <$> takeTMVar iSrc)
+
+  -- Keep taking and cancelling timers until we encounter a key event, then run
+  -- the hooks on that event.
+  let read = atomically next >>= \case
         Left  t -> cancelTimer t >> read
+        Right e -> runHooks e
   read
 
 -- | Keep stepping until we succesfully get a KeyEvent
@@ -188,8 +194,8 @@ hookWithin ms p a = do
 -- | Send a signal to the 'HookStore' indicating that a timer hook has expired.
 signalTimeout :: HasHookStore e => Unique -> RIO e ()
 signalTimeout t = do
-  v <- view injectP
-  atomically $ putTMVar v (Left t)
+  v <- view injectTmr
+  atomically $ putTMVar v t
 
 -- | Try to cancel a hook stored in 'timerHooks'. If it doesn't exist, do
 -- nothing. If it does, remove it from the map and call it on 'NoMatch'.
