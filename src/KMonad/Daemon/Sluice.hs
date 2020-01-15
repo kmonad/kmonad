@@ -22,11 +22,14 @@ data Sluice = Sluice
 makeClassy ''Sluice
 
 -- | Create a new 'Sluice' environment
-mkSluice :: RIO e KeyEvent -> RIO e Sluice
-mkSluice src = withRunInIO $ \u -> do
+mkSluice' :: RIO e KeyEvent -> RIO e Sluice
+mkSluice' src = withRunInIO $ \u -> do
   bld <- atomically $ newTVar False
   buf <- atomically $ newTVar []
   pure $ Sluice (u src) bld buf
+
+mkSluice :: RIO e KeyEvent -> ContT r (RIO e) Sluice
+mkSluice = lift . mkSluice'
 
 -- | Try to read from the Sluice, if we are blocked, store the event internally
 -- and return Nothing. If we are unblocked, return Just the KeyEvent.
@@ -44,12 +47,12 @@ pull = step >>= maybe pull pure
 
 -- | Set the Sluice to blocked mode.
 block :: HasSluice e => RIO e ()
-block = view blocked >>= \b -> atomically $ writeTVar b True
+block = trace "blocking" view blocked >>= \b -> atomically $ writeTVar b True
 
 -- | Set the Sluice to unblocked mode, return a list of all the stored events
 -- that should be rerun, in the correct order (head was first-in, etc).
 unblock :: HasSluice e => RIO e [KeyEvent]
-unblock = do
+unblock = trace "unblocking" $ do
   s <- view sluice
   es <- atomically $ do
     writeTVar (s^.blocked) False

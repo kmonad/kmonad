@@ -60,12 +60,15 @@ data HookStore = HookStore
 makeClassy ''HookStore
 
 -- | Initialize a new 'HookStore' environment
-mkHookStore :: MonadUnliftIO m => m KeyEvent -> m HookStore
-mkHookStore src = withRunInIO $ \u -> do
+mkHookStore' :: MonadUnliftIO m => m KeyEvent -> m HookStore
+mkHookStore' src = withRunInIO $ \u -> do
   ijp <- atomically $ newEmptyTMVar
   nxh <- atomically $ newTVar []
   trh <- atomically $ newTVar M.empty
   pure $ HookStore (u src) ijp nxh trh
+
+mkHookStore :: MonadUnliftIO m => m KeyEvent -> ContT r m HookStore
+mkHookStore = lift . mkHookStore'
 
 
 --------------------------------------------------------------------------------
@@ -94,6 +97,13 @@ runHooks :: HasHookStore e => KeyEvent -> RIO e (Maybe KeyEvent)
 runHooks e = do
   th  <- view timerHooks
   nh  <- view nextHooks
+
+  -- FIXME: Delete me when done debugging
+  traceShowIO =<< do
+    cbs <- (atomically $ readTVar nh :: RIO e [KH])
+    let khs = map (flip runKH e) cbs
+    pure $ map (\(KHRes (b, _)) -> b) khs
+
   (KHRes (mtch, io))  <- atomically $ do
     nRes <- foldMap (flip runKH e) <$> swapTVar nh []
     tRes <- runTimers th

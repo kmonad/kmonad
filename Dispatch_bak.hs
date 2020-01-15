@@ -106,21 +106,6 @@ withDispatch src = do
 
 
 
--- -- | Run all 'Intercept's on a KeyEvent. Any 'Intercept' that succeeds has their
--- -- callback performed and is removed from the store. If any 'Intercept'
--- -- succeeds, then this returns Nothing, indicating the 'KeyEvent' should not be
--- -- processed further.
--- tryIntercept :: MonadUnliftIO m => MVar [Intercept] -> KeyEvent -> m (Maybe KeyEvent)
--- tryIntercept icpt e = do
---   modifyMVar icpt $ \st -> do
---     case runIntercepts e st of
---       ([], _)   -> pure (st, Just e)
---       (ms, st') -> do
---         traceIO "caught one"
---         traverse_ (flip putMVar e) ms
---         pure (st', Nothing)
-
-
 
 --     -- let (matches, st') = runIntercepts e st
 --     -- if null matches

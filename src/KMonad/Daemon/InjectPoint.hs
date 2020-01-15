@@ -7,11 +7,15 @@ module KMonad.Daemon.InjectPoint
   , inject
   )
 where
--- FIXME: Clean and comment me plz
+
 import Prelude
 
 import KMonad.Keyboard
 import KMonad.Event
+
+--------------------------------------------------------------------------------
+-- $env
+--
 
 data InjectPoint = InjectPoint
   { _pullSrc :: IO KeyEvent
@@ -20,12 +24,18 @@ data InjectPoint = InjectPoint
   }
 makeClassy ''InjectPoint
 
-mkInjectPoint :: RIO e KeyEvent -> RIO e InjectPoint
-mkInjectPoint src = do
+mkInjectPoint' :: RIO e KeyEvent -> RIO e InjectPoint
+mkInjectPoint' src = do
   u   <- askRunInIO
   rdn <- atomically $ newTVar False
   inj <- atomically $ newEmptyTMVar
   pure $ InjectPoint (u src) rdn inj
+
+mkInjectPoint :: RIO e KeyEvent -> ContT r (RIO e) InjectPoint
+mkInjectPoint = lift . mkInjectPoint'
+
+--------------------------------------------------------------------------------
+-- $loop
 
 pull :: HasInjectPoint e => RIO e Event
 pull = do
@@ -46,6 +56,10 @@ pull = do
       atomically $ writeTVar (i^.reading) False
       pure $ KeyIOEvent ke
     Right e -> pure e
+
+
+--------------------------------------------------------------------------------
+-- $ops
 
 -- | Inject an event into the event-loop
 inject :: HasInjectPoint e => Event -> RIO e ()

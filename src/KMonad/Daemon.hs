@@ -1,18 +1,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
 module KMonad.Daemon
-  -- ( DaemonCfg(..)
-  -- , runDaemon
-  -- , startDaemon
-  -- )
+  ( DaemonCfg(..)
+  , runDaemon
+  , loop
+  , Keymap
+  )
 where
 
 import Prelude
-
-import Control.Monad.Except
-import Data.Semigroup (Any(..))
-
 
 import KMonad.Button
 import KMonad.Event
@@ -21,185 +17,212 @@ import KMonad.Keyboard.IO
 import KMonad.Util
 import KMonad.Runner
 
+import KMonad.Daemon.KeyHandler
+
 import qualified KMonad.Daemon.Dispatch     as Di
 import qualified KMonad.Daemon.HookStore    as Hs
 import qualified KMonad.Daemon.InjectPoint  as Ip
 import qualified KMonad.Daemon.Sluice       as Sl
-import qualified UnliftIO.Async             as A
-import qualified RIO.Seq                    as Q
 
 
 --------------------------------------------------------------------------------
 -- $env
 --
 
+
 -- | All the configuration options for running a daemon
 data DaemonCfg = DaemonCfg
   { _keySinkDev   :: Acquire KeySink
   , _keySourceDev :: Acquire KeySource
-  -- , _keymapCfg    :: Keymap Button
+  , _keymapCfg    :: Keymap Button
   , _port         :: ()
   }
 makeClassy ''DaemonCfg
 
 -- | The runtime environment of the daemon
-data DaemonEnv = DaemonEnv
-  { -- KeyEvent input handling
+data Daemon = Daemon
+  { -- Other configurations
     _deDaemonCfg   :: DaemonCfg
   , _deRunEnv      :: RunEnv
+
+    -- KeyEvent input handling
   , _deKeySink     :: KeySink
+
+    -- Components
   , _deDispatch    :: Di.Dispatch
-  , _deInjectPoint :: Ip.InjectPoint
   , _deHookStore   :: Hs.HookStore
+  , _deInjectPoint :: Ip.InjectPoint
   , _deSluice      :: Sl.Sluice
-    -- Buttonmap
-  -- , _buttonMap    :: TVar (Keymap ButtonEnv)
+  , _deKeyHandler  :: KeyHandler
   } 
-makeLenses ''DaemonEnv
+makeLenses ''Daemon
 
--- | RIO constraints for being able to perform daemon actions
--- class ( HasLogFunc e, HasKeymap e, HasKeySink e , HasRunEnv e )
---   => HasDaemonEnv e where
---   daemonEnv :: Lens' e DaemonEnv
+class ( HasLogFunc         e
+      , HasKeySink         e
+      , HasRunEnv          e
+      , Di.HasDispatch     e
+      , Hs.HasHookStore    e
+      , Sl.HasSluice       e
+      , Ip.HasInjectPoint  e
+      , HasKeyHandler   e
+      )
+  => HasDaemon e where
+  daemon :: Lens' e Daemon
 
+instance HasDaemon Daemon where daemon = id
 
-class ( HasLogFunc e, HasKeySink e , HasRunEnv e , Di.HasDispatch e
-      , Hs.HasHookStore e, Sl.HasSluice e, Ip.HasInjectPoint e)
-  => HasDaemonEnv e where
-  daemonEnv :: Lens' e DaemonEnv
-
-instance HasDaemonEnv DaemonEnv where daemonEnv = id
-
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasDaemonCfg e where
-  daemonCfg = daemonEnv . deDaemonCfg
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasRunEnv e where
-  runEnv = daemonEnv . deRunEnv
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => HasKeySink e where
-  keySink = daemonEnv . deKeySink
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => Di.HasDispatch e where
-  dispatch = daemonEnv . deDispatch
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => Hs.HasHookStore e where
-  hookStore = daemonEnv . deHookStore
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => Sl.HasSluice e where
-  sluice = daemonEnv . deSluice
-instance {-# OVERLAPS #-} (HasDaemonEnv e) => Ip.HasInjectPoint e where
-  injectPoint = daemonEnv . deInjectPoint
-
-
---------------------------------------------------------------------------------
--- $apploop
-
-
-
--- | Return the next 'Event' that reaches the app-loop. This can either be an
--- injected event or an event received from the keyboard. This action will keep
--- retrying getKey and running its IO actions until one succeeds.
--- nextEvent :: HasDaemonEnv e => RIO e Event
--- nextEvent = do
---   d <- view daemonEnv
---   let next = atomically $ (Left  <$> takeTMVar (d^.injectV))
---                  `orElse` (Right <$> getKey d)
---   next >>= \case
---     Left  e             -> pure e
---     Right (Nothing, io) -> liftIO io >> nextEvent
---     Right (Just e,  io) -> liftIO io >> (pure . KeyIOEvent $ e)
-
-
--- step :: HasDaemonEnv e => RIO e ()
--- step = do
---   e <- nextEvent
---   undefined
+instance {-# OVERLAPS #-} (HasDaemon e) => HasDaemonCfg e where
+  daemonCfg = daemon . deDaemonCfg
+instance {-# OVERLAPS #-} (HasDaemon e) => HasRunEnv e where
+  runEnv = daemon . deRunEnv
+instance {-# OVERLAPS #-} (HasDaemon e) => HasKeySink e where
+  keySink = daemon . deKeySink
+instance {-# OVERLAPS #-} (HasDaemon e) => Di.HasDispatch e where
+  dispatch = daemon . deDispatch
+instance {-# OVERLAPS #-} (HasDaemon e) => Hs.HasHookStore e where
+  hookStore = daemon . deHookStore
+instance {-# OVERLAPS #-} (HasDaemon e) => Sl.HasSluice e where
+  sluice = daemon . deSluice
+instance {-# OVERLAPS #-} (HasDaemon e) => Ip.HasInjectPoint e where
+  injectPoint = daemon . deInjectPoint
+instance {-# OVERLAPS #-} (HasDaemon e) => HasKeyHandler e where
+  keyHandler = daemon . deKeyHandler
 
 --------------------------------------------------------------------------------
--- $ops
+-- $init
+--
 
-mbHold :: HasDaemonEnv e => Bool -> RIO e ()
-mbHold = undefined
+-- | Initialize all the components of the Daemon
+mkDaemon :: HasRunEnv e => DaemonCfg -> ContT r (RIO e) Daemon
+mkDaemon cfg = do
+  -- Get a reference to the RunEnv
+  rnv <- view runEnv
 
-mbAwait :: HasDaemonEnv e => (KeyEvent -> Bool) -> RIO e KeyEvent
-mbAwait = undefined
+  -- Acquire the OS KeyIO actions
+  snk <- using $ cfg^.keySinkDev
+  src <- using $ cfg^.keySourceDev
 
+  -- Initialize the components, hook them up so they pull from eachother
+  dsp <- Di.mkDispatch    $ awaitKeyWith src
+  hks <- Hs.mkHookStore   $ runRIO dsp Di.pull
+  slc <- Sl.mkSluice      $ runRIO hks Hs.pull
+  ijp <- Ip.mkInjectPoint $ runRIO slc Sl.pull
+
+  -- Initialize components that are not part of the pull-chain
+  kyh <- mkKeyHandler  $ cfg^.keymapCfg
+
+  -- Construct and return the Daemon
+  pure $ Daemon
+    { _deDaemonCfg   = cfg
+    , _deRunEnv      = rnv
+    , _deKeySink     = snk
+    , _deDispatch    = dsp
+    , _deHookStore   = hks
+    , _deInjectPoint = ijp
+    , _deSluice      = slc
+    , _deKeyHandler  = kyh
+    }
+
+-- | Reduce a RIO action that requires a 'Daemon' to one that requires only a
+-- 'RunEnv'. If you are in a 'RunEnv', this simply runs the 'Daemon' action.
+runDaemon :: HasRunEnv e => DaemonCfg -> RIO Daemon a -> RIO e a
+runDaemon cfg a = runContT (mkDaemon cfg) $ flip runRIO a
 
 
 --------------------------------------------------------------------------------
 -- $mbut
 
-instance HasDaemonEnv e => HasDaemonEnv (e, a) where
-  daemonEnv = _1 . daemonEnv
-instance HasButtonEnv e => HasButtonEnv (a, e) where
-  buttonEnv = _2 . buttonEnv
+data KEnv = KEnv
+  { _kDaemon    :: Daemon
+  , _kButtonEnv :: ButtonEnv
+  }
+makeLenses ''KEnv
 
-instance (HasDaemonEnv e, HasButtonEnv e) => MonadButton (RIO e) where
+class (HasDaemon e, HasButtonEnv e) => HasKEnv e where
+  kEnv :: Lens' e KEnv
+instance HasKEnv KEnv where kEnv = id
+
+instance {-# OVERLAPS #-} (HasKEnv e) => HasDaemon e where
+  daemon = kEnv . kDaemon
+instance {-# OVERLAPS #-} (HasKEnv e) => HasButtonEnv e where
+  buttonEnv = kEnv . kButtonEnv
+
+
+-- | When 'True', set the 'Sluice' to blocked mode, when 'False', unblock the
+-- 'Sluice' and rerun all the Events.
+kHold :: HasDaemon e => Bool -> RIO e ()
+kHold = bool (Sl.unblock >>= Di.rerun) Sl.block
+
+instance HasKEnv e => MonadButton (RIO e) where
   emit ka     = view keySink >>= flip emitKeyWith ka
   pause       = threadDelay . (*1000) . fromIntegral
-  hold        = mbHold
+  hold        = kHold
   myBinding   = view binding
   hookNext    = Hs.hookNext
   hookWithin  = Hs.hookWithin
 
--- runButtonEnv :: HasDaemonEnv e
---   => ButtonEnv
---   -> RIO (e, ButtonEnv) a
---   -> RIO e a
--- runButtonEnv b = withReader (, b)
+runK :: HasDaemon e => ButtonEnv -> RIO KEnv a -> RIO e a
+runK b a = view daemon >>= \d -> runRIO (KEnv d b) a
+
+-- | Press the current 'Button'
+--
+-- This:
+--   1. Executes the 'pressAction' of the currently active Button
+--   2. Sets 'lastAction' to 'Press', ensuring further presses do nothing until
+--      a 'releaseButton' action has succesfully completed.
+--   3. Adds a hook to the release of this 'Button' which will execute
+--      'releaseButton'
+pressButton :: RIO KEnv ()
+pressButton = do
+  runButton Press >>= maybe (pure ()) (\a -> do
+      runAction a
+      onRelease_ releaseButton)
+
+-- | Release the current 'Button'
+--
+-- This:
+--   1. Executes the 'releaseAction' of the currently active Button
+--   2. Sets the 'lastAction' to 'Release'.
+releaseButton :: RIO KEnv ()
+releaseButton = do
+  runButton Release >>= maybe (pure ()) runAction
 
 
--- -- | The running environment of the Daemon
--- data DaemonEnv = DaemonEnv
---   { _deDispatch   :: Di.Dispatch
---   , _deKeymap     :: MVar (Keymap ButtonEnv)
---   , _deDaemonCfg  :: DaemonCfg
---   , _deKeySink    :: KeySink
---   , _deRunEnv     :: RunEnv
---   }
--- makeLenses ''DaemonEnv
+--------------------------------------------------------------------------------
+-- $loop
 
+-- | Wait for the next event to occur.
+--
+-- NOTE: This is implemented as pulling from the 'InjectPoint'. The components
+-- of the Daemon are arranged in such a way that they pull from eachother, so
+-- pulling from the 'InjectPoint' will cause the 'InjectPoint' to start pulling
+-- from the 'Sluice', which pulls from the 'HookStore', which pulls from the
+-- 'Dispatch'. Each of those pulls comes with possible side-effects, like
+-- blocking, dispatching to external processes, or event injection.
+--
+-- The moment a pull succeeds, it stops trying to pull, so when 'nextEvent'
+-- returns, we know that the entire pull-chain has stopped. Therefore we will
+-- never be handling an event while another event is already in the middle of
+-- the pull-chain.
+nextEvent :: HasDaemon e => RIO e Event
+nextEvent = Ip.pull
 
+-- | Fetch the next event from the pull-chain of components and subsequently
+-- pass it to the appropriate handler (or exit the loop).
+loop :: HasDaemon e => RIO e ()
+loop = do
+  nextEvent >>= \case
+    Quit           -> pure ()
+    KeyIOEvent   e -> handleKey e >> loop
+    MessageEvent e -> handleMsg e >> loop
 
+-- | Handle a key press by running 'pressButton' in its environment, any other
+-- key event gets ignored.
+handleKey :: HasDaemon e => KeyEvent -> RIO e ()
+handleKey e = lookupKey (e^.keyAction) >>= \case
+  Nothing -> pure ()
+  Just b  -> runK b $ pressButton
 
--- --------------------------------------------------------------------------------
--- -- $ops
-
-
--- -- | Turn a RIO action that requires a 'DaemonEnv' into one that only requires a
--- -- 'RunEnv' by instantiating a 'DaemonEnv' using the 'DaemonCfg' and running the
--- -- provided action inside it.
--- runDaemon :: HasRunEnv e => DaemonCfg -> RIO DaemonEnv a -> RIO e a
--- runDaemon dfg rio = do
---   rnv <- view runEnv
---   flip runContT id $ do
-
---     lift $ logInfo "Constructing components"
-
---     snk <- using $ dfg^.keySinkDev
---     src <- using $ dfg^.keySourceDev
---     dsp <- Di.startDispatch src
---     kym <- lift $ newMVar =<< initKeymap (dfg^.keymapCfg)
-
---     let env = DaemonEnv
---           { _deDispatch   = dsp
---           , _deKeymap     = kym
---           , _deDaemonCfg  = dfg
---           , _deKeySink    = snk
---           , _deRunEnv     = rnv
---           }
---     pure $ runRIO env rio
-
--- startDaemon :: HasDaemonEnv e => RIO e ()
--- startDaemon = logInfo "Starting app-loop" >> step
-
--- step :: HasDaemonEnv e => RIO e ()
--- step = do
---   e <- Di.awaitEvent
---   case e of
---     KeyIOEvent a -> do
---       logDebug $ "Handling key event: " <> pprintDisp a
---       lookupKey (a^.thing) >>= \case
---         Nothing -> pure ()
---         Just benv  -> runButtonEnv benv $ do
---           runAction $ benv^.pressAction
---           intercept =<< catchRelease (a^.keycode)
---                         (runAction =<< releaseButton benv)
---       step
---     Quit       -> pure ()
---     _          -> undefined
+-- | Handle a message by crashing instantly. TODO: This might need to be different.
+handleMsg :: MsgEvent -> RIO e ()
+handleMsg = undefined

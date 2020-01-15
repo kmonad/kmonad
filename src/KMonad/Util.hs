@@ -29,7 +29,7 @@ module KMonad.Util
     -- * Overloaded fieldnames
     -- $fields
   , HasThing(..)
-  , HasCfg(..)
+  -- , HasCfg(..)
 
     -- * Support for pretty-printing
     -- $pprint
@@ -67,8 +67,8 @@ import qualified RIO.HashSet as S
 class HasThing a t | a -> t where
   thing :: Lens' a t
 
-class HasCfg a t | a -> t where
-  cfg :: Lens' a t
+-- class HasCfg a t | a -> t where
+--   cfg :: Lens' a t
 
 --------------------------------------------------------------------------------
 -- $name
@@ -225,7 +225,12 @@ withLaunch :: HasLogFunc e
 withLaunch n a f = do
   logInfo $ "Launching thread: " <> display n
   withAsync
-   (forever a `finally` (logInfo $ "Closing thread: " <> display n))
+   (forever a
+    `catch` (\e -> do logError $ "Encountered error in: "
+                               <> display n
+                               <> display (e :: SomeException)
+                      throwIO e)
+    `finally` (logInfo $ "Closing thread: " <> display n))
    (\a' -> link a' >> f a')
 
 withLaunch_ :: HasLogFunc e
@@ -233,11 +238,7 @@ withLaunch_ :: HasLogFunc e
   -> RIO e a -- ^ The action to repeat forever in the background
   -> RIO e b -- ^ The foreground action to run
   -> RIO e b -- ^ The resulting action
-withLaunch_ n a f = do
-  logInfo $ "Launching thread: " <> display n
-  withAsync
-   (forever a `finally` (logInfo $ "Closing thread: " <> display n))
-   (\a' -> link a' >> f)
+withLaunch_ n a f = withLaunch n a (const f)
 
 launch :: HasLogFunc e
   => Name

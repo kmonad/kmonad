@@ -22,26 +22,10 @@ import qualified RIO.HashMap as M
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
--- holdWhile :: Button
--- holdWhile = mkButton p (traceIO "releasing")
---   where
---     p :: forall m. MonadButton m => m ()
---     p = do
---       traceIO "hold ON before"
---       hold True
---       traceIO "hold ON after"
---       void . fork $ do
---         traceIO "forked"
---         within 500 (awaitMy Release) >>= \case
---           Nothing -> traceIO "timeout"
---           Just _  -> traceIO "action"
---         traceIO "hold off"
---         hold False
---         traceIO "done"
 
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
-           -- th   = tapHold2 500  (emitB KeyZ) (emitB KeyLeftShift)
+           th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
@@ -52,7 +36,7 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyW, sftB KeyS)
                 , (KeyF, sftB KeyD)
                 , (KeyP, sftB KeyF)
-                -- , (KeyZ, th)
+                , (KeyZ, th)
                 ])
             ]
        in case ls of
@@ -72,10 +56,19 @@ runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
   let dcfg = DaemonCfg
         { _keySinkDev   = snkDev
         , _keySourceDev = srcDev
-        , _keymap       = kmap
+        , _keymapCfg    = kmap
         , _port         = ()
         }
-  runDaemon dcfg $ startDaemon
+  runDaemon dcfg loop
+
+
+
+launchTest :: LogLevel -> IO ()
+launchTest ll = run (defRunCfg & logLevel .~ ll) $ do
+  flip (withLaunch_ "testing") (threadDelay 20000) $ do
+      threadDelay 10000
+      throwString "hello"
+
 
 runTest :: IO ()
 runTest = runTest' LevelInfo
@@ -83,8 +76,8 @@ runTest = runTest' LevelInfo
 testCfg :: RunCfg
 testCfg = defRunCfg & logLevel .~ LevelInfo
 
-testKeyIO :: IO ()
-testKeyIO = run defRunCfg $ do
+testKeyIO :: LogLevel -> IO ()
+testKeyIO ll = run (defRunCfg & logLevel .~ ll) $ do
   srcR <- deviceSource64 kbd
   snkR <- uinputSink defUinputCfg
   with srcR $ \src -> with snkR $ \snk -> forever $ do

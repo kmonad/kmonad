@@ -78,6 +78,17 @@ defUinputCfg = UinputCfg
   , _postInit       = Nothing
   }
 
+-- | UinputSink is an MVar to a filehandle
+data UinputSink = UinputSink
+  { _cfg     :: UinputCfg
+  , _st      :: MVar Fd
+  }
+makeLenses ''UinputSink
+
+-- | Return a new uinput 'KeySink' with extra options
+uinputSink :: HasRunEnv e => UinputCfg -> RIO e (Acquire KeySink)
+uinputSink c = mkKeySink (usOpen c) usClose usWrite
+
 --------------------------------------------------------------------------------
 -- FFI calls and type-friendly wrappers
 
@@ -117,23 +128,6 @@ send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
   logDebug $ "Emiting: " <> pprintDisp e
   (liftIO $ c_send_event h typ c val s' ns')
     `onErr` SinkEncodeError (u^.cfg.keyboardName) e
-
---------------------------------------------------------------------------------
--- UinputSink definition and implementation
-
--- | UinputSink is an MVar to a filehandle
-data UinputSink = UinputSink
-  { __cfg     :: UinputCfg
-  , _st      :: MVar Fd
-  }
-makeLenses ''UinputSink
-
-instance HasCfg UinputSink UinputCfg where
-  cfg = _cfg
-
--- | Return a new uinput 'KeySink' with extra options
-uinputSink :: HasRunEnv e => UinputCfg -> RIO e (Acquire KeySink)
-uinputSink c = mkKeySink (usOpen c) usClose usWrite
 
 
 --------------------------------------------------------------------------------

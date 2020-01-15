@@ -1,11 +1,10 @@
 module KMonad.Button
   ( onPress
-
-  , mkButtonEnv
-  , HasButtonEnv(..)
+  , Button
+  , HasButton(..)
+  -- , button
   , around
   , tapOn
-
   , tapHold
   , multiTap
   , tapNext
@@ -46,43 +45,6 @@ onPress :: MB () -> Button
 onPress p = mkButton p (pure ())
 
 
--- | The configuration of a 'Button' with some additional state to keep track of
--- the last 'SwitchAction'
-data ButtonEnv = ButtonEnv
-  { _beButton   :: !Button              -- ^ The configuration for this button
-  , _binding    :: !Keycode             -- ^ The 'Keycode' to which this button is bound
-  , _lastAction :: !(MVar SwitchAction) -- ^ State to keep track of last manipulation
-  }
-makeClassy ''ButtonEnv
-
--- | Initialize a 'Button' from a 'Button' and a binding
-mkButtonEnv :: Button -> Keycode -> RIO e ButtonEnv
-mkButtonEnv b c = ButtonEnv b c <$> newMVar Release
-
-instance HasButton ButtonEnv where button = beButton
-
-
-
-
--- -- | Run a 'Button' on a 'SwitchAction' returning an 'Action' to be performed by
--- -- the engine. This will only do something if a 'Press' is followed a 'Release'
--- -- or vice-versa, pressing or releasing more than once in sequence does nothing.
--- runButton :: SwitchAction -> ButtonEnv -> RIO e Action
--- runButton a b = do
---   modifyMVar (b^.lastAction) $ \l -> pure $ case (a, l) of
---     (Press, Release) -> (Press,   b^.pressAction)
---     (Release, Press) -> (Release, b^.releaseAction)
---     _                -> (a,       pure ())
-
--- -- | Press the 'Button'
--- pressButton :: ButtonEnv -> RIO e Action
--- pressButton = runButton Press
-
--- -- | Release the 'Button'
--- releaseButton :: ButtonEnv -> RIO e Action
--- releaseButton = runButton Release
-
-
 
 --------------------------------------------------------------------------------
 -- $running
@@ -93,11 +55,31 @@ tap b = do
   runAction $ b^.pressAction
   runAction $ b^.releaseAction
 
--- | Perform the press action of a Button and register its release callback
+-- | Perform the press action of a Button and register its release callback.
+--
+-- NOTE: The interaction with 'KMonad.Daemon.pressButton' might seem confusing,
+-- since both actions hook an action to the release of the button, however it
+-- works like this:
+--
+-- You use 'press' inside 'MonadButton' definitions, it is used in combinators
+-- that combine different buttons into one 'Button'. See for example 'tapHold'.
+-- When 'press' is used in such a context, it essentially inserts the action of
+-- hooking a release into that 'Button's press action.
+--
+-- When 'pressButton' is used on a 'tapHold', the 'pressAction' from the
+-- 'tapHold' will insert a callback, and at the same time, 'pressButton' will
+-- insert a separate callback that first of all calls 'tapHold's 'releaseAction'
+-- (which is empty), and secondly resets the
+-- 'KMonad.Daemon.KeyHandler.ButtonEnv's 'lastAction' to 'Release'.
+--
+-- This means that if a 'Button' does not require any complex operations, it can
+-- simply store its release action in its 'releaseAction' field, where it will
+-- automatically get called, or else actively encode hooking release-actions in
+-- its 'pressAction' field if more complicated operations are required.
 press :: MonadButton m => Button -> m ()
 press b = do
   runAction $ b^.pressAction
-  onRelease (const . runAction $ b^.releaseAction :: KeyEvent -> MB ())
+  onRelease_ . runAction $ b^.releaseAction
 
 
 --------------------------------------------------------------------------------
