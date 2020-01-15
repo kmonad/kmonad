@@ -1,4 +1,4 @@
-module KMonad.Button.Action
+module KMonad.Action
 
 where
 

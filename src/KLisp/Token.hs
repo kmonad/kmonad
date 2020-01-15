@@ -1,11 +1,12 @@
-module KMonad.Future
+module KLisp.Token
 
 where
 
 import Prelude
 
-import KMonad.Keyboard
-import KMonad.Util
+import KMonad
+
+
 
 data Expr a where
   LitKA   :: KeyAction           -> Expr KeyAction

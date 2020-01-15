@@ -6,6 +6,7 @@ import Prelude
 
 import Data.LayerStack
 
+import KMonad.Action
 import KMonad.Button
 import KMonad.Daemon
 import KMonad.Keyboard
@@ -19,6 +20,12 @@ import qualified RIO.HashMap as M
 
 kbd :: FilePath
 kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
+
+silly :: Button
+silly = mkButton
+  ( pause 500 >> emit (keyPress KeyA) >> pause 500 >> emit (keyPress KeyB) )
+  ( emit (keyRelease KeyA) >> pause 500 >> emit (keyRelease KeyB) )
+
 
 kmap :: Keymap Button
 kmap = let sftB = modded KeyLeftShift . emitB
@@ -40,6 +47,7 @@ kmap = let sftB = modded KeyLeftShift . emitB
                 , (KeyC, tn)
                 , (KeyV, mt)
                 , (KeyB, cs)
+                , (KeyD, silly)
                 ])
             ]
        in case ls of

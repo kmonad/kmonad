@@ -1,8 +1,8 @@
 module KMonad.Button
   ( onPress
   , Button
+  , mkButton
   , HasButton(..)
-  -- , button
   , around
   , tapOn
   , tapHold
@@ -11,18 +11,15 @@ module KMonad.Button
   , emitB
   , modded
 
-  , module KMonad.Button.Action
+  , module KMonad.Action
   )
 where
 
 import Prelude
 
-import KMonad.Button.Action
--- import KMonad.Button.Types
+import KMonad.Action
 import KMonad.Keyboard
 import KMonad.Util
-
--- import qualified RIO.NonEmpty as N
 
 --------------------------------------------------------------------------------
 -- $button

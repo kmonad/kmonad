@@ -15,7 +15,7 @@ import Data.Unique
 import KMonad.Keyboard
 import KMonad.Util
 
-import KMonad.Button.Action hiding (hookNext, hookWithin, HookFun)
+import KMonad.Action hiding (hookNext, hookWithin, HookFun)
 import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ pull = step >>= maybe pull pure
 -- All the code dealing with adding and removing hooks from the 'HookStore'
 -- environment.
 
--- | Implementation of 'hookNext' from "KMonad.Button.Action".
+-- | Implementation of 'hookNext' from "KMonad.Action".
 --
 -- This adds a hook to the 'nextHooks' list in 'HookStore', where it will be called
 -- on the next 'KeyEvent' to occur.
@@ -173,7 +173,7 @@ hookNext p a = do
   cb <- mkKH p a
   atomically $ modifyTVar st (cb:)
 
--- | Implementation of 'hookWithin' from "KMonad.Button.Action".
+-- | Implementation of 'hookWithin' from "KMonad.Action".
 --
 -- Inserts a KH into the 'timerHooks' hashmap in the 'HookStore'. It also
 -- asynchronously starts a thread that will signal when the timer has expired.
