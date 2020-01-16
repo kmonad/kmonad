@@ -19,7 +19,8 @@ import KMonad.Util
 import qualified RIO.HashMap as M
 
 kbd :: FilePath
-kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
+kbd = "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd"
+-- kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
 silly :: Button
 silly = mkButton
@@ -36,18 +37,17 @@ kmap = let sftB = modded KeyLeftShift . emitB
            ls = mkLayerStack ["test"] $
             [ ("test",
                 [ (KeyA, emitB KeyA)
-                , (KeyR, emitB KeyS)
-                , (KeyS, emitB KeyD)
-                , (KeyT, emitB KeyF)
+                , (KeyS, emitB KeyR)
+                , (KeyD, emitB KeyS)
+                , (KeyF, emitB KeyT)
                 , (KeyQ, sftB KeyA)
-                , (KeyW, sftB KeyS)
-                , (KeyF, sftB KeyD)
-                , (KeyP, sftB KeyF)
+                , (KeyW, sftB KeyR)
+                , (KeyE, sftB KeyS)
+                , (KeyR, sftB KeyT)
                 , (KeyZ, th)
-                , (KeyC, tn)
-                , (KeyV, mt)
-                , (KeyB, cs)
-                , (KeyD, silly)
+                , (KeyX, tn)
+                , (KeyC, mt)
+                , (KeyV, cs)
                 ])
             ]
        in case ls of
@@ -79,17 +79,16 @@ launchTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
       throwString "hello"
 
 runTest :: IO ()
-runTest = runTest' LevelInfo
+runTest = runTest' LevelDebug
 
 testCfg :: RunCfg
 testCfg = defRunCfg & logLevel .~ LevelInfo
 
-testKeyIO :: LogLevel -> IO ()
-testKeyIO ll = run (defRunCfg & logLevel .~ ll) $ do
-  srcR <- deviceSource64 kbd
-  snkR <- uinputSink defUinputCfg
-  with srcR $ \src -> with snkR $ \snk -> forever $ do
-    e <- awaitKeyWith src
-    logInfo $ pprintDisp e
-    emitKeyWith snk (e^.thing)
-
+-- testKeyIO :: LogLevel -> IO ()
+-- testKeyIO ll = run (defRunCfg & logLevel .~ ll) $ do
+--   srcR <- deviceSource64 kbd
+--   snkR <- uinputSink defUinputCfg
+--   with srcR $ \src -> with snkR $ \snk -> forever $ do
+--     e <- awaitKeyWith src
+--     logInfo $ displayShow e
+--     emitKeyWith snk (e^.thing)

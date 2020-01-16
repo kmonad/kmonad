@@ -18,34 +18,34 @@ import KMonad.Event
 --
 
 data InjectPoint = InjectPoint
-  { _pullSrc :: IO KeyEvent
-  , _reading :: TVar Bool
+  { _reading :: TVar Bool
   , _injectP :: TMVar (Either KeyEvent Event)
   }
 makeClassy ''InjectPoint
 
-mkInjectPoint' :: RIO e KeyEvent -> RIO e InjectPoint
-mkInjectPoint' src = do
-  u   <- askRunInIO
+mkInjectPoint' :: RIO e InjectPoint
+mkInjectPoint' = do
   rdn <- atomically $ newTVar False
   inj <- atomically $ newEmptyTMVar
-  pure $ InjectPoint (u src) rdn inj
+  pure $ InjectPoint rdn inj
 
-mkInjectPoint :: RIO e KeyEvent -> ContT r (RIO e) InjectPoint
-mkInjectPoint = lift . mkInjectPoint'
+mkInjectPoint ::ContT r (RIO e) InjectPoint
+mkInjectPoint = lift mkInjectPoint'
 
 --------------------------------------------------------------------------------
 -- $loop
 
-pull :: HasInjectPoint e => RIO e Event
-pull = do
+pull :: (HasLogFunc e, HasInjectPoint e)
+  => RIO e KeyEvent
+  -> RIO e Event
+pull pullSrc = do
   -- Get a reference to the environment
   i <- view injectPoint
 
   -- Unless we are reading, start a thread that copies 1 event from src to chan
   r <- atomically . readTVar $ i^.reading
   unless r . void . async $ do
-    e <- liftIO $ i^.pullSrc
+    e <- pullSrc
     atomically . putTMVar (i^.injectP) $ Left e
 
   -- Read an event from the injection var, if it is a key-event, that means we

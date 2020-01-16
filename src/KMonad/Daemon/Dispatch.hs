@@ -16,6 +16,7 @@ import KMonad.Keyboard
 import KMonad.Util
 
 import RIO.Seq (Seq(..), (><))
+import qualified RIO.Text as T (replicate)
 import qualified RIO.Seq as Seq
 
 
@@ -26,25 +27,19 @@ import qualified RIO.Seq as Seq
 
 
 data Dispatch = Dispatch
-  { _keyChan  :: TChan KeyEvent
-  , _rerunBuf :: TVar (Seq KeyEvent)
-  , _redirect :: TMVar (KeyEvent -> IO ())
+  { _rerunBuf :: IORef (Seq KeyEvent)
+  , _redirect :: IORef (Maybe (KeyEvent -> IO ()))
   }
 makeClassy ''Dispatch
 
-mkDispatch :: HasLogFunc e => RIO e KeyEvent -> ContT r (RIO e) Dispatch
-mkDispatch src = do
-  -- Initialize variables
-  kch <- lift . atomically $ newTChan
-  rrb <- lift . atomically $ newTVar Seq.empty
-  rdr <- lift . atomically $ newEmptyTMVar
+mkDispatch' :: RIO e Dispatch
+mkDispatch' = do
+  rrb <- newIORef $ Seq.empty
+  rdr <- newIORef $ Nothing
+  pure $ Dispatch rrb rdr
 
-  -- Launch thread that copies keys from OS into Chan
-  launch_ "dispatch:keyIO-copy" $
-    src >>= \e -> atomically (writeTChan kch e)
-
-  -- Return the initialized 'Dispatch' object
-  pure $ Dispatch kch rrb rdr
+mkDispatch :: ContT r (RIO e) Dispatch
+mkDispatch = lift mkDispatch'
 
 -- | Try to read a KeyEvent.
 --
@@ -53,26 +48,28 @@ mkDispatch src = do
 -- capturing process is registered, this function returns a 'Left KeyEvent',
 -- otherwise it returns a 'Right IO ()'. This IO action needs to be executed to
 -- dispatch the 'KeyEvent' to the capturing process.
-step :: HasDispatch e => RIO e (Either KeyEvent (IO ()))
-step = view dispatch >>= \d -> atomically $ do
+pull :: (HasLogFunc e, HasDispatch e)
+  => RIO e KeyEvent
+  -> RIO e KeyEvent
+pull pullSrc = do
+  d <- view dispatch
 
-  let pullRR = readTVar (d^.rerunBuf) >>= \case
-        Seq.Empty -> retrySTM
-        (e :<| b) -> do
-          writeTVar (d^.rerunBuf) b
-          pure e
+  -- Get an event from the rerunBuf, or if empty, from the OS
+  e <- readIORef (d^.rerunBuf) >>= \case
+    Seq.Empty -> pullSrc
+    (e' :<| b) -> do
+      writeIORef (d^.rerunBuf) b
+      logDebug $ "\n" <> display (T.replicate 80 "-")
+              <> "\n Rerunning event: " <> display e'
+      pure e'
 
-  e <- pullRR `orElse` readTChan (d^.keyChan)
-
-  tryTakeTMVar (d^.redirect) >>= \case
-    Nothing -> pure . Left  $ e
-    Just f  -> pure . Right $ f e
-
--- | Keep trying to read a KeyEvent until it succeeds.
-pull :: HasDispatch e => RIO e KeyEvent
-pull = step >>= \case
-  Left e   -> pure e
-  Right io -> liftIO io >> pull
+  -- If we have a registered process, dispatch event, otherwise return it
+  readIORef (d^.redirect) >>= \case
+    Nothing -> pure e
+    Just f  -> do
+      logDebug $ "Dispatching event to external process"
+      liftIO $ f e
+      pull pullSrc
 
 -- | Add a list of 'KeyEvent's to the front of the rerun-buffer. These events
 -- will be taken before any new events are read from the OS. The list is
@@ -80,21 +77,25 @@ pull = step >>= \case
 rerun :: HasDispatch e => [KeyEvent] -> RIO e ()
 rerun es = do
   rr <- view rerunBuf
-  atomically $ modifyTVar rr (Seq.fromList es ><)
+  modifyIORef' rr (Seq.fromList es ><)
 
 -- | Register a capturing process with the 'Dispatch'
 --
 -- NOTE: This blocks if the input is already captured by a different process.
 --
-captureInput :: HasDispatch e => (KeyEvent -> RIO e ()) -> RIO e ()
+captureInput :: (HasLogFunc e, HasDispatch e) => (KeyEvent -> RIO e ()) -> RIO e ()
 captureInput f = do
+  logDebug $ "Registering external process to capture input"
   u   <- askRunInIO
   rdr <- view redirect
-  atomically $ putTMVar rdr (u . f)
+  writeIORef rdr (Just $ u . f)
 
 -- | Remove the registered capture from the 'Dispatch'
 --
 -- NOTE: This blocks if there is no registered process capturing the input.
 --
-releaseInput :: HasDispatch e => RIO e ()
-releaseInput = view redirect >>= \rdr -> void . atomically $ takeTMVar rdr
+releaseInput :: (HasLogFunc e, HasDispatch e) => RIO e ()
+releaseInput = do
+  logDebug $ "Unregistering external process from input"
+  rdr <- view redirect
+  writeIORef rdr Nothing

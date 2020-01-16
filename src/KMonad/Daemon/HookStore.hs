@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module KMonad.Daemon.HookStore
   ( HookStore
   , mkHookStore
@@ -44,16 +45,17 @@ instance Monoid KHRes where
 -- | Run a KH on a KeyEvent, returning the KHRes
 runKH :: KH -> KeyEvent -> KHRes
 runKH kh e = do
-  let m = kh^.pred $ e
+  let m = runPred (kh^.pred) e
   KHRes $ (m^.caught, kh^.act $ m)
 
 --------------------------------------------------------------------------------
 -- $env
 
--- | The different components of the HookStore runtime environment
+-- TODO: Probably can make 'nextHooks' an IO-ref
+
+-- | The different 'inherited' components of the HookStore runtime environment
 data HookStore = HookStore
-  { _pullSrc    :: IO KeyEvent
-  , _injectSrc  :: TMVar KeyEvent
+  { _injectSrc  :: TMVar KeyEvent
   , _injectTmr  :: TMVar Unique
   , _nextHooks  :: TVar [KH]
   , _timerHooks :: TVar (M.HashMap Unique KH)
@@ -61,16 +63,16 @@ data HookStore = HookStore
 makeClassy ''HookStore
 
 -- | Initialize a new 'HookStore' environment
-mkHookStore' :: MonadUnliftIO m => m KeyEvent -> m HookStore
-mkHookStore' src = withRunInIO $ \u -> do
+mkHookStore' :: RIO e HookStore
+mkHookStore' = do
   isr <- atomically $ newEmptyTMVar
   itr <- atomically $ newEmptyTMVar
   nxh <- atomically $ newTVar []
   trh <- atomically $ newTVar M.empty
-  pure $ HookStore (u src) isr itr nxh trh
+  pure $ HookStore isr itr nxh trh
 
-mkHookStore :: MonadUnliftIO m => m KeyEvent -> ContT r m HookStore
-mkHookStore = lift . mkHookStore'
+mkHookStore :: ContT r (RIO e) HookStore
+mkHookStore = lift mkHookStore'
 
 
 --------------------------------------------------------------------------------
@@ -78,6 +80,27 @@ mkHookStore = lift . mkHookStore'
 --
 -- All the code dealing with getting events through the 'HookStore' context and
 -- running hooks on events.
+
+-- | Print out information about hooks and matches
+debugReport :: HasHookStore e => KeyEvent -> RIO e Text
+debugReport e = do
+  let fOne kh = " - " <> textDisplay (kh^.pred)
+             <> ": "  <> textDisplay (runPred (kh^.pred) e)
+
+  -- Generate the report for the 'NEXT' hooks
+  nhs <- view nextHooks >>= \n -> atomically $ readTVar n
+  let ntxt = if null nhs
+        then ["Running no <NEXT>  hooks"]
+        else "Running <NEXT> hooks: ":(map fOne nhs)
+
+  -- Generate the report for the 'TIMER' hooks
+  ths <- view timerHooks >>= \t -> M.elems <$> (atomically $ readTVar t)
+  let ttxt = if null ths
+        then ["Running no <TIMER> hooks"]
+        else "Running <TIMER> hooks: ":(map fOne ths)
+
+  pure . unlines $ ntxt <> ttxt
+
 
 -- | Run all hooks on the provided keyevent.
 --
@@ -95,16 +118,12 @@ mkHookStore = lift . mkHookStore'
 --   `timer` hook registers a 'NoMatch' is when its timer-event occurs when it
 --   is still in the 'HookStore'.
 --  
-runHooks :: HasHookStore e => KeyEvent -> RIO e (Maybe KeyEvent)
+runHooks :: (HasLogFunc e, HasHookStore e) => KeyEvent -> RIO e (Maybe KeyEvent)
 runHooks e = do
+  logDebug . display =<< debugReport e
+
   th  <- view timerHooks
   nh  <- view nextHooks
-
-  -- FIXME: Delete me when done debugging
-  -- traceShowIO =<< do
-  --   cbs <- (atomically $ readTVar nh :: RIO e [KH])
-  --   let khs = map (flip runKH e) cbs
-  --   pure $ map (\(KHRes (b, _)) -> b) khs
 
   (KHRes (mtch, io))  <- atomically $ do
     nRes <- foldMap (flip runKH e) <$> swapTVar nh []
@@ -129,15 +148,17 @@ runHooks e = do
 -- is not caught by any callback, then return it (otherwise return Nothing). At
 -- the same time, stay receptive to any 'TimerEvents' and handle them as they
 -- occur. No 2 events will ever be processed at the same time.
-step :: HasHookStore e => RIO e (Maybe KeyEvent)
-step = do
+step :: (HasLogFunc e, HasHookStore e)
+  => RIO e KeyEvent
+  -> RIO e (Maybe KeyEvent)
+step pullSrc = do
   iSrc <- view injectSrc
   iTmr <- view injectTmr
 
   -- Asynchronously start a thread that will write 1 event from the event-source
   -- to the inject-point TMVar
   void . async $ do
-    e <- liftIO =<< view pullSrc
+    e <- pullSrc
     atomically . putTMVar iSrc $ e
 
   -- Handle any timer event first, and then try to read from the source
@@ -151,8 +172,10 @@ step = do
   read
 
 -- | Keep stepping until we succesfully get a KeyEvent
-pull :: HasHookStore e => RIO e KeyEvent
-pull = step >>= maybe pull pure
+pull :: (HasLogFunc e, HasHookStore e)
+  => RIO e KeyEvent
+  -> RIO e KeyEvent
+pull pullSrc = step pullSrc >>= maybe (pull pullSrc) pure
 
 --------------------------------------------------------------------------------
 -- $hooks
@@ -164,11 +187,12 @@ pull = step >>= maybe pull pure
 --
 -- This adds a hook to the 'nextHooks' list in 'HookStore', where it will be called
 -- on the next 'KeyEvent' to occur.
-hookNext :: HasHookStore e
+hookNext :: (HasLogFunc e, HasHookStore e)
   => HookPred
   -> (Match -> RIO e ())
   -> RIO e ()
 hookNext p a = do
+  logDebug $ "Registering <NEXT>  hook: " <> display p
   st <- view nextHooks
   cb <- mkKH p a
   atomically $ modifyTVar st (cb:)
@@ -177,12 +201,13 @@ hookNext p a = do
 --
 -- Inserts a KH into the 'timerHooks' hashmap in the 'HookStore'. It also
 -- asynchronously starts a thread that will signal when the timer has expired.
-hookWithin :: HasHookStore e
+hookWithin :: (HasLogFunc e, HasHookStore e)
   => Milliseconds
   -> HookPred
   -> (Match -> RIO e ())
   -> RIO e ()
 hookWithin ms p a = do
+  logDebug $ "Registering <TIMER> hook: " <> display p <> ", " <> display ms <> "ms"
   st <- view timerHooks
   kh <- mkKH p a
   tg <- liftIO newUnique

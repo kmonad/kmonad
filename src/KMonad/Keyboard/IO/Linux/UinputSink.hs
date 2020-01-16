@@ -36,6 +36,8 @@ import KMonad.Runner
 --------------------------------------------------------------------------------
 -- $err
 
+type SinkId = String
+
 data UinputSinkError
   = UinputRegistrationError SinkId
   | UinputReleaseError      SinkId
@@ -86,7 +88,7 @@ data UinputSink = UinputSink
 makeLenses ''UinputSink
 
 -- | Return a new uinput 'KeySink' with extra options
-uinputSink :: HasRunEnv e => UinputCfg -> RIO e (Acquire KeySink)
+uinputSink :: HasLogFunc e => UinputCfg -> RIO e (Acquire KeySink)
 uinputSink c = mkKeySink (usOpen c) usClose usWrite
 
 --------------------------------------------------------------------------------
@@ -119,13 +121,12 @@ release_uinput_keysink :: MonadIO m => Fd -> m Int
 release_uinput_keysink (Fd h) = liftIO $ c_release_uinput_keysink h
 
 -- | Using a Uinput device, send a KeyEvent to the Linux kernel
-send_event :: HasRunEnv e
+send_event :: ()
   => UinputSink
   -> Fd
   -> LinuxKeyEvent
   -> RIO e ()
 send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
-  logDebug $ "Emiting: " <> pprintDisp e
   (liftIO $ c_send_event h typ c val s' ns')
     `onErr` SinkEncodeError (u^.cfg.keyboardName) e
 
@@ -133,7 +134,7 @@ send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
 --------------------------------------------------------------------------------
 
 -- | Create a new UinputSink
-usOpen :: HasRunEnv e => UinputCfg -> RIO e UinputSink
+usOpen :: HasLogFunc e => UinputCfg -> RIO e UinputSink
 usOpen c = do
   fd <- liftIO . openFd "/dev/uinput" WriteOnly Nothing $
     OpenFileFlags False False False True False
@@ -145,7 +146,7 @@ usOpen c = do
   UinputSink c <$> newMVar fd
 
 -- | Close a 'UinputSink'
-usClose :: HasRunEnv e => UinputSink -> RIO e ()
+usClose :: HasLogFunc e => UinputSink -> RIO e ()
 usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
   where
     release h = do
@@ -159,7 +160,7 @@ usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
-usWrite :: HasRunEnv e => UinputSink -> KeyAction -> RIO e ()
+usWrite :: HasLogFunc e => UinputSink -> KeyAction -> RIO e ()
 usWrite u a = withMVar (u^.st) $ \fd -> do
   send_event u fd =<< toLinuxKeyEvent <$> stampNow a
   send_event u fd =<< now sync

@@ -22,6 +22,7 @@ import Data.Acquire       as X
 import Data.Serialize     as X
 import GHC.Conc           as X (orElse)
 import qualified System.IO as S
+import RIO.Text as X (unlines, lines)
 
 import RIO as X hiding
   (-- Not the lens stuff, I want more support for lenses
@@ -31,8 +32,8 @@ import RIO as X hiding
     -- Not the chan stuff, I will use unagi-chan instead
   , newChan, writeChan, dupChan, readChan
 
-    -- Want to have my own race alias
-  , race
+    -- Some stuff I'd rather default to Text
+  , unlines, lines
   )
 
 print :: (Show a, MonadIO m) => a -> m ()

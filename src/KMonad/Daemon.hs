@@ -47,6 +47,7 @@ data Daemon = Daemon
 
     -- KeyEvent input handling
   , _deKeySink     :: KeySink
+  , _deKeySource   :: KeySource
 
     -- Components
   , _deDispatch    :: Di.Dispatch
@@ -59,6 +60,7 @@ makeLenses ''Daemon
 
 class ( HasLogFunc         e
       , HasKeySink         e
+      , HasKeySource       e
       , HasRunEnv          e
       , Di.HasDispatch     e
       , Hs.HasHookStore    e
@@ -77,6 +79,8 @@ instance {-# OVERLAPS #-} (HasDaemon e) => HasRunEnv e where
   runEnv = daemon . deRunEnv
 instance {-# OVERLAPS #-} (HasDaemon e) => HasKeySink e where
   keySink = daemon . deKeySink
+instance {-# OVERLAPS #-} (HasDaemon e) => HasKeySource e where
+  keySource = daemon . deKeySource
 instance {-# OVERLAPS #-} (HasDaemon e) => Di.HasDispatch e where
   dispatch = daemon . deDispatch
 instance {-# OVERLAPS #-} (HasDaemon e) => Hs.HasHookStore e where
@@ -103,10 +107,10 @@ mkDaemon cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the components, hook them up so they pull from eachother
-  dsp <- Di.mkDispatch    $ awaitKeyWith src
-  hks <- Hs.mkHookStore   $ runRIO dsp Di.pull
-  slc <- Sl.mkSluice      $ runRIO hks Hs.pull
-  ijp <- Ip.mkInjectPoint $ runRIO slc Sl.pull
+  dsp <- Di.mkDispatch   
+  hks <- Hs.mkHookStore
+  slc <- Sl.mkSluice
+  ijp <- Ip.mkInjectPoint
 
   -- Initialize components that are not part of the pull-chain
   kyh <- mkKeyHandler  $ cfg^.keymapCfg
@@ -116,6 +120,7 @@ mkDaemon cfg = do
     { _deDaemonCfg   = cfg
     , _deRunEnv      = rnv
     , _deKeySink     = snk
+    , _deKeySource   = src
     , _deDispatch    = dsp
     , _deHookStore   = hks
     , _deInjectPoint = ijp
@@ -154,7 +159,7 @@ kHold :: HasDaemon e => Bool -> RIO e ()
 kHold = bool (Sl.unblock >>= Di.rerun) Sl.block
 
 instance HasKEnv e => MonadButton (RIO e) where
-  emit ka     = view keySink >>= flip emitKeyWith ka
+  emit        = emitKey
   pause       = threadDelay . (*1000) . fromIntegral
   hold        = kHold
   myBinding   = view binding
@@ -205,7 +210,7 @@ releaseButton = do
 -- never be handling an event while another event is already in the middle of
 -- the pull-chain.
 nextEvent :: HasDaemon e => RIO e Event
-nextEvent = Ip.pull
+nextEvent = Ip.pull . Sl.pull . Hs.pull . Di.pull $ awaitKey
 
 -- | Fetch the next event from the pull-chain of components and subsequently
 -- pass it to the appropriate handler (or exit the loop).

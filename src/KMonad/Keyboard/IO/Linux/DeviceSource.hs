@@ -89,7 +89,7 @@ data DeviceFile = DeviceFile
 makeLenses ''DeviceFile
 
 -- | Open a device file
-deviceSource :: HasRunEnv e
+deviceSource :: HasLogFunc e
   => Int         -- ^ The amount of bytes to read in 1 chunk
   -> EventParser -- ^ A function that parses LinuxEvent's from bytes
   -> FilePath    -- ^ The filepath to the device file
@@ -97,7 +97,7 @@ deviceSource :: HasRunEnv e
 deviceSource n pr pt = mkKeySource (lsOpen n pr pt) lsClose lsRead
 
 -- | Open a device file on a standard linux 64 bit architecture
-deviceSource64 :: HasRunEnv e
+deviceSource64 :: HasLogFunc e
   => FilePath  -- ^ The filepath to the device file
   -> RIO e (Acquire KeySource)
 deviceSource64 = deviceSource 24 decode64

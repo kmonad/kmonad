@@ -55,9 +55,9 @@ fi = fromIntegral
 newtype LinuxKeyEvent = LinuxKeyEvent (CInt, CInt, CInt, CInt, CInt)
   deriving Show
 
-instance PrettyPrint LinuxKeyEvent where
-  pprint (LinuxKeyEvent (s, ns, typ, c, val)) = mconcat
-         [ pprint $ mkTime s ns , ": "
+instance Display LinuxKeyEvent where
+  textDisplay (LinuxKeyEvent (s, ns, typ, c, val)) = mconcat
+         [ textDisplay $ mkTime s ns , ": "
          , "type: ", tshow typ, ",  "
          , "code: ", tshow c,   ",  "
          , "val: ",  tshow val

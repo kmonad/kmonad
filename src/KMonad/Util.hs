@@ -29,11 +29,6 @@ module KMonad.Util
     -- * Overloaded fieldnames
     -- $fields
   , HasThing(..)
-  -- , HasCfg(..)
-
-    -- * Support for pretty-printing
-    -- $pprint
-  , PrettyPrint(..)
 
     -- * Random utility helpers that have no better home
   , pop
@@ -44,17 +39,15 @@ module KMonad.Util
   , withLaunch_
   , launch_
   , using
+  , logRethrow
   )
 
 where
 
 import Prelude
 
-import Control.Monad.Cont
 import Data.Time.Clock.System
 
-import qualified RIO.HashMap as M
-import qualified RIO.HashSet as S
 
 
 --------------------------------------------------------------------------------
@@ -102,13 +95,13 @@ named n = Named n
 
 -- | Newtype wrappers around 'Int' to add typesafety to our units
 newtype Seconds      = Seconds      Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 newtype Milliseconds = Milliseconds Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 newtype Microseconds = Microseconds Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 newtype Nanoseconds  = Nanoseconds  Int
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 
 instance Serialize Seconds
 instance Serialize Nanoseconds
@@ -159,8 +152,8 @@ instance Serialize a => Serialize (Timed a) where
   put v = put (v^.time) >> put (v^.thing)
   get   = (get :: Get Time) >>= \t -> atTime t <$> get
 
-instance PrettyPrint a => PrettyPrint (Timed a) where
-  pprint a = pprint (a^.time) <> ": " <> pprint (a^.thing)
+instance Display a => Display (Timed a) where
+  textDisplay a = textDisplay (a^.time) <> ": " <> textDisplay (a^.thing)
 
 -- | A smart constructor for 'Timed' values
 atTime :: Time -> a -> Timed a
@@ -177,15 +170,11 @@ stampNow a = now $ flip atTime a
 --------------------------------------------------------------------------------
 -- $pprint
 
-class PrettyPrint a where
-  pprint     :: a -> Text
-  pprintDisp :: a -> Utf8Builder
-  pprintDisp = display . pprint
-
-instance PrettyPrint Time where
-  pprint t = tshow (fromIntegral $ t^._s :: Int)
-          <> "."
-          <> tshow (fromIntegral $ t^._ns :: Int)
+instance Display Time where
+  textDisplay t
+    = tshow (fromIntegral $ t^._s :: Int)
+      <> "."
+      <> tshow (fromIntegral $ t^._ns :: Int)
 
 
 --------------------------------------------------------------------------------
@@ -229,12 +218,8 @@ withLaunch n a f = do
   logInfo $ "Launching thread: " <> display n
   withAsync
    (forever a
-    `catch` (\e -> do logError $ "Encountered error in <"
-                               <> display n
-                               <> ">: "
-                               <> display (e :: SomeException)
-                      throwIO e)
-    `finally` (logInfo $ "Closing thread: " <> display n))
+    `catch`   logRethrow ("Encountered error in <" <> display n <> ">")
+    `finally` logInfo    ("Closing thread: " <> display n))
    (\a' -> link a' >> f a')
 
 withLaunch_ :: HasLogFunc e
@@ -255,3 +240,9 @@ launch_ :: HasLogFunc e
   -> RIO e a
   -> ContT r (RIO e) ()
 launch_ n a = ContT $ \next -> withLaunch_ n a (next ())
+
+
+logRethrow :: HasLogFunc e => Utf8Builder -> SomeException -> RIO e a
+logRethrow t e = do
+  logError $ t <> ": " <> display e
+  throwIO e

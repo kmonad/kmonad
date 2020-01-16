@@ -19,6 +19,12 @@ data Match
   = Match KeyEvent -- Match but no capture
   | Catch KeyEvent -- Match and capture
   | NoMatch        -- No match
+  deriving Show
+
+instance Display Match where
+  textDisplay (Match e) = "Match: " <> textDisplay e
+  textDisplay (Catch e) = "Catch: " <> textDisplay e
+  textDisplay NoMatch   = "NoMatch"
 
 matched :: Getter Match Bool
 matched = to $ \case
@@ -30,23 +36,34 @@ caught = to $ \case
   Catch _ -> True
   _       -> False
 
-type HookPred = KeyEvent -> Match
+data HookPred
+  = MatchOn KeyAction
+  | CatchOn KeyAction
+
+instance Display HookPred where
+  textDisplay (MatchOn a) = "MatchOn: " <> textDisplay a
+  textDisplay (CatchOn a) = "CatchOn: " <> textDisplay a
+
+runPred :: HookPred -> KeyEvent -> Match
+runPred (MatchOn a) e = bool NoMatch (Match e) (e `kaEq` a)
+runPred (CatchOn a) e = bool NoMatch (Catch e) (e `kaEq` a)
 
 -- | Turn a simple predicate into a HookPred that matches a KeyEvent.
-matchKey :: (KeyEvent -> Bool) -> HookPred
-matchKey p = \e -> bool NoMatch (Match e) $ p e
+-- matchKey :: (KeyEvent -> Bool) -> HookPred
+-- matchKey p = \e -> bool NoMatch (Match e) $ p e
 
 -- | Turn a simple predicate into a HookPred that captures a KeyEvent.
-catchKey :: (KeyEvent -> Bool) -> HookPred
-catchKey p = \e -> bool NoMatch (Catch e) $ p e
+-- catchKey :: (KeyEvent -> Bool) -> HookPred
+-- catchKey p = \e -> bool NoMatch (Catch e) $ p e
 
 -- | Create a HookPred that matches the Press or Release of the calling button.
 matchMy :: MonadButton m => SwitchAction -> m HookPred
-matchMy a = my a >>= \b -> pure $ \e -> bool NoMatch (Match e) (e `kaEq` b)
+matchMy a = MatchOn <$> my a
 
 -- | Create a HookPred that catches the Press or Release of the calling button.
 catchMy :: MonadButton m => SwitchAction -> m HookPred
-catchMy a = my a >>= \b -> pure $ \e -> bool NoMatch (Catch e) (e `kaEq` b)
+catchMy a = CatchOn <$> my a
+  -- my a >>= \b -> pure $ \e -> bool NoMatch (Catch e) (e `kaEq` b)
 
 -- | A HookFun is a function that is run on the result of trying to 'Match'
 type HookFun m = Match -> m ()

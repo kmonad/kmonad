@@ -48,8 +48,8 @@ makeClassy ''KeyAction
 
 instance Serialize KeyAction
 
-instance PrettyPrint KeyAction where
-  pprint a = tshow (a^.switchAction) <> " " <> pprint (a^.keycode)
+instance Display KeyAction where
+  textDisplay a = tshow (a^.switchAction) <> " " <> textDisplay (a^.keycode)
 
 instance Ord KeyAction where
   a `compare` b = case (a^.switchAction) `compare` (b^.switchAction) of

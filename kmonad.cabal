@@ -52,7 +52,6 @@ library
   --     KMonad.Types.Parser.Parsers.SpecialSymbol
   --     KMonad.Types.Parser.Token
   --     KMonad.Types.Parser.Utility
-  --     KMonad.Types.Pretty
   --     KMonad.Types.SpecialSymbol
   --     KMonad.Types.Switch
   --     KMonad.Types.Time

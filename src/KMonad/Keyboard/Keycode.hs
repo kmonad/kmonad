@@ -27,10 +27,11 @@ import Data.Char (toLower)
 
 import KMonad.Util
 
-import qualified Data.MultiMap as Q
-import qualified RIO.HashMap   as M
-import qualified RIO.HashSet   as S
-import qualified RIO.Text      as T
+import qualified Data.MultiMap     as Q
+import qualified RIO.HashMap       as M
+import qualified RIO.HashSet       as S
+import qualified RIO.Text          as T
+import qualified RIO.Text.Partial  as T (head)
 
 --------------------------------------------------------------------------------
 -- $typ
@@ -309,9 +310,16 @@ data Keycode
 -- bytes and vice-versa
 instance Serialize Keycode
 
-instance PrettyPrint Keycode where
-  pprint c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
-    $ minimumByOf (_Just . folded) (comparing T.length) (keyNames ^. at c)
+
+instance Display Keycode where
+  textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
+    $ minimumByOf (_Just . folded) cmpName (keyNames ^. at c)
+    where cmpName a b =
+            -- Prefer the shortest, and if equal, lowercased version
+            case compare (T.length a) (T.length b) of
+              EQ -> compare (T.head b) (T.head a)
+              o  -> o
+
 
 --------------------------------------------------------------------------------
 -- $help
