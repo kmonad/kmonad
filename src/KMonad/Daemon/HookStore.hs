@@ -1,4 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
 module KMonad.Daemon.HookStore
   ( HookStore
   , mkHookStore
@@ -10,43 +9,40 @@ module KMonad.Daemon.HookStore
   )
 where
 
-import Prelude
+import KPrelude
 
+import Data.Semigroup (Any(..))
 import Data.Unique
 import KMonad.Keyboard
 import KMonad.Util
 
-import KMonad.Action hiding (hookNext, hookWithin, HookFun)
+import KMonad.Action hiding (hookNext, hookWithin)
 import qualified RIO.HashMap as M
+import qualified RIO.Text    as T (replicate)
 
 --------------------------------------------------------------------------------
 -- $kh
 
--- | An internal keyhandler object that contains a predicate and an action
-data KH = KH
-  { _pred :: HookPred
-  , _act  :: Match -> IO () }
-makeLenses ''KH
+newtype NextH = NextH (HookPred, Match -> IO ())
+makeWrapped ''NextH
 
--- | Turn any MonadUnliftIO action into a KH
-mkKH :: MonadUnliftIO m => HookPred -> (Match -> m ()) -> m KH
-mkKH p a = withRunInIO $ \u -> pure $ KH p (u . a)
+mkNextH :: HookPred -> (Match -> RIO e ()) -> RIO e NextH
+mkNextH p a = withRunInIO $ \u -> pure $ NextH (p, (u . a))
 
--- | The result-type of running a KH
-newtype KHRes = KHRes (Bool, IO ())
-makeWrapped ''KHRes
+newtype TimerH = TimerH (HookPred, TimerMatch -> IO (), Time)
+makeWrapped ''TimerH
 
--- | Make KHRes a Monoid with 'or' on the bool and sequencing of IO actions
-instance Semigroup KHRes where
-  (KHRes (ab, aio)) <> (KHRes (bb, bio)) = KHRes (ab || bb, aio >> bio)
-instance Monoid KHRes where
-  mempty = KHRes (False, pure ())
 
--- | Run a KH on a KeyEvent, returning the KHRes
-runKH :: KH -> KeyEvent -> KHRes
-runKH kh e = do
-  let m = runPred (kh^.pred) e
-  KHRes $ (m^.caught, kh^.act $ m)
+class HasPred e where pred :: Lens' e HookPred
+instance HasPred NextH  where pred = _Wrapped._1
+instance HasPred TimerH where pred = _Wrapped._1
+
+
+mkTimerH :: HookPred -> (TimerMatch -> RIO e ()) -> RIO e TimerH
+mkTimerH p a = do
+  u <- askRunInIO
+  t <- nowIO
+  pure $ TimerH (p, u . a, t)
 
 --------------------------------------------------------------------------------
 -- $env
@@ -57,8 +53,8 @@ runKH kh e = do
 data HookStore = HookStore
   { _injectSrc  :: TMVar KeyEvent
   , _injectTmr  :: TMVar Unique
-  , _nextHooks  :: TVar [KH]
-  , _timerHooks :: TVar (M.HashMap Unique KH)
+  , _nextHooks  :: TVar [NextH]
+  , _timerHooks :: TVar (M.HashMap Unique TimerH)
   }
 makeClassy ''HookStore
 
@@ -84,8 +80,6 @@ mkHookStore = lift mkHookStore'
 -- | Print out information about hooks and matches
 debugReport :: HasHookStore e => KeyEvent -> RIO e Text
 debugReport e = do
-  let fOne kh = " - " <> textDisplay (kh^.pred)
-             <> ": "  <> textDisplay (runPred (kh^.pred) e)
 
   -- Generate the report for the 'NEXT' hooks
   nhs <- view nextHooks >>= \n -> atomically $ readTVar n
@@ -101,6 +95,30 @@ debugReport e = do
 
   pure . unlines $ ntxt <> ttxt
 
+  where
+    fOne :: HasPred a => a -> Text
+    fOne h = " - " <> textDisplay (h^.pred)
+          <> ": "  <> textDisplay (if (h^.pred.target) `kaEq` e
+                                   then ("Match" :: Text) else "NoMatch")
+
+
+runNextHook :: KeyEvent -> NextH -> (Any, IO ())
+runNextHook e (NextH (p, a)) = if (p^.target) `kaEq` e
+  then (Any $ p^.capture, a $ Match e)
+  else (Any $ False     , a $ NoMatch)
+
+runTimerHook :: ()
+  => KeyEvent
+  -> Time
+  -> (Unique, TimerH)
+  -> (Any, M.HashMap Unique TimerH, IO ())
+runTimerHook e tNow (u, it@(TimerH (p, a, t))) = if (p^.target) `kaEq` e
+  then ( Any $ p^.capture
+       , M.empty
+       , a $ TimerMatch (Match e) (t `tDiff` tNow))
+  else (Any False
+       , M.singleton u it
+       , pure ())
 
 -- | Run all hooks on the provided keyevent.
 --
@@ -120,29 +138,30 @@ debugReport e = do
 --  
 runHooks :: (HasLogFunc e, HasHookStore e) => KeyEvent -> RIO e (Maybe KeyEvent)
 runHooks e = do
+  hs   <- view hookStore
+  tNow <- nowIO
   logDebug . display =<< debugReport e
 
-  th  <- view timerHooks
-  nh  <- view nextHooks
+  (caught, io) <- atomically $ do
+    (nc, nio)     <- foldMap (runNextHook e) <$> swapTVar (hs^.nextHooks) []
+    (tc, ts, tio) <- foldMap (runTimerHook e tNow) . M.toList <$> readTVar (hs^.timerHooks)
+    writeTVar (hs^.timerHooks) ts
 
-  (KHRes (mtch, io))  <- atomically $ do
-    nRes <- foldMap (flip runKH e) <$> swapTVar nh []
-    tRes <- runTimers th
-    pure $ nRes <> tRes
+    pure $ (nc, nio) <> (tc, tio)
 
   liftIO io
-  pure $ if mtch then Nothing else Just e
+  pure $ if getAny caught then Nothing else Just e
 
-  where
-    runTimers th = do
-      (r, m') <- M.foldrWithKey doOne mempty <$> readTVar th
-      writeTVar th m'
-      pure r
+  -- where
+    -- runTimers th = do
+    --   (r, m') <- M.foldrWithKey doOne mempty <$> readTVar th
+    --   writeTVar th m'
+    --   pure r
 
-    doOne k f acc = let r = runKH f e in
-      if r^._Wrapped._1
-      then (r, M.empty)                 <> acc -- If matched, remove callback
-      else (mempty (), M.singleton k f) <> acc -- If no match, do nothing
+    -- doOne k f acc = let r = runKH f e in
+    --   if r^._Wrapped._1
+    --   then (r, M.empty)                 <> acc -- If matched, remove callback
+    --   else (mempty (), M.singleton k f) <> acc -- If no match, do nothing
 
 -- | Pull 1 event from the action we use to generate KeyEvents. If that action
 -- is not caught by any callback, then return it (otherwise return Nothing). At
@@ -194,8 +213,8 @@ hookNext :: (HasLogFunc e, HasHookStore e)
 hookNext p a = do
   logDebug $ "Registering <NEXT>  hook: " <> display p
   st <- view nextHooks
-  cb <- mkKH p a
-  atomically $ modifyTVar st (cb:)
+  nh <- mkNextH p a
+  atomically $ modifyTVar st (nh:)
 
 -- | Implementation of 'hookWithin' from "KMonad.Action".
 --
@@ -204,12 +223,12 @@ hookNext p a = do
 hookWithin :: (HasLogFunc e, HasHookStore e)
   => Milliseconds
   -> HookPred
-  -> (Match -> RIO e ())
+  -> (TimerMatch -> RIO e ())
   -> RIO e ()
 hookWithin ms p a = do
   logDebug $ "Registering <TIMER> hook: " <> display p <> ", " <> display ms <> "ms"
   st <- view timerHooks
-  kh <- mkKH p a
+  kh <- mkTimerH p a
   tg <- liftIO newUnique
   atomically $ modifyTVar st (M.insert tg kh)
   void . async $ do
@@ -224,14 +243,18 @@ signalTimeout t = do
 
 -- | Try to cancel a hook stored in 'timerHooks'. If it doesn't exist, do
 -- nothing. If it does, remove it from the map and call it on 'NoMatch'.
-cancelTimer :: HasHookStore e => Unique -> RIO e ()
+cancelTimer :: (HasLogFunc e, HasHookStore e) => Unique -> RIO e ()
 cancelTimer t = do
+  u  <- askRunInIO
   th <- view timerHooks
   join . atomically $ do
     m <- readTVar th
-    let cncl f = do
+    let cncl (TimerH (_, go, _)) = do
           modifyTVar th (M.delete t)
-          pure . liftIO . (f^.act) $ NoMatch
+          pure . liftIO $ do
+            u . logDebug $ display (T.replicate 80 "-")
+                        <> "\nCancelling <TIMER> hook"
+            go $ TimerMatch NoMatch 0
     maybe (pure $ pure ()) cncl $ M.lookup t m
 
 

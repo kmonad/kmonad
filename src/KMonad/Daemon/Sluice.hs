@@ -9,13 +9,13 @@ module KMonad.Daemon.Sluice
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 
 -- | The 'Sluice' environment.
 data Sluice = Sluice
-  { _blocked  :: IORef Bool
+  { _blocked  :: IORef Int
   , _blockBuf :: IORef [KeyEvent]
   }
 makeClassy ''Sluice
@@ -23,7 +23,7 @@ makeClassy ''Sluice
 -- | Create a new 'Sluice' environment
 mkSluice' :: RIO e Sluice
 mkSluice' = do
-  bld <- newIORef False
+  bld <- newIORef 0
   buf <- newIORef []
   pure $ Sluice bld buf
 
@@ -42,33 +42,42 @@ step pullSrc = do
   s <- view sluice
   e <- pullSrc
   readIORef (s^.blocked) >>= \case
-    True  -> do
+    0 -> pure $ Just e
+    _ -> do
       modifyIORef' (s^.blockBuf) (e:)
       logDebug . display =<< debugReport
       pure Nothing
-    False -> pure $ Just e
 
 -- | Keep trying to read from the Sluice until an event passes through
 pull :: (HasLogFunc e, HasSluice e) => RIO e KeyEvent -> RIO e KeyEvent
 pull pullSrc = step pullSrc >>= maybe (pull pullSrc) pure
 
+blockReport :: (HasSluice e) => RIO e Utf8Builder
+blockReport = do
+  n <- readIORef =<< view blocked
+  pure $ "Block level set to: " <> display n
+
 -- | Set the Sluice to blocked mode.
 block :: (HasSluice e, HasLogFunc e) => RIO e ()
 block = do
-  logDebug $ "Blocking input stream"
-  view blocked >>= \b -> writeIORef b True
+  view blocked >>= \b -> modifyIORef b (+1)
+  logDebug =<< blockReport
 
 -- | Set the Sluice to unblocked mode, return a list of all the stored events
 -- that should be rerun, in the correct order (head was first-in, etc).
 unblock :: (HasSluice e, HasLogFunc e) => RIO e [KeyEvent]
 unblock = do
   s <- view sluice
-  writeIORef (s^.blocked) False
-  es <- readIORef (s^.blockBuf)
-  writeIORef (s^.blockBuf) []
-
-  logDebug $ "Unblocking input stream, " <>
-    if null es
-    then "no stored events"
-    else "rerunning:\n" <> (display . unlines . map textDisplay $ reverse es)
-  pure $ reverse es
+  modifyIORef' (s^.blocked) (\n -> n - 1)
+  readIORef (s^.blocked) >>= \case
+    0 -> do
+      es <- readIORef (s^.blockBuf)
+      writeIORef (s^.blockBuf) []
+      logDebug $ "Unblocking input stream, " <>
+        if null es
+        then "no stored events"
+        else "rerunning:\n" <> (display . unlines . map textDisplay $ reverse es)
+      pure $ reverse es
+    _ -> do
+      logDebug =<< blockReport
+      pure []

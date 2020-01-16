@@ -18,7 +18,7 @@ module KMonad.Keyboard
 
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard.Keycode
 import KMonad.Util

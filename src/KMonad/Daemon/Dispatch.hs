@@ -10,7 +10,7 @@ module KMonad.Daemon.Dispatch
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 import KMonad.Util
@@ -27,16 +27,18 @@ import qualified RIO.Seq as Seq
 
 
 data Dispatch = Dispatch
-  { _rerunBuf :: IORef (Seq KeyEvent)
+  { _readProc :: TMVar (Async KeyEvent)
+  , _rerunBuf :: TVar (Seq KeyEvent)
   , _redirect :: IORef (Maybe (KeyEvent -> IO ()))
   }
 makeClassy ''Dispatch
 
 mkDispatch' :: RIO e Dispatch
 mkDispatch' = do
-  rrb <- newIORef $ Seq.empty
+  rpr <- atomically $ newEmptyTMVar
+  rrb <- atomically $ newTVar Seq.empty
   rdr <- newIORef $ Nothing
-  pure $ Dispatch rrb rdr
+  pure $ Dispatch rpr rrb rdr
 
 mkDispatch :: ContT r (RIO e) Dispatch
 mkDispatch = lift mkDispatch'
@@ -54,14 +56,26 @@ pull :: (HasLogFunc e, HasDispatch e)
 pull pullSrc = do
   d <- view dispatch
 
+  -- Either fetch or start the reading process
+  a <- atomically (tryTakeTMVar $ d^.readProc) >>= \case
+    Nothing -> async pullSrc
+    Just a' -> pure a'
+
+  -- Blocking-read taking an event from the head of the rerun buf
+  let readRerun = readTVar (d^.rerunBuf) >>= \case
+          Seq.Empty -> retrySTM
+          (e :<| b) -> do
+            writeTVar (d^.rerunBuf) b
+            pure e
+
   -- Get an event from the rerunBuf, or if empty, from the OS
-  e <- readIORef (d^.rerunBuf) >>= \case
-    Seq.Empty -> pullSrc
-    (e' :<| b) -> do
-      writeIORef (d^.rerunBuf) b
+  e <- atomically ((Left <$> readRerun) `orElse` (Right <$> waitSTM a)) >>= \case
+    Left  e' -> do
       logDebug $ "\n" <> display (T.replicate 80 "-")
-              <> "\n Rerunning event: " <> display e'
+              <> "\nRerunning event: " <> display e'
+      atomically $ putTMVar (d^.readProc) a
       pure e'
+    Right e' -> pure e'
 
   -- If we have a registered process, dispatch event, otherwise return it
   readIORef (d^.redirect) >>= \case
@@ -77,7 +91,7 @@ pull pullSrc = do
 rerun :: HasDispatch e => [KeyEvent] -> RIO e ()
 rerun es = do
   rr <- view rerunBuf
-  modifyIORef' rr (Seq.fromList es ><)
+  atomically $ modifyTVar rr (Seq.fromList es ><)
 
 -- | Register a capturing process with the 'Dispatch'
 --

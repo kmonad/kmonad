@@ -28,7 +28,7 @@ module KMonad.Keyboard.IO
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 import KMonad.Util

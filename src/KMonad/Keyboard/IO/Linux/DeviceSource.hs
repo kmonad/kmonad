@@ -17,7 +17,7 @@ module KMonad.Keyboard.IO.Linux.DeviceSource
   )
 where
 
-import Prelude
+import KPrelude
 
 import Foreign.C.Types
 import System.Posix

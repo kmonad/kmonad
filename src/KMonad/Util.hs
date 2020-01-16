@@ -24,6 +24,9 @@ module KMonad.Util
   , Timed
   , atTime
   , now
+  , nowIO
+  , tDiff
+  , since
   , stampNow
 
     -- * Overloaded fieldnames
@@ -44,7 +47,7 @@ module KMonad.Util
 
 where
 
-import Prelude
+import KPrelude
 
 import Data.Time.Clock.System
 
@@ -161,7 +164,21 @@ atTime t = Timed t
 
 -- | Run a computation that requires a time now
 now :: MonadIO m => (Time -> a) -> m a
-now f = f . (view $ from _SystemTime) <$> liftIO getSystemTime
+now f = f <$> nowIO
+
+-- | Return the current Time
+nowIO :: MonadIO m => m Time
+nowIO = view (from _SystemTime) <$> liftIO getSystemTime
+
+tDiff :: Time -> Time -> Milliseconds
+tDiff a b = let
+  s  = fromIntegral $ (b^._s - a^._s) * 1000
+  ns = fromIntegral $ (b^._ns - a^._ns) `div` 1000000
+  in s + ns
+
+-- | Return how many milliseconds have elapsed since 'Time'
+since :: MonadIO m => Time -> m Milliseconds
+since t = now $ \n -> t `tDiff` n
 
 -- | Wrap a thing in a 'Timed' wrapper with the current time
 stampNow :: MonadIO m => a -> m (Timed a)

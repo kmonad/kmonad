@@ -2,7 +2,7 @@ module KMonad.Event
 
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 import KMonad.Util

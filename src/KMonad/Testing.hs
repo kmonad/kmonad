@@ -2,7 +2,7 @@ module KMonad.Testing
 
 where
 
-import Prelude
+import KPrelude
 
 import Data.LayerStack
 

@@ -21,7 +21,7 @@ module KMonad.Keyboard.Keycode
   )
 where
 
-import Prelude
+import KPrelude
 
 import Data.Char (toLower)
 

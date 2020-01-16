@@ -4,7 +4,7 @@ module KMonad.Types.Keyboard.Test
 
 where
 
-import Prelude
+import KPrelude
 
 -- lens21 :: Lens' a b -> (b -> c -> d) -> Lens' a d
 -- lens21 l f = l . go where go f

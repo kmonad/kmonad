@@ -42,7 +42,7 @@ module Data.LayerStack
 
 where
 
-import Prelude
+import KPrelude
 
 import RIO.List (delete)
 

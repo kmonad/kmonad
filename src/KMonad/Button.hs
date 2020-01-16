@@ -15,7 +15,7 @@ module KMonad.Button
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Action
 import KMonad.Keyboard
@@ -108,9 +108,9 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = onPress $ catchWithinHeld ms (catchMy Release) $ \case
-    Catch _ -> tap t
-    _       -> press h
+tapHold ms t h = onPress $ catchWithinHeld ms (catchMy Release) $ \m -> if
+  | m^.matched -> tap t
+  | otherwise  -> press h
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
@@ -121,17 +121,29 @@ multiTap l bs = onPress $ go bs
   where
     go :: [(Milliseconds, Button)] -> MB ()
     go []             = press l
-    go ((ms, b'):bs') = catchWithinHeld ms (catchMy Press) $ \case
-        Catch _ -> go bs'
-        _       -> press b'
+    go ((ms, b'):bs') = catchWithinHeld ms (catchMy Release) $ \m -> if
+        | m^.matched -> catchWithinHeld (ms - m^.elapsed) (catchMy Press) $ \m2 -> if
+            | m2^.matched -> go bs'
+            | otherwise   -> tap b'
+        | otherwise  -> press b'
+
+-- multiTap :: Button -> [(Milliseconds, Button)] -> Button
+-- multiTap l bs = onPress $ go bs
+--   where
+--     go :: [(Milliseconds, Button)] -> MB ()
+--     go []             = press l
+--     go ((ms, b'):bs') = catchWithinHeld ms (catchMy Press) $ \m -> if
+--         | m^.matched -> go bs'
+--         | otherwise  -> press b'
+
 
 -- | Create a 'Button' that performs a tap of one button if the next event is
 -- its own release, or else it presses another button (and releases it when a
 -- release is detected).
 tapNext :: Button -> Button -> Button
-tapNext t h = onPress $ catchNext (catchMy Release) $ \case
-    Catch _ -> tap t
-    _       -> press h
+tapNext t h = onPress $ catchNext (catchMy Release) $ \m -> if
+    | m^.matched -> tap t
+    | otherwise  -> press h
 
 
 --------------------------------------------------------------------------------

@@ -5,7 +5,7 @@ module KMonad.Daemon.KeyHandler
 where
 
 
-import Prelude
+import KPrelude
 
 import KMonad.Button
 import KMonad.Keyboard

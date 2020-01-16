@@ -2,7 +2,7 @@ module KMonad.Action
 
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 import KMonad.Util
@@ -13,60 +13,56 @@ import KMonad.Util
 --
 -- The types and functions dealing with functions that try to match key-events.
 
-type MB a = forall m. MonadButton m => m a
 
 data Match
-  = Match KeyEvent -- Match but no capture
-  | Catch KeyEvent -- Match and capture
-  | NoMatch        -- No match
-  deriving Show
+  = Match   KeyEvent
+  | NoMatch
+
+class HasMatch e where match :: Lens' e Match
+instance HasMatch Match where match = id
+
+data TimerMatch = TimerMatch
+  { _tMatch  :: Match
+  , _elapsed :: Milliseconds
+  }
+makeLenses ''TimerMatch
+
+instance HasMatch TimerMatch where match = tMatch
+
+matched :: HasMatch e => Getter e Bool
+matched = match . to (\case
+  (Match _) -> True
+  _         -> False)
+
+-- class HasMatched e where matched :: Lens' e Bool
+-- instance HasMatched NextMatch where matched = nMatched
+-- instance HasMatched TimerMatch where matched = tMatched
 
 instance Display Match where
-  textDisplay (Match e) = "Match: " <> textDisplay e
-  textDisplay (Catch e) = "Catch: " <> textDisplay e
-  textDisplay NoMatch   = "NoMatch"
+  textDisplay m = if m^.matched then "Match" else "NoMatch"
 
-matched :: Getter Match Bool
-matched = to $ \case
-  NoMatch -> False
-  _       -> True
+instance Display TimerMatch where
+  textDisplay t = if t^.matched
+    then "Match in " <> textDisplay (t^.elapsed) <> "ms"
+    else "NoMatch"
 
-caught :: Getter Match Bool
-caught = to $ \case
-  Catch _ -> True
-  _       -> False
-
-data HookPred
-  = MatchOn KeyAction
-  | CatchOn KeyAction
+data HookPred = HookPred
+  { _capture :: Bool
+  , _target  :: KeyAction
+  }
+makeLenses ''HookPred
 
 instance Display HookPred where
-  textDisplay (MatchOn a) = "MatchOn: " <> textDisplay a
-  textDisplay (CatchOn a) = "CatchOn: " <> textDisplay a
-
-runPred :: HookPred -> KeyEvent -> Match
-runPred (MatchOn a) e = bool NoMatch (Match e) (e `kaEq` a)
-runPred (CatchOn a) e = bool NoMatch (Catch e) (e `kaEq` a)
-
--- | Turn a simple predicate into a HookPred that matches a KeyEvent.
--- matchKey :: (KeyEvent -> Bool) -> HookPred
--- matchKey p = \e -> bool NoMatch (Match e) $ p e
-
--- | Turn a simple predicate into a HookPred that captures a KeyEvent.
--- catchKey :: (KeyEvent -> Bool) -> HookPred
--- catchKey p = \e -> bool NoMatch (Catch e) $ p e
+  textDisplay h = (<> textDisplay (h^.target)) $ if h^.capture
+    then "Catch event: " else "Match event: "
 
 -- | Create a HookPred that matches the Press or Release of the calling button.
 matchMy :: MonadButton m => SwitchAction -> m HookPred
-matchMy a = MatchOn <$> my a
+matchMy a = HookPred False <$> my a
 
 -- | Create a HookPred that catches the Press or Release of the calling button.
 catchMy :: MonadButton m => SwitchAction -> m HookPred
-catchMy a = CatchOn <$> my a
-  -- my a >>= \b -> pure $ \e -> bool NoMatch (Catch e) (e `kaEq` b)
-
--- | A HookFun is a function that is run on the result of trying to 'Match'
-type HookFun m = Match -> m ()
+catchMy a = HookPred True <$> my a
 
 --------------------------------------------------------------------------------
 -- $monad
@@ -84,9 +80,9 @@ class MonadIO m => MonadButton m where
   -- | Pause or unpause event processing
   hold        :: Bool -> m ()
   -- | Run a hook on only the next 'KeyEvent'
-  hookNext   :: HookPred -> HookFun m -> m ()
+  hookNext   :: HookPred -> (Match -> m ()) -> m ()
   -- | Run a hook on all 'KeyEvent's until the timer expires,
-  hookWithin :: Milliseconds -> HookPred -> HookFun m -> m ()
+  hookWithin :: Milliseconds -> HookPred -> (TimerMatch -> m ()) -> m ()
   -- | Access the keycode to which this button is bound
   myBinding   :: m Keycode
 
@@ -96,6 +92,7 @@ class MonadIO m => MonadButton m where
 -- Action wrapper for creating Buttons
 --
 
+type MB a = forall m. MonadButton m => m a
 newtype Action a = Action { _runAction :: MB a}
   deriving (Functor)
 
@@ -125,15 +122,18 @@ my a = mkKeyAction a <$> myBinding
 await :: MonadButton m => m HookPred -> (KeyEvent -> m ()) -> m ()
 await p f = catchNext p $ \case
   Match e -> f e
-  Catch e -> f e
   NoMatch -> await p f
 
 -- | Monadic counterpart of hookNext where the predicate runs in MonadButton
-catchNext :: MonadButton m => m HookPred -> HookFun m -> m ()
+catchNext :: MonadButton m => m HookPred -> (Match -> m ()) -> m ()
 catchNext p f = p >>= \p' -> hookNext p' f
 
 -- | Monadic counterpart of hookWithin where the predicate runs in MonadButton
-catchWithin :: MonadButton m => Milliseconds -> m HookPred -> HookFun m -> m ()
+catchWithin :: MonadButton m
+  => Milliseconds
+  -> m HookPred
+  -> (TimerMatch -> m ())
+  -> m ()
 catchWithin ms p f = p >>= \p' -> hookWithin ms p' f
 
 -- | Run an action on the first occurence of the release of the current button
@@ -155,7 +155,11 @@ matchRelease_ = matchRelease . const
 -- | A 'catchWithin' action which executes its attempt to catch in the context
 -- of a paused input stream. This unpauses the input stream the moment
 -- 'catchWithin' succeeds to match its predicate, or when the timer expires.
-catchWithinHeld :: MonadButton m => Milliseconds -> m HookPred -> HookFun m -> m ()
+catchWithinHeld :: MonadButton m
+  => Milliseconds
+  -> m HookPred
+  -> (TimerMatch -> m ())
+  -> m ()
 catchWithinHeld ms p f = do
   hold True
   catchWithin ms p (\e -> f e >>= \res -> hold False >> pure res)

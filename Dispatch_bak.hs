@@ -18,7 +18,7 @@ module KMonad.Components.Dispatch
   -- )
 where
 
-import Prelude
+import KPrelude
 
 import Control.Concurrent.Chan.Unagi
 

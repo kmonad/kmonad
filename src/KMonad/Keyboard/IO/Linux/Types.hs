@@ -27,7 +27,7 @@ module KMonad.Keyboard.IO.Linux.Types
   )
 where
 
-import Prelude
+import KPrelude
 
 import Foreign.C.Types (CInt)
 import RIO.Partial (toEnum)

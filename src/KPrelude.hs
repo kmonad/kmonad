@@ -1,5 +1,5 @@
 {-|
-Module      : Prelude
+Module      : KPrelude
 Description : Code that will be imported into every module
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 
-module Prelude
+module KPrelude
   ( print
   , module X
   )

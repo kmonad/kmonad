@@ -13,7 +13,7 @@ module KMonad.Runner
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Util
 

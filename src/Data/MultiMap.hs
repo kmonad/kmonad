@@ -26,7 +26,7 @@ module Data.MultiMap
   )
 where
 
-import Prelude hiding (reverse)
+import KPrelude hiding (reverse)
 
 import qualified RIO.HashMap as M
 import qualified RIO.HashSet as S

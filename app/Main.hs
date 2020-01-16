@@ -18,8 +18,9 @@ module Main
   )
 where
 
-import KMonad
+import KPrelude
+import KMonad.Testing
 
 main :: IO ()
 main = do
-  runKMonad
+  runTest

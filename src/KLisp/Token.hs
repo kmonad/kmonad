@@ -2,7 +2,7 @@ module KLisp.Token
 
 where
 
-import Prelude
+import KPrelude
 
 import KMonad
 

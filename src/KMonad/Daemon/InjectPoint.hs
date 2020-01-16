@@ -8,7 +8,7 @@ module KMonad.Daemon.InjectPoint
   )
 where
 
-import Prelude
+import KPrelude
 
 import KMonad.Keyboard
 import KMonad.Event

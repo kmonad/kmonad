@@ -15,85 +15,29 @@ library
     -Wno-name-shadowing
     -Wno-unused-imports
   exposed-modules:
-      KMonad.Types.Keyboard
-      KMonad.Types.Keyboard.Keycode
-      KMonad.Types.Keyboard.Event
-      KMonad.Types.Time
-      Prelude
-  --     KMonad
-  --     KMonad.Api.App
-  --     KMonad.Api.Encode
-  --     KMonad.Api.EventTracker
-  --     KMonad.Api.Dispatch
-  --     KMonad.Api.KeyIO
-  --     KMonad.Api.KeyIO.Types
-  --     KMonad.Api.LayerStack
-  --     KMonad.Api.LockManager
-  --     KMonad.Api.Sluice
-  --     KMonad.Api.SymbolEncoder
-  --     KMonad.CLI.Args
-  --     KMonad.Core
-  --     KMonad.Types.Config
-  --     KMonad.Types.Event
-  --     KMonad.Types.Keyboard
-  --     KMonad.Types.KeyCode
-  --     KMonad.Types.MapStack
-  --     KMonad.Types.Matrix
-  --     KMonad.Types.Parser
-  --     KMonad.Types.Parser.Parsers.Alias
-  --     KMonad.Types.Parser.Parsers.Button
-  --     KMonad.Types.Parser.Parsers.Config
-  --     KMonad.Types.Parser.Parsers.IO
-  --     KMonad.Types.Parser.Parsers.KeyCode
-  --     KMonad.Types.Parser.Parsers.KeySequence
-  --     KMonad.Types.Parser.Parsers.Layer
-  --     KMonad.Types.Parser.Parsers.Matrix
-  --     KMonad.Types.Parser.Parsers.Source
-  --     KMonad.Types.Parser.Parsers.SpecialSymbol
-  --     KMonad.Types.Parser.Token
-  --     KMonad.Types.Parser.Utility
-  --     KMonad.Types.SpecialSymbol
-  --     KMonad.Types.Switch
-  --     KMonad.Types.Time
-  --     KMonad.Types.Types
-  --     KMonad.Domain.Button
-  --     KMonad.Domain.Button.Button
-  --     KMonad.Domain.Button.Buttons
-  --     KMonad.Domain.Button.Buttons.After
-  --     KMonad.Domain.Button.Buttons.Around
-  --     KMonad.Domain.Button.Buttons.Block
-  --     KMonad.Domain.Button.Buttons.Emit
-  --     KMonad.Domain.Button.Buttons.EmitDeadKey
-  --     KMonad.Domain.Button.Buttons.EmitSpecial
-  --     KMonad.Domain.Button.Buttons.LayerAdd
-  --     KMonad.Domain.Button.Buttons.LayerRem
-  --     KMonad.Domain.Button.Buttons.LayerToggle
-  --     KMonad.Domain.Button.Buttons.Lockers
-  --     KMonad.Domain.Button.Buttons.Macro
-  --     KMonad.Domain.Button.Buttons.MultiTap
-  --     KMonad.Domain.Button.Buttons.TapHold
-  --     KMonad.Domain.Button.Buttons.TapNext
-  --     KMonad.Domain.Button.Encode
-  --     KMonad.Domain.Effect
-  --     KMonad.Domain.Effect.Effects
-  --     KMonad.Domain.Effect.Effects.MonadButton
-  --     KMonad.Domain.Effect.Effects.MonadEmit
-  --     KMonad.Domain.Effect.Effects.MonadFork
-  --     KMonad.Domain.Effect.Effects.MonadFuture
-  --     KMonad.Domain.Effect.Effects.MonadHandler
-  --     KMonad.Domain.Effect.Effects.MonadHold
-  --     KMonad.Domain.Effect.Effects.MonadInject
-  --     KMonad.Domain.Effect.Effects.MonadLock
-  --     KMonad.Domain.Effect.Effects.MonadMaskInput
-  --     KMonad.Domain.Effect.Effects.MonadNext
-  --     KMonad.Domain.Effect.Effects.MonadNow
-  --     KMonad.Domain.Effect.Effects.MonadRace
-  --     KMonad.Domain.Effect.Effects.MonadScript
-  --     KMonad.Domain.Effect.Effects.MonadStackManip
-  --     KMonad.Domain.Effect.Effects.MonadSymbol
-  --     KMonad.Domain.Effect.Effects.MonadVar
-  --     KMonad.Domain.Effect.Effects.MonadWait
-  --     KMonad.Domain.Loop
+      KPrelude
+      Data.LayerStack
+      Data.MultiMap
+      KMonad
+      KMonad.Action
+      KMonad.Button
+      KMonad.Daemon
+      KMonad.Daemon.Dispatch
+      KMonad.Daemon.HookStore
+      KMonad.Daemon.InjectPoint
+      KMonad.Daemon.KeyHandler
+      KMonad.Daemon.Sluice
+      KMonad.Event
+      KMonad.Keyboard
+      KMonad.Keyboard.IO
+      KMonad.Keyboard.IO.Linux.DeviceSource
+      KMonad.Keyboard.IO.Linux.Types
+      KMonad.Keyboard.IO.Linux.UinputSink
+      KMonad.Keyboard.Keycode
+      KMonad.Runner
+      KMonad.Testing
+      KMonad.Util
+       
   -- if os(linux)
   --   exposed-modules:
   --     KMonad.Api.KeyIO.Linux.DeviceSource
@@ -106,7 +50,7 @@ library
   --     KMonad.Api.KeyIO.Windows.Types
   --     Test
   other-modules:
-      Paths_kmonad
+      -- Paths_kmonad
   hs-source-dirs:
       src
   default-extensions:
@@ -160,25 +104,6 @@ library
     c-sources:
       c_src/keyio_win.c
   build-depends:
-    --   async
-    -- , base
-    -- , bytestring
-    -- , cereal
-    -- , containers
-    -- , exceptions
-    -- , hashable
-    -- , lens
-    -- , megaparsec
-    -- , monad-logger
-    -- , mtl
-    -- , network
-    -- , optparse-applicative
-    -- , process
-    -- , text
-    -- , time
-    -- , unagi-chan
-    -- , unliftio
-    -- , unordered-containers
       base
     , cereal
     , hspec
@@ -188,7 +113,6 @@ library
     , resourcet
     , rio
     , time
-    , unagi-chan
     , unliftio
   if os(linux)
      build-depends: unix
@@ -197,17 +121,61 @@ library
 
   default-language: Haskell2010
 
--- executable kmonad
---   main-is: Main.hs
---   other-modules:
---       Paths_kmonad
---   hs-source-dirs:
---       app
---   ghc-options:
---       -threaded
---       -rtsopts
---       -with-rtsopts=-N
---   build-depends:
---       base
---     , kmonad
---   default-language: Haskell2010
+executable kmonad
+  main-is: Main.hs
+  other-modules:
+      -- Paths_kmonad
+  default-extensions:
+      AutoDeriveTypeable
+      BangPatterns
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveDataTypeable
+      DeriveFoldable
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      DoAndIfThenElse
+      EmptyDataDecls
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      KindSignatures
+      LambdaCase
+      MonadFailDesugaring
+      MultiParamTypeClasses
+      MultiWayIf
+      NamedFieldPuns
+      NoImplicitPrelude
+      OverloadedStrings
+      PartialTypeSignatures
+      PatternGuards
+      PolyKinds
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeOperators
+      TypeFamilies
+      TypeSynonymInstances
+      ViewPatterns
+  hs-source-dirs:
+      app
+  ghc-options:
+      -threaded
+      -rtsopts
+      -with-rtsopts=-N
+  build-depends:
+      base
+    , kmonad
+  default-language: Haskell2010

@@ -21,7 +21,7 @@ module KMonad.Keyboard.IO.Linux.UinputSink
   )
 where
 
-import Prelude
+import KPrelude
 
 import Foreign.C.String
 import Foreign.C.Types
