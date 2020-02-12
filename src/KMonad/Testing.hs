@@ -29,30 +29,40 @@ silly = mkButton
 
 
 kmap :: Keymap Button
-kmap = let sftB = modded KeyLeftShift . emitB
-           th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
-           tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
-           mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
-           cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
-           ls = mkLayerStack ["test"] $
-            [ ("test",
-                [ (KeyA, emitB KeyA)
-                , (KeyS, emitB KeyR)
-                , (KeyD, emitB KeyS)
-                , (KeyF, emitB KeyT)
-                , (KeyQ, sftB KeyA)
-                , (KeyW, sftB KeyR)
-                , (KeyE, sftB KeyS)
-                , (KeyR, sftB KeyT)
-                , (KeyZ, th)
-                , (KeyX, tn)
-                , (KeyC, mt)
-                , (KeyV, cs)
-                ])
-            ]
-       in case ls of
-            Left _   -> error "boop"
-            Right it -> it
+kmap = let
+  sftB = modded KeyLeftShift . emitB
+  th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
+  tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
+  mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
+  cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
+  lt   = mkButton (layerOp $ PushLayer "bloop") (layerOp $ PopLayer "bloop")
+  tb   = onPress (layerOp $ SetBaseLayer "bloop")
+  tt   = onPress (layerOp $ SetBaseLayer "test")
+  in mkLayerStack $
+        [ ("test",
+            [ (KeyA, emitB KeyA)
+            , (KeyS, emitB KeyR)
+            , (KeyD, emitB KeyS)
+            , (KeyF, emitB KeyT)
+            , (KeyQ, sftB KeyA)
+            , (KeyW, sftB KeyR)
+            , (KeyE, sftB KeyS)
+            , (KeyR, sftB KeyT)
+            , (KeyZ, th)
+            , (KeyX, tn)
+            , (KeyC, mt)
+            , (KeyV, cs)
+            , (KeyCapsLock, lt)
+            , (KeyEsc, tb)
+            ])
+        , ("bloop",
+           [ (KeyA, emitB KeyP)
+           , (KeyS, emitB KeyO)
+           , (KeyD, emitB KeyL)
+           , (KeyF, mt)
+           , (KeyEsc, tt)
+           ])
+        ]
 
 
 rstore :: M.HashMap Keycode Char
@@ -68,6 +78,7 @@ runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
         { _keySinkDev   = snkDev
         , _keySourceDev = srcDev
         , _keymapCfg    = kmap
+        , _firstLayer   = "test"
         , _port         = ()
         }
   runDaemon dcfg loop

@@ -47,23 +47,27 @@ runButton a = do
 -- $env
 --
 
--- | 'Keymap's are mappings from 'Name'd maps from 'Keycode' to things.
-type Keymap a = Ls.LayerStack Name Keycode a
+-- | 'Keymap's are mappings from 'LayerTag'd maps from 'Keycode' to things.
+type Keymap a = Ls.LayerStack LayerTag Keycode a
+
 
 -- |
 data KeyHandler = KeyHandler
-  { _keymap :: TVar (Keymap ButtonEnv)
+  { _keymap :: IORef (Keymap ButtonEnv)
+  , _baseL  :: IORef LayerTag
   }
 makeClassy ''KeyHandler
 
-mkKeyHandler' :: Keymap Button -> RIO e KeyHandler
-mkKeyHandler' m = do
+mkKeyHandler' :: ()
+  => LayerTag         -- ^ The initial base layer
+  -> Keymap Button    -- ^ The keymap of 'Button's
+  -> RIO e KeyHandler
+mkKeyHandler' n m = do
   envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> mkButtonEnv b c
-  v    <- atomically $ newTVar envs
-  pure $ KeyHandler v
+  KeyHandler <$> newIORef envs <*> newIORef n
 
-mkKeyHandler :: Keymap Button -> ContT r (RIO e) KeyHandler
-mkKeyHandler = lift . mkKeyHandler'
+mkKeyHandler :: LayerTag -> Keymap Button -> ContT r (RIO e) KeyHandler
+mkKeyHandler n = lift . mkKeyHandler' n
 
 --------------------------------------------------------------------------------
 -- $keyh
@@ -78,11 +82,15 @@ lookupKey :: HasKeyHandler e
   -> RIO e (Maybe ButtonEnv) -- ^ The resulting action
 lookupKey a
   | isPress a = do
-      km <- atomically . readTVar =<< view keymap
-      pure $ km ^? Ls.atKey (a^.keycode)
+      -- try to read from the keymap
+      km <- readIORef =<< view keymap
+      case km ^? Ls.atKey (a^.keycode) of
+        Nothing -> do
+          -- try to read from the base layer
+          base <- readIORef =<< view baseL
+          pure $ km ^? Ls.inLayer base (a^.keycode)
+        e -> pure e
   | otherwise = pure $ Nothing
-
-
 
 
 --------------------------------------------------------------------------------
@@ -92,31 +100,34 @@ lookupKey a
 -- to the front, and one that pops the first occurence of a layer. Note that
 -- both of these actions can throw errors.
 
--- | Push a layer to the front of the stack. This throws an error if the
--- provided 'Name' does not correspond to any map.
--- pushLayer :: (HasKeymap e, HasLogFunc e) => Name -> RIO e ()
--- pushLayer n =
---   view keymap >>= flip modifyMVar (pure . go) >>= \case
---     Left e  -> do
---       logError $ "Error pushing layer: " <> display n
---       throwIO e
---     Right _ ->
---       logInfo $ "Pushed layer: " <> display n
---   where go st = case Ls.pushLayer n st of
---           Left e   -> (st, Left e)
---           Right km -> (km, Right ())
+-- | Print a header message followed by an enumeration of the layer-stack
+debugReport :: (HasLogFunc e, HasKeyHandler e) => Utf8Builder -> RIO e ()
+debugReport hdr = do
+  st <- view Ls.stack <$> (readIORef =<< view keymap)
+  let ub = foldMap (\(i, n) -> " "  <> display i
+                            <> ". " <> display n <> "\n")
+             (zip ([1..] :: [Int]) st)
+  ls <- readIORef =<< view baseL
+  logDebug $ hdr <> "\n" <> ub <> "Base-layer: " <> display ls <> "\n"
 
--- -- | Pop a layer from the stack. This throws a 'LayerNotOnStackError' if the
--- -- layer does not exist on the stack, or a 'LayerNotFoundError' if the layer
--- -- does not exist in the keymap at all.
--- popLayer :: (HasKeymap e, HasLogFunc e) => Name -> RIO e ()
--- popLayer n =
---   view keymap >>= flip modifyMVar (pure . go) >>= \case
---     Left e  -> do
---       logError $ "Error popping layer: " <> display n
---       throwIO e
---     Right _ ->
---       logInfo $ "Popped layer: " <> display n
---   where go st = case Ls.popLayer n st of
---           Left e   -> (st, Left e)
---           Right km -> (km, Right ())
+-- | Perform operations on the layer-stack
+layerOp :: (HasLogFunc e, HasKeyHandler e) => LayerOp -> RIO e ()
+layerOp (PushLayer n) = do
+  km <- view keymap
+  Ls.pushLayer n <$> readIORef km >>= \case
+    Left e   -> throwIO e
+    Right m' -> writeIORef km m'
+  debugReport $ "Pushed layer to stack: " <> display n
+
+layerOp (PopLayer n) = do
+  km <- view keymap
+  Ls.popLayer n <$> readIORef km >>= \case
+    Left e   -> throwIO e
+    Right m' -> writeIORef km m'
+  debugReport $ "Popped layer from stack: " <> display n
+
+layerOp (SetBaseLayer n) = do
+  (n `elem`) . view Ls.maps <$> (readIORef =<< view (keymap)) >>= \case
+    True  -> view baseL >>= \b -> writeIORef b n
+    False -> throwIO $ Ls.LayerDoesNotExist n
+  debugReport $ "Set base layer to: " <> display n

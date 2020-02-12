@@ -108,6 +108,7 @@ library
     , cereal
     , hspec
     , lens
+    , megaparsec
     , mtl
     , network
     , resourcet

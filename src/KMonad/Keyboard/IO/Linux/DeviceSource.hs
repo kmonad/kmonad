@@ -24,7 +24,6 @@ import System.Posix
 
 import KMonad.Keyboard.IO.Linux.Types
 import KMonad.Util
-import KMonad.Runner
 
 import qualified Data.Serialize as B (decode)
 import qualified RIO.ByteString as B
@@ -62,8 +61,17 @@ ioctl_keyboard (Fd h) b = fromIntegral <$>
 --------------------------------------------------------------------------------
 -- $decoding
 
--- | An EventParser parses a ByteString into a LinuxKeyEvent
-type EventParser = B.ByteString -> Either String LinuxKeyEvent
+data EventParser = EventParser
+  { _nbytes :: !Int
+    -- ^ Size of 1 input event in bytes
+  , _prs    :: !(B.ByteString -> Either String LinuxKeyEvent)
+    -- ^ Function to convert bytestring to event
+  }
+makeClassy ''EventParser
+
+-- | Default configuration for parsing keyboard events
+defEventParser :: EventParser
+defEventParser = EventParser 24 decode64
 
 -- | The EventParser that works on my 64-bit Linux environment
 decode64 :: B.ByteString -> Either String LinuxKeyEvent
@@ -78,29 +86,36 @@ decode64 bs = (linuxKeyEvent . fliptup) <$> result
 --------------------------------------------------------------------------------
 -- $types
 
+-- | Configurable components of a 'DeviceSource'
+data DeviceSourceCfg = DeviceSourceCfg
+  { _pth     :: !FilePath     -- ^ Path to the event-file
+  , _parser  :: !EventParser  -- ^ The method used to decode events
+  }
+makeClassy ''DeviceSourceCfg
+
 -- | Collection of data used to read from linux input.h event stream
 data DeviceFile = DeviceFile
-  { _pth     :: !FilePath     -- ^ Path to the event-file
-  , _nbytes  :: !Int          -- ^ Size of 1 input event in bytes
-  , _prs     :: !EventParser  -- ^ Function to convert bytestring to event
-  , _fd      :: !Fd           -- ^ Posix filedescriptor to the device file
-  , _hdl     :: !Handle       -- ^ Haskell handle to the device file
+  { _cfg :: !DeviceSourceCfg -- ^ Configuration settings
+  , _fd  :: !Fd              -- ^ Posix filedescriptor to the device file
+  , _hdl :: !Handle          -- ^ Haskell handle to the device file
   }
-makeLenses ''DeviceFile
+makeClassy ''DeviceFile
+
+instance HasDeviceSourceCfg DeviceFile where deviceSourceCfg = cfg
+instance HasEventParser     DeviceFile where eventParser     = cfg.parser
 
 -- | Open a device file
 deviceSource :: HasLogFunc e
-  => Int         -- ^ The amount of bytes to read in 1 chunk
-  -> EventParser -- ^ A function that parses LinuxEvent's from bytes
+  => EventParser -- ^ The method by which to read and decode events
   -> FilePath    -- ^ The filepath to the device file
   -> RIO e (Acquire KeySource)
-deviceSource n pr pt = mkKeySource (lsOpen n pr pt) lsClose lsRead
+deviceSource pr pt = mkKeySource (lsOpen pr pt) lsClose lsRead
 
 -- | Open a device file on a standard linux 64 bit architecture
 deviceSource64 :: HasLogFunc e
   => FilePath  -- ^ The filepath to the device file
   -> RIO e (Acquire KeySource)
-deviceSource64 = deviceSource 24 decode64
+deviceSource64 = deviceSource defEventParser
 
 
 --------------------------------------------------------------------------------
@@ -110,17 +125,16 @@ deviceSource64 = deviceSource 24 decode64
 -- can throw an 'IOException' if the file cannot be opened for reading, or an
 -- 'IOCtlGrabError' if an ioctl grab could not be properly performed.
 lsOpen :: (HasLogFunc e)
-  => Int           -- ^ The size of 1 event in bytes
-  -> EventParser   -- ^ The function that parser bytes to events
+  => EventParser   -- ^ The method by which to decode events
   -> FilePath      -- ^ The path to the device file
   -> RIO e DeviceFile
-lsOpen n pr pt = do
+lsOpen pr pt = do
   h  <- liftIO . openFd pt ReadOnly Nothing $
     OpenFileFlags False False False False False
   hd <- liftIO $ fdToHandle h
   logInfo $ "Initiating ioctl grab"
   ioctl_keyboard h True `onErr` IOCtlGrabError pt
-  return $ DeviceFile pt n pr h hd
+  return $ DeviceFile (DeviceSourceCfg pt pr) h hd
 
 -- | Release the ioctl grab and close the device file. This can throw an
 -- 'IOException' if the handle to the device cannot be properly closed, or an

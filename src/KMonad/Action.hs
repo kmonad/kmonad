@@ -64,6 +64,20 @@ matchMy a = HookPred False <$> my a
 catchMy :: MonadButton m => SwitchAction -> m HookPred
 catchMy a = HookPred True <$> my a
 
+
+--------------------------------------------------------------------------------
+-- $lop
+--
+-- Layer operations.
+
+type LayerTag = Text
+
+data LayerOp
+  = PushLayer    LayerTag
+  | PopLayer     LayerTag
+  | SetBaseLayer LayerTag
+
+
 --------------------------------------------------------------------------------
 -- $monad
 --
@@ -83,8 +97,10 @@ class MonadIO m => MonadButton m where
   hookNext   :: HookPred -> (Match -> m ()) -> m ()
   -- | Run a hook on all 'KeyEvent's until the timer expires,
   hookWithin :: Milliseconds -> HookPred -> (TimerMatch -> m ()) -> m ()
+  -- | Run a layer-stack manipulation
+  layerOp    :: LayerOp -> m ()
   -- | Access the keycode to which this button is bound
-  myBinding   :: m Keycode
+  myBinding  :: m Keycode
 
 --------------------------------------------------------------------------------
 -- $action

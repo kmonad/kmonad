@@ -34,6 +34,8 @@ import RIO as X hiding
 
     -- Some stuff I'd rather default to Text
   , unlines, lines
+
+  , some, many
   )
 
 print :: (Show a, MonadIO m) => a -> m ()

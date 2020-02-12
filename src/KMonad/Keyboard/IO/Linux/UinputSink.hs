@@ -31,7 +31,6 @@ import UnliftIO.Process (callCommand)
 
 import KMonad.Keyboard.IO.Linux.Types
 import KMonad.Util
-import KMonad.Runner
 
 --------------------------------------------------------------------------------
 -- $err

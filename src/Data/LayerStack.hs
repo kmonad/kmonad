@@ -27,16 +27,19 @@ module Data.LayerStack
   , LayerStack
   , mkLayerStack
   , items
+  , maps
+  , stack
 
     -- * Basic operations on LayerStacks
     -- $ops
   , atKey
+  , inLayer
   , pushLayer
   , popLayer
 
     -- * Things that can go wrong with LayerStacks
     -- $err
-  , LayerStackError
+  , LayerStackError(..)
   , AsLayerStackError(..)
   )
 
@@ -60,7 +63,6 @@ data LayerStackError l
 makeClassyPrisms ''LayerStackError
 
 instance (Typeable l, Show l) => Exception (LayerStackError l)
-
 
 --------------------------------------------------------------------------------
 -- $constraints
@@ -89,25 +91,19 @@ data LayerStack l k a = LayerStack
   } deriving (Show, Eq, Functor)
 makeLenses ''LayerStack
 
+
 -- | Create a new 'LayerStack' from a foldable of foldables.
-mkLayerStack :: (Foldable t1, Foldable t2, Foldable t3, CanKey k, CanKey l)
-  => t1 l              -- ^ Initial state of the stack
-  -> t2 (l, t3 (k, a)) -- ^ The `alist` of `alists` describing the mapping
-  -> Either (LayerStackError l) (LayerStack l k a)
-mkLayerStack initStack nestMaps = let
+mkLayerStack :: (Foldable t1, Foldable t2, CanKey k, CanKey l)
+  => t1 (l, t2 (k, a)) -- ^ The `alist` of `alists` describing the mapping
+  -> LayerStack l k a
+mkLayerStack nestMaps = let
   -- Create a HashMap l (Layer k a) from the listlikes
   hms = M.fromList . map (over _2 mkLayer) $ toList nestMaps
-  -- Create a HashMap (l, k) a from `hms`
+--   -- Create a HashMap (l, k) a from `hms`
   its = M.fromList $ hms ^@.. ifolded <.> (to unLayer . ifolded)
-  -- Create a HashSet of keys from `its`
+--   -- Create a HashSet of keys from `its`
   kys = S.fromList . M.keys $ hms
-  in case (findOf folded (not . (`S.member` kys)) initStack) of
-       Nothing -> Right $ LayerStack
-            { _stack = toList initStack
-            , _maps  = kys
-            , _items = its
-            }
-       Just err -> Left . LayerDoesNotExist $ err
+  in LayerStack [] kys its
 
 --------------------------------------------------------------------------------
 -- $ops
@@ -117,19 +113,29 @@ mkLayerStack initStack nestMaps = let
 -- This can be used with 'toListOf' to get an overview of all the items
 -- currently mapped to an item-key, or more usefully, with 'firstOf' to simply
 -- try a lookup like this: `stack^? atKey KeyA`
-atKey :: (CanKey l, CanKey k)=> k -> Fold (LayerStack l k a) a
+atKey :: (CanKey l, CanKey k) => k -> Fold (LayerStack l k a) a
 atKey c = folding $ \m -> m ^.. stack . folded . to (getK m) . folded
   where getK m n = fromMaybe [] (pure <$> M.lookup (n, c) (m^.items))
 
--- | Add a layer to the front of the stack and return the new 'LayerStack'. If the
--- 'Layer' does not exist, return a 'LayerStackError'.
+-- | Try to look up a key in a specific layer, regardless of the stack
+inLayer :: (CanKey l, CanKey k) => l -> k -> Fold (LayerStack l k a) a
+inLayer l c = folding $ \m -> m ^? items . ix (l, c)
+
+-- | Add a layer to the front of the stack and return the new 'LayerStack'.
+--
+-- If the 'Layer' does not exist, return a 'LayerStackError'. If the 'Layer' is
+-- already on the stack, bring it to the front.
+--
 pushLayer :: (CanKey l, CanKey k)
   => l
   -> LayerStack l k a
   -> Either (LayerStackError l) (LayerStack l k a)
-pushLayer n keymap = if n `elem` keymap^.stack
-  then Right $ keymap & stack %~ (n:)
+pushLayer n keymap = if n `elem` keymap^.maps
+  then Right $ keymap & stack %~ (addFront n)
   else Left  $ LayerDoesNotExist n
+  where addFront a as = case break (a ==) as of
+          (frnt, a':rest) -> a':(frnt <> rest)
+          (frnt, [])      -> a:frnt
 
 -- | Remove a layer from the stack. If the layer index does not exist on the
 -- stack, return a 'LayerNotOnStack', if the layer index does not exist at all
@@ -140,5 +146,5 @@ popLayer :: (CanKey l, CanKey k)
   -> Either (LayerStackError l) (LayerStack l k a)
 popLayer n keymap = if
   | n `elem` keymap^.stack -> Right $ keymap & stack %~ delete n
-  | n `elem` keymap^.maps  -> Left  $ LayerNotOnStack n
-  | True                   -> Left  $ LayerDoesNotExist n
+  | n `elem` keymap^.maps  -> Left  $ LayerNotOnStack   n
+  | otherwise              -> Left  $ LayerDoesNotExist n

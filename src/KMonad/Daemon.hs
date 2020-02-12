@@ -4,7 +4,7 @@ module KMonad.Daemon
   ( DaemonCfg(..)
   , runDaemon
   , loop
-  , Keymap
+  , Kh.Keymap
   )
 where
 
@@ -17,13 +17,12 @@ import KMonad.Keyboard.IO
 import KMonad.Util
 import KMonad.Runner
 
-import KMonad.Daemon.KeyHandler
 
 import qualified KMonad.Daemon.Dispatch     as Di
 import qualified KMonad.Daemon.HookStore    as Hs
+import qualified KMonad.Daemon.KeyHandler   as Kh
 import qualified KMonad.Daemon.InjectPoint  as Ip
 import qualified KMonad.Daemon.Sluice       as Sl
-
 
 --------------------------------------------------------------------------------
 -- $env
@@ -34,7 +33,8 @@ import qualified KMonad.Daemon.Sluice       as Sl
 data DaemonCfg = DaemonCfg
   { _keySinkDev   :: Acquire KeySink
   , _keySourceDev :: Acquire KeySource
-  , _keymapCfg    :: Keymap Button
+  , _keymapCfg    :: Kh.Keymap Button
+  , _firstLayer   :: LayerTag
   , _port         :: ()
   }
 makeClassy ''DaemonCfg
@@ -54,7 +54,7 @@ data Daemon = Daemon
   , _deHookStore   :: Hs.HookStore
   , _deInjectPoint :: Ip.InjectPoint
   , _deSluice      :: Sl.Sluice
-  , _deKeyHandler  :: KeyHandler
+  , _deKeyHandler  :: Kh.KeyHandler
   } 
 makeLenses ''Daemon
 
@@ -66,7 +66,7 @@ class ( HasLogFunc         e
       , Hs.HasHookStore    e
       , Sl.HasSluice       e
       , Ip.HasInjectPoint  e
-      , HasKeyHandler   e
+      , Kh.HasKeyHandler   e
       )
   => HasDaemon e where
   daemon :: Lens' e Daemon
@@ -89,7 +89,7 @@ instance {-# OVERLAPS #-} (HasDaemon e) => Sl.HasSluice e where
   sluice = daemon . deSluice
 instance {-# OVERLAPS #-} (HasDaemon e) => Ip.HasInjectPoint e where
   injectPoint = daemon . deInjectPoint
-instance {-# OVERLAPS #-} (HasDaemon e) => HasKeyHandler e where
+instance {-# OVERLAPS #-} (HasDaemon e) => Kh.HasKeyHandler e where
   keyHandler = daemon . deKeyHandler
 
 --------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ mkDaemon cfg = do
   ijp <- Ip.mkInjectPoint
 
   -- Initialize components that are not part of the pull-chain
-  kyh <- mkKeyHandler  $ cfg^.keymapCfg
+  kyh <- Kh.mkKeyHandler (cfg^.firstLayer) (cfg^.keymapCfg)
 
   -- Construct and return the Daemon
   pure $ Daemon
@@ -139,17 +139,17 @@ runDaemon cfg a = runContT (mkDaemon cfg) $ flip runRIO a
 
 data KEnv = KEnv
   { _kDaemon    :: Daemon
-  , _kButtonEnv :: ButtonEnv
+  , _kButtonEnv :: Kh.ButtonEnv
   }
 makeLenses ''KEnv
 
-class (HasDaemon e, HasButtonEnv e) => HasKEnv e where
+class (HasDaemon e, Kh.HasButtonEnv e) => HasKEnv e where
   kEnv :: Lens' e KEnv
 instance HasKEnv KEnv where kEnv = id
 
 instance {-# OVERLAPS #-} (HasKEnv e) => HasDaemon e where
   daemon = kEnv . kDaemon
-instance {-# OVERLAPS #-} (HasKEnv e) => HasButtonEnv e where
+instance {-# OVERLAPS #-} (HasKEnv e) => Kh.HasButtonEnv e where
   buttonEnv = kEnv . kButtonEnv
 
 
@@ -162,11 +162,12 @@ instance HasKEnv e => MonadButton (RIO e) where
   emit        = emitKey
   pause       = threadDelay . (*1000) . fromIntegral
   hold        = kHold
-  myBinding   = view binding
+  myBinding   = view (Kh.binding)
   hookNext    = Hs.hookNext
   hookWithin  = Hs.hookWithin
+  layerOp     = Kh.layerOp
 
-runK :: HasDaemon e => ButtonEnv -> RIO KEnv a -> RIO e a
+runK :: HasDaemon e => Kh.ButtonEnv -> RIO KEnv a -> RIO e a
 runK b a = view daemon >>= \d -> runRIO (KEnv d b) a
 
 -- | Press the current 'Button'
@@ -179,7 +180,7 @@ runK b a = view daemon >>= \d -> runRIO (KEnv d b) a
 --      'releaseButton'
 pressButton :: RIO KEnv ()
 pressButton = do
-  runButton Press >>= maybe (pure ()) (\a -> do
+  Kh.runButton Press >>= maybe (pure ()) (\a -> do
       runAction a
       matchRelease_ releaseButton)
 
@@ -190,7 +191,7 @@ pressButton = do
 --   2. Sets the 'lastAction' to 'Release'.
 releaseButton :: RIO KEnv ()
 releaseButton = do
-  runButton Release >>= maybe (pure ()) runAction
+  Kh.runButton Release >>= maybe (pure ()) runAction
 
 
 --------------------------------------------------------------------------------
@@ -224,7 +225,7 @@ loop = do
 -- | Handle a key press by running 'pressButton' in its environment, any other
 -- key event gets ignored.
 handleKey :: HasDaemon e => KeyEvent -> RIO e ()
-handleKey e = lookupKey (e^.keyAction) >>= \case
+handleKey e = Kh.lookupKey (e^.keyAction) >>= \case
   Nothing -> pure ()
   Just b  -> runK b $ pressButton
 
