@@ -1,14 +1,20 @@
-;; IO
+#| Copy this out to easily specify a new layer
+(deflayer "name"
+   _    _    _    _    _              _    _    _    _    _
+   _    _    _    _    _              _    _    _    _    _
+   _    _    _    _    _              _    _    _    _    _
+   _    _    _    _    _    _    _    _    _    _    _    _
+)
+|#
 
-;; Copy this out to create a template for a new layer
-;; LAYER
-;;   _    _    _    _    _              _    _    _    _    _
-;;   _    _    _    _    _              _    _    _    _    _
-;;   _    _    _    _    _              _    _    _    _    _
-;;   _    _    _    _    _    _    _    _    _    _    _    _
+;; Define the IO parameters of this keyboard
+(defio
+  input  (device-file L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd)
+  output (uinput-sink "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
+  startup "/run/current-system/sw/bin/sleep 1"
+)
 
-
-;; Layer toggling shortcuts
+;; Define layer toggling shortcuts
 (defalias
   symb (layer-toggle symb)
   hask (layer-toggle hask)
@@ -91,5 +97,3 @@
 
 
 
-INPUT  = LINUX_DEVICE L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd
-OUTPUT = UINPUT_SINK "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt"
