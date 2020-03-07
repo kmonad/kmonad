@@ -450,4 +450,5 @@ aliases = Q.mkMultiMap
   , (KeyBackslash,      ["bksl", "\\"])
   , (KeyComma,          ["comm", ","])
   , (KeyDot,            ["."])
+  , (KeySlash,          ["/"])
   ]

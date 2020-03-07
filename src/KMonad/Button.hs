@@ -127,16 +127,6 @@ multiTap l bs = onPress $ go bs
             | otherwise   -> tap b'
         | otherwise  -> press b'
 
--- multiTap :: Button -> [(Milliseconds, Button)] -> Button
--- multiTap l bs = onPress $ go bs
---   where
---     go :: [(Milliseconds, Button)] -> MB ()
---     go []             = press l
---     go ((ms, b'):bs') = catchWithinHeld ms (catchMy Press) $ \m -> if
---         | m^.matched -> go bs'
---         | otherwise  -> press b'
-
-
 -- | Create a 'Button' that performs a tap of one button if the next event is
 -- its own release, or else it presses another button (and releases it when a
 -- release is detected).

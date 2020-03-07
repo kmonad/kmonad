@@ -19,7 +19,7 @@ import Control.Arrow      as X ((&&&), (***))
 import Control.Lens       as X
 import Control.Monad.Cont as X
 import Data.Acquire       as X
-import Data.Serialize     as X
+import Data.Serialize     as X hiding (lookAhead)
 import GHC.Conc           as X (orElse)
 import qualified System.IO as S
 import RIO.Text as X (unlines, lines)

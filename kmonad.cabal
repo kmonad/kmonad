@@ -18,6 +18,8 @@ library
       KPrelude
       Data.LayerStack
       Data.MultiMap
+      KLisp.Parser
+      KLisp.Token
       KMonad
       KMonad.Action
       KMonad.Button

@@ -34,10 +34,6 @@ matched = match . to (\case
   (Match _) -> True
   _         -> False)
 
--- class HasMatched e where matched :: Lens' e Bool
--- instance HasMatched NextMatch where matched = nMatched
--- instance HasMatched TimerMatch where matched = tMatched
-
 instance Display Match where
   textDisplay m = if m^.matched then "Match" else "NoMatch"
 
@@ -85,8 +81,8 @@ data LayerOp
 -- 'MonadButton' that exposes a programmable API to the user, without exposing 'IO'.
 
 -- FIXME: remove MonadIO when finished debugging
--- class Monad m => MonadButton m where
-class MonadIO m => MonadButton m where
+class Monad m => MonadButton m where
+-- class MonadIO m => MonadButton m where
   -- | Emit a KeyAction to the OS
   emit        :: KeyAction -> m ()
   -- | Pause the current thread for n milliseconds
