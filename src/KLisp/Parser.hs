@@ -12,10 +12,11 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 import RIO.List (sortBy)
-import RIO.Partial (read)
+import RIO.Partial (read, fromJust)
 
 
 import qualified Data.MultiMap as Q
+import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -45,11 +46,18 @@ symbol = void . L.symbol sc
 
 -- | Consume all chars until a space is encounterd
 word :: Parser Text
-word = T.pack <$> some (satisfy $ not . isSpace)
+word = T.pack <$> some (satisfy wordChar)
+  where
+    wordChar c = not (isSpace c || c `elem` forbidden)
+    forbidden = "()\"\\'" :: String
 
 -- | Run the parser IFF it is followed by a space or eof.
 terminated :: Parser a -> Parser a
-terminated p = try $ p <* (lookAhead $ void spaceChar <|> eof)
+terminated p = try $ p <* lookAhead (void spaceChar <|> eof)
+
+-- | Run the parser IFF it is not followed by a space or eof.
+prefix :: Parser a -> Parser a
+prefix p = try $ p <* notFollowedBy (void spaceChar <|> eof)
 
 -- | Create a parser that matches symbols to values and only consumes on match.
 fromNamed :: [(Text, a)] -> Parser a
@@ -73,16 +81,13 @@ paren = between (symbol "(") (symbol ")")
 statement :: Text -> Parser a -> Parser a
 statement s = paren . (symbol s *>)
 
--- | Collect some items in a hashmap of named tokens
---
--- For example, `naming buttonP` will parse an alist of style:
--- ( name1 button1
---   name2 button2 )
--- and return an alist.
---
-naming :: Parser a -> Parser [(Text, a)]
-naming p = many $ (,) <$> lexeme word <*> p
- 
+
+
+--------------------------------------------------------------------------------
+-- $refs
+
+type Aliases = M.HashMap Text KButton
+
 
 
 --------------------------------------------------------------------------------
@@ -105,9 +110,9 @@ textP = do
   s <- manyTill L.charLiteral (char '\"')
   pure . T.pack $ s
 
--- | Parse a Lisp list of KExpr
--- listP :: Parser
--- listP = between (symbol "(") (symbol ")") (many $ lexeme exprP)
+-- | Parse a variable reference
+derefP :: Parser Text
+derefP = prefix (char '@') *> word
 
 --------------------------------------------------------------------------------
 -- $tkn
@@ -116,6 +121,7 @@ data KExpr
   = KDefIO    DefIO
   | KDefSrc   DefSrc
   | KDefLayer DefLayer
+  | KDefAlias Aliases
   deriving Show
 
 --------------------------------------------------------------------------------
@@ -137,7 +143,58 @@ exprP = paren . choice $
   [ try (symbol "defio")    *> (KDefIO    <$> defioP)
   , try (symbol "defsrc")   *> (KDefSrc   <$> defsrcP)
   , try (symbol "deflayer") *> (KDefLayer <$> deflayerP)
+  , try (symbol "defalias") *> (KDefAlias <$> defaliasP)
   ]
+
+--------------------------------------------------------------------------------
+-- $but
+--
+-- All the various ways to refer to buttons
+
+
+data KButton
+  = KRef Text                            -- ^ Reference a named button
+  | KEmit Keycode                        -- ^ Emit a keycode
+  | KLayerToggle Text                    -- ^ Toggle to a layer when held
+  | KTapNext KButton KButton             -- ^ Do 2 things based on behavior
+  | KTapHold Int KButton KButton         -- ^ Do 2 things based on behavior and delay
+  | KMultiTap [(Int, KButton)] KButton   -- ^ Do things depending on tap-count
+  | KAround KButton KButton              -- ^ Wrap 1 button around another
+  | KTrans                               -- ^ Transparent button that does nothing
+  | KBlock                               -- ^ Button that catches event and does nothing
+  deriving Show
+
+-- | Names for various buttons
+buttonNames :: [(Text, KButton)]
+buttonNames = caps <> syms <> escp <> util
+  where
+    emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
+    pair t c = (T.singleton t, emitS . fromJust . kcFromChar $ c)
+    -- Capitalized letters signify shifted letter
+    caps = map (\c -> pair c c ) ['A'..'Z']
+    -- Certain symbols signify shifted numbers
+    syms = map (\(t, c) -> pair t c) $ zip "!@#$%^&*""12345678"
+    -- Escaped versions for reserved characters
+    escp = [("\\(", emitS Key9), ("\\)", emitS Key0), ("\\_", emitS KeyMinus)]
+    -- Extra names for useful buttons
+    util = [("_", KTrans), ("_X", KBlock)]
+
+buttonP :: Parser KButton
+buttonP = (lexeme . choice . map try $
+  [ statement "around"       $ KAround      <$> buttonP <*> buttonP
+  , statement "multi-tap"    $ KMultiTap    <$> timed   <*> buttonP
+  , statement "tap-hold"     $ KTapHold     <$> numP    <*> buttonP <*> buttonP
+  , statement "tap-next"     $ KTapNext     <$> buttonP <*> buttonP
+  , statement "layer-toggle" $ KLayerToggle <$> word
+  , KRef  <$> derefP
+  , lexeme $ fromNamed buttonNames
+  , KEmit <$> keycodeP
+  ]) <?> "button"
+
+  where
+    timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
+
+
 
 --------------------------------------------------------------------------------
 -- $defio
@@ -177,6 +234,13 @@ defioP = do
   pure $ DefIO it ot is
 
 --------------------------------------------------------------------------------
+-- $defalias
+
+-- | Parse a collection of names and buttons
+defaliasP :: Parser Aliases
+defaliasP = M.fromList <$> (many $ (,) <$> lexeme word <*> buttonP)
+
+--------------------------------------------------------------------------------
 -- $defsrc
 
 -- | The source layer describes the configuration of the input signal
@@ -192,41 +256,15 @@ defsrcP = many $ lexeme keycodeP
 -- | A layer of buttons
 data DefLayer = DefLayer
   { _layerName :: Text
-  , _initial   :: Bool
   , _buttons   :: [KButton]
   }
   deriving Show
-
-data KButton
-  = KEmit Keycode                        -- ^ Emit a keycode
-  | KLayerToggle Text                    -- ^ Toggle to a layer when held
-  | KTapNext KButton KButton             -- ^ Do 2 things based on behavior
-  | KTapHold Int KButton KButton         -- ^ Do 2 things based on behavior and delay
-  | KMultiTap [(Int, KButton)] KButton   -- ^ Do things depending on tap-count
-  | KAround KButton KButton              -- ^ Wrap 1 button around another
-  deriving Show
-
-buttonP :: Parser KButton
-buttonP = (lexeme . choice . map try $
-  [ statement "around"       $ KAround      <$> buttonP <*> buttonP
-  , statement "multi-tap"    $ KMultiTap    <$> timed   <*> buttonP
-  , statement "tap-hold"     $ KTapHold     <$> numP    <*> buttonP <*> buttonP
-  , statement "tap-next"     $ KTapNext     <$> buttonP <*> buttonP
-  , statement "layer-toggle" $ KLayerToggle <$> word
-  , KEmit        <$> keycodeP
-  ]) <?> "button"
-
-  where
-    timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
-
 deflayerP :: Parser DefLayer
-deflayerP = DefLayer
-  <$> lexeme textP
-  <*> lexeme (isJust <$> (optional $ symbol "INITIAL"))
-  <*> lexeme (many $ lexeme buttonP)
+deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
 
--- --------------------------------------------------------------------------------
--- -- $tst
+
+--------------------------------------------------------------------------------
+-- $tst
 
 testText :: IO Text
 testText = readFileUtf8 "/home/david/prj/hask/kmonad/doc/test.kbd"
