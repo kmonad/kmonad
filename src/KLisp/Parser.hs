@@ -1,5 +1,36 @@
-module KLisp.Parser
+{-|
+Module      : KLisp.Parser
+Description : The code that turns text into tokens
+Copyright   : (c) David Janssen, 2019
+License     : MIT
 
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
+
+The first stage of reading a config-file: reading in text and turning it into
+KExpr-tokens.
+
+-}
+module KLisp.Parser
+  ( loadTokens
+  , KExpr(..)
+
+    -- * $defio
+  , DefIO(..)
+  , IToken(..)
+  , OToken(..)
+
+    -- * $defsrc
+  , DefSrc
+
+    -- * $defalias
+  , DefAlias
+
+    -- * $deflayer
+  , DefLayer(..)
+
+  )
 where
 
 import KPrelude hiding (try)
@@ -27,7 +58,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 type Parser = Parsec Void Text
 
 -- | Errors defined to match Parser's
-type PError = ParseErrorBundle Text Void
+-- type PError = ParseErrorBundle Text Void
 
 -- | Consume whitespace
 sc :: Parser ()
@@ -44,16 +75,21 @@ lexeme = L.lexeme sc
 symbol :: Text -> Parser ()
 symbol = void . L.symbol sc
 
+-- | List of all characters that 'end' a word or sequence
+terminators :: String
+terminators = ")\""
+
+terminatorP :: Parser Char
+terminatorP = satisfy (`elem` terminators)
+
 -- | Consume all chars until a space is encounterd
 word :: Parser Text
 word = T.pack <$> some (satisfy wordChar)
-  where
-    wordChar c = not (isSpace c || c `elem` forbidden)
-    forbidden = "()\"\\'" :: String
+  where wordChar c = not (isSpace c || c `elem` terminators)
 
--- | Run the parser IFF it is followed by a space or eof.
+-- | Run the parser IFF it is followed by a space, eof, or reserved char
 terminated :: Parser a -> Parser a
-terminated p = try $ p <* lookAhead (void spaceChar <|> eof)
+terminated p = try $ p <* lookAhead (void spaceChar <|> eof <|> void terminatorP)
 
 -- | Run the parser IFF it is not followed by a space or eof.
 prefix :: Parser a -> Parser a
@@ -86,7 +122,7 @@ statement s = paren . (symbol s *>)
 --------------------------------------------------------------------------------
 -- $refs
 
-type Aliases = M.HashMap Text KButton
+type DefAlias = M.HashMap Text KButton
 
 
 
@@ -121,7 +157,7 @@ data KExpr
   = KDefIO    DefIO
   | KDefSrc   DefSrc
   | KDefLayer DefLayer
-  | KDefAlias Aliases
+  | KDefAlias DefAlias
   deriving Show
 
 --------------------------------------------------------------------------------
@@ -129,9 +165,17 @@ data KExpr
 --
 -- Parsers built up from the basic KExpr's
 
+-- | Load a set of tokens from file
+loadTokens :: MonadIO m => FilePath -> m [KExpr]
+loadTokens pth = do
+  t <- readFileUtf8 pth
+  case runParser configP "" t of
+    Left e   -> throwString $ errorBundlePretty e
+    Right xs -> pure xs
+
 -- | Consume an entire file of expressions and comments
 configP :: Parser [KExpr]
-configP = sc *> exprsP
+configP = sc *> exprsP <* eof
 
 -- | Parse 0 or more KExpr's
 exprsP :: Parser [KExpr]
@@ -151,7 +195,7 @@ exprP = paren . choice $
 --
 -- All the various ways to refer to buttons
 
-
+-- | Button ADT
 data KButton
   = KRef Text                            -- ^ Reference a named button
   | KEmit Keycode                        -- ^ Emit a keycode
@@ -160,34 +204,60 @@ data KButton
   | KTapHold Int KButton KButton         -- ^ Do 2 things based on behavior and delay
   | KMultiTap [(Int, KButton)] KButton   -- ^ Do things depending on tap-count
   | KAround KButton KButton              -- ^ Wrap 1 button around another
+  | KTapMacro [KButton]                  -- ^ Sequence of buttons to tap
   | KTrans                               -- ^ Transparent button that does nothing
-  | KBlock                               -- ^ Button that catches event and does nothing
+  | KBlock                               -- ^ Button that catches event
   deriving Show
+
+-- | Different ways to refer to shifted versions of keycodes
+shiftedNames :: [(Text, KButton)]
+shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) in
+                 map f $ cps <> num <> oth
+  where
+    cps = zip (map T.singleton ['A'..'Z'])
+          [ KeyA, KeyB, KeyC, KeyD, KeyE, KeyF, KeyG, KeyH, KeyI, KeyJ, KeyK, KeyL, KeyM,
+            KeyN, KeyO, KeyP, KeyQ, KeyR, KeyS, KeyT, KeyU, KeyV, KeyW, KeyX, KeyY, KeyZ ]
+    num = zip (map T.singleton "!@#$%^&*")
+          [ Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8 ]
+    oth = zip (map T.singleton "<>:~\"|{}+")
+          [ KeyComma, KeyDot, KeySemicolon, KeyGrave, KeyApostrophe, KeyBackslash
+          , KeyLeftBrace, KeyRightBrace, KeyEqual]
 
 -- | Names for various buttons
 buttonNames :: [(Text, KButton)]
-buttonNames = caps <> syms <> escp <> util
+buttonNames = shiftedNames <> escp <> util
   where
     emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
-    pair t c = (T.singleton t, emitS . fromJust . kcFromChar $ c)
-    -- Capitalized letters signify shifted letter
-    caps = map (\c -> pair c c ) ['A'..'Z']
-    -- Certain symbols signify shifted numbers
-    syms = map (\(t, c) -> pair t c) $ zip "!@#$%^&*""12345678"
     -- Escaped versions for reserved characters
-    escp = [("\\(", emitS Key9), ("\\)", emitS Key0), ("\\_", emitS KeyMinus)]
+    escp = [ ("\\(", emitS Key9), ("\\)", emitS Key0)
+           , ("\\_", emitS KeyMinus), ("\\\\", emitS KeyBackslash)]
     -- Extra names for useful buttons
-    util = [("_", KTrans), ("_X", KBlock)]
+    util = [("_", KTrans), ("XX", KBlock)]
+
+-- | Parse "X-b" style modded-sequences
+moddedP :: Parser KButton
+moddedP = KAround <$> prfx <*> buttonP
+  where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
+               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)]
+        prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
+
+-- | 'Reader-macro' style tap-macro
+rmTapMacro :: Parser KButton
+rmTapMacro = KTapMacro <$> (char '#' *> paren (some buttonP))
+
 
 buttonP :: Parser KButton
 buttonP = (lexeme . choice . map try $
-  [ statement "around"       $ KAround      <$> buttonP <*> buttonP
-  , statement "multi-tap"    $ KMultiTap    <$> timed   <*> buttonP
-  , statement "tap-hold"     $ KTapHold     <$> numP    <*> buttonP <*> buttonP
-  , statement "tap-next"     $ KTapNext     <$> buttonP <*> buttonP
+  [ statement "around"       $ KAround      <$> buttonP     <*> buttonP
+  , statement "multi-tap"    $ KMultiTap    <$> timed       <*> buttonP
+  , statement "tap-hold"     $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
+  , statement "tap-next"     $ KTapNext     <$> buttonP     <*> buttonP
   , statement "layer-toggle" $ KLayerToggle <$> word
+  , statement "tap-macro"    $ KTapMacro    <$> some buttonP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
+  , try moddedP
+  , lexeme $ try rmTapMacro
   , KEmit <$> keycodeP
   ]) <?> "button"
 
@@ -195,18 +265,17 @@ buttonP = (lexeme . choice . map try $
     timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
 
 
-
 --------------------------------------------------------------------------------
 -- $defio
 
 -- | All different input-tokens KMonad can take
 data IToken
-  = KDeviceSource Text
+  = KDeviceSource FilePath
   deriving Show
 
 -- | Parse an input token
 itokenP :: Parser IToken
-itokenP = statement "device-file" $ KDeviceSource <$> textP
+itokenP = statement "device-file" $ KDeviceSource <$> (T.unpack <$> textP)
 
 -- | All different output-tokens KMonad can take
 data OToken
@@ -215,7 +284,7 @@ data OToken
 
 -- | Parse an output token
 otokenP :: Parser OToken
-otokenP = statement "uinput-sink" $ KUinputSink <$> textP <*> optional textP
+otokenP = statement "uinput-sink" $ KUinputSink <$> lexeme textP <*> optional textP
 
 -- | A collection of all the IO configuration for KMonad
 data DefIO = DefIO
@@ -237,7 +306,7 @@ defioP = do
 -- $defalias
 
 -- | Parse a collection of names and buttons
-defaliasP :: Parser Aliases
+defaliasP :: Parser DefAlias
 defaliasP = M.fromList <$> (many $ (,) <$> lexeme word <*> buttonP)
 
 --------------------------------------------------------------------------------
@@ -263,17 +332,27 @@ deflayerP :: Parser DefLayer
 deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
 
 
+
 --------------------------------------------------------------------------------
 -- $tst
 
-testText :: IO Text
-testText = readFileUtf8 "/home/david/prj/hask/kmonad/doc/test.kbd"
+-- fname :: String
+-- fname = "/home/david/prj/hask/kmonad/doc/example.kbd"
 
-test2Text :: IO Text
-test2Text = readFileUtf8  "/home/david/prj/hask/kmonad/doc/test2.kbd"
+-- testText :: IO Text
+-- testText = readFileUtf8 "/home/david/prj/hask/kmonad/doc/test.kbd"
 
-test :: IO ()
-test = parseTest configP =<< testText
+-- test2Text :: IO Text
+-- test2Text = readFileUtf8  "/home/david/prj/hask/kmonad/doc/test2.kbd"
 
-test2 :: IO ()
-test2 = parseTest (some $ lexeme keycodeP) =<< test2Text
+-- test3Text :: IO Text
+-- test3Text = readFileUtf8  "/home/david/prj/hask/kmonad/doc/example.kbd"
+
+-- test :: IO ()
+-- test = parseTest configP =<< testText
+
+-- test2 :: IO ()
+-- test2 = parseTest (some $ lexeme keycodeP) =<< test2Text
+
+-- test3 :: IO ()
+-- test3 = parseTest configP =<< test3Text

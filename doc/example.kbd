@@ -9,9 +9,9 @@
 
 ;; Define the IO parameters of this keyboard
 (defio
-  input  (device-file L64 /dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd)
+  input  (device-file "/dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd")
   output (uinput-sink "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
-  startup "/run/current-system/sw/bin/sleep 1"
+  init   "/run/current-system/sw/bin/sleep 1"
 )
 
 ;; Define layer toggling shortcuts
@@ -33,8 +33,8 @@
   <*> #(< * >)
   <$> #(< $ >)
   =>  #(= >)
-  :-) #(: - ))
-  ;-) #(; - ))
+  ;; sml #(: - \))
+  ;; wnk #(; - \))
   :p  #(: p)
 )
 
@@ -56,10 +56,10 @@
 
 ;; Various symbols and a numpad
 (deflayer symbols
-  X    `    ~    [    ]              X    7    8    9    /
-  @ll  "    __   (    )              X    4    5    6    *
+  X    `    ~    [    ]              XX   7    8    9    /
+  @ll  "    \_   \(   \)             XX   4    5    6    *
   lctl '    |    {    }              =    1    2    3    -
-  _    _    \    <    >    _    @lr  spc  0    _    _    +
+  _    _    \\   <    >    _    @lr  spc  0    _    _    +
 )
 
 ;; Haskell macros: to be completed when I implement macros
@@ -70,14 +70,25 @@
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
+
+(deflayer funckeys
+  _    _    _    _    _              _    f7   f8   f9   f10
+  _    @sml @wnk @:p  _              _    f4   f5   f6   f11
+  _    _    _    _    _              _    f1   f2   f3   f12
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
+
+#|
 ;; Function keys
 (deflayer funckeys
   _    _    _    _    _              _    f7   f8   f9   f10
-  _    @:-) @;-) @:p  _              _    f4   f5   f6   f11
+  _    @sml @wnk @:p  _              _    f4   f5   f6   f11
   _    é    ë    ñ    _              _    f1   f2   f3   f12
   _    +'   +"   +~   _    _    _    _    _    _    _    _
 )
+|#
 
+#|
 ;; Navigation and volume keys
 (deflayer
   caps +`   +~   _    _              _    pgup up   pgdn volu
@@ -86,7 +97,6 @@
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
-
 ;; Adding special characters for when I have to type Spanish
 (deflayer spanish
   _    _    _    _    _              _    _    ú    _    _
@@ -94,6 +104,4 @@
   _    _    _    _    _              _    _    _    ¡    ¿
   _    _    _    _    _    _    _    _    _    _    _    _
 )
-
-
-
+|#

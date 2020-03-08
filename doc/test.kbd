@@ -39,12 +39,15 @@ comment spanning multiple lies
 )
 |#
 
-#|
 (defalias
+  bup   #(1 2 3 4 5)
+  thing S-M-x
+  die   C-A-del
   hello (layer-toggle test)
   bar   P
+  baz   (tap-macro j k l m )
+  gchs  (tap-hold 200 l a)
 )
-|#
 
 ;; Define the input-layout coming from
 (deflayer colemak
