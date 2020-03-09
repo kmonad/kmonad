@@ -19,8 +19,7 @@ module Main
 where
 
 import KPrelude
-import KMonad.Testing
+import KMonad.Runner (kmonad)
 
 main :: IO ()
-main = do
-  runTest
+main = kmonad

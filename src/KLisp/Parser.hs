@@ -31,7 +31,7 @@ where
 
 import KPrelude hiding (try)
 
-import KMonad
+import KMonad.Keyboard
 import KLisp.Types
 
 import Data.Char
@@ -39,7 +39,6 @@ import RIO.List (sortBy)
 
 
 import qualified Data.MultiMap as Q
-import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 

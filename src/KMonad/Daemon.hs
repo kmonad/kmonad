@@ -15,7 +15,7 @@ import KMonad.Event
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
-import KMonad.Runner
+import KMonad.Runner.Types
 
 
 import qualified KMonad.Daemon.Dispatch     as Di

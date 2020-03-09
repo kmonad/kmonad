@@ -1,69 +1,50 @@
-{-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 module KMonad.Runner
-  ( RunCfg
-  , defRunCfg
-  , verbose
-  , logHandle
-  , logLevel
-
-  , RunEnv
-  , HasRunEnv(..)
+  ( kmonad
   , run
   )
 where
 
 import KPrelude
 
-import KMonad.Util
+import KLisp
+import KMonad.Daemon
+import KMonad.Runner.Types
+import KMonad.Runner.GetCmd
+
+-- | Parse the arguments and then start run kmonad
+kmonad :: IO ()
+kmonad = getRunCfg >>= flip run dispatchCommand
+
+-- | Dispatch on the command to run
+dispatchCommand :: RIO RunEnv ()
+dispatchCommand = view cmd >>= \case
+  StartDaemon sd -> do
+    dCfg <- loadConfig $ sd^.cfgFile
+    runDaemon dCfg loop
+  TestConfig (TestConfigCmd f) -> void $ loadConfig f
+
+
+
+
 
 --------------------------------------------------------------------------------
--- $cfg
+-- $env
+--
+-- How to construct 'RunEnv's and run RIO RunEnv actions.
 
--- | The RunCfg describes those settings that apply to every part of KMonad.
--- This currently only really has to do with logging configuration.
-data RunCfg = RunCfg
-  { _verbose   :: !Bool
-  , _logHandle :: !Handle
-  , _logLevel  :: !LogLevel
-  }
-makeClassy ''RunCfg
+-- | Acquire a Handle to log to
+withLogTarget :: LogTarget -> (Handle -> IO a) -> IO a
+withLogTarget Stdout f       = f stdout
+withLogTarget (ToFile pth) f = withFile pth WriteMode f
 
--- | The default settings for 'RunCfg'
-defRunCfg :: RunCfg
-defRunCfg = RunCfg
-  { _verbose   = False
-  , _logHandle = stdout
-  , _logLevel  = LevelWarn
-  }
-
--- | The RunEnv contains the environment that is present in all computations in
--- KMonad. It currently only really describes logging.
-data RunEnv = RunEnv
-  { __cfg      :: RunCfg
-  , _reLogFunc :: LogFunc
-  }
-makeLenses ''RunEnv
-
-instance {-# OVERLAPS #-} (HasRunEnv e) => HasRunCfg e where
-  runCfg = runEnv . runCfg
-instance {-# OVERLAPS #-} (HasRunEnv e) => HasLogFunc e where
-  logFuncL = runEnv . reLogFunc
-
-
-class (HasLogFunc e, HasRunCfg e) => HasRunEnv e where
-  runEnv :: Lens' e RunEnv
-instance HasRunEnv RunEnv where runEnv = id
-
---------------------------------------------------------------------------------
-
--- | Run a RIO RunEnv action by instantiation the 'RunEnv' from a 'RunCfg'
+-- | Run a RIO RunEnv action by instantiating the 'RunEnv' from a 'RunCfg'
 run :: RunCfg -> RIO RunEnv a -> IO a
-run c rio = do
-  lo <- logOptionsHandle stdout (c^.verbose) <&> setLogMinLevel (c^.logLevel)
-  withLogFunc lo $ \lf -> do
-    let renv = RunEnv
-          { __cfg      = c
-          , _reLogFunc = lf
-          }
-    runRIO renv rio
+run c rio =
+  withLogTarget (c^.logTarget) $ \h -> do
+    logOpts <- logOptionsHandle h False <&> setLogMinLevel (c^.logLevel)
+    withLogFunc logOpts $ \lf -> do
+      let renv = RunEnv
+            { _reRunCfg  = c
+            , _reLogFunc = lf
+            }
+      runRIO renv rio

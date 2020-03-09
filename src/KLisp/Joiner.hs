@@ -9,22 +9,25 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KList.Joiner
-
+module KLisp.Joiner
+  ( joinConfigIO
+  , joinConfig
+  )
 where
 
 import KPrelude hiding (uncons)
 
-import KLisp.Parser
 import KLisp.Types
 
-import KMonad
+import KMonad.Button
 import KMonad.Daemon
+import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Linux.DeviceSource
 import KMonad.Keyboard.IO.Linux.UinputSink
 
-import RIO.List (uncons)
+import RIO.List (uncons, headMaybe)
+import RIO.Partial (fromJust)
 import qualified Data.LayerStack  as L
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
@@ -49,6 +52,11 @@ type J a = Either JoinError a
 
 --------------------------------------------------------------------------------
 -- $full
+
+joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e DefCfg
+joinConfigIO es = case joinConfig es of
+  Left  e -> throwM e
+  Right c -> pure c
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
@@ -79,7 +87,7 @@ joinConfig es = do
     , _src  = i
     , _km   = km
     , _fstL = fl
-    , _port = ()
+    , _prt  = ()
     }
 
 --------------------------------------------------------------------------------
@@ -162,20 +170,19 @@ joinButton ns als =
 --------------------------------------------------------------------------------
 -- $kmap
 
+-- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
+-- the name signifying the initial layer to load.
 joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (Keymap Button, LayerTag)
 joinKeymap _   _   []  = Left $ MissingBlock "deflayer"
 joinKeymap src als lys = do
+  let f acc x = if x `elem` acc then Left $ DuplicateLayer x else pure (x:acc)
+  nms  <- foldM f [] $ map _layerName lys   -- Extract all names
+  als' <- joinAliases nms als               -- Join aliases into 1 hashmap
+  lys' <- mapM (joinLayer als' nms src) lys -- Join all layers
+  -- Return the layerstack and the name of the first layer
+  pure $ (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
 
-  let nms  = map _layerName lys
-  amp <- joinAliases nms als
-
-  -- Generate [(tag, [(Keycode Button)])] lists
-  -- let g ls DefLayer{_layerName=n, _buttons=bs} = if
-  --       | length bs /= nsrc      -> Left  $ LengthMismatch n (length bs) nsrc
-  --       | True                   -> Right $ ls <> [(n, zip src bs)]
-  undefined
-
-
+-- | Check and join 1 deflayer.
 joinLayer ::
      Aliases                       -- ^ Mapping of names to buttons
   -> LNames                        -- ^ List of valid layer names
@@ -195,14 +202,11 @@ joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
   (n,) <$> foldM f [] (zip src bs)
 
 
-
- 
-
 --------------------------------------------------------------------------------
 -- $test
 
-fname :: String
-fname = "/home/david/prj/hask/kmonad/doc/example.kbd"
+-- fname :: String
+-- fname = "/home/david/prj/hask/kmonad/doc/example.kbd"
 
-test :: IO (J DefCfg)
-test = runRIO () . fmap joinConfig $ loadTokens fname
+-- test :: IO (J DefCfg)
+-- test = runRIO () . fmap joinConfig $ loadTokens fname

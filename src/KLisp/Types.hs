@@ -1,3 +1,14 @@
+{-|
+Module      : KLisp.Types
+Description : The basic types of configuration parsing.
+Copyright   : (c) David Janssen, 2019
+License     : MIT
+
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
+
+-}
 module KLisp.Types
   ( -- * $bsc
     Parser
@@ -38,8 +49,6 @@ import KMonad.Daemon.KeyHandler (Keymap)
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-
-import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $bsc
@@ -85,7 +94,7 @@ data DefCfg = DefCfg
   , _snk  :: LogFunc -> IO (Acquire KeySink)
   , _km   :: Keymap Button
   , _fstL :: Text
-  , _port :: ()
+  , _prt  :: ()
   }
 
 

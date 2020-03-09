@@ -18,8 +18,10 @@ library
       KPrelude
       Data.LayerStack
       Data.MultiMap
+      KLisp
+      KLisp.Joiner
       KLisp.Parser
-      KLisp.Token
+      KLisp.Types
       KMonad
       KMonad.Action
       KMonad.Button
@@ -37,6 +39,8 @@ library
       KMonad.Keyboard.IO.Linux.UinputSink
       KMonad.Keyboard.Keycode
       KMonad.Runner
+      KMonad.Runner.GetCmd
+      KMonad.Runner.Types
       KMonad.Testing
       KMonad.Util
        
@@ -113,6 +117,7 @@ library
     , megaparsec
     , mtl
     , network
+    , optparse-applicative
     , resourcet
     , rio
     , time

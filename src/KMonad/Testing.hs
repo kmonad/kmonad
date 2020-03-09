@@ -2,98 +2,98 @@ module KMonad.Testing
 
 where
 
-import KPrelude
+-- import KPrelude
 
-import Data.LayerStack
+-- import Data.LayerStack
 
-import KMonad.Action
-import KMonad.Button
-import KMonad.Daemon
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
-import KMonad.Keyboard.IO.Linux.UinputSink
-import KMonad.Keyboard.IO.Linux.DeviceSource
-import KMonad.Runner
-import KMonad.Util
+-- import KMonad.Action
+-- import KMonad.Button
+-- import KMonad.Daemon
+-- import KMonad.Keyboard
+-- import KMonad.Keyboard.IO
+-- import KMonad.Keyboard.IO.Linux.UinputSink
+-- import KMonad.Keyboard.IO.Linux.DeviceSource
+-- import KMonad.Runner
+-- import KMonad.Util
 
-import qualified RIO.HashMap as M
+-- import qualified RIO.HashMap as M
 
-kbd :: FilePath
-kbd = "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd"
--- kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
+-- kbd :: FilePath
+-- kbd = "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd"
+-- -- kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
 
-silly :: Button
-silly = mkButton
-  ( pause 500 >> emit (keyPress KeyA) >> pause 500 >> emit (keyPress KeyB) )
-  ( emit (keyRelease KeyA) >> pause 500 >> emit (keyRelease KeyB) )
-
-
-kmap :: Keymap Button
-kmap = let
-  sftB = modded KeyLeftShift . emitB
-  th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
-  tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
-  mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
-  cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
-  lt   = mkButton (layerOp $ PushLayer "bloop") (layerOp $ PopLayer "bloop")
-  tb   = onPress (layerOp $ SetBaseLayer "bloop")
-  tt   = onPress (layerOp $ SetBaseLayer "test")
-  in mkLayerStack $
-        [ ("test",
-            [ (KeyA, emitB KeyA)
-            , (KeyS, emitB KeyR)
-            , (KeyD, emitB KeyS)
-            , (KeyF, emitB KeyT)
-            , (KeyQ, sftB KeyA)
-            , (KeyW, sftB KeyR)
-            , (KeyE, sftB KeyS)
-            , (KeyR, sftB KeyT)
-            , (KeyZ, th)
-            , (KeyX, tn)
-            , (KeyC, mt)
-            , (KeyV, cs)
-            , (KeyCapsLock, lt)
-            , (KeyEsc, tb)
-            ])
-        , ("bloop",
-           [ (KeyA, emitB KeyP)
-           , (KeyS, emitB KeyO)
-           , (KeyD, emitB KeyL)
-           , (KeyF, mt)
-           , (KeyEsc, tt)
-           ])
-        ]
+-- silly :: Button
+-- silly = mkButton
+--   ( pause 500 >> emit (keyPress KeyA) >> pause 500 >> emit (keyPress KeyB) )
+--   ( emit (keyRelease KeyA) >> pause 500 >> emit (keyRelease KeyB) )
 
 
-rstore :: M.HashMap Keycode Char
-rstore = M.empty
+-- kmap :: Keymap Button
+-- kmap = let
+--   sftB = modded KeyLeftShift . emitB
+--   th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
+--   tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
+--   mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
+--   cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
+--   lt   = mkButton (layerOp $ PushLayer "bloop") (layerOp $ PopLayer "bloop")
+--   tb   = onPress (layerOp $ SetBaseLayer "bloop")
+--   tt   = onPress (layerOp $ SetBaseLayer "test")
+--   in mkLayerStack $
+--         [ ("test",
+--             [ (KeyA, emitB KeyA)
+--             , (KeyS, emitB KeyR)
+--             , (KeyD, emitB KeyS)
+--             , (KeyF, emitB KeyT)
+--             , (KeyQ, sftB KeyA)
+--             , (KeyW, sftB KeyR)
+--             , (KeyE, sftB KeyS)
+--             , (KeyR, sftB KeyT)
+--             , (KeyZ, th)
+--             , (KeyX, tn)
+--             , (KeyC, mt)
+--             , (KeyV, cs)
+--             , (KeyCapsLock, lt)
+--             , (KeyEsc, tb)
+--             ])
+--         , ("bloop",
+--            [ (KeyA, emitB KeyP)
+--            , (KeyS, emitB KeyO)
+--            , (KeyD, emitB KeyL)
+--            , (KeyF, mt)
+--            , (KeyEsc, tt)
+--            ])
+--         ]
 
-runTest' :: LogLevel -> IO ()
-runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
 
-  snkDev <- uinputSink defUinputCfg
-  srcDev <- deviceSource64 kbd
+-- rstore :: M.HashMap Keycode Char
+-- rstore = M.empty
 
-  let dcfg = DaemonCfg
-        { _keySinkDev   = snkDev
-        , _keySourceDev = srcDev
-        , _keymapCfg    = kmap
-        , _firstLayer   = "test"
-        , _port         = ()
-        }
-  runDaemon dcfg loop
+-- runTest' :: LogLevel -> IO ()
+-- runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
 
-launchTest :: IO ()
-launchTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
-  flip (withLaunch_ "testing") (threadDelay 200000) $ do
-      threadDelay 10000
-      throwString "hello"
+--   snkDev <- uinputSink defUinputCfg
+--   srcDev <- deviceSource64 kbd
 
-runTest :: IO ()
-runTest = runTest' LevelDebug
+--   let dcfg = DaemonCfg
+--         { _keySinkDev   = snkDev
+--         , _keySourceDev = srcDev
+--         , _keymapCfg    = kmap
+--         , _firstLayer   = "test"
+--         , _port         = ()
+--         }
+--   runDaemon dcfg loop
 
-testCfg :: RunCfg
-testCfg = defRunCfg & logLevel .~ LevelInfo
+-- launchTest :: IO ()
+-- launchTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
+--   flip (withLaunch_ "testing") (threadDelay 200000) $ do
+--       threadDelay 10000
+--       throwString "hello"
+
+-- runTest :: IO ()
+-- runTest = runTest' LevelDebug
+
+-- testCfg :: RunCfg
+-- testCfg = defRunCfg & logLevel .~ LevelInfo
 
 -- testKeyIO :: LogLevel -> IO ()
 -- testKeyIO ll = run (defRunCfg & logLevel .~ ll) $ do

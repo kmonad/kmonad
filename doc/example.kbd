@@ -16,12 +16,13 @@
 
 ;; Define layer toggling shortcuts
 (defalias
-  symb (layer-toggle symb)
-  hask (layer-toggle hask)
-  ffun (layer-toggle ffun)
-  medi (layer-toggle media)
+  smb (layer-toggle symbols)
+  hsk (layer-toggle haskell)
+  fun (layer-toggle funckeys)
+  ;; ffun (layer-toggle ffun)
+  ;; medi (layer-toggle media)
   alt/ (tap-hold 200 / lalt)
-  espG (tap-hold 200 g (layer-toggle spanish))
+  ;; espG (tap-hold 200 g (layer-toggle spanish))
   xcp  (tap-next esc lctl)
   )
 
@@ -33,8 +34,8 @@
   <*> #(< * >)
   <$> #(< $ >)
   =>  #(= >)
-  ;; sml #(: - \))
-  ;; wnk #(; - \))
+  sml #(: - \))
+  wnk #(; - \))
   :p  #(: p)
 )
 
@@ -48,18 +49,18 @@
 
 ;; The colemak base layer
 (deflayer colemak
-  q    w    f    p    @gsp           j    l    u    y    ;
+  q    w    f    p    g              j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
-  @dbz x    c    v    b              k    m    ,    .    @as
-  tab  lalt @r   lsft lctl @l   @xcp spc  lmet -    bspc ret
+  z    x    c    v    b              k    m    ,    .    @alt/
+  tab  lalt XX   lsft lctl @smb @xcp spc  lmet -    bspc ret
 )
 
 ;; Various symbols and a numpad
 (deflayer symbols
   X    `    ~    [    ]              XX   7    8    9    /
-  @ll  "    \_   \(   \)             XX   4    5    6    *
+  @hsk "    \_   \(   \)             XX   4    5    6    *
   lctl '    |    {    }              =    1    2    3    -
-  _    _    \\   <    >    _    @lr  spc  0    _    _    +
+  _    _    \\   <    >    _    @fun spc  0    _    _    +
 )
 
 ;; Haskell macros: to be completed when I implement macros
