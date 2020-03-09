@@ -1,4 +1,15 @@
 {-|
+
+-- | All different input-tokens KMonad can take
+data IToken
+  = KDeviceSource FilePath
+  deriving Show
+
+-- | All different output-tokens KMonad can take
+data OToken
+  = KUinputSink Text (Maybe Text)
+  deriving Show
+
 Module      : KLisp.Parser
 Description : The code that turns text into tokens
 Copyright   : (c) David Janssen, 2019
@@ -13,37 +24,18 @@ KExpr-tokens.
 
 -}
 module KLisp.Parser
-  ( loadTokens
-  , KExpr(..)
-
-    -- * $defio
-  , DefIO(..)
-  , IToken(..)
-  , OToken(..)
-
-    -- * $defsrc
-  , DefSrc
-
-    -- * $defalias
-  , DefAlias
-
-    -- * $deflayer
-  , DefLayer(..)
-
+  ( parseTokens
+  , loadTokens
   )
 where
 
 import KPrelude hiding (try)
 
 import KMonad
+import KLisp.Types
 
 import Data.Char
-
-import Text.Megaparsec
-import Text.Megaparsec.Char
-
 import RIO.List (sortBy)
-import RIO.Partial (read, fromJust)
 
 
 import qualified Data.MultiMap as Q
@@ -51,14 +43,22 @@ import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 
+
+--------------------------------------------------------------------------------
+-- $run
+
+parseTokens :: Text -> Either PErrors [KExpr]
+parseTokens = runParser configP ""
+
+-- | Load a set of tokens from file, throw an error on parse-fail
+loadTokens :: FilePath -> RIO e [KExpr]
+loadTokens pth = parseTokens <$> readFileUtf8 pth >>= \case
+  Left e   -> throwM e
+  Right xs -> pure xs
+
+
 --------------------------------------------------------------------------------
 -- $basic
-
--- | Parser's operate on Text and carry no state
-type Parser = Parsec Void Text
-
--- | Errors defined to match Parser's
--- type PError = ParseErrorBundle Text Void
 
 -- | Consume whitespace
 sc :: Parser ()
@@ -118,14 +118,6 @@ statement :: Text -> Parser a -> Parser a
 statement s = paren . (symbol s *>)
 
 
-
---------------------------------------------------------------------------------
--- $refs
-
-type DefAlias = M.HashMap Text KButton
-
-
-
 --------------------------------------------------------------------------------
 -- $elem
 --
@@ -151,27 +143,9 @@ derefP :: Parser Text
 derefP = prefix (char '@') *> word
 
 --------------------------------------------------------------------------------
--- $tkn
-
-data KExpr
-  = KDefIO    DefIO
-  | KDefSrc   DefSrc
-  | KDefLayer DefLayer
-  | KDefAlias DefAlias
-  deriving Show
-
---------------------------------------------------------------------------------
 -- $cmb
 --
 -- Parsers built up from the basic KExpr's
-
--- | Load a set of tokens from file
-loadTokens :: MonadIO m => FilePath -> m [KExpr]
-loadTokens pth = do
-  t <- readFileUtf8 pth
-  case runParser configP "" t of
-    Left e   -> throwString $ errorBundlePretty e
-    Right xs -> pure xs
 
 -- | Consume an entire file of expressions and comments
 configP :: Parser [KExpr]
@@ -195,22 +169,8 @@ exprP = paren . choice $
 --
 -- All the various ways to refer to buttons
 
--- | Button ADT
-data KButton
-  = KRef Text                            -- ^ Reference a named button
-  | KEmit Keycode                        -- ^ Emit a keycode
-  | KLayerToggle Text                    -- ^ Toggle to a layer when held
-  | KTapNext KButton KButton             -- ^ Do 2 things based on behavior
-  | KTapHold Int KButton KButton         -- ^ Do 2 things based on behavior and delay
-  | KMultiTap [(Int, KButton)] KButton   -- ^ Do things depending on tap-count
-  | KAround KButton KButton              -- ^ Wrap 1 button around another
-  | KTapMacro [KButton]                  -- ^ Sequence of buttons to tap
-  | KTrans                               -- ^ Transparent button that does nothing
-  | KBlock                               -- ^ Button that catches event
-  deriving Show
-
 -- | Different ways to refer to shifted versions of keycodes
-shiftedNames :: [(Text, KButton)]
+shiftedNames :: [(Text, DefButton)]
 shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) in
                  map f $ cps <> num <> oth
   where
@@ -224,7 +184,7 @@ shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) i
           , KeyLeftBrace, KeyRightBrace, KeyEqual]
 
 -- | Names for various buttons
-buttonNames :: [(Text, KButton)]
+buttonNames :: [(Text, DefButton)]
 buttonNames = shiftedNames <> escp <> util
   where
     emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
@@ -235,18 +195,18 @@ buttonNames = shiftedNames <> escp <> util
     util = [("_", KTrans), ("XX", KBlock)]
 
 -- | Parse "X-b" style modded-sequences
-moddedP :: Parser KButton
+moddedP :: Parser DefButton
 moddedP = KAround <$> prfx <*> buttonP
   where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
                , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
 -- | 'Reader-macro' style tap-macro
-rmTapMacro :: Parser KButton
+rmTapMacro :: Parser DefButton
 rmTapMacro = KTapMacro <$> (char '#' *> paren (some buttonP))
 
 
-buttonP :: Parser KButton
+buttonP :: Parser DefButton
 buttonP = (lexeme . choice . map try $
   [ statement "around"       $ KAround      <$> buttonP     <*> buttonP
   , statement "multi-tap"    $ KMultiTap    <$> timed       <*> buttonP
@@ -268,31 +228,15 @@ buttonP = (lexeme . choice . map try $
 --------------------------------------------------------------------------------
 -- $defio
 
--- | All different input-tokens KMonad can take
-data IToken
-  = KDeviceSource FilePath
-  deriving Show
-
 -- | Parse an input token
 itokenP :: Parser IToken
 itokenP = statement "device-file" $ KDeviceSource <$> (T.unpack <$> textP)
 
--- | All different output-tokens KMonad can take
-data OToken
-  = KUinputSink Text (Maybe Text)
-  deriving Show
 
 -- | Parse an output token
 otokenP :: Parser OToken
 otokenP = statement "uinput-sink" $ KUinputSink <$> lexeme textP <*> optional textP
 
--- | A collection of all the IO configuration for KMonad
-data DefIO = DefIO
-  { _itoken  :: IToken     -- ^ How to read key events from the OS
-  , _otoken  :: OToken     -- ^ How to write key events to the OS
-  , _initStr :: Maybe Text -- ^ Shell command to execute before starting
-  }
-  deriving Show
 
 -- | Parse the DefIO token
 defioP :: Parser DefIO
@@ -312,22 +256,12 @@ defaliasP = M.fromList <$> (many $ (,) <$> lexeme word <*> buttonP)
 --------------------------------------------------------------------------------
 -- $defsrc
 
--- | The source layer describes the configuration of the input signal
-type DefSrc = [Keycode]
-
 defsrcP :: Parser DefSrc
 defsrcP = many $ lexeme keycodeP
 
 
 --------------------------------------------------------------------------------
 -- $deflayer
-
--- | A layer of buttons
-data DefLayer = DefLayer
-  { _layerName :: Text
-  , _buttons   :: [KButton]
-  }
-  deriving Show
 deflayerP :: Parser DefLayer
 deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
 
