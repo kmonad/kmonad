@@ -10,7 +10,9 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KLisp
-  ( loadConfig )
+  ( loadConfig
+  , PErrors(..)
+  )
 where
 
 import KPrelude

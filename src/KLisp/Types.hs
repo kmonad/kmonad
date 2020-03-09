@@ -12,7 +12,7 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 module KLisp.Types
   ( -- * $bsc
     Parser
-  , PErrors
+  , PErrors(..)
 
     -- * $cfg
   , DefCfg(..)
@@ -59,8 +59,11 @@ import Text.Megaparsec.Char
 type Parser = Parsec Void Text
 
 -- | The type of errors returned by the Megaparsec parsers
-type PErrors = ParseErrorBundle Text Void
+newtype PErrors = PErrors (ParseErrorBundle Text Void)
+  deriving (Exception)
 
+instance Show PErrors where
+  show (PErrors e)= errorBundlePretty e
 
 --------------------------------------------------------------------------------
 -- $but

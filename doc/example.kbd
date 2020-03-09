@@ -1,28 +1,27 @@
 #| Copy this out to easily specify a new layer
 (deflayer "name"
-   _    _    _    _    _              _    _    _    _    _
-   _    _    _    _    _              _    _    _    _    _
-   _    _    _    _    _              _    _    _    _    _
-   _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _         _
+  _    _    _              _              _    _    _    _    _    _     _
 )
 |#
 
 ;; Define the IO parameters of this keyboard
 (defio
-  input  (device-file "/dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd")
+  input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
   output (uinput-sink "KMonad: Atreus" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
   init   "/run/current-system/sw/bin/sleep 1"
 )
 
 ;; Define layer toggling shortcuts
 (defalias
-  smb (layer-toggle symbols)
-  hsk (layer-toggle haskell)
-  fun (layer-toggle funckeys)
-  ;; ffun (layer-toggle ffun)
-  ;; medi (layer-toggle media)
+  ;; smb (layer-toggle symbols)
+  ;; hsk (layer-toggle haskell)
+  ;; fun (layer-toggle funckeys)
   alt/ (tap-hold 200 / lalt)
-  ;; espG (tap-hold 200 g (layer-toggle spanish))
   xcp  (tap-next esc lctl)
   )
 
@@ -41,20 +40,25 @@
 
 ;; Define the input-layout coming from the keyboard
 (defsrc
-  q    w    f    p    g              j    l    u    y    ;
-  a    r    s    t    d              h    n    e    i    o
-  z    x    c    v    b              k    m    ,    .    /
-  tab  lmet lalt lsft lctl ins  esc  spc  rmet -    bspc ret
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft      up
+  lctl lmet lalt           spc            ralt rmet cmp  rctl left down rght
 )
 
-;; The colemak base layer
 (deflayer colemak
-  q    w    f    p    g              j    l    u    y    ;
-  a    r    s    t    d              h    n    e    i    o
-  z    x    c    v    b              k    m    ,    .    @alt/
-  tab  lalt XX   lsft lctl @smb @xcp spc  lmet -    bspc ret
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    f    p    g    j    l    u    y    ;    [    ]    \
+  @xcp a    r    s    t    d    h    n    e    i    o    '    ret
+  lsft z    x    c    v    b    k    m    ,    .    /    rsft      up
+  lctl lmet lalt           spc            ralt rmet cmp  rctl left down rght
 )
 
+
+#|
 ;; Various symbols and a numpad
 (deflayer symbols
   X    `    ~    [    ]              XX   7    8    9    /
@@ -87,9 +91,7 @@
   _    é    ë    ñ    _              _    f1   f2   f3   f12
   _    +'   +"   +~   _    _    _    _    _    _    _    _
 )
-|#
 
-#|
 ;; Navigation and volume keys
 (deflayer
   caps +`   +~   _    _              _    pgup up   pgdn volu

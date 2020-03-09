@@ -425,7 +425,7 @@ aliases = Q.mkMultiMap
   , (KeyBrightnessDown, ["brdown", "brdwn", "brdn"])
   , (KeyLeftAlt,        ["lalt"])
   , (KeyRightAlt,       ["ralt"])
-  , (KeyCompose,        ["comp", "cmps"])
+  , (KeyCompose,        ["comp", "cmps", "cmp"])
   , (KeyLeftShift,      ["lshift", "lshft", "lsft"])
   , (KeyRightShift,     ["rshift", "rshft", "rsft"])
   , (KeyLeftCtrl,       ["lctrl", "lctl"])

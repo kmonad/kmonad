@@ -11,9 +11,14 @@ import KMonad.Daemon
 import KMonad.Runner.Types
 import KMonad.Runner.GetCmd
 
+
 -- | Parse the arguments and then start run kmonad
 kmonad :: IO ()
-kmonad = getRunCfg >>= flip run dispatchCommand
+kmonad = do
+  cfg <- getRunCfg
+  run cfg dispatchCommand
+    `catch` (\(e :: PErrors) -> print e)
+
 
 -- | Dispatch on the command to run
 dispatchCommand :: RIO RunEnv ()

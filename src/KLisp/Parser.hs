@@ -47,7 +47,9 @@ import qualified Text.Megaparsec.Char.Lexer as L
 -- $run
 
 parseTokens :: Text -> Either PErrors [KExpr]
-parseTokens = runParser configP ""
+parseTokens t = case runParser configP "" t  of
+  Left  e -> Left $ PErrors e
+  Right x -> Right x
 
 -- | Load a set of tokens from file, throw an error on parse-fail
 loadTokens :: FilePath -> RIO e [KExpr]
