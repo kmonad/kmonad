@@ -5,11 +5,19 @@ module KMonad.Button
   , HasButton(..)
   , around
   , tapOn
+
+  -- $cplx
   , tapHold
   , multiTap
   , tapNext
+  , tapMacro
+
+  -- $smpl
   , emitB
   , modded
+  , layerToggle
+  , pass
+
 
   , module KMonad.Action
   )
@@ -135,6 +143,10 @@ tapNext t h = onPress $ catchNext (catchMy Release) $ \m -> if
     | m^.matched -> tap t
     | otherwise  -> press h
 
+-- | Create a 'Button' that performs a series of taps on press.
+tapMacro :: [Button] -> Button
+tapMacro bs = onPress $ mapM_ tap bs
+
 
 --------------------------------------------------------------------------------
 -- $simple
@@ -155,3 +167,13 @@ modded ::
   -> Button  -- ^ The button to nest inside `being modded`
   -> Button
 modded modder = around (emitB modder)
+
+-- | Create a button that toggles a layer on and off
+layerToggle :: LayerTag -> Button
+layerToggle t = mkButton
+  (layerOp $ PushLayer t)
+  (layerOp $ PopLayer  t)
+
+-- | Create a button that does nothing (but captures the input)
+pass :: Button
+pass = onPress $ pure ()

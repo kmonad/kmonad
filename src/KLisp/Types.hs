@@ -3,6 +3,9 @@ module KLisp.Types
     Parser
   , PErrors
 
+    -- * $cfg
+  , DefCfg(..)
+
     -- * $but
   , DefButton(..)
 
@@ -17,6 +20,9 @@ module KLisp.Types
   , IToken(..)
   , OToken(..)
 
+    -- * $lenses
+  , AsKExpr(..)
+
     -- * Reexports
   , module Text.Megaparsec
   , module Text.Megaparsec.Char
@@ -25,7 +31,10 @@ module KLisp.Types
 
 import KPrelude
 
+import KMonad.Button
 import KMonad.Keyboard
+import KMonad.Keyboard.IO
+import KMonad.Daemon.KeyHandler (Keymap)
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -65,6 +74,22 @@ data DefButton
 
 
 --------------------------------------------------------------------------------
+-- $cfg
+--
+-- The Cfg token that can be extracted from a config-text without ever enterring
+-- IO.
+--
+
+data DefCfg = DefCfg
+  { _src  :: LogFunc -> IO (Acquire KeySource)
+  , _snk  :: LogFunc -> IO (Acquire KeySink)
+  , _km   :: Keymap Button
+  , _fstL :: Text
+  , _port :: ()
+  }
+
+
+--------------------------------------------------------------------------------
 -- $tls
 --
 -- A collection of all the different top-level statements possible in a config
@@ -74,7 +99,7 @@ data DefButton
 type DefSrc = [Keycode]
 
 -- | A mapping from names to button tokens
-type DefAlias = M.HashMap Text DefButton
+type DefAlias = [(Text, DefButton)]
 
 -- | A layer of buttons
 data DefLayer = DefLayer
@@ -117,4 +142,4 @@ data KExpr
   | KDefLayer DefLayer
   | KDefAlias DefAlias
   deriving Show
-makePrisms ''KExpr
+makeClassyPrisms ''KExpr

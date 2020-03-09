@@ -251,7 +251,7 @@ defioP = do
 
 -- | Parse a collection of names and buttons
 defaliasP :: Parser DefAlias
-defaliasP = M.fromList <$> (many $ (,) <$> lexeme word <*> buttonP)
+defaliasP = many $ (,) <$> lexeme word <*> buttonP
 
 --------------------------------------------------------------------------------
 -- $defsrc
