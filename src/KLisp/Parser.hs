@@ -32,13 +32,15 @@ where
 import KPrelude hiding (try)
 
 import KMonad.Keyboard
+import KMonad.Keyboard.ComposeSeq
 import KLisp.Types
 
 import Data.Char
-import RIO.List (sortBy)
+import RIO.List (sortBy, find)
 
 
 import qualified Data.MultiMap as Q
+import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -159,7 +161,7 @@ exprsP = lexeme . many $ lexeme exprP
 -- | Parse 1 KExpr
 exprP :: Parser KExpr
 exprP = paren . choice $
-  [ try (symbol "defio")    *> (KDefIO    <$> defioP)
+  [ try (symbol "defcfg")   *> (KDefCfg   <$> defcfgP)
   , try (symbol "defsrc")   *> (KDefSrc   <$> defsrcP)
   , try (symbol "deflayer") *> (KDefLayer <$> deflayerP)
   , try (symbol "defalias") *> (KDefAlias <$> defaliasP)
@@ -202,9 +204,23 @@ moddedP = KAround <$> prfx <*> buttonP
                , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
--- | 'Reader-macro' style tap-macro
-rmTapMacro :: Parser DefButton
-rmTapMacro = KTapMacro <$> (char '#' *> paren (some buttonP))
+-- | #()-syntax tap-macro
+rmTapMacroP :: Parser DefButton
+rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
+
+-- | Compose-key sequence
+composeSeqP :: Parser [DefButton]
+composeSeqP = do
+  -- Lookup 1 character in the compose-seq list
+  c <- anySingle <?> "special character"
+  s <- case find (\(_, c', _) -> (c' == c)) ssComposed of
+         Nothing -> fail "Unrecognized compose-char"
+         Just b  -> pure $ b^._1
+
+  -- If matching, parse a button-sequence from the stored text
+  case runParser (some buttonP) "" s of
+    Left  _ -> fail "Could not parse compose sequence"
+    Right b -> pure b
 
 
 buttonP :: Parser DefButton
@@ -218,8 +234,9 @@ buttonP = (lexeme . choice . map try $
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP
-  , lexeme $ try rmTapMacro
+  , lexeme $ try rmTapMacroP
   , KEmit <$> keycodeP
+  , KComposeSeq <$> composeSeqP
   ]) <?> "button"
 
   where
@@ -227,25 +244,30 @@ buttonP = (lexeme . choice . map try $
 
 
 --------------------------------------------------------------------------------
--- $defio
+-- $defcfg
 
 -- | Parse an input token
 itokenP :: Parser IToken
 itokenP = statement "device-file" $ KDeviceSource <$> (T.unpack <$> textP)
 
-
 -- | Parse an output token
 otokenP :: Parser OToken
 otokenP = statement "uinput-sink" $ KUinputSink <$> lexeme textP <*> optional textP
 
+-- | Parse the DefCfg token
+defcfgP :: Parser DefSettings
+defcfgP = M.fromList <$> some (lexeme settingP)
 
--- | Parse the DefIO token
-defioP :: Parser DefIO
-defioP = do
-  it <- lexeme (symbol "input" *> itokenP) -- <?> "Valid input token"
-  ot <- lexeme (symbol "output" *> otokenP) -- <?> "Valid output token"
-  is <- lexeme $ optional (symbol "init" *> textP)
-  pure $ DefIO it ot is
+-- | All possible configuration options that can be passed in the defcfg block
+settingP :: Parser (Text, DefSetting)
+settingP = let f s p = symbol s *> ((s,) <$> p) in
+  (lexeme . choice . map try $
+    [ second SIToken  <$> f "input"    itokenP
+    , second SOToken  <$> f "output"   otokenP
+    , second SCmpSeq  <$> f "cmp-seq"  buttonP
+    , second SUtf8Seq <$> f "utf8-seq" buttonP
+    , second SInitStr <$> f "init"     textP
+    ])
 
 --------------------------------------------------------------------------------
 -- $defalias

@@ -26,6 +26,8 @@ import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Linux.DeviceSource
 import KMonad.Keyboard.IO.Linux.UinputSink
 
+import Control.Monad.Except
+
 import RIO.List (uncons, headMaybe)
 import RIO.Partial (fromJust)
 import qualified Data.LayerStack  as L
@@ -48,13 +50,33 @@ data JoinError
 
 instance Exception JoinError
 
-type J a = Either JoinError a
+-- | Joining Config
+data JCfg = JCfg
+  { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
+  , _utf8Key :: Button  -- ^ How to prefix Utf8-sequences
+  , _src     :: [KExpr] -- ^ The source expresions we operate on
+  }
+
+defJCfg :: [KExpr] ->JCfg
+defJCfg = JCfg
+  (emitB KeyRightAlt)
+  (modded KeyLeftShift . modded KeyLeftCtrl $ emitB KeyU)
+
+newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
+  deriving (Functor, Applicative, Monad, MonadError JoinError)
+
+runJ :: J a -> JCfg -> Either JoinError a
+runJ j = runReader (runExceptT $ unJ j)
 
 --------------------------------------------------------------------------------
 -- $full
 
-joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e DefCfg
-joinConfigIO es = case joinConfig es of
+-- | Turn a list of KExpr into a CfgToken, throwing errors when encountered.
+--
+-- NOTE: We start joinConfig with the default JCfg, but joinConfig might locally
+-- override settings by things it reads from the config itself.
+joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
+joinConfigIO es = case runJ joinConfig $ defJCfg es of
   Left  e -> throwM e
   Right c -> pure c
 
@@ -63,8 +85,11 @@ extract :: Prism' a b -> [a] -> [b]
 extract p = catMaybes . map (preview p)
 
 -- | Parse an entire DaemonCfg from a list of KExpr
-joinConfig :: [KExpr] -> J DefCfg
+joinConfig :: J CfgToken
 joinConfig es = do
+
+  -- Extract JCfg overrides
+  override <- getOverride
 
   -- Extract exactly 1 item from a list, otherwise throw the appropriate error
   let onlyOne t xs = case uncons xs of
@@ -82,7 +107,7 @@ joinConfig es = do
   src      <- onlyOne "defsrc" $ extract _KDefSrc $ es
   (km, fl) <- joinKeymap src als lys
 
-  pure $ DefCfg
+  pure $ CfgToken
     { _snk  = o
     , _src  = i
     , _km   = km
@@ -91,19 +116,22 @@ joinConfig es = do
     }
 
 --------------------------------------------------------------------------------
--- $io
+-- $settings
+
 
 -- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
 runLF :: (forall e. HasLogFunc e => RIO e a) -> LogFunc -> IO a
 runLF = flip runRIO
 
+-- getCfg ::
+
 -- | Extract the KeySource-loader from a `DefIO`
-getI :: DefIO -> J (LogFunc -> IO (Acquire KeySource))
+getI :: DefSettings -> J (LogFunc -> IO (Acquire KeySource))
 getI dio = case _itoken dio of
   KDeviceSource pth -> pure $ runLF (deviceSource64 pth)
 
 -- | Extract the KeySink-loader from a `DefIO`
-getO :: DefIO -> J (LogFunc -> IO (Acquire KeySink))
+getO :: DefSettings -> J (LogFunc -> IO (Acquire KeySink))
 getO dio = case _otoken dio of
   KUinputSink t init -> pure $ runLF (uinputSink
     (defUinputCfg { _keyboardName = T.unpack t
@@ -154,7 +182,9 @@ joinButton ns als =
       then ret $ layerToggle t
       else Left $ MissingLayer t
 
+
     -- Various compound buttons
+
     KTapMacro bs   -> jst $ tapMacro       <$> mapM go bs
     KAround o i    -> jst $ around         <$> go o <*> go i
     KTapNext t h   -> jst $ tapNext        <$> go t <*> go h
@@ -193,7 +223,7 @@ joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
 
   -- Ensure length-match between src and buttons
   when (length bs /= length src) $
-    Left $ LengthMismatch n (length bs) (length src)
+    throwError $ LengthMismatch n (length bs) (length src)
 
   -- Join each button and add it (filtering out KTrans)
   let f acc (kc, b) = joinButton ns als b >>= \case

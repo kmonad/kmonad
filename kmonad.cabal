@@ -33,6 +33,7 @@ library
       KMonad.Daemon.Sluice
       KMonad.Event
       KMonad.Keyboard
+      KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
       KMonad.Keyboard.IO.Linux.DeviceSource
       KMonad.Keyboard.IO.Linux.Types

@@ -15,14 +15,15 @@ module KLisp.Types
   , PErrors(..)
 
     -- * $cfg
-  , DefCfg(..)
+  , CfgToken(..)
 
     -- * $but
   , DefButton(..)
 
     -- * $tls
+  , DefSetting(..)
+  , DefSettings
   , DefAlias
-  , DefIO(..)
   , DefLayer(..)
   , DefSrc
   , KExpr(..)
@@ -49,6 +50,8 @@ import KMonad.Daemon.KeyHandler (Keymap)
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
+
+import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $bsc
@@ -80,6 +83,8 @@ data DefButton
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
+  | KComposeSeq [DefButton]                -- ^ Compose-key sequence
+  -- | KUtf8 Char                             -- ^ Emit a Utf8 sequence
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
@@ -89,10 +94,10 @@ data DefButton
 -- $cfg
 --
 -- The Cfg token that can be extracted from a config-text without ever enterring
--- IO.
+-- IO. This will then directly be translated to a DaemonCfg
 --
 
-data DefCfg = DefCfg
+data CfgToken = CfgToken
   { _src  :: LogFunc -> IO (Acquire KeySource)
   , _snk  :: LogFunc -> IO (Acquire KeySink)
   , _km   :: Keymap Button
@@ -120,19 +125,12 @@ data DefLayer = DefLayer
   }
   deriving Show
 
--- | A collection of all the IO configuration for KMonad
-data DefIO = DefIO
-  { _itoken  :: IToken     -- ^ How to read key events from the OS
-  , _otoken  :: OToken     -- ^ How to write key events to the OS
-  , _initStr :: Maybe Text -- ^ Shell command to execute before starting
-  }
-  deriving Show
 
 
 --------------------------------------------------------------------------------
--- $defio
+-- $defcfg
 --
--- Different IO settings
+-- Different settings
 
 -- | All different input-tokens KMonad can take
 data IToken
@@ -144,12 +142,23 @@ data OToken
   = KUinputSink Text (Maybe Text)
   deriving Show
 
+-- | All possible single settings
+data DefSetting
+  = SIToken  IToken
+  | SOToken  OToken
+  | SCmpSeq  DefButton
+  | SUtf8Seq DefButton
+  | SInitStr Text
+  deriving Show
+makePrisms ''DefSetting
+
+type DefSettings = M.HashMap Text DefSetting
 
 --------------------------------------------------------------------------------
 -- $tkn
 
 data KExpr
-  = KDefIO    DefIO
+  = KDefCfg   DefSettings
   | KDefSrc   DefSrc
   | KDefLayer DefLayer
   | KDefAlias DefAlias
