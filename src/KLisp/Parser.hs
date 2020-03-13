@@ -222,7 +222,16 @@ composeSeqP = do
     Left  _ -> fail "Could not parse compose sequence"
     Right b -> pure b
 
+-- | Parse a dead-key sequence as a `+` followed by some symbol
+deadkeySeqP :: Parser [DefButton]
+deadkeySeqP = do
+  _ <- prefix (char '+')
+  c <- satisfy (`elem` ("~'´^`\"" :: String))
+  case runParser buttonP "" (T.singleton c) of
+    Left  _ -> fail "Could not parse deadkey sequence"
+    Right b -> pure [b]
 
+-- | Parse any button
 buttonP :: Parser DefButton
 buttonP = (lexeme . choice . map try $
   [ statement "around"       $ KAround      <$> buttonP     <*> buttonP
@@ -236,6 +245,7 @@ buttonP = (lexeme . choice . map try $
   , try moddedP
   , lexeme $ try rmTapMacroP
   , KEmit <$> keycodeP
+  , KComposeSeq <$> deadkeySeqP
   , KComposeSeq <$> composeSeqP
   ]) <?> "button"
 
@@ -256,17 +266,17 @@ otokenP = statement "uinput-sink" $ KUinputSink <$> lexeme textP <*> optional te
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
-defcfgP = M.fromList <$> some (lexeme settingP)
+defcfgP = some (lexeme settingP)
 
 -- | All possible configuration options that can be passed in the defcfg block
-settingP :: Parser (Text, DefSetting)
-settingP = let f s p = symbol s *> ((s,) <$> p) in
+settingP :: Parser DefSetting
+settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ second SIToken  <$> f "input"    itokenP
-    , second SOToken  <$> f "output"   otokenP
-    , second SCmpSeq  <$> f "cmp-seq"  buttonP
-    , second SUtf8Seq <$> f "utf8-seq" buttonP
-    , second SInitStr <$> f "init"     textP
+    [ SIToken  <$> f "input"    itokenP
+    , SOToken  <$> f "output"   otokenP
+    , SCmpSeq  <$> f "cmp-seq"  buttonP
+    , SUtf8Seq <$> f "utf8-seq" buttonP
+    , SInitStr <$> f "init"     textP
     ])
 
 --------------------------------------------------------------------------------

@@ -713,3 +713,4 @@ ssComposed =
     --, ("^ spc", '^', "asciicircum") -- This overlaps with the normal 'shifted-6' macro for
     -- , ("' j", 'j́', "jacute")
     ]
+

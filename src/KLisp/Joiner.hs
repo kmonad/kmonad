@@ -38,14 +38,18 @@ import qualified RIO.Text         as T
 -- $err
 
 data JoinError
-  = DuplicateBlock Text
-  | MissingBlock   Text
-  | DuplicateAlias Text
-  | DuplicateLayer Text
-  | LengthMismatch Text Int Int
-  | MissingAlias   Text
-  | MissingLayer   Text
+  = DuplicateBlock   Text
+  | MissingBlock     Text
+  | DuplicateAlias   Text
+  | DuplicateLayer   Text
+  | LengthMismatch   Text Int Int
+  | MissingAlias     Text
+  | MissingLayer     Text
+  | MissingSetting   Text
+  | DuplicateSetting Text
   | NestedTrans
+  | InvalidComposeKey
+  | InvalidUtf8Key
   deriving Show
 
 instance Exception JoinError
@@ -54,8 +58,9 @@ instance Exception JoinError
 data JCfg = JCfg
   { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
   , _utf8Key :: Button  -- ^ How to prefix Utf8-sequences
-  , _src     :: [KExpr] -- ^ The source expresions we operate on
+  , _kes     :: [KExpr] -- ^ The source expresions we operate on
   }
+makeLenses ''JCfg
 
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
@@ -63,7 +68,8 @@ defJCfg = JCfg
   (modded KeyLeftShift . modded KeyLeftCtrl $ emitB KeyU)
 
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
-  deriving (Functor, Applicative, Monad, MonadError JoinError)
+  deriving ( Functor, Applicative, Monad
+           , MonadError JoinError , MonadReader JCfg)
 
 runJ :: J a -> JCfg -> Either JoinError a
 runJ j = runReader (runExceptT $ unJ j)
@@ -84,27 +90,42 @@ joinConfigIO es = case runJ joinConfig $ defJCfg es of
 extract :: Prism' a b -> [a] -> [b]
 extract p = catMaybes . map (preview p)
 
--- | Parse an entire DaemonCfg from a list of KExpr
+data SingletonError
+  = None
+  | Duplicate
+
+-- | Take the head of a list, or else throw the appropriate error
+onlyOne :: [a] -> Either SingletonError a
+onlyOne xs = case uncons xs of
+  Just (x, []) -> Right x
+  Just _       -> Left Duplicate
+  Nothing      -> Left None
+
+-- | Take the one and only block matching the prism from the expressions
+oneBlock :: Text -> Prism' KExpr a -> J a
+oneBlock t l = onlyOne . extract l <$> view kes >>= \case
+  Right x        -> pure x
+  Left None      -> throwError $ MissingBlock t
+  Left Duplicate -> throwError $ DuplicateBlock t
+
+-- | Update the JCfg and then run the entire 'joining' process
 joinConfig :: J CfgToken
-joinConfig es = do
+joinConfig = getOverride >>= \cfg -> (local (const cfg) joinConfig')
 
-  -- Extract JCfg overrides
-  override <- getOverride
+-- | Join an entire 'CfgToken' from the current list of 'KExpr'.
+joinConfig' :: J CfgToken
+joinConfig' = do
 
-  -- Extract exactly 1 item from a list, otherwise throw the appropriate error
-  let onlyOne t xs = case uncons xs of
-        Just (x, []) -> pure x
-        Just _       -> Left $ DuplicateBlock t
-        Nothing      -> Left $ MissingBlock   t
+  es <- view kes
 
-  -- Extract and join the `defio` block
-  dio    <- onlyOne "defio" . extract _KDefIO $ es
-  (i, o) <- (,) <$> getI dio <*> getO dio
+  -- Extract the IO settings
+  i <- getI
+  o <- getO
 
   -- Extract the other blocks and join them into a keymap
   let als = extract _KDefAlias $ es
   let lys = extract _KDefLayer $ es
-  src      <- onlyOne "defsrc" $ extract _KDefSrc $ es
+  src      <- oneBlock "defsrc" _KDefSrc
   (km, fl) <- joinKeymap src als lys
 
   pure $ CfgToken
@@ -118,24 +139,54 @@ joinConfig es = do
 --------------------------------------------------------------------------------
 -- $settings
 
+-- | Return a JCfg with all settings from defcfg applied to the env's JCfg
+getOverride :: J JCfg
+getOverride = do
+  env <- ask
+  cfg <- oneBlock "defcfg" _KDefCfg
+  let getB = joinButton [] M.empty
+  let go e v = case v of
+        SCmpSeq b  -> getB b >>= maybe (throwError InvalidComposeKey)
+                                       (\b' -> pure $ set cmpKey b' e)
+        SUtf8Seq b -> getB b >>= maybe (throwError InvalidUtf8Key)
+                                       (\b' -> pure $ set utf8Key b' e)
+        _ -> pure e
+  foldM go env cfg
 
 -- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
 runLF :: (forall e. HasLogFunc e => RIO e a) -> LogFunc -> IO a
 runLF = flip runRIO
 
--- getCfg ::
 
--- | Extract the KeySource-loader from a `DefIO`
-getI :: DefSettings -> J (LogFunc -> IO (Acquire KeySource))
-getI dio = case _itoken dio of
-  KDeviceSource pth -> pure $ runLF (deviceSource64 pth)
+-- | Extract the KeySource-loader from the 'KExpr's
+getI :: J (LogFunc -> IO (Acquire KeySource))
+getI = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _SIToken $ cfg of
+    Right (KDeviceSource pth) -> pure $ runLF (deviceSource64 pth)
+    Left  None                -> throwError $ MissingSetting "input"
+    Left  Duplicate           -> throwError $ DuplicateSetting "input"
+
+-- | Extract the KeySource-loader from a 'KExpr's
+getO :: J (LogFunc -> IO (Acquire KeySink))
+getO = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _SOToken $ cfg of
+    Right (KUinputSink t init) -> pure $ runLF
+      (uinputSink
+        (defUinputCfg { _keyboardName = T.unpack t
+                      , _postInit     = T.unpack <$> init}))
+    Left  None                 -> throwError $ MissingSetting "input"
+    Left  Duplicate            -> throwError $ DuplicateSetting "input"
 
 -- | Extract the KeySink-loader from a `DefIO`
-getO :: DefSettings -> J (LogFunc -> IO (Acquire KeySink))
-getO dio = case _otoken dio of
-  KUinputSink t init -> pure $ runLF (uinputSink
-    (defUinputCfg { _keyboardName = T.unpack t
-                  , _postInit     = T.unpack <$> init}))
+--
+-- getO :: DefSettings -> J (LogFunc -> IO (Acquire KeySink))
+-- getO dio = undefined
+--   -- case _otoken dio of
+--   -- KUinputSink t init -> pure $ runLF (uinputSink
+--     (defUinputCfg { _keyboardName = T.unpack t
+--                   , _postInit     = T.unpack <$> init}))
 
 
 --------------------------------------------------------------------------------
@@ -150,7 +201,7 @@ type LNames  = [Text]
 joinAliases :: LNames -> [DefAlias] -> J Aliases
 joinAliases ns als = foldM f M.empty $ concat als
   where f mp (t, b) = if t `M.member` mp
-          then Left $ DuplicateAlias t
+          then throwError $ DuplicateAlias t
           else flip (M.insert t) mp <$> (unnest $ joinButton ns mp b)
 
 --------------------------------------------------------------------------------
@@ -159,32 +210,31 @@ joinAliases ns als = foldM f M.empty $ concat als
 -- | Turn 'Nothing's (caused by joining a KTrans) into the appropriate error.
 -- KTrans buttons may only occur in 'DefLayer' definitions.
 unnest :: J (Maybe Button) -> J Button
-unnest = join . fmap (maybe (Left NestedTrans) (Right . id))
+unnest = join . fmap (maybe (throwError NestedTrans) (pure . id))
 
 -- | Turn a button token into an actual KMonad `Button` value
 joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
 joinButton ns als =
+
   -- Define some utility functions
-  let ret    = Right . Just
+  let ret    = pure . Just
       go     = unnest . joinButton ns als
       jst    = fmap Just
       fi     = fromIntegral
   in \case
-
     -- Variable dereference
     KRef t -> case M.lookup t als of
-      Nothing -> Left $ MissingAlias t
+      Nothing -> throwError $ MissingAlias t
       Just b  -> ret b
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
     KLayerToggle t -> if t `elem` ns
       then ret $ layerToggle t
-      else Left $ MissingLayer t
-
+      else throwError $ MissingLayer t
 
     -- Various compound buttons
-
+    KComposeSeq bs -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
     KTapMacro bs   -> jst $ tapMacro       <$> mapM go bs
     KAround o i    -> jst $ around         <$> go o <*> go i
     KTapNext t h   -> jst $ tapNext        <$> go t <*> go h
@@ -193,7 +243,7 @@ joinButton ns als =
       where f (ms, b) = (fi ms,) <$> go b
 
     -- Non-action buttons
-    KTrans -> Right Nothing
+    KTrans -> pure Nothing
     KBlock -> ret pass
 
 
@@ -203,9 +253,9 @@ joinButton ns als =
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
 joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (Keymap Button, LayerTag)
-joinKeymap _   _   []  = Left $ MissingBlock "deflayer"
+joinKeymap _   _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap src als lys = do
-  let f acc x = if x `elem` acc then Left $ DuplicateLayer x else pure (x:acc)
+  let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
   nms  <- foldM f [] $ map _layerName lys   -- Extract all names
   als' <- joinAliases nms als               -- Join aliases into 1 hashmap
   lys' <- mapM (joinLayer als' nms src) lys -- Join all layers

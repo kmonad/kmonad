@@ -34,6 +34,7 @@ module KLisp.Types
 
     -- * $lenses
   , AsKExpr(..)
+  , AsDefSetting(..)
 
     -- * Reexports
   , module Text.Megaparsec
@@ -150,9 +151,9 @@ data DefSetting
   | SUtf8Seq DefButton
   | SInitStr Text
   deriving Show
-makePrisms ''DefSetting
+makeClassyPrisms ''DefSetting
 
-type DefSettings = M.HashMap Text DefSetting
+type DefSettings = [DefSetting]
 
 --------------------------------------------------------------------------------
 -- $tkn
