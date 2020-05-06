@@ -1,0 +1,25 @@
+Hey everyone,
+
+I have a question about how to structure nested environments when using a RIO Monad. First, I will explain the situation, and then I will ask my question. So, the (simplified) situation:
+
+I am trying to write an application. It needs to be able to be run in at least 2
+ways (for example: 'start as a daemon' and 'just try parsing the config file').
+Certain application settings apply to any kind of command I might give the
+application, for example, `verbosity`. Other settings apply only to a particular
+task, like `port`.
+
+Therefore, I have different config-records. I have a `RunnerCfg` that contains,
+amongst others, a `verbosity` value. This `RunnerCfg` then gets turned into a
+`RunnerEnv` when I start the application. This `RunnerEnv` has a `LogFunc` field
+that lets me log things. This lets me have a function like `logInfo ::
+(HasLogFunc e) => Text -> RIO e ()`
+
+I also have a `DaemonCfg` that contains all the daemon-specific configuration,
+and that gets turned into a `DaemonEnv`. The `DaemonEnv` contains a `RunnerEnv`,
+and the `RunnerEnv` contains a `LogFunc`. Ideally, I'd like to make `DaemonEnv`
+a member of the `HasLogFunc` class so I can just use `logInfo`.
+
+I have found different ways to do this, but all of them fail to satisfy. I can:
+
+1. Make `RunnerEnv` a member of `HasLogFunc` and then `DaemonCfg` a member of
+   `RunnerEnv`. Without any additional tricks, though, you end

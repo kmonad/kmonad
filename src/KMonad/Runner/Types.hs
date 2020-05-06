@@ -10,7 +10,6 @@ import KPrelude
 
 data StartDaemonCmd = StartDaemonCmd
   { _cfgFile  :: FilePath
-  , _asServer :: Bool
   }
   deriving Show
 makeLenses ''StartDaemonCmd

@@ -1,105 +1,35 @@
+{-# LANGUAGE TypeFamilies #-}
 module KMonad.Testing
 
 where
 
--- import KPrelude
+import KPrelude
 
--- import Data.LayerStack
-
--- import KMonad.Action
--- import KMonad.Button
--- import KMonad.Daemon
--- import KMonad.Keyboard
--- import KMonad.Keyboard.IO
--- import KMonad.Keyboard.IO.Linux.UinputSink
--- import KMonad.Keyboard.IO.Linux.DeviceSource
--- import KMonad.Runner
--- import KMonad.Util
-
--- import qualified RIO.HashMap as M
-
--- kbd :: FilePath
--- kbd = "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd"
--- -- kbd = "/dev/input/by-id/usb-ErgoDox_EZ_ErgoDox_EZ_0-event-kbd"
-
--- silly :: Button
--- silly = mkButton
---   ( pause 500 >> emit (keyPress KeyA) >> pause 500 >> emit (keyPress KeyB) )
---   ( emit (keyRelease KeyA) >> pause 500 >> emit (keyRelease KeyB) )
+import Data.Kind (Type)
 
 
--- kmap :: Keymap Button
--- kmap = let
---   sftB = modded KeyLeftShift . emitB
---   th   = tapHold 500  (emitB KeyZ) (emitB KeyLeftShift)
---   tn   = tapNext (emitB KeyZ) (emitB KeyLeftShift)
---   mt   = multiTap (emitB KeyC) [(500, emitB KeyA), (500, emitB KeyB)]
---   cs   = around (emitB KeyLeftShift) (emitB KeyLeftCtrl)
---   lt   = mkButton (layerOp $ PushLayer "bloop") (layerOp $ PopLayer "bloop")
---   tb   = onPress (layerOp $ SetBaseLayer "bloop")
---   tt   = onPress (layerOp $ SetBaseLayer "test")
---   in mkLayerStack $
---         [ ("test",
---             [ (KeyA, emitB KeyA)
---             , (KeyS, emitB KeyR)
---             , (KeyD, emitB KeyS)
---             , (KeyF, emitB KeyT)
---             , (KeyQ, sftB KeyA)
---             , (KeyW, sftB KeyR)
---             , (KeyE, sftB KeyS)
---             , (KeyR, sftB KeyT)
---             , (KeyZ, th)
---             , (KeyX, tn)
---             , (KeyC, mt)
---             , (KeyV, cs)
---             , (KeyCapsLock, lt)
---             , (KeyEsc, tb)
---             ])
---         , ("bloop",
---            [ (KeyA, emitB KeyP)
---            , (KeyS, emitB KeyO)
---            , (KeyD, emitB KeyL)
---            , (KeyF, mt)
---            , (KeyEsc, tt)
---            ])
---         ]
 
+data Foo m = Foo (m Int)
+data Bar m = Bar (m String)
 
--- rstore :: M.HashMap Keycode Char
--- rstore = M.empty
+data Env m = Env
+  { _envFoo :: Foo m
+  , _envBar :: Bar m
+  }
+makeLenses ''Env
 
--- runTest' :: LogLevel -> IO ()
--- runTest' ll = run (defRunCfg & logLevel .~ ll) $ do
+data OthEnv m = OthEnv
+  { _oEnv :: Env m }
+makeLenses ''OthEnv
 
---   snkDev <- uinputSink defUinputCfg
---   srcDev <- deviceSource64 kbd
+class HasFoo env where
+  type FooF env :: Type -> Type
+  foo :: Lens' env (Foo (FooF env))
 
---   let dcfg = DaemonCfg
---         { _keySinkDev   = snkDev
---         , _keySourceDev = srcDev
---         , _keymapCfg    = kmap
---         , _firstLayer   = "test"
---         , _port         = ()
---         }
---   runDaemon dcfg loop
+instance HasFoo (Env m) where
+  type FooF (Env m) = m
+  foo = envFoo
 
--- launchTest :: IO ()
--- launchTest = run (defRunCfg & logLevel .~ LevelInfo) $ do
---   flip (withLaunch_ "testing") (threadDelay 200000) $ do
---       threadDelay 10000
---       throwString "hello"
-
--- runTest :: IO ()
--- runTest = runTest' LevelDebug
-
--- testCfg :: RunCfg
--- testCfg = defRunCfg & logLevel .~ LevelInfo
-
--- testKeyIO :: LogLevel -> IO ()
--- testKeyIO ll = run (defRunCfg & logLevel .~ ll) $ do
---   srcR <- deviceSource64 kbd
---   snkR <- uinputSink defUinputCfg
---   with srcR $ \src -> with snkR $ \snk -> forever $ do
---     e <- awaitKeyWith src
---     logInfo $ displayShow e
---     emitKeyWith snk (e^.thing)
+instance HasFoo (OthEnv m) where
+  type FooF (OthEnv m) = m
+  foo = oEnv . foo

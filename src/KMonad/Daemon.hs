@@ -23,11 +23,12 @@ import qualified KMonad.Daemon.HookStore    as Hs
 import qualified KMonad.Daemon.KeyHandler   as Kh
 import qualified KMonad.Daemon.InjectPoint  as Ip
 import qualified KMonad.Daemon.Sluice       as Sl
+import qualified KMonad.Daemon.Server       as Sv
+
 
 --------------------------------------------------------------------------------
 -- $env
 --
-
 
 -- | All the configuration options for running a daemon
 data DaemonCfg = DaemonCfg
@@ -35,12 +36,12 @@ data DaemonCfg = DaemonCfg
   , _keySourceDev :: Acquire KeySource
   , _keymapCfg    :: Kh.Keymap Button
   , _firstLayer   :: LayerTag
-  , _port         :: ()
+  , _port         :: Sv.Port
   }
 makeClassy ''DaemonCfg
 
 -- | The runtime environment of the daemon
-data Daemon = Daemon
+data DaemonEnv = DaemonEnv
   { -- Other configurations
     _deDaemonCfg   :: DaemonCfg
   , _deRunEnv      :: RunEnv
@@ -55,49 +56,32 @@ data Daemon = Daemon
   , _deInjectPoint :: Ip.InjectPoint
   , _deSluice      :: Sl.Sluice
   , _deKeyHandler  :: Kh.KeyHandler
+  , _deServer      :: Sv.Server
   } 
-makeLenses ''Daemon
+makeClassy ''DaemonEnv
 
-class ( HasLogFunc         e
-      , HasKeySink         e
-      , HasKeySource       e
-      , HasRunEnv          e
-      , Di.HasDispatch     e
-      , Hs.HasHookStore    e
-      , Sl.HasSluice       e
-      , Ip.HasInjectPoint  e
-      , Kh.HasKeyHandler   e
-      )
-  => HasDaemon e where
-  daemon :: Lens' e Daemon
+-- class ( HasLogFunc         e
+--       , HasKeySink         e
+--       , HasKeySource       e
+--       , HasRunEnv          e
+--       , Di.HasDispatch     e
+--       , Hs.HasHookStore    e
+--       , Sl.HasSluice       e
+--       , Ip.HasInjectPoint  e
+--       , Kh.HasKeyHandler   e
+--       , Sv.HasServer       e
+--       )
+--   => HasDaemon e where
+--   daemon :: Lens' e Daemon
 
-instance HasDaemon Daemon where daemon = id
-
-instance {-# OVERLAPS #-} (HasDaemon e) => HasDaemonCfg e where
-  daemonCfg = daemon . deDaemonCfg
-instance {-# OVERLAPS #-} (HasDaemon e) => HasRunEnv e where
-  runEnv = daemon . deRunEnv
-instance {-# OVERLAPS #-} (HasDaemon e) => HasKeySink e where
-  keySink = daemon . deKeySink
-instance {-# OVERLAPS #-} (HasDaemon e) => HasKeySource e where
-  keySource = daemon . deKeySource
-instance {-# OVERLAPS #-} (HasDaemon e) => Di.HasDispatch e where
-  dispatch = daemon . deDispatch
-instance {-# OVERLAPS #-} (HasDaemon e) => Hs.HasHookStore e where
-  hookStore = daemon . deHookStore
-instance {-# OVERLAPS #-} (HasDaemon e) => Sl.HasSluice e where
-  sluice = daemon . deSluice
-instance {-# OVERLAPS #-} (HasDaemon e) => Ip.HasInjectPoint e where
-  injectPoint = daemon . deInjectPoint
-instance {-# OVERLAPS #-} (HasDaemon e) => Kh.HasKeyHandler e where
-  keyHandler = daemon . deKeyHandler
+-- instance HasDaemon Daemon where daemon = id
 
 --------------------------------------------------------------------------------
 -- $init
 --
 
 -- | Initialize all the components of the Daemon
-mkDaemon :: HasRunEnv e => DaemonCfg -> ContT r (RIO e) Daemon
+mkDaemon :: HasRunEnv e => DaemonCfg -> ContT r (RIO e) DaemonEnv
 mkDaemon cfg = do
   -- Get a reference to the RunEnv
   rnv <- view runEnv
@@ -106,7 +90,7 @@ mkDaemon cfg = do
   snk <- using $ cfg^.keySinkDev
   src <- using $ cfg^.keySourceDev
 
-  -- Initialize the components, hook them up so they pull from eachother
+  -- Initialize the components of the pull-chain
   dsp <- Di.mkDispatch   
   hks <- Hs.mkHookStore
   slc <- Sl.mkSluice
@@ -114,9 +98,10 @@ mkDaemon cfg = do
 
   -- Initialize components that are not part of the pull-chain
   kyh <- Kh.mkKeyHandler (cfg^.firstLayer) (cfg^.keymapCfg)
+  srv <- Sv.mkServer (cfg^.port)
 
   -- Construct and return the Daemon
-  pure $ Daemon
+  pure $ DaemonEnv
     { _deDaemonCfg   = cfg
     , _deRunEnv      = rnv
     , _deKeySink     = snk
@@ -126,36 +111,54 @@ mkDaemon cfg = do
     , _deInjectPoint = ijp
     , _deSluice      = slc
     , _deKeyHandler  = kyh
+    , _deServer      = srv
     }
 
--- | Reduce a RIO action that requires a 'Daemon' to one that requires only a
+-- initDaemon :: ContT r (RIO Daemon) ()
+-- initDaemon = launch_ "msg-inject" (MessageEvent <$> Sv.recvMsg >>= Ip.inject)
+
+initDaemon :: (HasLogFunc e, Sv.HasServer e, Ip.HasInjectPoint e) => ContT r (RIO e) ()
+initDaemon = launch_ "msg-inject" (MessageEvent <$> Sv.recvMsg >>= Ip.inject)
+
+-- | Reduce a RIO action that requires a 'DaemonEnv' to one that requires only a
 -- 'RunEnv'. If you are in a 'RunEnv', this simply runs the 'Daemon' action.
-runDaemon :: HasRunEnv e => DaemonCfg -> RIO Daemon a -> RIO e a
-runDaemon cfg a = runContT (mkDaemon cfg) $ flip runRIO a
+runDaemon :: HasRunEnv e => DaemonCfg -> RIO DaemonEnv a -> RIO e a
+runDaemon cfg a = do
+  dem <- runContT (mkDaemon cfg) pure
+
+  withLaunch_ "msg-inject" (MessageEvent <$> Sv.recvMsg >>= Ip.inject) $
+    runRIO dem a
 
 
+  -- runContT (mkDaemon cfg) $ \dm -> runRIO dm a
+  undefined
+
+  -- flip runContT (flip runRIO (startServer >> a)) $ do
+  -- dm <- mkDaemon cfg
+
+  -- dm <- mkDaemon cfg
+  -- runRIO dm a
+  -- launch_ "msg-inject" (MessageEvent <$> Sv.recvMsg >>= Ip.inject)
+  
+-- runContT (mkDaemon cfg) $ flip runRIO a
 --------------------------------------------------------------------------------
 -- $mbut
 
 data KEnv = KEnv
-  { _kDaemon    :: Daemon
+  { _kDaemonEnv :: DaemonEnv
   , _kButtonEnv :: Kh.ButtonEnv
   }
 makeLenses ''KEnv
 
-class (HasDaemon e, Kh.HasButtonEnv e) => HasKEnv e where
-  kEnv :: Lens' e KEnv
-instance HasKEnv KEnv where kEnv = id
-
-instance {-# OVERLAPS #-} (HasKEnv e) => HasDaemon e where
-  daemon = kEnv . kDaemon
-instance {-# OVERLAPS #-} (HasKEnv e) => Kh.HasButtonEnv e where
-  buttonEnv = kEnv . kButtonEnv
+instance HasDaemonEnv KEnv where
+  daemonEnv = kDaemonEnv
+instance Kh.HasButtonEnv KEnv where
+  buttonEnv = kButtonEnv
 
 
 -- | When 'True', set the 'Sluice' to blocked mode, when 'False', unblock the
 -- 'Sluice' and rerun all the Events.
-kHold :: HasDaemon e => Bool -> RIO e ()
+kHold :: HasDaemonEnv e => Bool -> RIO e ()
 kHold = bool (Sl.unblock >>= Di.rerun) Sl.block
 
 instance HasKEnv e => MonadButton (RIO e) where

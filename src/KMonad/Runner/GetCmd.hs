@@ -56,9 +56,6 @@ startDaemonCmd :: Parser StartDaemonCmd
 startDaemonCmd = StartDaemonCmd
   <$> strArgument     ( metavar "FILE"
                      <> help    "The configuration file to load.")
-  <*> flag True False ( long  "fg"
-                     <> short 'g'
-                     <> help  "Run kmonad in the foreground")
 
 -- | Parse the log-level as either a level option or a verbose flag
 levelP :: Parser LogLevel
