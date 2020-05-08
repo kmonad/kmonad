@@ -41,7 +41,7 @@ it App, but who's checking).
 Well, there are a variety of customizations you can make. For example, this
 duplicates the functionality of another popular Linux utility: XCAPE, which
 allows you to specify mod-buttons that also emit events when you simply tap
-them. 
+them.
 
 For example, look at that useless CapsLock key on your keyboard. It is in a
 **great** position, but do we ever use it? Well, what if you could remap
@@ -145,6 +145,75 @@ to install udev rules using something like this in your `config.scm`
                     (udev-configuration-rules config))))))))
 ```
 
+#### Nixos
+There is not currently a `kmonad` package in `nixpkgs`, however the following instructions show
+how to create your own adhoc derivation, and how to configure udev rules in nixos.
+
+##### The Derivation
+Create a `kmonad.nix` derivation such as this one which fetches a static binary release of kmonad and packages it in the nix-store:
+```
+let
+  pkgs = import <nixpkgs> { };
+
+  kmonad-bin = pkgs.fetchurl {
+    url = "https://github.com/david-janssen/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
+    sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
+  };
+in
+pkgs.runCommand "kmonad" {}
+    ''
+      #!${pkgs.stdenv.shell}
+      mkdir -p $out/bin
+      cp ${kmonad-bin} $out/bin/kmonad
+      chmod +x $out/bin/*
+    ''
+```
+
+##### Configuration.nix
+
+1. Import `kmonad.nix` into your `configuration.nix` file using a `let` expression:
+```
+let
+  kmonad =  import /path/to/kmonad.nix;
+in {
+  <your_config>
+}
+```
+
+2. Add `kmonad` to `environment.systemPackages`:
+```
+  environment.systemPackages = with pkgs; [
+    ...
+    kmonad
+    ...
+  ];
+```
+
+3. Create the `uinput` group and add your user to `uinput` and `input`:
+```
+  users.groups = { uinput = {}; };
+
+  users.extraUsers.userName = {
+    ...
+    extraGroups = [ ... "input" "uinput" ];
+  };
+```
+
+4. Add `udev` rules:
+```
+  services.udev.extraRules =
+    ''
+      # KMonad user access to /dev/uinput
+      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+    '';
+```
+
+5. Rebuild system:
+```
+sudo nixos-rebuild switch
+```
+
+
 ## Running
 KMonad currently requires 1, and exactly 1 input argument: a path to a
 configuration file that describes the keyboard layout to run. For a guide to
@@ -179,7 +248,7 @@ and display the error to stdout. It is however not uncommon for KMonad to have
 to reacquire a uinput keyboard on resume from suspend. To that extent, any core
 IO exception will cause KMonad to pause for a second and attempt a restart, ad
 infinitum. This means its fine to unplug the mapped keyboard and plug it back
-in, without crashing KMonad. 
+in, without crashing KMonad.
 
 ## Common issues
 
@@ -220,12 +289,12 @@ This might have to be repeated whenever you restart your computer. There are
 various techniques for getting the `uinput` subsystem to load automatically, but
 I didn't manage to get any of them to work.
 
-### Figuring out which event-file corresponds to your keyboard 
+### Figuring out which event-file corresponds to your keyboard
 Sometimes you can find your keyboard listed under `/dev/input/by-id`. If so,
 this is by far the best solution, since there is no guarantee that a keyboard
 will be assigned the same numbered event-file. If this is not the case, however,
 the easiest way to figure out which event-file corresponds to your keyboard is
-probably to use the `evtest` Linux utility. 
+probably to use the `evtest` Linux utility.
 
 ### Getting special characters to work
 Since KMonad only deals in 'raw', primitive keyboard events, there is no such
@@ -241,7 +310,7 @@ There are two ways of doing this:
 
 ``` shell
 # Either
-xmodmap -e "keysym Alt_R = Multi_key" 
+xmodmap -e "keysym Alt_R = Multi_key"
 # or:
 setxkbmap option compose:ralt
 ```
@@ -256,7 +325,7 @@ errors because you are trying to map to buttons that have already been remapped.
    This has the added benefit that, whenever we need to recreate the uinput sink
    (this is sometimes necessary after resuming from suspend, for example), the
    command is automatically called again for you.
-   
+
 Note that there is a small interval between creating a uinput sink and it
 actually being registered by the OS, so whether you manually call `setxkbmap` or
 use the UINPUT_SINK token to pass a shell command, you need to ensure that it
@@ -279,7 +348,7 @@ handle them all in different ways, the Windows version of KMonad catches *all*
 keyboard input signals. The only distinction KMonad makes under Windows is
 between 'real' keyboard events and simulated keyboard events. Anything simulated
 is automatically passed on to the OS (that is also how KMonad avoids handling
-its own simulated output). 
+its own simulated output).
 
 #### No native support for compose sequences
 Windows does not support the same compose-sequences as X11, meaning that the
