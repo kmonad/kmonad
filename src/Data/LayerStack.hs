@@ -18,6 +18,11 @@ those as:
   - l: The layer key, which is the identifier for the different layers
   - k: The item key, which is the per-layer identifier for different items
   - a: The item (value), which is the value stored for k in a particular layer
+
+'LayerStack' is used to implement the basic keymap logic in 'KMonad', where the
+configuration for a keyboard is essentially a set of layers. Each layer maps
+keycodes to buttons, and the entire layers can be overlayed on top of eachother.
+
 -}
 module Data.LayerStack
   ( -- * Basic types

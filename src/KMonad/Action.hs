@@ -53,11 +53,11 @@ instance Display HookPred where
     then "Catch event: " else "Match event: "
 
 -- | Create a HookPred that matches the Press or Release of the calling button.
-matchMy :: MonadButton m => SwitchAction -> m HookPred
+matchMy :: MonadButton m => Switch -> m HookPred
 matchMy a = HookPred False <$> my a
 
 -- | Create a HookPred that catches the Press or Release of the calling button.
-catchMy :: MonadButton m => SwitchAction -> m HookPred
+catchMy :: MonadButton m => Switch -> m HookPred
 catchMy a = HookPred True <$> my a
 
 
@@ -127,7 +127,7 @@ instance Applicative Action where
 --
 
 -- | Create a KeyAction matching pressing or releasing of the current button
-my :: MonadButton m => SwitchAction -> m KeyAction
+my :: MonadButton m => Switch -> m KeyAction
 my a = mkKeyAction a <$> myBinding
 
 -- | Wait for an event to match a predicate and then execute an action

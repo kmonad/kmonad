@@ -1,4 +1,17 @@
-{-# LANGUAGE DeriveAnyClass #-}
+{-|
+Module      : KMonad.Keyboard
+Description : Basic keyboard types
+Copyright   : (c) David Janssen, 2019
+License     : MIT
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : portable
+
+This module contains or reexports all the basic, non-IO concepts related to
+dealing with key codes, events, and mappings. For keyboard-related IO see
+"KMonad.Keyboard.IO".
+
+-}
 module KMonad.Keyboard
   ( -- * Keyactions and their helpers
     -- $keyaction
