@@ -14,15 +14,11 @@ module KMonad.Keyboard.IO
   ( -- * KeySink: send keyboard events to the OS
     -- $snk
     KeySink
-  , HasKeySink
-  , keySink
   , mkKeySink
   , emitKey
 
     -- * KeySource: read keyboard events from the OS
   , KeySource
-  , HasKeySource
-  , keySource
   , mkKeySource
   , awaitKey
   )
@@ -39,14 +35,13 @@ import qualified RIO.Text as T
 -- $snk
 
 -- | A 'KeySink' sends key actions to the OS
-newtype KeySink = KeySink { emitKeyWith :: KeyAction -> IO () }
-makeClassy ''KeySink
+newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> IO () }
 
 -- | Create a new 'KeySink'
 mkKeySink :: HasLogFunc e
   => RIO e snk                      -- ^ Action to acquire the keysink
   -> (snk -> RIO e ())              -- ^ Action to close the keysink
-  -> (snk -> KeyAction -> RIO e ()) -- ^ Action to write with the keysink
+  -> (snk -> KeyEvent -> RIO e ()) -- ^ Action to write with the keysink
   -> RIO e (Acquire KeySink)
 mkKeySink o c w = do
   u     <- askUnliftIO
@@ -57,19 +52,17 @@ mkKeySink o c w = do
   pure $ KeySink . write <$> mkAcquire open close
 
 -- | Emit a key to the OS
-emitKey :: (HasLogFunc e, HasKeySink e) => KeyAction -> RIO e ()
-emitKey a = do
-  logDebug $ "Emitting: " <> display a
-  view keySink >>= liftIO . flip emitKeyWith a
-
+emitKey :: (HasLogFunc e) => KeySink -> KeyEvent -> RIO e ()
+emitKey snk e = do
+  logDebug $ "Emitting: " <> display e
+  liftIO $ emitKeyWith snk e
 
 
 --------------------------------------------------------------------------------
 -- $src
 
 -- | A 'KeySource' is an action that awaits 'KeyEvent's from the OS
-newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent }
-makeClassy ''KeySource
+newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent}
 
 -- | Create a new KeySource
 mkKeySource :: HasLogFunc e
@@ -86,9 +79,9 @@ mkKeySource o c r = do
   pure $ KeySource . read <$> mkAcquire open close
 
 -- | Wait for the next key from the OS
-awaitKey :: (HasLogFunc e, HasKeySource e) => RIO e KeyEvent
-awaitKey = do
-  e <- liftIO . awaitKeyWith =<< view keySource
+awaitKey :: (HasLogFunc e) => KeySource -> RIO e KeyEvent
+awaitKey src = do
+  e <- liftIO . awaitKeyWith $ src
   logDebug $ "\n" <> display (T.replicate 80 "-")
           <> "\nReceived event: " <> display e
   pure e

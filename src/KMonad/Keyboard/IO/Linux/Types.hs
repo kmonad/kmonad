@@ -29,6 +29,7 @@ where
 
 import KPrelude
 
+import Data.Time.Clock.System
 import Foreign.C.Types (CInt)
 import RIO.Partial (toEnum)
 
@@ -76,8 +77,8 @@ linuxKeyEvent (a, b, c, d, e) = LinuxKeyEvent (f a, f b, f c, f d, f e)
 -- | Constructor for linux sync events. Whenever you write an event to linux,
 -- you need to emit a 'sync' to signal to linux that it should sync all queued
 -- updates.
-sync :: Time -> LinuxKeyEvent
-sync t = LinuxKeyEvent (fi $ t^._s, fi $ t^._ns, 0, 0, 0)
+sync :: SystemTime -> LinuxKeyEvent
+sync (MkSystemTime s ns) = LinuxKeyEvent (fi s, fi ns, 0, 0, 0)
 
 
 -------------------------------------------------------------------------------
@@ -104,17 +105,18 @@ sync t = LinuxKeyEvent (fi $ t^._s, fi $ t^._ns, 0, 0, 0)
 
 -- | Translate a 'LinuxKeyEvent' to a kmonad 'KeyEvent'
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
-fromLinuxKeyEvent (LinuxKeyEvent (s, ns, typ, c, val))
-  | typ == 1 && val == 0 = Just . atTime t $ keyRelease kc
-  | typ == 1 && val == 1 = Just . atTime t $ keyPress   kc
+fromLinuxKeyEvent (LinuxKeyEvent (_, _, typ, c, val))
+  | typ == 1 && val == 0 = Just . mkRelease $ kc
+  | typ == 1 && val == 1 = Just . mkPress   $ kc
   | otherwise = Nothing
   where
-    t  = mkTime s ns
     kc = toEnum . fromIntegral $ c -- This is theoretically partial, but practically not
 
--- | Translate kmonad 'KeyEvent's to 'LinuxKeyEvent's for writing
-toLinuxKeyEvent :: KeyEvent -> LinuxKeyEvent
-toLinuxKeyEvent e = LinuxKeyEvent (fi $ e^._s, fi $ e^._ns, 1, c, val)
+-- | Translate kmonad 'KeyEvent' along with a 'SystemTime' to 'LinuxKeyEvent's
+-- for writing.
+toLinuxKeyEvent :: KeyEvent -> SystemTime -> LinuxKeyEvent
+toLinuxKeyEvent e (MkSystemTime s ns)
+  = LinuxKeyEvent (fi s, fi ns, 1, c, val)
   where
     c   = fi . fromEnum $ e^.keycode
-    val = if isPress e then 1 else 0
+    val = if (e^.switch == Press) then 1 else 0

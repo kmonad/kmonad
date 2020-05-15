@@ -18,32 +18,32 @@ library
       KPrelude
       Data.LayerStack
       Data.MultiMap
-      KLisp
-      KLisp.Joiner
-      KLisp.Parser
-      KLisp.Types
-      KMonad
-      KMonad.Action
-      KMonad.Button
-      KMonad.Daemon
-      KMonad.Daemon.Dispatch
-      KMonad.Daemon.HookStore
-      KMonad.Daemon.InjectPoint
-      KMonad.Daemon.KeyHandler
-      KMonad.Daemon.Sluice
-      KMonad.Event
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
       KMonad.Keyboard.IO.Linux.DeviceSource
       KMonad.Keyboard.IO.Linux.Types
       KMonad.Keyboard.IO.Linux.UinputSink
-      KMonad.Keyboard.Keycode
-      KMonad.Runner
-      KMonad.Runner.GetCmd
-      KMonad.Runner.Types
-      KMonad.Testing
-      KMonad.Util
+      -- KLisp
+      -- KLisp.Joiner
+      -- KLisp.Parser
+      -- KLisp.Types
+      -- KMonad
+      -- KMonad.Action
+      -- KMonad.Button
+      -- KMonad.Daemon
+      -- KMonad.Daemon.Dispatch
+      -- KMonad.Daemon.HookStore
+      -- KMonad.Daemon.InjectPoint
+      -- KMonad.Daemon.KeyHandler
+      -- KMonad.Daemon.Sluice
+      -- -- KMonad.Event
+      -- KMonad.Keyboard.Keycode
+      -- KMonad.Runner
+      -- KMonad.Runner.GetCmd
+      -- KMonad.Runner.Types
+      -- KMonad.Testing
+      -- KMonad.Util
        
   -- if os(linux)
   --   exposed-modules:
@@ -111,18 +111,19 @@ library
     c-sources:
       c_src/keyio_win.c
   build-depends:
-      base
-    , cereal
-    , hspec
-    , lens
-    , megaparsec
-    , mtl
-    , network
-    , optparse-applicative
-    , resourcet
-    , rio
-    , time
-    , unliftio
+                    base
+                , cereal
+                , hspec
+                , lens
+                , megaparsec
+                , mtl
+                , network
+                , optparse-applicative
+                , resourcet
+                , rio
+                , time
+                , transformers
+                , unliftio
   if os(linux)
      build-depends: unix
   if os(windows)
@@ -185,6 +186,7 @@ executable kmonad
       -rtsopts
       -with-rtsopts=-N
   build-depends:
-      base
-    , kmonad
+                    base
+                , kmonad
+                , transformers
   default-language: Haskell2010

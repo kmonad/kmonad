@@ -7,12 +7,13 @@ License     : MIT
 Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : portable
+
 -}
 module KMonad.Keyboard.IO.Linux.DeviceSource
   ( deviceSource
   , deviceSource64
 
-  , EventParser
+  , KeyEventParser
   , decode64
   )
 where
@@ -38,9 +39,9 @@ data DeviceSourceError
   deriving Exception
 
 instance Show DeviceSourceError where
-  show (IOCtlGrabError pth) = "Could not perform IOCTL grab on: " <> pth
+  show (IOCtlGrabError pth)    = "Could not perform IOCTL grab on: "    <> pth
   show (IOCtlReleaseError pth) = "Could not perform IOCTL release on: " <> pth
-  show (KeyIODecodeError msg) = "Event decode failed with msg: " <> msg
+  show (KeyIODecodeError msg)  = "KeyEvent decode failed with msg: "    <> msg
 
 makeClassyPrisms ''DeviceSourceError
 
@@ -61,19 +62,19 @@ ioctl_keyboard (Fd h) b = fromIntegral <$>
 --------------------------------------------------------------------------------
 -- $decoding
 
-data EventParser = EventParser
+data KeyEventParser = KeyEventParser
   { _nbytes :: !Int
     -- ^ Size of 1 input event in bytes
   , _prs    :: !(B.ByteString -> Either String LinuxKeyEvent)
     -- ^ Function to convert bytestring to event
   }
-makeClassy ''EventParser
+makeClassy ''KeyEventParser
 
 -- | Default configuration for parsing keyboard events
-defEventParser :: EventParser
-defEventParser = EventParser 24 decode64
+defEventParser :: KeyEventParser
+defEventParser = KeyEventParser 24 decode64
 
--- | The EventParser that works on my 64-bit Linux environment
+-- | The KeyEventParser that works on my 64-bit Linux environment
 decode64 :: B.ByteString -> Either String LinuxKeyEvent
 decode64 bs = (linuxKeyEvent . fliptup) <$> result
   where
@@ -88,8 +89,8 @@ decode64 bs = (linuxKeyEvent . fliptup) <$> result
 
 -- | Configurable components of a 'DeviceSource'
 data DeviceSourceCfg = DeviceSourceCfg
-  { _pth     :: !FilePath     -- ^ Path to the event-file
-  , _parser  :: !EventParser  -- ^ The method used to decode events
+  { _pth     :: !FilePath        -- ^ Path to the event-file
+  , _parser  :: !KeyEventParser  -- ^ The method used to decode events
   }
 makeClassy ''DeviceSourceCfg
 
@@ -102,11 +103,11 @@ data DeviceFile = DeviceFile
 makeClassy ''DeviceFile
 
 instance HasDeviceSourceCfg DeviceFile where deviceSourceCfg = cfg
-instance HasEventParser     DeviceFile where eventParser     = cfg.parser
+instance HasKeyEventParser  DeviceFile where keyEventParser  = cfg.parser
 
 -- | Open a device file
 deviceSource :: HasLogFunc e
-  => EventParser -- ^ The method by which to read and decode events
+  => KeyEventParser -- ^ The method by which to read and decode events
   -> FilePath    -- ^ The filepath to the device file
   -> RIO e (Acquire KeySource)
 deviceSource pr pt = mkKeySource (lsOpen pr pt) lsClose lsRead
@@ -125,7 +126,7 @@ deviceSource64 = deviceSource defEventParser
 -- can throw an 'IOException' if the file cannot be opened for reading, or an
 -- 'IOCtlGrabError' if an ioctl grab could not be properly performed.
 lsOpen :: (HasLogFunc e)
-  => EventParser   -- ^ The method by which to decode events
+  => KeyEventParser   -- ^ The method by which to decode events
   -> FilePath      -- ^ The path to the device file
   -> RIO e DeviceFile
 lsOpen pr pt = do

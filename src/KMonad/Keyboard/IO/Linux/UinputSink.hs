@@ -23,6 +23,8 @@ where
 
 import KPrelude
 
+import Data.Time.Clock.System (getSystemTime)
+
 import Foreign.C.String
 import Foreign.C.Types
 import System.Posix
@@ -110,16 +112,16 @@ foreign import ccall "send_event"
 
 -- | Create and acquire a Uinput device
 acquire_uinput_keysink :: MonadIO m => Fd -> UinputCfg -> m Int
-acquire_uinput_keysink (Fd h) cfg = liftIO $ do
-  cstr <- newCString $ cfg^.keyboardName
+acquire_uinput_keysink (Fd h) c = liftIO $ do
+  cstr <- newCString $ c^.keyboardName
   c_acquire_uinput_keysink h cstr
-    (cfg^.vendorCode) (cfg^.productCode) (cfg^.productVersion)
+    (c^.vendorCode) (c^.productCode) (c^.productVersion)
 
 -- | Release a Uinput device
 release_uinput_keysink :: MonadIO m => Fd -> m Int
 release_uinput_keysink (Fd h) = liftIO $ c_release_uinput_keysink h
 
--- | Using a Uinput device, send a KeyEvent to the Linux kernel
+-- | Using a Uinput device, send a LinuxKeyEvent to the Linux kernel
 send_event :: ()
   => UinputSink
   -> Fd
@@ -159,7 +161,8 @@ usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
-usWrite :: HasLogFunc e => UinputSink -> KeyAction -> RIO e ()
-usWrite u a = withMVar (u^.st) $ \fd -> do
-  send_event u fd =<< toLinuxKeyEvent <$> stampNow a
-  send_event u fd =<< now sync
+usWrite :: HasLogFunc e => UinputSink -> KeyEvent -> RIO e ()
+usWrite u e = withMVar (u^.st) $ \fd -> do
+  now <- liftIO $ getSystemTime
+  send_event u fd . toLinuxKeyEvent e $ now
+  send_event u fd . sync              $ now

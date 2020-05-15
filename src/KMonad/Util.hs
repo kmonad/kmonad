@@ -17,17 +17,7 @@ module KMonad.Util
   , Milliseconds
   , Microseconds
   , Nanoseconds
-  , Time
-  , HasTime(..)
-  , _SystemTime
-  , mkTime
-  , Timed
-  , atTime
-  , now
-  , nowIO
   , tDiff
-  , since
-  , stampNow
 
     -- * Overloaded fieldnames
     -- $fields
@@ -106,92 +96,40 @@ newtype Microseconds = Microseconds Int
 newtype Nanoseconds  = Nanoseconds  Int
   deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 
-instance Serialize Seconds
-instance Serialize Nanoseconds
+_s :: Lens' SystemTime Seconds
+_s = let
+  get (MkSystemTime s _)    = fromIntegral s
+  set (MkSystemTime _ ns) s = MkSystemTime (fromIntegral s) ns
+  in lens get set
 
+_ns :: Lens' SystemTime Nanoseconds
+_ns = let
+  get (MkSystemTime _ ns)    = fromIntegral ns
+  set (MkSystemTime s _)  ns = MkSystemTime s (fromIntegral ns)
+  in lens get set
 
--- | The 'Time' datatype that expresses a time value in KMonad
-data Time = Time
-  { __s  :: Seconds
-  , __ns :: Nanoseconds
-  } deriving (Eq, Show, Generic)
-makeClassy ''Time
-
-
--- | A 'Serialize' instance for time so we can encode and decode it easily.
-instance Serialize Time where
-  put = put . (__s &&& __ns)
-  get = uncurry Time <$> get
-
--- | An Iso to map between Time and SystemTime values easily
-_SystemTime :: Iso' Time SystemTime
-_SystemTime = iso to' from'
-  where
-    to'   = uncurry MkSystemTime .
-      (fromIntegral . __s &&& fromIntegral . __ns)
-    from' = uncurry Time .
-      (fromIntegral . systemSeconds &&& fromIntegral . systemNanoseconds)
-
-  -- where convert = uncurry Time . (fromIntegral . systemSeconds &&& fromIntegral . systemNanoseconds)
-
--- | A smart constructor that creates Time values from Integrals
-mkTime :: (Integral a, Integral b)
-  => a    -- ^ The seconds part of system time
-  -> b    -- ^ The nanoseconds part of system time
-  -> Time -- ^ The Time value
-mkTime s ns = Time (fromIntegral s) (fromIntegral ns)
-
--- | A datatype for things that happen at a certain type
-data Timed a = Timed
-  { _tTime :: Time
-  , _tThing :: a
-  } deriving (Show, Eq, Functor)
-makeLenses ''Timed
-
-instance HasTime (Timed a)    where time  = tTime
-instance HasThing (Timed a) a where thing = tThing
-
-instance Serialize a => Serialize (Timed a) where
-  put v = put (v^.time) >> put (v^.thing)
-  get   = (get :: Get Time) >>= \t -> atTime t <$> get
-
-instance Display a => Display (Timed a) where
-  textDisplay a = textDisplay (a^.time) <> ": " <> textDisplay (a^.thing)
-
--- | A smart constructor for 'Timed' values
-atTime :: Time -> a -> Timed a
-atTime t = Timed t
-
--- | Run a computation that requires a time now
-now :: MonadIO m => (Time -> a) -> m a
-now f = f <$> nowIO
-
--- | Return the current Time
-nowIO :: MonadIO m => m Time
-nowIO = view (from _SystemTime) <$> liftIO getSystemTime
-
-tDiff :: Time -> Time -> Milliseconds
+tDiff :: SystemTime -> SystemTime -> Milliseconds
 tDiff a b = let
   s  = fromIntegral $ (b^._s - a^._s) * 1000
   ns = fromIntegral $ (b^._ns - a^._ns) `div` 1000000
   in s + ns
 
 -- | Return how many milliseconds have elapsed since 'Time'
-since :: MonadIO m => Time -> m Milliseconds
-since t = now $ \n -> t `tDiff` n
+-- since :: MonadIO m => Time -> m Milliseconds
+-- since t = now $ \n -> t `tDiff` n
 
 -- | Wrap a thing in a 'Timed' wrapper with the current time
-stampNow :: MonadIO m => a -> m (Timed a)
-stampNow a = now $ flip atTime a
+-- stampNow :: MonadIO m => a -> m (Timed a)
+-- stampNow a = now $ flip atTime a
 
---------------------------------------------------------------------------------
--- $pprint
+-- --------------------------------------------------------------------------------
+-- -- $pprint
 
-instance Display Time where
-  textDisplay t
-    = tshow (fromIntegral $ t^._s :: Int)
-      <> "."
-      <> tshow (fromIntegral $ t^._ns :: Int)
+-- instance Display Time where
+--   textDisplay t
+--     = tshow (fromIntegral $ t^._s :: Int)
+--       <> "."
+--       <> tshow (fromIntegral $ t^._ns :: Int)
 
 
 --------------------------------------------------------------------------------

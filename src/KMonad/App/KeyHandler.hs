@@ -14,11 +14,15 @@ import KMonad.Util
 -- | The configuration of a 'Button' with some additional state to keep track of
 -- the last 'Switch'
 data ButtonEnv = ButtonEnv
-  { _beButton   :: !Button        -- ^ The configuration for this button
-  , _binding    :: !Keycode       -- ^ The 'Keycode' to which this button is bound
+  { _beButton   :: !Button              -- ^ The configuration for this button
+  , _binding    :: !Keycode             -- ^ The 'Keycode' to which this button is bound
   , _lastAction :: !(MVar Switch) -- ^ State to keep track of last manipulation
   }
 makeClassy ''ButtonEnv
+
+-- | Anything that has a ButtonEnv has a Button
+instance {-# OVERLAPS #-} (HasButtonEnv e) => HasButton e
+  where button = buttonEnv . beButton
 
 -- | Initialize a 'Button' from a 'Button' and a binding
 mkButtonEnv :: Button -> Keycode -> RIO e ButtonEnv

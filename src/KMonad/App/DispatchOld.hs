@@ -27,9 +27,9 @@ import qualified RIO.Seq as Seq
 
 
 data Dispatch = Dispatch
-  { _readProc :: TMVar (Async KeyEvent)
-  , _rerunBuf :: TVar (Seq KeyEvent)
-  , _redirect :: IORef (Maybe (KeyEvent -> IO ()))
+  { _readProc :: TMVar (Async Event)
+  , _rerunBuf :: TVar (Seq Event)
+  , _redirect :: IORef (Maybe (Event -> IO ()))
   }
 makeClassy ''Dispatch
 
@@ -43,16 +43,16 @@ mkDispatch' = do
 mkDispatch :: ContT r (RIO e) Dispatch
 mkDispatch = lift mkDispatch'
 
--- | Try to read a KeyEvent.
+-- | Try to read a Event.
 --
 -- If there are any events on the 'rerunBuf', those are consumed head first.
 -- Afterwards, we try to pull events from the TChan of raw OS input. If no
--- capturing process is registered, this function returns a 'Left KeyEvent',
+-- capturing process is registered, this function returns a 'Left Event',
 -- otherwise it returns a 'Right IO ()'. This IO action needs to be executed to
--- dispatch the 'KeyEvent' to the capturing process.
+-- dispatch the 'Event' to the capturing process.
 pull :: (HasLogFunc e, HasDispatch e)
-  => RIO e KeyEvent
-  -> RIO e KeyEvent
+  => RIO e Event
+  -> RIO e Event
 pull pullSrc = do
   d <- view dispatch
 
@@ -85,10 +85,10 @@ pull pullSrc = do
       liftIO $ f e
       pull pullSrc
 
--- | Add a list of 'KeyEvent's to the front of the rerun-buffer. These events
+-- | Add a list of 'Event's to the front of the rerun-buffer. These events
 -- will be taken before any new events are read from the OS. The list is
 -- consumed head-first.
-rerun :: HasDispatch e => [KeyEvent] -> RIO e ()
+rerun :: HasDispatch e => [Event] -> RIO e ()
 rerun es = do
   rr <- view rerunBuf
   atomically $ modifyTVar rr (Seq.fromList es ><)
@@ -97,7 +97,7 @@ rerun es = do
 --
 -- NOTE: This blocks if the input is already captured by a different process.
 --
-captureInput :: (HasLogFunc e, HasDispatch e) => (KeyEvent -> RIO e ()) -> RIO e ()
+captureInput :: (HasLogFunc e, HasDispatch e) => (Event -> RIO e ()) -> RIO e ()
 captureInput f = do
   logDebug $ "Registering external process to capture input"
   u   <- askRunInIO

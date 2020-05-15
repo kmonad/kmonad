@@ -23,26 +23,21 @@ import qualified RIO.Text    as T (replicate)
 --------------------------------------------------------------------------------
 -- $kh
 
-newtype NextH = NextH (HookPred, Match -> IO ())
+newtype NextH = NextH (MatchTarget, Match -> IO ())
 makeWrapped ''NextH
 
-mkNextH :: HookPred -> (Match -> RIO e ()) -> RIO e NextH
+mkNextH :: MatchTarget -> (Match -> RIO e ()) -> RIO e NextH
 mkNextH p a = withRunInIO $ \u -> pure $ NextH (p, (u . a))
 
-newtype TimerH = TimerH (HookPred, TimerMatch -> IO (), Time)
+newtype TimerH = TimerH (MatchTarget, TimerMatch -> IO (), Time)
 makeWrapped ''TimerH
 
 
-class HasPred e where pred :: Lens' e HookPred
+class HasPred e where pred :: Lens' e MatchTarget
 instance HasPred NextH  where pred = _Wrapped._1
 instance HasPred TimerH where pred = _Wrapped._1
 
 
-mkTimerH :: HookPred -> (TimerMatch -> RIO e ()) -> RIO e TimerH
-mkTimerH p a = do
-  u <- askRunInIO
-  t <- nowIO
-  pure $ TimerH (p, u . a, t)
 
 --------------------------------------------------------------------------------
 -- $env
@@ -51,7 +46,7 @@ mkTimerH p a = do
 
 -- | The different 'inherited' components of the HookStore runtime environment
 data HookStore = HookStore
-  { _injectSrc  :: TMVar KeyEvent
+  { _injectSrc  :: TMVar Event
   , _injectTmr  :: TMVar Unique
   , _nextHooks  :: TVar [NextH]
   , _timerHooks :: TVar (M.HashMap Unique TimerH)
@@ -77,38 +72,20 @@ mkHookStore = lift mkHookStore'
 -- All the code dealing with getting events through the 'HookStore' context and
 -- running hooks on events.
 
--- | Print out information about hooks and matches
-debugReport :: HasHookStore e => KeyEvent -> RIO e Text
-debugReport e = do
-
-  -- Generate the report for the 'NEXT' hooks
-  nhs <- view nextHooks >>= \n -> atomically $ readTVar n
-  let ntxt = if null nhs
-        then ["Running no <NEXT>  hooks"]
-        else "Running <NEXT> hooks: ":(map fOne nhs)
-
-  -- Generate the report for the 'TIMER' hooks
-  ths <- view timerHooks >>= \t -> M.elems <$> (atomically $ readTVar t)
-  let ttxt = if null ths
-        then ["Running no <TIMER> hooks"]
-        else "Running <TIMER> hooks: ":(map fOne ths)
-
-  pure . unlines $ ntxt <> ttxt
-
-  where
-    fOne :: HasPred a => a -> Text
-    fOne h = " - " <> textDisplay (h^.pred)
-          <> ": "  <> textDisplay (if (h^.pred.target) `kaEq` e
-                                   then ("Match" :: Text) else "NoMatch")
 
 
-runNextHook :: KeyEvent -> NextH -> (Any, IO ())
+-- | Run a predicate over the 'Event' part of a structure
+kaEq :: (HasEvent a, HasEvent b) => a -> b -> Bool
+kaEq a b = (a^.keyAction) == (b^.keyAction)
+
+
+runNextHook :: Event -> NextH -> (Any, IO ())
 runNextHook e (NextH (p, a)) = if (p^.target) `kaEq` e
   then (Any $ p^.capture, a $ Match e)
   else (Any $ False     , a $ NoMatch)
 
 runTimerHook :: ()
-  => KeyEvent
+  => Event
   -> Time
   -> (Unique, TimerH)
   -> (Any, M.HashMap Unique TimerH, IO ())
@@ -129,14 +106,14 @@ runTimerHook e tNow (u, it@(TimerH (p, a, t))) = if (p^.target) `kaEq` e
 --   removed from the 'HookStore' action is run. Either way, the hook is removed
 --   from the 'HookStore'
 --
--- - A `timer` hook is checked against any KeyEvent as long as it remains in the
+-- - A `timer` hook is checked against any Event as long as it remains in the
 --   'HookStore'. The moment a timer hook matches an input, its 'Match' action is
---   run, and it is removed. However, when a timer doesn't match on a KeyEvent,
+--   run, and it is removed. However, when a timer doesn't match on a Event,
 --   no action is performed, but the hook remains in the store. The way a
 --   `timer` hook registers a 'NoMatch' is when its timer-event occurs when it
 --   is still in the 'HookStore'.
 --  
-runHooks :: (HasLogFunc e, HasHookStore e) => KeyEvent -> RIO e (Maybe KeyEvent)
+runHooks :: (HasLogFunc e, HasHookStore e) => Event -> RIO e (Maybe Event)
 runHooks e = do
   hs   <- view hookStore
   tNow <- nowIO
@@ -163,13 +140,13 @@ runHooks e = do
     --   then (r, M.empty)                 <> acc -- If matched, remove callback
     --   else (mempty (), M.singleton k f) <> acc -- If no match, do nothing
 
--- | Pull 1 event from the action we use to generate KeyEvents. If that action
+-- | Pull 1 event from the action we use to generate Events. If that action
 -- is not caught by any callback, then return it (otherwise return Nothing). At
 -- the same time, stay receptive to any 'TimerEvents' and handle them as they
 -- occur. No 2 events will ever be processed at the same time.
 step :: (HasLogFunc e, HasHookStore e)
-  => RIO e KeyEvent
-  -> RIO e (Maybe KeyEvent)
+  => RIO e Event
+  -> RIO e (Maybe Event)
 step pullSrc = do
   iSrc <- view injectSrc
   iTmr <- view injectTmr
@@ -190,10 +167,10 @@ step pullSrc = do
         Right e -> runHooks e
   read
 
--- | Keep stepping until we succesfully get a KeyEvent
+-- | Keep stepping until we succesfully get a Event
 pull :: (HasLogFunc e, HasHookStore e)
-  => RIO e KeyEvent
-  -> RIO e KeyEvent
+  => RIO e Event
+  -> RIO e Event
 pull pullSrc = step pullSrc >>= maybe (pull pullSrc) pure
 
 --------------------------------------------------------------------------------
@@ -205,9 +182,9 @@ pull pullSrc = step pullSrc >>= maybe (pull pullSrc) pure
 -- | Implementation of 'hookNext' from "KMonad.Action".
 --
 -- This adds a hook to the 'nextHooks' list in 'HookStore', where it will be called
--- on the next 'KeyEvent' to occur.
+-- on the next 'Event' to occur.
 hookNext :: (HasLogFunc e, HasHookStore e)
-  => HookPred
+  => MatchTarget
   -> (Match -> RIO e ())
   -> RIO e ()
 hookNext p a = do
@@ -222,7 +199,7 @@ hookNext p a = do
 -- asynchronously starts a thread that will signal when the timer has expired.
 hookWithin :: (HasLogFunc e, HasHookStore e)
   => Milliseconds
-  -> HookPred
+  -> MatchTarget
   -> (TimerMatch -> RIO e ())
   -> RIO e ()
 hookWithin ms p a = do

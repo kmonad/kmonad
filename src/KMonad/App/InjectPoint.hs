@@ -19,7 +19,7 @@ import KMonad.Event
 
 data InjectPoint = InjectPoint
   { _reading :: TVar Bool
-  , _injectP :: TMVar (Either KeyEvent Event)
+  , _injectP :: TMVar (Either KeyEvent KeyEvent)
   }
 makeClassy ''InjectPoint
 
@@ -37,7 +37,7 @@ mkInjectPoint = lift mkInjectPoint'
 
 pull :: (HasLogFunc e, HasInjectPoint e)
   => RIO e KeyEvent
-  -> RIO e Event
+  -> RIO e KeyEvent
 pull pullSrc = do
   -- Get a reference to the environment
   i <- view injectPoint
@@ -62,5 +62,5 @@ pull pullSrc = do
 -- $ops
 
 -- | Inject an event into the event-loop
-inject :: HasInjectPoint e => Event -> RIO e ()
+inject :: HasInjectPoint e => KeyEvent -> RIO e ()
 inject e = view injectP >>= \ip -> atomically $ putTMVar ip (Right e)

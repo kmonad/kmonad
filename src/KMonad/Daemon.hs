@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 module KMonad.Daemon
   ( DaemonCfg(..)
   , runDaemon
@@ -157,11 +155,11 @@ instance Kh.HasButtonEnv KEnv where
 
 
 -- | When 'True', set the 'Sluice' to blocked mode, when 'False', unblock the
--- 'Sluice' and rerun all the Events.
+-- 'Sluice' and rerun all the KeyEvents.
 kHold :: HasDaemonEnv e => Bool -> RIO e ()
 kHold = bool (Sl.unblock >>= Di.rerun) Sl.block
 
-instance HasKEnv e => MonadButton (RIO e) where
+instance HasKEnv e => MonadK (RIO e) where
   emit        = emitKey
   pause       = threadDelay . (*1000) . fromIntegral
   hold        = kHold
@@ -213,7 +211,7 @@ releaseButton = do
 -- returns, we know that the entire pull-chain has stopped. Therefore we will
 -- never be handling an event while another event is already in the middle of
 -- the pull-chain.
-nextEvent :: HasDaemon e => RIO e Event
+nextEvent :: HasDaemon e => RIO e KeyEvent
 nextEvent = Ip.pull . Sl.pull . Hs.pull . Di.pull $ awaitKey
 
 -- | Fetch the next event from the pull-chain of components and subsequently
