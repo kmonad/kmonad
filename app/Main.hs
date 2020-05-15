@@ -15,9 +15,7 @@ module Main
   )
 where
 
-import KPrelude
-import KMonad.Args.Cmd
-import KMonad.App
+import KMonad.Args (run)
 
 main :: IO ()
-main = getCmd >>= print
+main = run

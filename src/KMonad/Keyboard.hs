@@ -24,10 +24,10 @@ module KMonad.Keyboard
   , mkPress
   , mkRelease
 
-    -- * Keymaps
-    -- $keymap
+    -- * LMaps
+    -- $lmap
   , LayerTag
-  , Keymap
+  , LMap
 
     -- * Reexports
   , module KMonad.Keyboard.Keycode
@@ -88,15 +88,12 @@ mkRelease = KeyEvent Release
 
 
 --------------------------------------------------------------------------------
--- $keymap
+-- $lmap
 --
--- The basic types related to specifying 'Keymap's. A 'Keymap' contains a number
--- of different, named layers, where each layer maps 'Keycode's to things. The
--- thing that gets mapped to is a type parameter of the Keymap.
+-- Type aliases for specifying stacked-layer mappings
 
 -- | Layers are identified by a tag that is simply a 'Text' value.
 type LayerTag = Text
 
--- | 'Keymap's are mappings from 'LayerTag'd maps from 'Keycode' to things.
-type Keymap a = Ls.LayerStack LayerTag Keycode a
-
+-- | 'LMap's are mappings from 'LayerTag'd maps from 'Keycode' to things.
+type LMap a = Ls.LayerStack LayerTag Keycode a

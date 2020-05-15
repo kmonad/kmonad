@@ -22,10 +22,10 @@ import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
 
-import qualified KMonad.App.Dispatch      as Dp
-import qualified KMonad.App.Hooks         as Hs
-import qualified KMonad.App.Sluice        as Sl
-import qualified KMonad.App.PressHandler  as Ph
+import qualified KMonad.App.Dispatch as Dp
+import qualified KMonad.App.Hooks    as Hs
+import qualified KMonad.App.Sluice   as Sl
+import qualified KMonad.App.Keymap   as Km
 
 --------------------------------------------------------------------------------
 -- $appcfg
@@ -48,9 +48,8 @@ import qualified KMonad.App.PressHandler  as Ph
 data AppCfg = AppCfg
   { _keySinkDev   :: Acquire KeySink   -- ^ How to open a 'KeySink'
   , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
-  , _keymapCfg    :: Keymap Button     -- ^ The map defining the 'Button' layout
+  , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
-  , _acLogFunc    :: LogFunc           -- ^ How to perform logging
   }
 makeClassy ''AppCfg
 
@@ -68,7 +67,7 @@ data AppEnv = AppEnv
   , _sluice     :: Sl.Sluice
 
     -- Other components
-  , _keymap    :: Ph.PressHandler
+  , _keymap     :: Km.Keymap
   }
 makeClassy ''AppEnv
 
@@ -99,7 +98,7 @@ initAppEnv cfg = flip runContT pure $ do
   slc <- Sl.mkSluice   $ Hs.pull  hks
 
   -- Initialize the button environments in the keymap
-  phl <- Ph.mkPressHandler (cfg^.firstLayer) (cfg^.keymapCfg)
+  phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   pure $ AppEnv
     { _keLogFunc = lgf
@@ -122,7 +121,7 @@ initAppEnv cfg = flip runContT pure $ do
 -- | Trigger the button-action press currently registered to 'Keycode'
 pressKey :: (HasAppEnv e, HasLogFunc e) => Keycode -> RIO e ()
 pressKey c =
-  view keymap >>= flip Ph.lookupKey c >>= \case
+  view keymap >>= flip Km.lookupKey c >>= \case
     Nothing -> pure () -- If the keycode does not occur in our keymap
     Just b  -> runBEnv b Press >>= \case
       Nothing -> pure ()  -- If the previous action on this key was *not* a release
@@ -144,11 +143,10 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
   _                      -> pure ()
 
 -- | Run 'KMonad' using the provided configuration
-startApp :: MonadIO m => AppCfg -> m ()
-startApp c = runRIO (c^.acLogFunc) $ do
-  app <- initAppEnv c
-  runRIO app loop
- 
+startApp :: HasLogFunc e => AppCfg -> RIO e ()
+startApp c = initAppEnv c >>= flip runRIO loop
+
+
 --------------------------------------------------------------------------------
 -- $kenv
 --
@@ -185,5 +183,5 @@ instance MonadK (RIO KEnv) where
   hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
   hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
 
-  -- Layer-ops are sent to the 'PressHandler'
-  layerOp o = view keymap >>= \hl -> Ph.layerOp hl o
+  -- Layer-ops are sent to the 'Keymap'
+  layerOp o = view keymap >>= \hl -> Km.layerOp hl o

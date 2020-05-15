@@ -1,5 +1,5 @@
 {-|
-Module      : KLisp.Joiner
+Module      : KMonad.Args.Joiner
 Description : The code that turns tokens into a DaemonCfg
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -8,8 +8,14 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
+We perform configuration parsing in 2 steps:
+- 1. We turn the text-file into a token representation
+- 2. We check the tokens and turn them into an AppCfg
+
+This module covers step 2.
+
 -}
-module KLisp.Joiner
+module KMonad.Args.Joiner
   ( joinConfigIO
   , joinConfig
   )
@@ -251,7 +257,7 @@ joinButton ns als =
 
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
-joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (Keymap Button, LayerTag)
+joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (LMap Button, LayerTag)
 joinKeymap _   _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap src als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)

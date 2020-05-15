@@ -22,9 +22,13 @@ library
       KMonad.App
       KMonad.App.Dispatch
       KMonad.App.Hooks
-      KMonad.App.PressHandler
+      KMonad.App.Keymap
       KMonad.App.Sluice
+      KMonad.Args
       KMonad.Args.Cmd
+      KMonad.Args.Parser
+      KMonad.Args.Joiner
+      KMonad.Args.Types
       KMonad.Button
       KMonad.Keyboard
       KMonad.Keyboard.Keycode
@@ -171,7 +175,7 @@ executable kmonad
       -- MultiParamTypeClasses
       -- MultiWayIf
       -- NamedFieldPuns
-      NoImplicitPrelude
+      -- NoImplicitPrelude
       -- OverloadedStrings
       -- PartialTypeSignatures
       -- PatternGuards

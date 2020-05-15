@@ -1,5 +1,5 @@
 {-|
-Module      : KLisp.Types
+Module      : KMonad.Args.Types
 Description : The basic types of configuration parsing.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KLisp.Types
+module KMonad.Args.Types
   ( -- * $bsc
     Parser
   , PErrors(..)
@@ -50,8 +50,6 @@ import KMonad.Keyboard.IO
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-
-import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $bsc
@@ -100,7 +98,7 @@ data DefButton
 data CfgToken = CfgToken
   { _src  :: LogFunc -> IO (Acquire KeySource)
   , _snk  :: LogFunc -> IO (Acquire KeySink)
-  , _km   :: Keymap Button
+  , _km   :: LMap Button
   , _fstL :: Text
   , _prt  :: ()
   }
