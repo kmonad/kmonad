@@ -17,14 +17,14 @@ where
 
 import KPrelude
 
-import KMonad.Daemon
+import KMonad.App
 
 import KLisp.Parser
 import KLisp.Joiner
 import KLisp.Types
 
 -- | Parse a configuration file into a 'DaemonCfg' record
-loadConfig :: HasLogFunc e => FilePath -> RIO e DaemonCfg
+loadConfig :: HasLogFunc e => FilePath -> RIO e AppCfg
 loadConfig pth = do
   lf  <- view logFuncL
   tks <- loadTokens pth   -- This can throw a parse-error

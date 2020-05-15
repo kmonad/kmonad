@@ -58,7 +58,7 @@ newtype LinuxKeyEvent = LinuxKeyEvent (CInt, CInt, CInt, CInt, CInt)
 
 instance Display LinuxKeyEvent where
   textDisplay (LinuxKeyEvent (s, ns, typ, c, val)) = mconcat
-         [ textDisplay $ mkTime s ns , ": "
+         [ tshow s, ".", tshow ns, ": "
          , "type: ", tshow typ, ",  "
          , "code: ", tshow c,   ",  "
          , "val: ",  tshow val

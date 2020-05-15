@@ -8,9 +8,6 @@ Maintainer  : janssen.dhj@gmail.com
 Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
-The entry-point to KMonad that simply imports the relevant modules and strings
-them together. For the actual implementation details see "KMonad.Api.App"
-
 -}
 module Main
   ( -- * The entry-point to KMonad
@@ -19,7 +16,8 @@ module Main
 where
 
 import KPrelude
-import KMonad.Runner (kmonad)
+import KMonad.Args.Cmd
+import KMonad.App
 
 main :: IO ()
-main = kmonad
+main = getCmd >>= print

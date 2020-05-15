@@ -18,12 +18,22 @@ library
       KPrelude
       Data.LayerStack
       Data.MultiMap
+      KMonad.Action
+      KMonad.App
+      KMonad.App.Dispatch
+      KMonad.App.Hooks
+      KMonad.App.PressHandler
+      KMonad.App.Sluice
+      KMonad.Args.Cmd
+      KMonad.Button
       KMonad.Keyboard
+      KMonad.Keyboard.Keycode
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
       KMonad.Keyboard.IO.Linux.DeviceSource
       KMonad.Keyboard.IO.Linux.Types
       KMonad.Keyboard.IO.Linux.UinputSink
+      KMonad.Util
       -- KLisp
       -- KLisp.Joiner
       -- KLisp.Parser
@@ -61,7 +71,6 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      AutoDeriveTypeable
       BangPatterns
       BinaryLiterals
       ConstraintKinds
@@ -84,7 +93,6 @@ library
       InstanceSigs
       KindSignatures
       LambdaCase
-      MonadFailDesugaring
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
@@ -136,49 +144,49 @@ executable kmonad
   other-modules:
       -- Paths_kmonad
   default-extensions:
-      AutoDeriveTypeable
-      BangPatterns
-      BinaryLiterals
-      ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveTraversable
-      DerivingStrategies
-      DoAndIfThenElse
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
-      LambdaCase
-      MonadFailDesugaring
-      MultiParamTypeClasses
-      MultiWayIf
-      NamedFieldPuns
+      -- AutoDeriveTypeable
+      -- BangPatterns
+      -- BinaryLiterals
+      -- ConstraintKinds
+      -- DataKinds
+      -- DefaultSignatures
+      -- DeriveDataTypeable
+      -- DeriveFoldable
+      -- DeriveFunctor
+      -- DeriveGeneric
+      -- DeriveTraversable
+      -- DerivingStrategies
+      -- DoAndIfThenElse
+      -- EmptyDataDecls
+      -- ExistentialQuantification
+      -- FlexibleContexts
+      -- FlexibleInstances
+      -- FunctionalDependencies
+      -- GADTs
+      -- GeneralizedNewtypeDeriving
+      -- InstanceSigs
+      -- KindSignatures
+      -- LambdaCase
+      -- MonadFailDesugaring
+      -- MultiParamTypeClasses
+      -- MultiWayIf
+      -- NamedFieldPuns
       NoImplicitPrelude
-      OverloadedStrings
-      PartialTypeSignatures
-      PatternGuards
-      PolyKinds
-      RankNTypes
-      RecordWildCards
-      ScopedTypeVariables
-      StandaloneDeriving
-      TemplateHaskell
-      TupleSections
-      TypeApplications
-      TypeOperators
-      TypeFamilies
-      TypeSynonymInstances
-      ViewPatterns
+      -- OverloadedStrings
+      -- PartialTypeSignatures
+      -- PatternGuards
+      -- PolyKinds
+      -- RankNTypes
+      -- RecordWildCards
+      -- ScopedTypeVariables
+      -- StandaloneDeriving
+      -- TemplateHaskell
+      -- TupleSections
+      -- TypeApplications
+      -- TypeOperators
+      -- TypeFamilies
+      -- TypeSynonymInstances
+      -- ViewPatterns
   hs-source-dirs:
       app
   ghc-options:

@@ -167,22 +167,22 @@ instance HasLogFunc KEnv where logFuncL     = kAppEnv.logFuncL
 -- | Hook up all the components to the different 'MonadK' functionalities
 instance MonadK (RIO KEnv) where
   -- Emitting with the keysink
-  emit e      = view keySink >>= flip emitKey e
+  emit e = view keySink >>= flip emitKey e
 
   -- Pausing is a simple IO action
-  pause       = threadDelay . (*1000) . fromIntegral
+  pause = threadDelay . (*1000) . fromIntegral
 
   -- Holding and rerunning through the sluice and dispatch
-  hold b      = do
+  hold b = do
     sl <- view sluice
     di <- view dispatch
     if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
 
   -- Binding is found in the stored 'BEnv'
-  myBinding    = view (bEnv.binding)
+  myBinding = view (bEnv.binding)
 
   -- Hooking is performed with the hooks component
-  hookNext      t f = view hooks >>= \hs -> Hs.hookNext hs t f
+  hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
   hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
 
   -- Layer-ops are sent to the 'PressHandler'
