@@ -19,7 +19,7 @@ module KMonad.Keyboard.IO.Linux.DeviceSource
 where
 
 import KPrelude
-
+import System.IO (openFile)
 import Foreign.C.Types
 import System.Posix
 

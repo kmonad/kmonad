@@ -83,8 +83,8 @@ instance HasLogFunc AppEnv where logFuncL = keLogFunc
 -- to simplify a bunch of nesting of calls. At no point do we make use of
 -- 'callCC' or other 'ContT' functionality.
 --
-initAppEnv :: HasLogFunc e => AppCfg -> RIO e AppEnv
-initAppEnv cfg = flip runContT pure $ do
+initAppEnv :: HasLogFunc e => AppCfg -> ContT r (RIO e) AppEnv
+initAppEnv cfg = do
   -- Get a reference to the logging function
   lgf <- view logFuncL
 
@@ -144,7 +144,7 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
 
 -- | Run 'KMonad' using the provided configuration
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
-startApp c = initAppEnv c >>= flip runRIO loop
+startApp c = runContT (initAppEnv c) (flip runRIO loop)
 
 
 --------------------------------------------------------------------------------

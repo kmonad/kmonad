@@ -10,7 +10,9 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Args
-  ( run )
+  ( run
+  , test -- TODO: remove me when done
+  )
 where
 
 import KPrelude
@@ -23,15 +25,21 @@ import KMonad.Args.Types
 --------------------------------------------------------------------------------
 --
 
--- | The first entry-point for KMonad
---
--- 1. Grab the command-line options
--- 2. Construct the log-func
--- 3. Parse the config-file
--- 4. Maybe start KMonad
+-- | Run KMonad
 run :: IO ()
-run = do
-  c <- getCmd
+run = getCmd >>= runCmd
+
+-- | Start KMonad with the 'example.kbd' config file
+test :: IO ()
+test = runCmd $ Cmd "../../../doc/example.kbd" False LevelDebug
+
+-- | Execute the provided 'Cmd'
+--
+-- 1. Construct the log-func
+-- 2. Parse the config-file
+-- 3. Maybe start KMonad
+runCmd :: Cmd -> IO ()
+runCmd c = do
   o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logLvl)
   withLogFunc o $ \f -> runRIO f $ do
     cfg <- loadConfig $ c^.cfgFile
