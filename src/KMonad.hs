@@ -1,3 +1,0 @@
-module KMonad
-  ()
-where
