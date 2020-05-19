@@ -82,7 +82,6 @@ data DefButton
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
-  -- | KUtf8 Char                             -- ^ Emit a Utf8 sequence
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show

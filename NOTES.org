@@ -1,3 +1,8 @@
+* Steps to finalize:
+** TODO Add parsing support for all options
+** TODO Get a config with all options running
+** TODO Check if we use init for cfg
+** WAITING Clean up unused modules
 * Article notes:
 ** Type restriction
 restrict your types:
