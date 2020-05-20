@@ -1,4 +1,0 @@
-(defio
-  input (device-file "/some/path")
-  ouput (uinput-sink "my-name" "some stuff")
-)
