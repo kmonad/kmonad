@@ -1,0 +1,101 @@
+#| This configuration file describes the layout used by the KMonad author
+   himself. It captures a 40% Atreus keyboard. It assumes that keyboard (which
+   runs QMK) has been switched into a static layer that doesn't contain any
+   other keyboard trickery itself. That layer matches the `defsrc` layer defined
+   below.
+|#
+
+#| Layer template
+(deflayer somename
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
+|#
+
+;; Define various layer-interaction buttons
+(defalias
+  num  (layer-toggle numpad)
+  sym  (layer-toggle symbols)
+  fun  (layer-toggle fn-keys)
+  arr  (layer-toggle arrows)
+  L    (tap-hold 200 ret @num)
+  R    (tap-hold 200 esc @sym)
+  cL   (tap-hold 200 tab @fun)
+  cR   (tap-hold 200 @arr @swp)
+)
+
+;; Emacs macros (could customize emacs instead..)
+(defalias
+  swp  #(spc / /)
+)
+
+;; Define various macro sequences
+( defalias
+  ::  #(: :)
+  ->  #(- >)
+  <-  #(< -)
+  =>  #(= >)
+  <=  #(< =)
+  *>  #(* >)
+  <*  #(< *)
+  ^.  #(^ .)
+  <|> #(< | >)
+  <$> #(< $ >)
+  <*> #(< * >)
+  >>= #(> > =)
+  =<< #(= < <)
+)
+
+
+;; Source-layer. Lines up with the static layer defined in my QMK driver.
+(defsrc
+  q    w    f    p    g              j    l    u    y    ;
+  a    r    s    t    d              h    n    e    i    o
+  z    x    c    v    b              k    m    ,    .    /
+  tab  lmet lalt lsft lctl ins  esc  spc  rmet -    bspc ret
+)
+
+
+;;; Every-day typing layers
+
+;; Base-layer. Colemak with entry-points to my layers
+(deflayer colemak
+  q    w    f    p    g              j    l    u    y    ;
+  a    r    s    t    d              h    n    e    i    o
+  z    x    c    v    b              k    m    ,    .    /
+  @cL  lmet lalt lsft lctl @L   @R  spc  rmet -    bspc  @cR
+)
+
+;; Numpad, punctuation, brackets
+(deflayer numpad
+  X    `    ~    [    ]              X    7    8    9    /
+  @sym "    \_   \(   \)             X    4    5    6    *
+  X    '    |    {    }              =    1    2    3    -
+  _    _    _    _    _    _    @fun _    0    X    .    +
+)
+
+;; Symbols
+(deflayer symbols
+  @^.  @<|> @<$> @<*> @::            X    &    *    =    \\
+  X    @=>  @->  @*>  @>>=           X    $    %    ^    X
+  X    @<=  @<-  @<*  @=<<           X    !    @    #    X
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
+
+;; Function keys and emacs macros
+(deflayer fn-keys
+  _    _    _    _    _              vold F7   F8   F9   F10
+  _    _    _    _    _              volu F4   F5   F6   F11
+  _    _    _    _    _              mute F1   F2   F3   F12
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
+
+;; Arrow keys and perma-switching
+(deflayer arrows
+  _    pgdn up   pgup _              _    _    _    _    _
+  _    left down rght _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
