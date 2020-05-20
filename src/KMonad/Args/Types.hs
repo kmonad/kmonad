@@ -61,10 +61,11 @@ type Parser = Parsec Void Text
 
 -- | The type of errors returned by the Megaparsec parsers
 newtype PErrors = PErrors (ParseErrorBundle Text Void)
-  deriving (Exception)
 
 instance Show PErrors where
-  show (PErrors e)= errorBundlePretty e
+  show (PErrors e) = "Parse error at " <> errorBundlePretty e
+
+instance Exception PErrors
 
 --------------------------------------------------------------------------------
 -- $but
