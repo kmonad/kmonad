@@ -1,38 +1,57 @@
-#| This configuration file describes the layout used by the KMonad author
-   himself. It captures a 40% Atreus keyboard. It assumes that keyboard (which
-   runs QMK) has been switched into a static layer that doesn't contain any
-   other keyboard trickery itself. That layer matches the `defsrc` layer defined
-   below.
-|#
+#| --------------------------------------------------------------------------
 
-#| Layer template
+                                 KMonad: Atreus
+
+  This configuration file describes the layout used by the KMonad author
+  himself. It captures a 40% Atreus keyboard. It assumes that keyboard (which
+  runs QMK) has been switched into a static layer that doesn't contain any other
+  keyboard trickery itself. That layer matches the `defsrc` layer defined below.
+
+  Copy-out the following template to quickly create a layer:
+
 (deflayer somename
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
-|#
 
-;; Define various layer-interaction buttons
-(defalias
-  num  (layer-toggle numpad)
-  sym  (layer-toggle symbols)
-  fun  (layer-toggle fn-keys)
-  arr  (layer-toggle arrows)
-  L    (tap-hold 200 ret @num)
-  R    (tap-hold 200 esc @sym)
-  cL   (tap-hold 200 tab @fun)
-  cR   (tap-hold 200 @arr @swp)
+  -------------------------------------------------------------------------- |#
+
+
+
+
+#| --------------------------------------------------------------------------
+                           Setup system configuration
+   -------------------------------------------------------------------------- |#
+
+;; Basic system config
+(defcfg
+  input  (device-file "/dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd")
+  output (uinput-sink "KMonad: Atreus")
 )
 
-;; Emacs macros (could customize emacs instead..)
+
+;; Source-layer. Lines up with the static layer defined in my QMK driver.
+(defsrc
+  q    w    f    p    g              j    l    u    y    ;
+  a    r    s    t    d              h    n    e    i    o
+  z    x    c    v    b              k    m    ,    .    /
+  tab  lmet lalt lsft lctl ins  esc  spc  rmet -    bspc ret
+)
+
+
+#| --------------------------------------------------------------------------
+                                 Define aliases
+   -------------------------------------------------------------------------- |#
+
 (defalias
+  ;; Everyday typing --------------------------------------------------------
+
+  ;; Emacs macros (could customize emacs instead..)
   swp  #(spc / /)
-)
 
-;; Define various macro sequences
-( defalias
+  ;; Haskell macros because 1-button-bind is awesome
   ::  #(: :)
   ->  #(- >)
   <-  #(< -)
@@ -46,19 +65,33 @@
   <*> #(< * >)
   >>= #(> > =)
   =<< #(= < <)
+
+  ;; Simple layer switches
+  num  (layer-toggle numpad)
+  sym  (layer-toggle symbols)
+  fun  (layer-toggle fn-keys)
+  arr  (layer-toggle arrows)
+
+  ;; Compound switching and tapping buttons
+  L    (tap-hold 200 ret @num)
+  R    (tap-hold 200 esc @sym)
+  cL   (tap-hold 200 tab @fun)
+  cR   (tap-hold 200 @arr @swp)
+
+  ;; Gaming -----------------------------------------------------------------
+
+  cr   (tap-next ret lctl)
+
+  ;; Changing modes ---------------------------------------------------------
+
+  gm   (layer-switch game)
+  col  (layer-switch colemak)
 )
 
 
-;; Source-layer. Lines up with the static layer defined in my QMK driver.
-(defsrc
-  q    w    f    p    g              j    l    u    y    ;
-  a    r    s    t    d              h    n    e    i    o
-  z    x    c    v    b              k    m    ,    .    /
-  tab  lmet lalt lsft lctl ins  esc  spc  rmet -    bspc ret
-)
-
-
-;;; Every-day typing layers
+#| --------------------------------------------------------------------------
+                            Every-day typing layers
+   -------------------------------------------------------------------------- |#
 
 ;; Base-layer. Colemak with entry-points to my layers
 (deflayer colemak
@@ -94,8 +127,24 @@
 
 ;; Arrow keys and perma-switching
 (deflayer arrows
-  _    pgdn up   pgup _              _    _    _    _    _
+  _    pgdn up   pgup _              _    _    _    _    @gm
   _    left down rght _              _    _    _    _    _
   _    _    _    _    _              _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
+)
+
+
+#| --------------------------------------------------------------------------
+                               Gaming setup
+   -------------------------------------------------------------------------- |#
+
+(deflayer game
+  esc  q    w    e    r              t    y    u    i    p
+  lsft a    s    d    f              g    h    j    k    l
+  @cr  z    x    c    v              b    n    m    ,    .
+  tab  _    _    _    _    _    _    _    _    _    _    _
+)
+
+(deflayer game-nums
+
 )
