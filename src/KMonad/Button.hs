@@ -33,6 +33,7 @@ module KMonad.Button
   , emitB
   , modded
   , layerToggle
+  , layerSwitch
   , pass
 
   -- $benv
@@ -189,6 +190,11 @@ layerToggle :: LayerTag -> Button
 layerToggle t = mkButton
   (layerOp $ PushLayer t)
   (layerOp $ PopLayer  t)
+
+-- | Create a button that switches the base-layer on a press
+layerSwitch :: LayerTag -> Button
+layerSwitch t = onPress (layerOp $ SetBaseLayer t)
+
 
 -- | Create a button that does nothing (but captures the input)
 pass :: Button

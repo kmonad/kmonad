@@ -237,6 +237,9 @@ joinButton ns als =
     KLayerToggle t -> if t `elem` ns
       then ret $ layerToggle t
       else throwError $ MissingLayer t
+    KLayerSwitch t -> if t `elem` ns
+      then ret $ layerSwitch t
+      else throwError $ MissingLayer t
 
     -- Various compound buttons
     KComposeSeq bs -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs

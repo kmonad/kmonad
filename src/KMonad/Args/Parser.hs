@@ -230,6 +230,7 @@ buttonP = (lexeme . choice . map try $
   , statement "tap-hold"     $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
   , statement "tap-next"     $ KTapNext     <$> buttonP     <*> buttonP
   , statement "layer-toggle" $ KLayerToggle <$> word
+  , statement "layer-switch" $ KLayerSwitch <$> word
   , statement "tap-macro"    $ KTapMacro    <$> some buttonP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
@@ -293,6 +294,8 @@ deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
 
 --------------------------------------------------------------------------------
 -- $tst
+
+-- TODO clean me
 
 -- fname :: String
 -- fname = "/home/david/prj/hask/kmonad/doc/example.kbd"

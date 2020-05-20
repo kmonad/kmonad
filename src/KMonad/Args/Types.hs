@@ -76,6 +76,7 @@ data DefButton
   = KRef Text                              -- ^ Reference a named button
   | KEmit Keycode                          -- ^ Emit a keycode
   | KLayerToggle Text                      -- ^ Toggle to a layer when held
+  | KLayerSwitch Text                      -- ^ Switch base-layer when pressed
   | KTapNext DefButton DefButton           -- ^ Do 2 things based on behavior
   | KTapHold Int DefButton DefButton       -- ^ Do 2 things based on behavior and delay
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count

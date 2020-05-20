@@ -49,7 +49,6 @@ module KMonad.Action
   , matchRelease
   , matchRelease_
   , catchWithinHeld
-
   )
 
 where
