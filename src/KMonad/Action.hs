@@ -113,14 +113,15 @@ instance Display TimerMatch where
 -- | The 'KeyEvent' to match against, and whether to `capture` the event
 -- (interrupt further processing beside the callback) on a succesful match.
 data MatchTarget = MatchTarget
-  { _capture :: Bool     -- ^ Whether a match should interrupt further processing.
-  , _target  :: KeyEvent -- ^ The 'KeyEvent' to match against
+  { _capture :: Bool
+    -- ^ Whether a match should interrupt further processing.
+  , _target  :: KeyEvent -> Bool
+    -- ^ The predicate used to decide whether a match occured
   }
 makeLenses ''MatchTarget
 
 instance Display MatchTarget where
-  textDisplay h = (<> textDisplay (h^.target)) $ if h^.capture
-    then "Catch event: " else "Match event: "
+  textDisplay h = if h^.capture then "Catch" else "Match"
 
 
 --------------------------------------------------------------------------------

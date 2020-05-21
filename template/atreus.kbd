@@ -81,6 +81,8 @@
   ;; Gaming -----------------------------------------------------------------
 
   cr   (tap-next ret lctl)
+  gn   (layer-toggle game-num)
+  gf   (layer-toggle game-fun)
 
   ;; Changing modes ---------------------------------------------------------
 
@@ -142,9 +144,19 @@
   esc  q    w    e    r              t    y    u    i    p
   lsft a    s    d    f              g    h    j    k    l
   @cr  z    x    c    v              b    n    m    ,    .
-  tab  _    _    _    _    _    _    _    _    _    _    _
+  tab  lalt m    ret  spc  @gn  @gf  _    _    _    _    _
 )
 
-(deflayer game-nums
+(deflayer game-num
+  _    _    _    _    _              _    _    _    _    _
+  1    2    3    4    5              _    _    _    _    _
+  6    7    8    9    0              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
 
+(deflayer game-fun
+  _    _    _    F11  F12            _    _    _    _    _
+  F1   F2   F3   F4   F5             _    _    _    _    _
+  F6   F7   F8   F9   F10            _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
 )
