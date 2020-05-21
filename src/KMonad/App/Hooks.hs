@@ -64,9 +64,9 @@ mkTimerH p a = withRunInIO $ \u -> do
   pure $ TimerH (p, u . a, t)
 
 -- | Both hooks containing a specific target to match against
-class HasMT e         where mt:: Lens' e KeyPred
-instance HasMT NextH  where mt = _Wrapped._1
-instance HasMT TimerH where mt = _Wrapped._1
+-- class HasMT e         where mt:: Lens' e KeyPred
+-- instance HasMT NextH  where mt = _Wrapped._1
+-- instance HasMT TimerH where mt = _Wrapped._1
 
 --------------------------------------------------------------------------------
 -- $env
@@ -105,11 +105,11 @@ mkHooks = lift . mkHooks'
 -- Add a hook to be called on the next event.
 hookNext :: (HasLogFunc e)
   => Hooks               -- ^ The 'Hooks' environment
-  -> KeyPred         -- ^ The event to match against
+  -> KeyPred             -- ^ Predicate to match with
   -> (Match -> RIO e ()) -- ^ The callback to run against the match
   -> RIO e ()            -- ^ The registering action
 hookNext h p a = do
-  logDebug $ "Registering <NEXT>  hook: " <> display p
+  logDebug "Registering <NEXT> hook"
   nh <- mkNextH p a
   atomically $ modifyTVar (h^.nextHooks) (nh:)
 
@@ -124,7 +124,7 @@ hookWithin :: (HasLogFunc e)
   -> (TimerMatch -> RIO e ())
   -> RIO e ()
 hookWithin h ms p a = do
-  logDebug $ "Registering <TIMER> hook: " <> display p <> ", " <> display ms <> "ms"
+  logDebug $ "Registering <TIMER> hook with: " <> display ms <> "ms"
   kh <- mkTimerH p a
   tg <- liftIO newUnique
   atomically $ modifyTVar (h^.timerHooks) (M.insert tg kh)
@@ -160,23 +160,13 @@ debugReport h e = do
 
   -- Generate the report for the 'NEXT' hooks
   nhs <- atomically . readTVar $ h^.nextHooks
-  let ntxt = if null nhs
-        then ["Running no <NEXT>  hooks"]
-        else "Running <NEXT> hooks: ":(map fOne nhs)
+  let ntxt = "Running " <> textDisplay (length nhs) <> " <NEXT> hooks\n"
 
   -- Generate the report for the 'TIMER' hooks
   ths <- M.elems <$> (atomically . readTVar $ h^.timerHooks)
-  let ttxt = if null ths
-        then ["Running no <TIMER> hooks"]
-        else "Running <TIMER> hooks: ":(map fOne ths)
+  let ttxt = "Running " <> textDisplay (length ths) <> " <TIMER> hooks"
 
-  pure . unlines $ ntxt <> ttxt
-
-  where
-    fOne :: HasMT a => a -> Text
-    fOne x = " - " <> textDisplay (x^.mt)
-          <> ": "  <> textDisplay (if (x^.mt.fun $ e)
-                                   then ("Match" :: Text) else "NoMatch")
+  pure $ ntxt <> ttxt
 
 -- | Run a 'NextH' hook on a 'KeyEvent'
 --
@@ -188,9 +178,8 @@ runNextHook :: ()
   => KeyEvent     -- ^ The 'KeyEvent' to compare against
   -> NextH        -- ^ The 'NextH' to use
   -> (Any, IO ()) -- ^ Monoidal result
-runNextHook e (NextH (p, a)) = if p^.fun $ e
-  then (Any $ p^.capture, a $ Match e)
-  else (Any $ False     , a $ NoMatch)
+runNextHook e (NextH (p, f)) = (Any $ r^.caught, f r)
+  where r = p e
 
 -- | Run A 'TimerH' hook on a 'KeyEvent'
 --
@@ -204,13 +193,10 @@ runTimerHook :: ()
   -> SystemTime       -- ^ The 'SystemTime' at which this event was registered
   -> (Unique, TimerH) -- ^ The 'TimerH' and its 'Unique' identifier
   -> (Any, M.HashMap Unique TimerH, IO ()) -- ^ Monoidal result
-runTimerHook e tNow (u, it@(TimerH (p, a, t))) = if p^.fun $ e
-  then ( Any $ p^.capture
-       , M.empty
-       , a $ TimerMatch (Match e) (t `tDiff` tNow))
-  else (Any False
-       , M.singleton u it
-       , pure ())
+runTimerHook e tNow (u, it@(TimerH (p, f, t))) = if r^.succeeded
+  then (Any $ r^.caught, M.empty         , f $ TimerMatch r (t `tDiff` tNow))
+  else (Any False      , M.singleton u it, pure ())
+  where r = p e
 
 -- | Run all hooks on the provided keyevent.
 --
@@ -235,7 +221,7 @@ runHooks h e = do
 
   -- NOTE: this happens atomically in STM, so we will never be interrupted by a
   -- timer terminating in the middle of this operation.
-  (caught, io) <- atomically $ do
+  (caught', io) <- atomically $ do
     -- These foldMap calls use the monoidal nature of the 'run...Hook' results
     (nc, nio)     <- foldMap (runNextHook e) <$> swapTVar (h^.nextHooks) []
     (tc, ts, tio) <- foldMap (runTimerHook e tNow) . M.toList <$> readTVar (h^.timerHooks)
@@ -243,7 +229,7 @@ runHooks h e = do
     pure $ (nc, nio) <> (tc, tio)
 
   liftIO io
-  pure $ if getAny caught then Nothing else Just e
+  pure $ if getAny caught' then Nothing else Just e
 
 
 --------------------------------------------------------------------------------

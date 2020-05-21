@@ -21,12 +21,14 @@ module KMonad.Action
   , TimerMatch(..)
   , elapsed
   , matched
+  , caught
+  , succeeded
 
     -- * Match target
     -- $tgt
-  , KeyPred(..)
-  , fun
-  , capture
+  , KeyPred
+  , matchWith
+  , catchWith
 
     -- * Layer operations
     -- $lop
@@ -71,7 +73,8 @@ import KMonad.Util
 -- | The result of attempting to match, which either succesfully matched against
 -- a particular 'KeyEvent', or failed to match.
 data Match
-  = Match KeyEvent -- ^ Match occured on the provided event
+  = Match KeyEvent -- ^ Matched but didn't interrupt event
+  | Catch KeyEvent -- ^ Matched and interrupted event
   | NoMatch        -- ^ The callback did not match
 
 -- | The result of attempting to match within a certain timeframe, whether the
@@ -88,19 +91,33 @@ class HasMatch e where match :: Lens' e Match
 instance HasMatch Match      where match = id
 instance HasMatch TimerMatch where match = tMatch
 
--- | Whether a match succeeded or not
-matched :: HasMatch e => Getter e Bool
-matched = match . to (\case
-  (Match _) -> True
-  _         -> False)
+
+-- | Extract the matched event from a value that has a Match
+matched :: HasMatch e => Fold e KeyEvent
+matched = match . folding (\case
+  Match e -> Just e
+  Catch e -> Just e
+  _       -> Nothing)
+
+-- | Return whether a Match has signalled interrupting an event
+caught :: HasMatch e => Getter e Bool
+caught = match . to (\case
+  Catch _ -> True
+  _       -> False)
+
+-- | Return whether a Match succeeded or not
+succeeded :: HasMatch e => Getter e Bool
+succeeded = match . to (\case
+  NoMatch -> False
+  _       -> True)
 
 instance Display Match where
-  textDisplay m = if m^.matched then "Match" else "NoMatch"
+  textDisplay m = if m^.succeeded then "Match" else "NoMatch"
 
 instance Display TimerMatch where
-  textDisplay t = if t^.matched
-    then "Match in " <> textDisplay (t^.elapsed) <> "ms"
-    else "NoMatch"
+  textDisplay t = case t^?matched of
+    Just _  -> "Match in " <> textDisplay (t^.elapsed) <> "ms"
+    Nothing -> "NoMatch"
 
 
 --------------------------------------------------------------------------------
@@ -112,16 +129,13 @@ instance Display TimerMatch where
 
 -- | The 'KeyEvent' to match against, and whether to `capture` the event
 -- (interrupt further processing beside the callback) on a succesful match.
-data KeyPred = KeyPred
-  { _capture :: Bool
-    -- ^ Whether a match should interrupt further processing.
-  , _fun :: KeyEvent -> Bool
-    -- ^ The function used to decide whether a match occured
-  }
-makeLenses ''KeyPred
+type KeyPred = KeyEvent -> Match
 
-instance Display KeyPred where
-  textDisplay h = if h^.capture then "Catch" else "Match"
+matchWith :: (KeyEvent -> Bool) -> KeyPred
+matchWith f = \e -> if f e then Match e else NoMatch
+
+catchWith :: (KeyEvent -> Bool) -> KeyPred
+catchWith f = \e -> if f e then Catch e else NoMatch
 
 
 --------------------------------------------------------------------------------
@@ -142,11 +156,11 @@ data LayerOp
 
 class Monad m => MonadK m where
   -- | Emit a KeyEvent to the OS
-  emit        :: KeyEvent -> m ()
+  emit       :: KeyEvent -> m ()
   -- | Pause the current thread for n milliseconds
-  pause       :: Milliseconds -> m ()
+  pause      :: Milliseconds -> m ()
   -- | Pause or unpause event processing
-  hold        :: Bool -> m ()
+  hold       :: Bool -> m ()
   -- | Run a hook on only the next 'KeyEvent'
   hookNext   :: KeyPred -> (Match -> m ()) -> m ()
   -- | Run a hook on all 'KeyEvent's until the timer expires,
@@ -162,6 +176,7 @@ class Monad m => MonadK m where
 -- More complicated 'MonadK' operations built from the fundamental
 -- components.
 
+-- TODO: come in here and spruce things up
 
 -- | Create a KeyEvent matching pressing or releasing of the current button
 my :: MonadK m => Switch -> m KeyEvent
@@ -169,17 +184,17 @@ my a = mkKeyEvent a <$> myBinding
 
 -- | Create a KeyPred that matches the Press or Release of the calling button.
 matchMy :: MonadK m => Switch -> m KeyPred
-matchMy a = KeyPred False . (==) <$> my a
+matchMy a = matchWith . (==) <$> my a
 
 -- | Create a KeyPred that catches the Press or Release of the calling button.
 catchMy :: MonadK m => Switch -> m KeyPred
-catchMy a = KeyPred True . (==) <$> my a
+catchMy a = catchWith . (==) <$> my a
 
 -- | Wait for an event to match a predicate and then execute an action
 await :: MonadK m => m KeyPred -> (KeyEvent -> m ()) -> m ()
-await tgt f = catchNext tgt $ \case
-  Match e -> f e
-  NoMatch -> await tgt f
+await p f = catchNext p $ \m -> case m^?matched of
+  Nothing -> await p f
+  Just e  -> f e
 
 -- | Monadic counterpart of hookNext where the predicate runs in MonadK
 catchNext :: MonadK m => m KeyPred -> (Match -> m ()) -> m ()

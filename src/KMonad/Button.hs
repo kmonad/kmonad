@@ -120,6 +120,11 @@ around outer inner = Button
   (Action (runAction (outer^.pressAction)   *> runAction (inner^.pressAction)))
   (Action (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction)))
 
+aroundNext ::
+     Button -- ^ The outer 'Button'
+  -> Button -- ^ The resulting 'Button'
+aroundNext outer = onPress $ await (pure $ catchWith (\e -> e^.switch == Press)) undefined
+
 -- | Create a new button that performs both a press and release of the input
 -- button on just a press or release
 tapOn ::
@@ -134,8 +139,8 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
 tapHold ms t h = onPress $ catchWithinHeld ms (catchMy Release) $ \m -> if
-  | m^.matched -> tap t
-  | otherwise  -> press h
+  | m^.succeeded -> tap t
+  | otherwise    -> press h
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
@@ -147,18 +152,18 @@ multiTap l bs = onPress $ go bs
     go :: [(Milliseconds, Button)] -> AnyK ()
     go []             = press l
     go ((ms, b'):bs') = catchWithinHeld ms (catchMy Release) $ \m -> if
-        | m^.matched -> catchWithinHeld (ms - m^.elapsed) (catchMy Press) $ \m2 -> if
-            | m2^.matched -> go bs'
-            | otherwise   -> tap b'
-        | otherwise  -> press b'
+        | m^.succeeded -> catchWithinHeld (ms - m^.elapsed) (catchMy Press) $ \m2 -> if
+            | m2^.succeeded -> go bs'
+            | otherwise     -> tap b'
+        | otherwise -> press b'
 
 -- | Create a 'Button' that performs a tap of one button if the next event is
 -- its own release, or else it presses another button (and releases it when a
 -- release is detected).
 tapNext :: Button -> Button -> Button
 tapNext t h = onPress $ catchNext (catchMy Release) $ \m -> if
-    | m^.matched -> tap t
-    | otherwise  -> press h
+    | m^.succeeded -> tap t
+    | otherwise    -> press h
 
 -- | Create a 'Button' that performs a series of taps on press.
 tapMacro :: [Button] -> Button
