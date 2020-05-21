@@ -120,10 +120,16 @@ around outer inner = Button
   (Action (runAction (outer^.pressAction)   *> runAction (inner^.pressAction)))
   (Action (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction)))
 
-aroundNext ::
-     Button -- ^ The outer 'Button'
-  -> Button -- ^ The resulting 'Button'
-aroundNext outer = onPress $ await (pure $ catchWith (\e -> e^.switch == Press)) undefined
+-- aroundNext ::
+--      Button -- ^ The outer 'Button'
+--   -> Button -- ^ The resulting 'Button'
+-- aroundNext b = onPress $ await (pure $ matchWith (\e -> e^.switch == Press)) $ \e -> do
+--   runAction $ b^.pressAction
+
+
+  
+
+
 
 -- | Create a new button that performs both a press and release of the input
 -- button on just a press or release
