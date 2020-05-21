@@ -46,25 +46,25 @@ import qualified RIO.Text    as T
 -- checked as long as they exist in the store.
 
 -- | The 'NextH' will trigger on the next event
-newtype NextH = NextH (MatchTarget, Match -> IO ())
+newtype NextH = NextH (KeyPred, Match -> IO ())
 makeWrapped ''NextH
 
 -- | Create a new 'NextH' from a target and a callback
-mkNextH :: MonadUnliftIO m => MatchTarget -> (Match -> m ()) -> m NextH
+mkNextH :: MonadUnliftIO m => KeyPred -> (Match -> m ()) -> m NextH
 mkNextH p a = withRunInIO $ \u -> pure $ NextH (p, (u . a))
 
 -- | The 'TimerH' will stay in the store until its timer runs out or it succeeds.
-newtype TimerH = TimerH (MatchTarget, TimerMatch -> IO (), SystemTime)
+newtype TimerH = TimerH (KeyPred, TimerMatch -> IO (), SystemTime)
 makeWrapped ''TimerH
 
 -- | Create a new 'TimerH' from a target and a callback
-mkTimerH :: MonadUnliftIO m => MatchTarget -> (TimerMatch -> m ()) -> m TimerH
+mkTimerH :: MonadUnliftIO m => KeyPred -> (TimerMatch -> m ()) -> m TimerH
 mkTimerH p a = withRunInIO $ \u -> do
   t <- liftIO getSystemTime
   pure $ TimerH (p, u . a, t)
 
 -- | Both hooks containing a specific target to match against
-class HasMT e         where mt:: Lens' e MatchTarget
+class HasMT e         where mt:: Lens' e KeyPred
 instance HasMT NextH  where mt = _Wrapped._1
 instance HasMT TimerH where mt = _Wrapped._1
 
@@ -105,7 +105,7 @@ mkHooks = lift . mkHooks'
 -- Add a hook to be called on the next event.
 hookNext :: (HasLogFunc e)
   => Hooks               -- ^ The 'Hooks' environment
-  -> MatchTarget         -- ^ The event to match against
+  -> KeyPred         -- ^ The event to match against
   -> (Match -> RIO e ()) -- ^ The callback to run against the match
   -> RIO e ()            -- ^ The registering action
 hookNext h p a = do
@@ -120,7 +120,7 @@ hookNext h p a = do
 hookWithin :: (HasLogFunc e)
   => Hooks
   -> Milliseconds
-  -> MatchTarget
+  -> KeyPred
   -> (TimerMatch -> RIO e ())
   -> RIO e ()
 hookWithin h ms p a = do
@@ -175,7 +175,7 @@ debugReport h e = do
   where
     fOne :: HasMT a => a -> Text
     fOne x = " - " <> textDisplay (x^.mt)
-          <> ": "  <> textDisplay (if (x^.mt.target) == e
+          <> ": "  <> textDisplay (if (x^.mt.fun $ e)
                                    then ("Match" :: Text) else "NoMatch")
 
 -- | Run a 'NextH' hook on a 'KeyEvent'
@@ -188,7 +188,7 @@ runNextHook :: ()
   => KeyEvent     -- ^ The 'KeyEvent' to compare against
   -> NextH        -- ^ The 'NextH' to use
   -> (Any, IO ()) -- ^ Monoidal result
-runNextHook e (NextH (p, a)) = if (p^.target) == e
+runNextHook e (NextH (p, a)) = if p^.fun $ e
   then (Any $ p^.capture, a $ Match e)
   else (Any $ False     , a $ NoMatch)
 
@@ -204,7 +204,7 @@ runTimerHook :: ()
   -> SystemTime       -- ^ The 'SystemTime' at which this event was registered
   -> (Unique, TimerH) -- ^ The 'TimerH' and its 'Unique' identifier
   -> (Any, M.HashMap Unique TimerH, IO ()) -- ^ Monoidal result
-runTimerHook e tNow (u, it@(TimerH (p, a, t))) = if (p^.target) == e
+runTimerHook e tNow (u, it@(TimerH (p, a, t))) = if p^.fun $ e
   then ( Any $ p^.capture
        , M.empty
        , a $ TimerMatch (Match e) (t `tDiff` tNow))

@@ -24,8 +24,8 @@ module KMonad.Action
 
     -- * Match target
     -- $tgt
-  , MatchTarget(..)
-  , target
+  , KeyPred(..)
+  , fun
   , capture
 
     -- * Layer operations
@@ -106,21 +106,21 @@ instance Display TimerMatch where
 --------------------------------------------------------------------------------
 -- $tgt
 --
--- The 'MatchTarget' expresses what to match against in the future. Together with
+-- The 'KeyPred' expresses what to match against in the future. Together with
 -- the 'Match' family it is responsible for dealing with KMonad's callback
 -- architecture.
 
 -- | The 'KeyEvent' to match against, and whether to `capture` the event
 -- (interrupt further processing beside the callback) on a succesful match.
-data MatchTarget = MatchTarget
+data KeyPred = KeyPred
   { _capture :: Bool
     -- ^ Whether a match should interrupt further processing.
-  , _target  :: KeyEvent -> Bool
-    -- ^ The predicate used to decide whether a match occured
+  , _fun :: KeyEvent -> Bool
+    -- ^ The function used to decide whether a match occured
   }
-makeLenses ''MatchTarget
+makeLenses ''KeyPred
 
-instance Display MatchTarget where
+instance Display KeyPred where
   textDisplay h = if h^.capture then "Catch" else "Match"
 
 
@@ -148,9 +148,9 @@ class Monad m => MonadK m where
   -- | Pause or unpause event processing
   hold        :: Bool -> m ()
   -- | Run a hook on only the next 'KeyEvent'
-  hookNext   :: MatchTarget -> (Match -> m ()) -> m ()
+  hookNext   :: KeyPred -> (Match -> m ()) -> m ()
   -- | Run a hook on all 'KeyEvent's until the timer expires,
-  hookWithin :: Milliseconds -> MatchTarget -> (TimerMatch -> m ()) -> m ()
+  hookWithin :: Milliseconds -> KeyPred -> (TimerMatch -> m ()) -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Access the keycode to which the current button is bound
@@ -162,32 +162,33 @@ class Monad m => MonadK m where
 -- More complicated 'MonadK' operations built from the fundamental
 -- components.
 
+
 -- | Create a KeyEvent matching pressing or releasing of the current button
 my :: MonadK m => Switch -> m KeyEvent
 my a = mkKeyEvent a <$> myBinding
 
--- | Create a MatchTarget that matches the Press or Release of the calling button.
-matchMy :: MonadK m => Switch -> m MatchTarget
-matchMy a = MatchTarget False <$> my a
+-- | Create a KeyPred that matches the Press or Release of the calling button.
+matchMy :: MonadK m => Switch -> m KeyPred
+matchMy a = KeyPred False . (==) <$> my a
 
--- | Create a MatchTarget that catches the Press or Release of the calling button.
-catchMy :: MonadK m => Switch -> m MatchTarget
-catchMy a = MatchTarget True <$> my a
+-- | Create a KeyPred that catches the Press or Release of the calling button.
+catchMy :: MonadK m => Switch -> m KeyPred
+catchMy a = KeyPred True . (==) <$> my a
 
 -- | Wait for an event to match a predicate and then execute an action
-await :: MonadK m => m MatchTarget -> (KeyEvent -> m ()) -> m ()
+await :: MonadK m => m KeyPred -> (KeyEvent -> m ()) -> m ()
 await tgt f = catchNext tgt $ \case
   Match e -> f e
   NoMatch -> await tgt f
 
 -- | Monadic counterpart of hookNext where the predicate runs in MonadK
-catchNext :: MonadK m => m MatchTarget -> (Match -> m ()) -> m ()
+catchNext :: MonadK m => m KeyPred -> (Match -> m ()) -> m ()
 catchNext tgt f = tgt >>= \tgt' -> hookNext tgt' f
 
 -- | Monadic counterpart of hookWithin where the predicate runs in MonadK
 catchWithin :: MonadK m
   => Milliseconds
-  -> m MatchTarget
+  -> m KeyPred
   -> (TimerMatch -> m ())
   -> m ()
 catchWithin ms tgt f = tgt >>= \tgt' -> hookWithin ms tgt' f
@@ -213,7 +214,7 @@ matchRelease_ = matchRelease . const
 -- 'catchWithin' succeeds to match its predicate, or when the timer expires.
 catchWithinHeld :: MonadK m
   => Milliseconds
-  -> m MatchTarget
+  -> m KeyPred
   -> (TimerMatch -> m ())
   -> m ()
 catchWithinHeld ms tgt f = do
