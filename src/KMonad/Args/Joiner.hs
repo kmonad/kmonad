@@ -247,6 +247,7 @@ joinButton ns als =
     KAround o i    -> jst $ around         <$> go o <*> go i
     KTapNext t h   -> jst $ tapNext        <$> go t <*> go h
     KTapHold s t h -> jst $ tapHold (fi s) <$> go t <*> go h
+    KAroundNext b  -> jst $ aroundNext     <$> go b
     KMultiTap bs d -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
 

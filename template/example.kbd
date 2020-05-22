@@ -37,6 +37,10 @@
   :p  #(: p)
 )
 
+(defalias
+  tst (around-next lsft)
+)
+
 ;; Define the input-layout coming from the keyboard
 (defsrc
   esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
@@ -54,7 +58,7 @@
   tab  q    w    f    p    g    j    l    u    y    ;    [    ]    \
   @xcp a    r    s    t    d    h    n    e    i    o    '    ret
   lsft z    x    c    v    b    k    m    ,    .    /    rsft      up
-  lctl lmet lalt           spc            ralt @smb cmp  rctl left down rght
+  lctl lmet lalt           spc            ralt @smb cmp  rctl left down @tst
 )
 
 ;; Various symbols and macros

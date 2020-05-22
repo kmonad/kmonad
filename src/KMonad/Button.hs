@@ -24,6 +24,7 @@ module KMonad.Button
   , tapOn
 
   -- $cplx
+  , aroundNext
   , tapHold
   , multiTap
   , tapNext
@@ -122,11 +123,19 @@ around outer inner = Button
   (Action (runAction (outer^.pressAction)   *> runAction (inner^.pressAction)))
   (Action (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction)))
 
--- aroundNext ::
---      Button -- ^ The outer 'Button'
---   -> Button -- ^ The resulting 'Button'
--- aroundNext b = onPress $ await (pure $ matchWith (\e -> e^.switch == Press)) $ \e -> do
---   runAction $ b^.pressAction
+-- | A 'Button' that, once pressed, will surround the next button with another.
+--
+-- Think of this as, essentially, a tappable mod. For example, an 'aroundNext
+-- KeyCtrl' would, once tapped, then make the next keypress C-<whatever>.
+aroundNext ::
+     Button -- ^ The outer 'Button'
+  -> Button -- ^ The resulting 'Button'
+aroundNext b = onPress $ await matchPress $ \e -> do
+  runAction $ b^.pressAction
+  await (matchEvent $ mkKeyEvent Release (e^.keycode)) $ \_ -> do
+    runAction $ b^.releaseAction
+    pure NoCatch
+  pure NoCatch
 
 -- | Create a new button that performs both a press and release of the input
 -- button on just a press or release

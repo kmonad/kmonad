@@ -80,8 +80,6 @@ matchPress :: KeyPred
 matchPress = matchOn $ (Press ==) . view switch
 
 
-
-
 --------------------------------------------------------------------------------
 -- $cb
 
@@ -97,73 +95,6 @@ instance Monoid Catch where
 
 -- | A 'Callback' is a function that is called on match results
 type Callback m = Match -> m Catch
-
-
-
--- -- | The result of attempting to match within a certain timeframe, whether the
--- -- match succeeded or not is contained in the 'tMatch' field, and how much time
--- -- has elapsed since we started trying to match is contained in the 'elapsed' field.
--- data TimerMatch = TimerMatch
---   { _tMatch  :: Match        -- ^ Result of attempting the match
---   , _elapsed :: Milliseconds -- ^ Time since the callback was registered
---   }
--- makeLenses ''TimerMatch
-
--- -- | A helper class to speak about things that contain a 'Match'
--- class HasMatch e where match :: Lens' e Match
--- instance HasMatch Match      where match = id
--- instance HasMatch TimerMatch where match = tMatch
-
--- -- | Extract the matched event from a value that has a Match
--- matched :: HasMatch e => Fold e KeyEvent
--- matched = match . folding (\case
---   Match   e -> Just e
---   NoMatch   -> Nothing)
-
--- -- | Return whether a Match succeeded or not
--- succeeded :: HasMatch e => Getter e Bool
--- succeeded = match . to (\case
---   NoMatch -> False
---   _       -> True)
-
--- instance Display Match where
---   textDisplay = tshow
-
--- instance Display TimerMatch where
---   textDisplay t = case t^?matched of
---     Just _  -> "Match in " <> textDisplay (t^.elapsed) <> "ms"
---     Nothing -> "NoMatch"
-
-
---------------------------------------------------------------------------------
--- $tgt
---
--- The 'KeyPred' expresses what to match against in the future. Together with
--- the 'Match' family it is responsible for dealing with KMonad's callback
--- architecture.
-
--- | The 'KeyEvent' to match against, and whether to `capture` the event
--- (interrupt further processing beside the callback) on a succesful match.
--- type KeyPred = KeyEvent -> Match
-
--- -- | Capture, used in functions that generates 'KeyPred's, used to indicate
--- -- whether a KeyPred should capture or not.
--- data Catch = DoCatch | NoCatch deriving (Eq, Show)
-
-
--- -- | Create a 'KeyPred' that will
--- onEvent :: Capture -> KeyEvent -> KeyPred
--- onEvent c e = \e' -> if (e == e') then
---   case c of
---     DoCatch -> Catch e
---     NoCatch -> Match e
---   else NoMatch
-
--- matchWith :: (KeyEvent -> Bool) -> KeyPred
--- matchWith f = \e -> if f e then Match e else NoMatch
-
--- catchWith :: (KeyEvent -> Bool) -> KeyPred
--- catchWith f = \e -> if f e then Catch e else NoMatch
 
 
 --------------------------------------------------------------------------------
