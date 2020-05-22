@@ -59,50 +59,80 @@ import KMonad.Util
 
 
 --------------------------------------------------------------------------------
--- $match
---
--- To make decisions about what actions to take, we must be able to defer a
--- decision. For example, a TapHold button does not know what action to take
--- until either a timer runs out, or a release is detected. Such deferred
--- judgements are expressed through the family of 'Match' datatypes defined
--- here.
+-- $pred
 
 -- | Whether a predicate matched on a 'KeyEvent' or not.
 data Match = Match KeyEvent | NoMatch deriving (Eq, Show)
 
--- | The result of attempting to match within a certain timeframe, whether the
--- match succeeded or not is contained in the 'tMatch' field, and how much time
--- has elapsed since we started trying to match is contained in the 'elapsed' field.
-data TimerMatch = TimerMatch
-  { _tMatch  :: Match        -- ^ Result of attempting the match
-  , _elapsed :: Milliseconds -- ^ Time since the callback was registered
-  }
-makeLenses ''TimerMatch
+-- | A 'KeyPred' is a function that calculates matches against events.
+type KeyPred = KeyEvent -> Match
 
--- | A helper class to speak about things that contain a 'Match'
-class HasMatch e where match :: Lens' e Match
-instance HasMatch Match      where match = id
-instance HasMatch TimerMatch where match = tMatch
+-- | Create a 'KeyPred' from a predicate on 'KeyEvent'
+matchOn :: (KeyEvent -> Bool) -> KeyPred
+matchOn p = \e -> if p e then Match e else NoMatch
 
--- | Extract the matched event from a value that has a Match
-matched :: HasMatch e => Fold e KeyEvent
-matched = match . folding (\case
-  Match   e -> Just e
-  NoMatch   -> Nothing)
+-- | Create a 'KeyPred' that matches only an exact event
+matchEvent :: KeyEvent -> KeyPred
+matchEvent = matchOn . (==)
 
--- | Return whether a Match succeeded or not
-succeeded :: HasMatch e => Getter e Bool
-succeeded = match . to (\case
-  NoMatch -> False
-  _       -> True)
+-- | A 'KeyPred' that will match on any 'Press' event
+matchPress :: KeyPred
+matchPress = matchOn $ (Press ==) . view switch
 
-instance Display Match where
-  textDisplay = tshow
 
-instance Display TimerMatch where
-  textDisplay t = case t^?matched of
-    Just _  -> "Match in " <> textDisplay (t^.elapsed) <> "ms"
-    Nothing -> "NoMatch"
+
+
+--------------------------------------------------------------------------------
+-- $cb
+
+-- | The 'Catch' type is used to signal whether an event should be intercepted.
+data Catch = Catch | NoCatch deriving (Eq, Show)
+
+instance Semigroup Catch where
+  NoCatch <> NoCatch = NoCatch
+  _       <> _       = Catch
+
+instance Monoid Catch where
+  mempty = NoCatch
+
+-- | A 'Callback' is a function that is called on match results
+type Callback m = Match -> m Catch
+
+
+
+-- -- | The result of attempting to match within a certain timeframe, whether the
+-- -- match succeeded or not is contained in the 'tMatch' field, and how much time
+-- -- has elapsed since we started trying to match is contained in the 'elapsed' field.
+-- data TimerMatch = TimerMatch
+--   { _tMatch  :: Match        -- ^ Result of attempting the match
+--   , _elapsed :: Milliseconds -- ^ Time since the callback was registered
+--   }
+-- makeLenses ''TimerMatch
+
+-- -- | A helper class to speak about things that contain a 'Match'
+-- class HasMatch e where match :: Lens' e Match
+-- instance HasMatch Match      where match = id
+-- instance HasMatch TimerMatch where match = tMatch
+
+-- -- | Extract the matched event from a value that has a Match
+-- matched :: HasMatch e => Fold e KeyEvent
+-- matched = match . folding (\case
+--   Match   e -> Just e
+--   NoMatch   -> Nothing)
+
+-- -- | Return whether a Match succeeded or not
+-- succeeded :: HasMatch e => Getter e Bool
+-- succeeded = match . to (\case
+--   NoMatch -> False
+--   _       -> True)
+
+-- instance Display Match where
+--   textDisplay = tshow
+
+-- instance Display TimerMatch where
+--   textDisplay t = case t^?matched of
+--     Just _  -> "Match in " <> textDisplay (t^.elapsed) <> "ms"
+--     Nothing -> "NoMatch"
 
 
 --------------------------------------------------------------------------------
@@ -114,11 +144,11 @@ instance Display TimerMatch where
 
 -- | The 'KeyEvent' to match against, and whether to `capture` the event
 -- (interrupt further processing beside the callback) on a succesful match.
-type KeyPred = KeyEvent -> Match
+-- type KeyPred = KeyEvent -> Match
 
--- | Capture, used in functions that generates 'KeyPred's, used to indicate
--- whether a KeyPred should capture or not.
-data Catch = DoCatch | NoCatch deriving (Eq, Show)
+-- -- | Capture, used in functions that generates 'KeyPred's, used to indicate
+-- -- whether a KeyPred should capture or not.
+-- data Catch = DoCatch | NoCatch deriving (Eq, Show)
 
 
 -- -- | Create a 'KeyPred' that will
@@ -129,8 +159,8 @@ data Catch = DoCatch | NoCatch deriving (Eq, Show)
 --     NoCatch -> Match e
 --   else NoMatch
 
-matchWith :: (KeyEvent -> Bool) -> KeyPred
-matchWith f = \e -> if f e then Match e else NoMatch
+-- matchWith :: (KeyEvent -> Bool) -> KeyPred
+-- matchWith f = \e -> if f e then Match e else NoMatch
 
 -- catchWith :: (KeyEvent -> Bool) -> KeyPred
 -- catchWith f = \e -> if f e then Catch e else NoMatch
@@ -160,9 +190,9 @@ class Monad m => MonadK m where
   -- | Pause or unpause event processing
   hold       :: Bool -> m ()
   -- | Run a hook on only the next 'KeyEvent'
-  hookNext   :: KeyPred -> (Match -> m Catch) -> m ()
+  hookNext   :: KeyPred -> Callback m -> m ()
   -- | Run a hook on all 'KeyEvent's until the timer expires,
-  hookWithin :: Milliseconds -> KeyPred -> (TimerMatch -> m Catch) -> m ()
+  hookWithin :: Milliseconds -> KeyPred -> Callback m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Access the keycode to which the current button is bound
@@ -176,11 +206,11 @@ class Monad m => MonadK m where
 
 -- | Create a KeyEvent matching pressing or releasing of the current button
 my :: MonadK m => Switch -> m KeyEvent
-my a = mkKeyEvent a <$> myBinding
+my s = mkKeyEvent s <$> myBinding
 
 -- | Create a KeyPred that matches the Press or Release of the calling button.
 matchMy :: MonadK m => Switch -> m KeyPred
-matchMy a = matchWith . (==) <$> my a
+matchMy s = matchEvent <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
 await :: MonadK m => KeyPred -> (KeyEvent -> m Catch) -> m ()
@@ -188,6 +218,37 @@ await p f = hookNext p $ \case
   Match e -> f e
   NoMatch -> await p f *> pure NoCatch
 
+-- | Execute an action on the detection of the Switch of the active button.
+--
+-- Use this, for example, to register a callback from a 'pressAction' to
+-- explicitly handle the 'Release' of the button.
+--
+-- NOTE: There is no reason to include the `Match ->` part of the 'Callback'
+-- since this will only ever be run on an Event that we already know.
+awaitMy :: MonadK m => Switch -> m Catch -> m ()
+awaitMy s a = matchMy s >>= \p -> await p (const a)
+
+-- | 'hookNext' except the 'KeyPred' runs in 'MonadK'
+hookNextM :: MonadK m => m KeyPred -> Callback m -> m ()
+hookNextM p c = p >>= \p' -> hookNext p' c
+
+-- | 'hookWithin' except the 'KeyPred' runs in 'MonadK'
+hookWithinM :: MonadK m
+  => Milliseconds
+  -> m KeyPred
+  -> Callback m
+  -> m ()
+hookWithinM ms p c = p >>= \p' -> hookWithin ms p' c
+
+-- | Transform a match-handler so that, whenever a 'Match' is detected, a
+-- 'Catch' is signalled, and vice-versa. This is essentially the default
+-- catching behavior, and this function just makes it easy to add it default
+-- catching behavior to handlers.
+catchMatch :: MonadK m => (Match -> m a) -> Callback m
+catchMatch h = \m -> h m *> case m of
+  Match _ -> pure Catch
+  NoMatch -> pure NoCatch
+ 
 -- -- | Monadic counterpart of hookWithin where the predicate runs in MonadK
 -- catchWithin :: MonadK m
 --   => Milliseconds
@@ -212,14 +273,12 @@ await p f = hookNext p $ \case
 -- matchRelease_ :: MonadK m => m () -> m ()
 -- matchRelease_ = matchRelease . const
 
--- -- | A 'catchWithin' action which executes its attempt to catch in the context
--- -- of a paused input stream. This unpauses the input stream the moment
--- -- 'catchWithin' succeeds to match its predicate, or when the timer expires.
--- catchWithinHeld :: MonadK m
---   => Milliseconds
---   -> m KeyPred
---   -> (TimerMatch -> m ())
---   -> m ()
--- catchWithinHeld ms tgt f = do
---   hold True
---   catchWithin ms tgt (\e -> f e >>= \res -> hold False >> pure res)
+-- | A 'catchWithin' action which executes its attempt to catch in the context
+-- of a paused input stream. This unpauses the input stream the moment
+-- 'catchWithin' succeeds to match its predicate, or when the timer expires.
+hookWithinMHeld :: MonadK m
+  => Milliseconds
+  -> m KeyPred
+  -> Callback m
+  -> m ()
+hookWithinMHeld ms p f = hold True *> hookWithinM ms p (\e -> f e <* hold False)

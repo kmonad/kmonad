@@ -130,7 +130,9 @@ pressKey c =
         app <- view appEnv
         runRIO (KEnv app b) $ do
           runAction a
-          catchRelease_ $ runBEnv b Release >>= maybe (pure ()) runAction
+          awaitMy Release $ do
+            runBEnv b Release >>= maybe (pure ()) runAction
+            pure Catch
 
 -- | Perform 1 step of KMonad's app loop
 --
