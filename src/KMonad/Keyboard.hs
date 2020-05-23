@@ -35,7 +35,7 @@ module KMonad.Keyboard
 
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import KMonad.Keyboard.Keycode
 
@@ -45,7 +45,7 @@ import qualified Data.LayerStack as Ls
 --------------------------------------------------------------------------------
 -- $event
 --
--- An 'KeyEvent' in 'KMonad' is either the 'Press' or 'Release' of a particular
+-- An 'KeyEvent' in KMonad is either the 'Press' or 'Release' of a particular
 -- 'Keycode'. A complete list of keycodes can be found in
 -- "KMonad.Keyboard.Keycode".
 
@@ -58,8 +58,8 @@ data Switch
 
 -- | An 'KeyEvent' is a 'Switch' on a particular 'Keycode'
 data KeyEvent = KeyEvent
-  { _switch  :: Switch
-  , _keycode :: Keycode
+  { _switch  :: Switch  -- ^ Whether the 'KeyEvent' was a 'Press' or 'Release'
+  , _keycode :: Keycode -- ^ The 'Keycode' mapped to this 'KeyEvent'
   } deriving (Eq, Show, Generic, Hashable)
 makeLenses ''KeyEvent
 

@@ -41,7 +41,7 @@ module KMonad.App.Dispatch
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 import KMonad.Keyboard
 
 import RIO.Seq (Seq(..), (><))
@@ -54,7 +54,6 @@ import qualified RIO.Text as T
 -- The 'Dispatch' environment, describing what values are required to perform
 -- the Dispatch operations, and constructors for creating such an environment.
 
-
 -- | The 'Dispatch' environment
 data Dispatch = Dispatch
   { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
@@ -63,12 +62,14 @@ data Dispatch = Dispatch
   }
 makeLenses ''Dispatch
 
+-- | Create a new 'Dispatch' environment
 mkDispatch' :: MonadUnliftIO m => m KeyEvent -> m Dispatch
 mkDispatch' s = withRunInIO $ \u -> do
   rpc <- atomically $ newEmptyTMVar
   rrb <- atomically $ newTVar Seq.empty
   pure $ Dispatch (u s) rpc rrb
 
+-- | Create a new 'Dispatch' environment in a 'ContT' environment
 mkDispatch :: MonadUnliftIO m => m KeyEvent -> ContT r m Dispatch
 mkDispatch = lift . mkDispatch'
 

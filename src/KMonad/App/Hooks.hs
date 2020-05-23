@@ -11,8 +11,8 @@ Part of the KMonad deferred-decision mechanics are implemented using hooks,
 which will call predicates and actions on future keypresses and/or timer events.
 The 'Hooks' component is the concrete implementation of this functionality.
 
-In the sequencing of components, this happens second, right after the 'Dispatch'
-component.
+In the sequencing of components, this happens second, right after the
+'KMonad.App.Dispatch.Dispatch' component.
 
 -}
 module KMonad.App.Hooks
@@ -24,7 +24,7 @@ module KMonad.App.Hooks
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import Data.Semigroup (Any(..))
 import Data.Time.Clock.System
@@ -156,16 +156,15 @@ runNextHook :: ()
   -> IO Catch -- ^ Monoidal result
 runNextHook e (Hook (p, f)) = f . p $ e
 
--- | Run A 'TimerH' hook on a 'KeyEvent'
+-- | Run timer 'Hook' on a 'KeyEvent'
 --
--- This takes a 'KeyEvent' and a 'TimerH' and returns a result tuple consisting
+-- This takes a 'KeyEvent' and a 'Hook' and returns a result tuple consisting
 -- of:
--- 1. An 'Any' value indicating whether this event should be captured
--- 2. Either an empty (matched) or singleton (no match) hashmap with the id and timer
--- 3. Either a callback action (matched) or an empty action (no match)
+-- 1. Either an empty (matched) or singleton (no match) hashmap with the id and timer
+-- 2. Either the IO action to run on the Event or else an empty IO action
 runTimerHook :: ()
-  => KeyEvent         -- ^ The 'KeyEvent to compare against'
-  -> (Unique, Hook) -- ^ The 'TimerH' and its 'Unique' identifier
+  => KeyEvent                          -- ^ The 'KeyEvent to compare against'
+  -> (Unique, Hook)                    -- ^ The timer 'Hook' and its 'Unique' identifier
   -> (M.HashMap Unique Hook, IO Catch) -- ^ Monoidal result
 runTimerHook e (u, it@(Hook (p, f))) = case m of
   Match _ -> (M.empty, f m)
@@ -176,16 +175,16 @@ runTimerHook e (u, it@(Hook (p, f))) = case m of
 --
 -- NOTE: The hooks are run very differently:
 --
--- - A `next` hook is run only once, if it matches, its 'Match' action is run,
+-- - A /next/ 'Hook' is run only once, if it matches, its 'Match' action is run,
 --   if it doesn't match, its 'NoMatch' action is run. Either way, the hook is
---   removed from the 'HookStore' action is run.
+--   removed from the 'Hooks' action is run.
 --
--- - A `timer` hook is checked against any Event as long as it remains in the
---   'HookStore'. The moment a timer hook matches an input, its 'Match' action is
---   run, and it is removed. However, when a timer doesn't match on a Event,
---   no action is performed, but the hook remains in the store. The way a
---   `timer` hook registers a 'NoMatch' is when its timer-event occurs when it
---   is still in the 'HookStore'.
+-- - A /timer/ 'Hook' is checked against any Event as long as it remains in the
+--   'Hooks'. The moment a timer hook matches an input, its 'Match' action is
+--   run, and it is removed. However, when a timer doesn't match on a Event, no
+--   action is performed, but the hook remains in the store. The way a /timer/
+--   hook registers a 'NoMatch' is when its timer-event occurs when it is still
+--   in the 'Hooks'.
 runHooks :: (HasLogFunc e) => Hooks -> KeyEvent -> RIO e (Maybe KeyEvent)
 runHooks h e = do
   logDebug . display =<< debugReport h e

@@ -15,12 +15,14 @@ module KMonad.App
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
+import KMonad.Action
 import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
+import KMonad.App.BEnv
 
 import qualified KMonad.App.Dispatch as Dp
 import qualified KMonad.App.Hooks    as Hs
@@ -144,7 +146,7 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
   e | e^.switch == Press -> pressKey $ e^.keycode
   _                      -> pure ()
 
--- | Run 'KMonad' using the provided configuration
+-- | Run KMonad using the provided configuration
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
 startApp c = runContT (initAppEnv c) (flip runRIO loop)
 

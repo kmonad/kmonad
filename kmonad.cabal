@@ -1,7 +1,7 @@
 cabal-version: 1.12
 
 name:           kmonad
-version:        0.2.0
+version:        1.0
 synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
 maintainer:     janssen.dhj@gmail.com
@@ -15,11 +15,11 @@ library
     -Wno-name-shadowing
     -Wno-unused-imports
   exposed-modules:
-      KPrelude
       Data.LayerStack
       Data.MultiMap
       KMonad.Action
       KMonad.App
+      KMonad.App.BEnv
       KMonad.App.Dispatch
       KMonad.App.Hooks
       KMonad.App.Keymap
@@ -37,28 +37,9 @@ library
       KMonad.Keyboard.IO.Linux.DeviceSource
       KMonad.Keyboard.IO.Linux.Types
       KMonad.Keyboard.IO.Linux.UinputSink
+      KMonad.Prelude
       KMonad.Util
-      -- KLisp
-      -- KLisp.Joiner
-      -- KLisp.Parser
-      -- KLisp.Types
-      -- KMonad
-      -- KMonad.Action
-      -- KMonad.Button
-      -- KMonad.Daemon
-      -- KMonad.Daemon.Dispatch
-      -- KMonad.Daemon.HookStore
-      -- KMonad.Daemon.InjectPoint
-      -- KMonad.Daemon.KeyHandler
-      -- KMonad.Daemon.Sluice
-      -- -- KMonad.Event
-      -- KMonad.Keyboard.Keycode
-      -- KMonad.Runner
-      -- KMonad.Runner.GetCmd
-      -- KMonad.Runner.Types
-      -- KMonad.Testing
-      -- KMonad.Util
-       
+
   -- if os(linux)
   --   exposed-modules:
   --     KMonad.Api.KeyIO.Linux.DeviceSource

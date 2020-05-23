@@ -20,7 +20,7 @@ import GHC.Conc           as X (orElse)
 import RIO.Text           as X (unlines, lines)
 
 import RIO as X hiding
-  (-- Not the lens stuff, I want more support for lenses from actual-lens
+  (-- Not the lens stuff, I want more support for lenses from "Control.Lens"
     view, ASetter, ASetter', Lens, Getting, Lens'
   , SimpleGetter, lens, over, set, sets, to, (^.)
 

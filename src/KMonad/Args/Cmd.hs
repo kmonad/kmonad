@@ -16,10 +16,9 @@ module KMonad.Args.Cmd
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import Options.Applicative
-
 
 
 --------------------------------------------------------------------------------
@@ -27,7 +26,7 @@ import Options.Applicative
 --
 -- The different things KMonad can be instructed to do.
 
--- | Record of the different KMonad settings
+-- | Record describing the instruction to KMonad
 data Cmd = Cmd
   { _cfgFile :: FilePath -- ^ Which file to read the config from
   , _dryRun  :: Bool     -- ^ Flag to indicate we are only test-parsing
@@ -36,7 +35,7 @@ data Cmd = Cmd
   deriving Show
 makeClassy ''Cmd
 
--- | Parse 'RunCfg' from the evocation of this program
+-- | Parse 'Cmd' from the evocation of this program
 getCmd :: IO Cmd
 getCmd = customExecParser (prefs showHelpOnEmpty) $ info (cmdP <**> helper)
   (  fullDesc

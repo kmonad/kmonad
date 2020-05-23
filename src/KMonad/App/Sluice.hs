@@ -21,7 +21,7 @@ module KMonad.App.Sluice
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import KMonad.Keyboard
 
@@ -70,10 +70,11 @@ block s = do
 --
 -- NOTE: After successfully unblocking the 'Sluice' will be empty, it is the
 -- caller's responsibility to insert the returned events at an appropriate
--- location in the 'App'.
+-- location in the 'KMonad.App.App'.
 --
--- We do this in KMonad by writing the events into 'Dispatch's rerun buffer.
--- (this happens in the "KMonad.App" module.)
+-- We do this in KMonad by writing the events into the
+-- 'KMonad.App.Dispatch.Dispatch's rerun buffer. (this happens in the
+-- "KMonad.App" module.)
 unblock :: HasLogFunc e => Sluice -> RIO e [KeyEvent]
 unblock s = do
   modifyIORef' (s^.blocked) (\n -> n - 1)

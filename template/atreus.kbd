@@ -50,9 +50,10 @@
   ;; Useful buttons ---------------------------------------------------------
 
   ;; Emacs macros (pauses are required for Emacs to catch on)
-  swp  #(esc P5 spc P5 / P5 /  )
-  p/   #(esc P5 spc P5 p P5 /  )
-  svf  #(esc P5 :   P5 w P5 ret)
+  P    P10 ;; Seems to be the sweet-spot
+  swp  #(esc @P spc @P / @P /  )
+  p/   #(esc @P spc @P p @P /  )
+  svf  #(esc @P :   @P w @P ret)
 
   ;; Haskell macros because 1-button-bind is awesome
   ::  #(: :)
@@ -64,6 +65,7 @@
   <*  #(< * spc)
   ^.  #(^ .)
   -|  #(- - spc | spc)
+  -^  #(- - spc ^ spc)
   <|> #(< | > spc)
   <$> #(< $ > spc)
   <*> #(< * > spc)
@@ -111,7 +113,7 @@
   q    w    f    p    g              j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
   z    x    c    v    b              k    m    ,    .    /
-  @fun lalt _    @st  @cr   @L   @R  spc  rmet -    bspc @arr
+  @fun lalt tab  @st  @cr   @num   @R  spc  rmet -    bspc @arr
 )
 
 ;; Numpad, punctuation, brackets
@@ -122,18 +124,19 @@
   _    _    _    _    _    _    @fun _    0    _    .    +
 )
 
+;; FIXME, \\ isn't reading as bksl but as |
 ;; Symbols
 (deflayer symbols
-  @^.  @<|> @<$> @<*> @::            _     &    *    =   \\
+  @^.  @<|> @<$> @<*> @::            _     &    *    =   bksl
   @-|  @=>  @->  @*>  @>>=           _     $    %    ^   _
-  _    @<=  @<-  @<*  @=<<           _     !    @    #   _
+  @-^  @<=  @<-  @<*  @=<<           _     !    @    #   _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
 ;; Function keys and emacs macros
 (deflayer fn-keys
   _    _    _    _    _              vold F7   F8   F9   F10
-  @swp @p/  @svf _    _              volu F4   F5   F6   F11
+  @swp @p/  @svf A-q  _              volu F4   F5   F6   F11
   _    _    _    _    _              mute F1   F2   F3   F12
   _    _    _    _    _    _    _    _    _    _    _    _
 )

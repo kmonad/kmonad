@@ -1,18 +1,20 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-|
+Module      : KMonad.Keyboard.Keycode
+Description : Description of all possible keycodes.
+Copyright   : (c) David Janssen, 2019
+License     : MIT
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : portable
+
+'Keycode's are represented as a large enum lining up the keycodes defined in the Linux headers.
+
+-}
 module KMonad.Keyboard.Keycode
   ( -- * The core Keycode type
     -- $typ
     Keycode(..)
-
-    -- * Helpers to construct Keycodes
-    -- $help
-  , kcFromChar
-
-    -- * Sets of Keycodes for matching
-    -- $sets
-  , kcLetters
-  , kcNumbers
-  , kcAlphanum
 
     -- * Naming utilities to refer to Keycodes
     -- $names
@@ -21,14 +23,9 @@ module KMonad.Keyboard.Keycode
   )
 where
 
-import KPrelude
-
-import Data.Char (toLower)
-
-import KMonad.Util
+import KMonad.Prelude
 
 import qualified Data.MultiMap     as Q
-import qualified RIO.HashMap       as M
 import qualified RIO.HashSet       as S
 import qualified RIO.Text          as T
 import qualified RIO.Text.Partial  as T (head)
@@ -41,10 +38,10 @@ import qualified RIO.Text.Partial  as T (head)
 -- https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h.
 --
 -- Anywhere there are missing regions in the linux headers, we've defined
--- *MissingXX* values for the ADT.
+-- @MissingXX@ values for the ADT.
 --
--- Calling 'toEnum' on a Linux keycode value should produce the corresponding
--- 'Keycode' value and vice-versa.
+-- Calling 'RIO.Partial.toEnum' on a Linux keycode value should produce the
+-- corresponding 'Keycode' value and vice-versa.
 
 -- | The 'Keycode' datatype, as an 'Enum' of all the values a 'Keycode' can take.
 data Keycode
@@ -306,10 +303,6 @@ data Keycode
   | Missing255
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
--- | 'Keycode's have a 'Serialize' instance, and can therefore be turned into
--- bytes and vice-versa
-instance Serialize Keycode
-
 
 instance Display Keycode where
   textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
@@ -320,71 +313,14 @@ instance Display Keycode where
               EQ -> compare (T.head b) (T.head a)
               o  -> o
 
-
---------------------------------------------------------------------------------
--- $help
-
--- | There is no easy correspondence between characters and keycodes, but it is
--- sometimes nice to be able to refer to keycodes by their letter or number.
--- This function is just a lookup-table. Both upper- and lower-case chars are
--- mapped to their corresponding keycode. Mappings only exist for letters and
--- numbers.
-kcFromChar :: Char -> Maybe Keycode
-kcFromChar c = M.lookup (fromEnum . toLower $ c) m
-  where m = M.fromList . map (\x -> x & _1 %~ fromEnum) $
-          [ ('a', KeyA)
-          , ('b', KeyB)
-          , ('c', KeyC)
-          , ('d', KeyD)
-          , ('e', KeyE)
-          , ('f', KeyF)
-          , ('g', KeyG)
-          , ('h', KeyH)
-          , ('i', KeyI)
-          , ('j', KeyJ)
-          , ('k', KeyK)
-          , ('l', KeyL)
-          , ('m', KeyM)
-          , ('n', KeyN)
-          , ('o', KeyO)
-          , ('p', KeyP)
-          , ('q', KeyQ)
-          , ('r', KeyR)
-          , ('s', KeyS)
-          , ('t', KeyT)
-          , ('u', KeyU)
-          , ('v', KeyV)
-          , ('w', KeyW)
-          , ('x', KeyX)
-          , ('y', KeyY)
-          , ('z', KeyZ)
-          , ('0', Key0)
-          , ('1', Key1)
-          , ('2', Key2)
-          , ('3', Key3)
-          , ('4', Key4)
-          , ('5', Key5)
-          , ('6', Key6)
-          , ('7', Key7)
-          , ('8', Key8)
-          , ('9', Key9)
-          ]
-
 --------------------------------------------------------------------------------
 -- $sets
 
+-- | The set of all existing 'Keycode'
 kcAll :: S.HashSet Keycode
 kcAll = S.fromList $ [minBound .. maxBound]
 
-kcLetters :: S.HashSet Keycode
-kcLetters = S.fromList $ [KeyQ .. KeyP] <> [KeyA .. KeyL] <> [KeyZ .. KeyM]
-
-kcNumbers :: S.HashSet Keycode
-kcNumbers = S.fromList $ [Key1 .. Key0]
-
-kcAlphanum :: S.HashSet Keycode
-kcAlphanum = kcLetters <> kcNumbers
-
+-- | The set of all 'Keycode' that are not of the MissingXX pattern
 kcNotMissing :: S.HashSet Keycode
 kcNotMissing = S.fromList $ kcAll ^.. folded . filtered (T.isPrefixOf "Key" . tshow)
 
@@ -393,14 +329,14 @@ kcNotMissing = S.fromList $ kcAll ^.. folded . filtered (T.isPrefixOf "Key" . ts
 
 -- | Helper function to generate easy name maps
 nameKC :: Foldable t
-  => (Keycode -> Name)
+  => (Keycode -> Text)
   -> t Keycode
-  -> Q.MultiMap Keycode Name
+  -> Q.MultiMap Keycode Text
 nameKC f = Q.mkMultiMap . map go . toList
   where go k = (k, [f k, T.toLower $ f k])
 
--- | A collection of 'Keycode' to 'Name' mappings
-keyNames :: Q.MultiMap Keycode Name
+-- | A collection of 'Keycode' to 'Text' mappings
+keyNames :: Q.MultiMap Keycode Text
 keyNames = mconcat
   [ nameKC tshow               kcAll
   , nameKC (T.drop 3 . tshow)  kcNotMissing
@@ -408,7 +344,7 @@ keyNames = mconcat
   ]
 
 -- | A collection of useful aliases to refer to keycode names
-aliases :: Q.MultiMap Keycode Name
+aliases :: Q.MultiMap Keycode Text
 aliases = Q.mkMultiMap
   [ (KeyEnter,          ["ret", "return", "ent"])
   , (KeyMinus,          ["min", "-"])

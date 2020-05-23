@@ -1,9 +1,25 @@
+{-|
+Module      : KMonad.Keyboard.ComposeSeq
+Description : A list of compose-sequences
+Copyright   : (c) David Janssen, 2019
+License     : MIT
+Maintainer  : janssen.dhj@gmail.com
+Stability   : experimental
+Portability : portable
+
+This module contains only a Haskellified list of (nearly) all X11 compose-key
+sequences. For each entry we have the sequence of keys that defines it, the
+UTF-8 character that it represents, and the X11 name for this
+sequence/character.
+
+-}
 module KMonad.Keyboard.ComposeSeq
-  ( ssComposed
+  ( -- * Sequences
+    ssComposed
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 --------------------------------------------------------------------------------
 

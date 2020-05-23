@@ -18,8 +18,7 @@ module KMonad.Keyboard.IO.Linux.DeviceSource
   )
 where
 
-import KPrelude
-import System.IO (openFile)
+import KMonad.Prelude
 import Foreign.C.Types
 import System.Posix
 
@@ -62,6 +61,8 @@ ioctl_keyboard (Fd h) b = fromIntegral <$>
 --------------------------------------------------------------------------------
 -- $decoding
 
+-- | A 'KeyEventParser' describes how to read and parse 'LinuxKeyEvent's from
+-- the binary data-stream provided by the device-file.
 data KeyEventParser = KeyEventParser
   { _nbytes :: !Int
     -- ^ Size of 1 input event in bytes
@@ -87,7 +88,7 @@ decode64 bs = (linuxKeyEvent . fliptup) <$> result
 --------------------------------------------------------------------------------
 -- $types
 
--- | Configurable components of a 'DeviceSource'
+-- | Configurable components of a DeviceSource
 data DeviceSourceCfg = DeviceSourceCfg
   { _pth     :: !FilePath        -- ^ Path to the event-file
   , _parser  :: !KeyEventParser  -- ^ The method used to decode events
@@ -147,7 +148,7 @@ lsClose src = do
   liftIO . closeFd $ src^.fd
 
 -- | Read a bytestring from an open filehandle and return a parsed event. This
--- can throw a 'KeyIODecodeError' if reading from the 'DeviceSource' fails to
+-- can throw a 'KeyIODecodeError' if reading from the 'DeviceFile' fails to
 -- yield a parseable sequence of bytes.
 lsRead :: (HasLogFunc e) => DeviceFile -> RIO e KeyEvent
 lsRead src = do

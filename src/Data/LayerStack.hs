@@ -19,7 +19,7 @@ those as:
   - k: The item key, which is the per-layer identifier for different items
   - a: The item (value), which is the value stored for k in a particular layer
 
-'LayerStack' is used to implement the basic keymap logic in 'KMonad', where the
+'LayerStack' is used to implement the basic keymap logic in KMonad, where the
 configuration for a keyboard is essentially a set of layers. Each layer maps
 keycodes to buttons, and the entire layers can be overlayed on top of eachother.
 
@@ -50,7 +50,7 @@ module Data.LayerStack
 
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import RIO.List (delete)
 
@@ -99,7 +99,7 @@ makeLenses ''LayerStack
 
 -- | Create a new 'LayerStack' from a foldable of foldables.
 mkLayerStack :: (Foldable t1, Foldable t2, CanKey k, CanKey l)
-  => t1 (l, t2 (k, a)) -- ^ The `alist` of `alists` describing the mapping
+  => t1 (l, t2 (k, a)) -- ^ The /alist/ of /alists/ describing the mapping
   -> LayerStack l k a
 mkLayerStack nestMaps = let
   -- Create a HashMap l (Layer k a) from the listlikes

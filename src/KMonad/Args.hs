@@ -15,7 +15,7 @@ module KMonad.Args
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 import KMonad.App
 import KMonad.Args.Cmd
 import KMonad.Args.Joiner
@@ -46,7 +46,7 @@ runCmd c = do
     unless (c^.dryRun) $ startApp cfg
 
 
--- | Parse a configuration file into a 'DaemonCfg' record
+-- | Parse a configuration file into a 'AppCfg' record
 loadConfig :: HasLogFunc e => FilePath -> RIO e AppCfg
 loadConfig pth = do
 

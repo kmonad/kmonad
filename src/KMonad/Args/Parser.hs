@@ -21,7 +21,7 @@ module KMonad.Args.Parser
   )
 where
 
-import KPrelude hiding (try)
+import KMonad.Prelude hiding (try)
 
 import KMonad.Args.Types
 import KMonad.Keyboard
@@ -39,6 +39,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 --------------------------------------------------------------------------------
 -- $run
 
+-- | Try to parse a list of 'KExpr' from 'Text'
 parseTokens :: Text -> Either PErrors [KExpr]
 parseTokens t = case runParser configP "" t  of
   Left  e -> Left $ PErrors e
@@ -69,7 +70,7 @@ lexeme = L.lexeme sc
 symbol :: Text -> Parser ()
 symbol = void . L.symbol sc
 
--- | List of all characters that 'end' a word or sequence
+-- | List of all characters that /end/ a word or sequence
 terminators :: String
 terminators = ")\""
 
@@ -273,7 +274,6 @@ settingP = let f s p = symbol s *> p in
     [ SIToken  <$> f "input"    itokenP
     , SOToken  <$> f "output"   otokenP
     , SCmpSeq  <$> f "cmp-seq"  buttonP
-    , SUtf8Seq <$> f "utf8-seq" buttonP
     , SInitStr <$> f "init"     textP
     ])
 

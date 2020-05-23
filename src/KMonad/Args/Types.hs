@@ -42,7 +42,7 @@ module KMonad.Args.Types
 ) where
 
 
-import KPrelude
+import KMonad.Prelude
 
 import KMonad.Button
 import KMonad.Keyboard
@@ -99,13 +99,15 @@ data DefButton
 -- IO. This will then directly be translated to a DaemonCfg
 --
 
+-- | The 'CfgToken' contains all the data needed to construct an
+-- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src  :: LogFunc -> IO (Acquire KeySource)
-  , _snk  :: LogFunc -> IO (Acquire KeySink)
-  , _km   :: LMap Button
-  , _fstL :: Text
-  , _prt  :: ()
+  { _src  :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
+  , _snk  :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
+  , _km   :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
+  , _fstL :: LayerTag                          -- ^ Name of initial layer
   }
+makeClassy ''CfgToken
 
 
 --------------------------------------------------------------------------------
@@ -128,7 +130,6 @@ data DefLayer = DefLayer
   deriving Show
 
 
-
 --------------------------------------------------------------------------------
 -- $defcfg
 --
@@ -149,16 +150,17 @@ data DefSetting
   = SIToken  IToken
   | SOToken  OToken
   | SCmpSeq  DefButton
-  | SUtf8Seq DefButton
   | SInitStr Text
   deriving Show
 makeClassyPrisms ''DefSetting
 
+-- | A list of different 'DefSetting' values
 type DefSettings = [DefSetting]
 
 --------------------------------------------------------------------------------
 -- $tkn
 
+-- | Any statement in a config-file must parse to a 'KExpr'
 data KExpr
   = KDefCfg   DefSettings
   | KDefSrc   DefSrc

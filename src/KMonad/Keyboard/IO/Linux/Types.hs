@@ -27,7 +27,7 @@ module KMonad.Keyboard.IO.Linux.Types
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import Data.Time.Clock.System
 import Foreign.C.Types (CInt)
@@ -95,7 +95,7 @@ sync (MkSystemTime s ns) = LinuxKeyEvent (fi s, fi ns, 0, 0, 0)
 -- The correspondence between LinuxKeyEvents and core KeyEvents can best be read
 -- in the above-mentioned documentation, but the quick version is this:
 --   Typ:  1 = KeyEvent            (see below)
---         4 = 'scancode' event    (we neither read nor write)
+--         4 = @scancode@ event    (we neither read nor write)
 --         0 = 'sync' event        (we don't read, but do generate for writing)
 --   Val:  for keys: 0 = Release, 1 = Press, 2 = Repeat
 --         for sync: always 0

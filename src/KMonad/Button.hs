@@ -9,46 +9,40 @@ Portability : portable
 
 A button contains 2 actions, one to perform on press, and another to perform on
 release. This module contains that definition, and some helper code that helps
-combine buttons. It is here that most of the `complicated` buttons are
+combine buttons. It is here that most of the complicated` buttons are
 implemented (like TapHold).
 
 -}
 module KMonad.Button
-  ( Action
-  , runAction
-  , onPress
-  , Button
+  ( -- * Button basics
+    -- $but
+    Button
   , HasButton(..)
+  , onPress
   , mkButton
   , around
   , tapOn
 
-  -- $cplx
-  , aroundNext
-  , tapHold
-  , multiTap
-  , tapNext
-  , tapMacro
-
-  -- $smpl
+  -- * Simple buttons
+  -- $simple
   , emitB
   , modded
   , layerToggle
   , layerSwitch
   , pass
 
-  -- $benv
-  , BEnv
-  , initBEnv
-  , runBEnv
-  , HasBEnv(..)
- 
-  -- $reexport
-  , module KMonad.Action
+  -- * Button combinators
+  -- $combinators
+  , aroundNext
+  , tapHold
+  , multiTap
+  , tapNext
+  , tapMacro
+
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import KMonad.Action
 import KMonad.Keyboard
@@ -56,17 +50,11 @@ import KMonad.Util
 
 
 --------------------------------------------------------------------------------
--- $action
-
--- | Type alias for `any monad that can perform MonadK actions`
-type AnyK a = forall m. MonadK m => m a
-
--- | A newtype wrapper used to construct 'MonadK' actions
-newtype Action = Action { runAction :: AnyK ()}
-
-
---------------------------------------------------------------------------------
--- $button
+-- $but
+--
+-- This section contains the basic definition of KMonad's 'Button' datatype. A
+-- 'Button' is essentially a collection of 2 different actions, 1 to perform on
+-- 'Press' and another on 'Release'.
 
 -- | A 'Button' consists of two 'MonadK' actions, one to take when a press is
 -- registered from the OS, and another when a release is registered.
@@ -77,6 +65,11 @@ data Button = Button
 makeClassy ''Button
 
 -- | Create a 'Button' out of a press and release action
+--
+-- NOTE: Since 'AnyK' is an existentially qualified 'MonadK', the monadic
+-- actions specified must be runnable by all implementations of 'MonadK', and
+-- therefore can only rely on functionality from 'MonadK'. I.e. the actions must
+-- be pure 'MonadK'.
 mkButton :: AnyK () -> AnyK () -> Button
 mkButton a b = Button (Action a) (Action b)
 
@@ -108,9 +101,45 @@ press b = do
     pure Catch
 
 --------------------------------------------------------------------------------
--- $bcomb
+-- $simple
 --
--- A collection of useful button combinators.
+-- A collection of simple buttons. These are basically almost direct wrappings
+-- around 'MonadK' functionality.
+
+-- | A button that emits a Press of a keycode when pressed, and a release when
+-- released.
+emitB :: Keycode -> Button
+emitB c = mkButton
+  (emit $ mkPress c)
+  (emit $ mkRelease c)
+
+-- | Create a new button that first presses a 'Keycode' before running an inner
+-- button, releasing the 'Keycode' again after the inner 'Button' is released.
+modded ::
+     Keycode -- ^ The 'Keycode' to `wrap around` the inner button
+  -> Button  -- ^ The button to nest inside `being modded`
+  -> Button
+modded modder = around (emitB modder)
+
+-- | Create a button that toggles a layer on and off
+layerToggle :: LayerTag -> Button
+layerToggle t = mkButton
+  (layerOp $ PushLayer t)
+  (layerOp $ PopLayer  t)
+
+-- | Create a button that switches the base-layer on a press
+layerSwitch :: LayerTag -> Button
+layerSwitch t = onPress (layerOp $ SetBaseLayer t)
+
+-- | Create a button that does nothing (but captures the input)
+pass :: Button
+pass = onPress $ pure ()
+
+
+--------------------------------------------------------------------------------
+-- $combinators
+--
+-- Functions that take 'Button's and combine them to form new 'Button's.
 
 -- | Create a new button from 2 buttons, an inner and an outer. When the new
 -- button is pressed, first the outer is pressed, then the inner. On release,
@@ -150,7 +179,7 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = onPress $ hookWithinMHeld ms (matchMy Release) $ catchMatch $ \case
+tapHold ms t h = onPress $ hookWithinHeldM ms (matchMy Release) $ catchMatch $ \case
   Match _ -> tap t
   NoMatch -> press h
 
@@ -163,8 +192,8 @@ multiTap l bs = onPress $ go bs
   where
     go :: [(Milliseconds, Button)] -> AnyK ()
     go []             = press l
-    go ((ms, b'):bs') = hookWithinMHeld ms (matchMy Release) $ catchMatch $ \case
-      Match _ -> hookWithinMHeld ms (matchMy Press) $ catchMatch $ \case
+    go ((ms, b'):bs') = hookWithinHeldM ms (matchMy Release) $ catchMatch $ \case
+      Match _ -> hookWithinHeldM ms (matchMy Press) $ catchMatch $ \case
         Match _ -> go bs'
         NoMatch -> tap b'
       NoMatch -> press b'
@@ -182,72 +211,3 @@ tapMacro :: [Button] -> Button
 tapMacro bs = onPress $ mapM_ tap bs
 
 
---------------------------------------------------------------------------------
--- $simple
---
--- A collection of simple buttons
-
--- | A button that emits a Press of a keycode when pressed, and a release when
--- released.
-emitB :: Keycode -> Button
-emitB c = mkButton
-  (emit $ mkPress c)
-  (emit $ mkRelease c)
-
--- | Create a new button first presses a 'Keycode' before running an inner
--- button, releasing the 'Keycode' again after the inner 'Button' is released.
-modded ::
-     Keycode -- ^ The 'Keycode' to `wrap around` the inner button
-  -> Button  -- ^ The button to nest inside `being modded`
-  -> Button
-modded modder = around (emitB modder)
-
--- | Create a button that toggles a layer on and off
-layerToggle :: LayerTag -> Button
-layerToggle t = mkButton
-  (layerOp $ PushLayer t)
-  (layerOp $ PopLayer  t)
-
--- | Create a button that switches the base-layer on a press
-layerSwitch :: LayerTag -> Button
-layerSwitch t = onPress (layerOp $ SetBaseLayer t)
-
-
--- | Create a button that does nothing (but captures the input)
-pass :: Button
-pass = onPress $ pure ()
-
-
---------------------------------------------------------------------------------
--- $benv
---
--- When running KMonad, a button also keeps track of what keycode it's bound to,
--- and what its last switch was. This is used to provide the 'myBinding' feature
--- of MonadK, and the invariant that switches always alternate (there is no
--- press-press or release-release).
-
--- | The configuration of a 'Button' with some additional state to keep track of
--- the last 'Switch'
-data BEnv = BEnv
-  { _beButton   :: !Button        -- ^ The configuration for this button
-  , _binding    :: !Keycode       -- ^ The 'Keycode' to which this button is bound
-  , _lastSwitch :: !(MVar Switch) -- ^ State to keep track of last manipulation
-  }
-makeClassy ''BEnv
-
-instance HasButton BEnv where button = beButton
-
--- | Initialize a 'BEnv', note that a key is always initialized in an unpressed
--- state.
-initBEnv :: MonadIO m => Button -> Keycode -> m BEnv
-initBEnv b c = BEnv b c <$> newMVar Release
-
--- | Try to switch a 'BEnv'. This only does something if the 'Switch' is
--- different from the 'lastSwitch' field. I.e. pressing a pressed button or
--- releasing a released button does nothing.
-runBEnv :: MonadUnliftIO m => BEnv -> Switch -> m (Maybe Action)
-runBEnv b a =
-  modifyMVar (b^.lastSwitch) $ \l -> pure $ case (a, l) of
-    (Press, Release) -> (Press,   Just $ b^.pressAction)
-    (Release, Press) -> (Release, Just $ b^.releaseAction)
-    _                -> (a,       Nothing)

@@ -21,10 +21,11 @@ module KMonad.Args.Joiner
   )
 where
 
-import KPrelude hiding (uncons)
+import KMonad.Prelude hiding (uncons)
 
 import KMonad.Args.Types
 
+import KMonad.Action
 import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
@@ -42,27 +43,43 @@ import qualified RIO.Text         as T
 --------------------------------------------------------------------------------
 -- $err
 
+-- | All the things that can go wrong with a joining attempt
 data JoinError
   = DuplicateBlock   Text
   | MissingBlock     Text
   | DuplicateAlias   Text
   | DuplicateLayer   Text
-  | LengthMismatch   Text Int Int
   | MissingAlias     Text
   | MissingLayer     Text
   | MissingSetting   Text
   | DuplicateSetting Text
   | NestedTrans
   | InvalidComposeKey
-  | InvalidUtf8Key
-  deriving Show
+  | LengthMismatch   Text Int Int
+
+instance Show JoinError where
+  show e = case e of
+    DuplicateBlock t     -> "Encountered duplicate block of type: " <> T.unpack t
+    MissingBlock   t     -> "Missing at least 1 block of type: "    <> T.unpack t
+    DuplicateAlias t     -> "Multiple aliases of the same name: "   <> T.unpack t
+    DuplicateLayer t     -> "Multiple layers of the same name: "    <> T.unpack t
+    MissingAlias   t     -> "Reference to non-existent alias: "     <> T.unpack t
+    MissingLayer   t     -> "Reference to non-existent layer: "     <> T.unpack t
+    MissingSetting t     -> "Missing setting in 'defcfg': "         <> T.unpack t
+    DuplicateSetting t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
+    NestedTrans          -> "Encountered 'Transparent' ouside of top-level layer"
+    InvalidComposeKey    -> "Encountered invalid button as Compose key"
+    LengthMismatch t l s -> mconcat
+      [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
+      , "Source length: ", show s, "\n"
+      , "Layer length: ", show l ]
+
 
 instance Exception JoinError
 
 -- | Joining Config
 data JCfg = JCfg
   { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
-  , _utf8Key :: Button  -- ^ How to prefix Utf8-sequences
   , _kes     :: [KExpr] -- ^ The source expresions we operate on
   }
 makeLenses ''JCfg
@@ -70,7 +87,6 @@ makeLenses ''JCfg
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
   (emitB KeyRightAlt)
-  (modded KeyLeftShift . modded KeyLeftCtrl $ emitB KeyU)
 
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
   deriving ( Functor, Applicative, Monad
@@ -113,7 +129,7 @@ oneBlock t l = onlyOne . extract l <$> view kes >>= \case
   Left None      -> throwError $ MissingBlock t
   Left Duplicate -> throwError $ DuplicateBlock t
 
--- | Update the JCfg and then run the entire 'joining' process
+-- | Update the JCfg and then run the entire joining process
 joinConfig :: J CfgToken
 joinConfig = getOverride >>= \cfg -> (local (const cfg) joinConfig')
 
@@ -138,7 +154,6 @@ joinConfig' = do
     , _src  = i
     , _km   = km
     , _fstL = fl
-    , _prt  = ()
     }
 
 --------------------------------------------------------------------------------
@@ -153,8 +168,6 @@ getOverride = do
   let go e v = case v of
         SCmpSeq b  -> getB b >>= maybe (throwError InvalidComposeKey)
                                        (\b' -> pure $ set cmpKey b' e)
-        SUtf8Seq b -> getB b >>= maybe (throwError InvalidUtf8Key)
-                                       (\b' -> pure $ set utf8Key b' e)
         _ -> pure e
   foldM go env cfg
 
@@ -183,15 +196,6 @@ getO = do
                       , _postInit     = T.unpack <$> init}))
     Left  None                 -> throwError $ MissingSetting "input"
     Left  Duplicate            -> throwError $ DuplicateSetting "input"
-
--- | Extract the KeySink-loader from a `DefIO`
---
--- getO :: DefSettings -> J (LogFunc -> IO (Acquire KeySink))
--- getO dio = undefined
---   -- case _otoken dio of
---   -- KUinputSink t init -> pure $ runLF (uinputSink
---     (defUinputCfg { _keyboardName = T.unpack t
---                   , _postInit     = T.unpack <$> init}))
 
 
 --------------------------------------------------------------------------------

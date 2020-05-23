@@ -11,6 +11,9 @@ This datastructure represents a `k -> Set v` mapping: that is to say, each key
 can have multiple values (but no duplicates). Additionally, we provide some
 operations to reverse this mapping.
 
+In KMonad we use this exclusively to easily define multiple names for the same
+'KMonad.Keyboard.Keycode' in a reversible manner.
+
 -}
 module Data.MultiMap
   ( -- * Types
@@ -26,7 +29,7 @@ module Data.MultiMap
   )
 where
 
-import KPrelude hiding (reverse)
+import KMonad.Prelude hiding (reverse)
 
 import qualified RIO.HashMap as M
 import qualified RIO.HashSet as S

@@ -21,7 +21,7 @@ module KMonad.Keyboard.IO.Linux.UinputSink
   )
 where
 
-import KPrelude
+import KMonad.Prelude
 
 import Data.Time.Clock.System (getSystemTime)
 
