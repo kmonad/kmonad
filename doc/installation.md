@@ -1,14 +1,14 @@
 # Installation
 
 Jump to
-- [Compilation](doc/installation.md#compilation)
-  - [Using nix](doc/installation.md#using-nix)
-  - [Using stack](doc/installation.md#using-stack)
-  - [Windows environment](doc/installation.md#windows-environment)
-- [Binaries](doc/installation.md#binaries)
-- [Packages](doc/installation.md#packages)
-  - [Void Linux](doc/installation.md#void-linux)
-  - [Guix](doc/installation.md#guix)
+- [Compilation](installation.md#compilation)
+  - [Using nix](installation.md#using-nix)
+  - [Using stack](installation.md#using-stack)
+  - [Windows environment](installation.md#windows-environment)
+- [Binaries](installation.md#binaries)
+- [Packages](installation.md#packages)
+  - [Void Linux](installation.md#void-linux)
+  - [Guix](installation.md#guix)
 
 ## Compilation
 ### Using `nix`
