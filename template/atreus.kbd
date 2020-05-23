@@ -31,7 +31,6 @@
   output (uinput-sink "KMonad: Atreus")
 )
 
-
 ;; Source-layer. Lines up with the static layer defined in my QMK driver.
 (defsrc
   q    w    f    p    g              j    l    u    y    ;
@@ -46,25 +45,29 @@
    -------------------------------------------------------------------------- |#
 
 (defalias
-  ;; Everyday typing --------------------------------------------------------
 
-  ;; Emacs macros (could customize emacs instead..)
-  swp  #(spc / /)
+  ;; Useful buttons ---------------------------------------------------------
+
+  ;; Emacs macros (pauses are required for Emacs to catch on)
+  swp  #(esc P5 spc P5 / P5 /  )
+  p/   #(esc P5 spc P5 p P5 /  )
+  svf  #(esc P5 :   P5 w P5 ret)
 
   ;; Haskell macros because 1-button-bind is awesome
   ::  #(: :)
-  ->  #(- >)
-  <-  #(< -)
-  =>  #(= >)
-  <=  #(< =)
-  *>  #(* >)
-  <*  #(< *)
+  ->  #(- > spc)
+  <-  #(< - spc)
+  =>  #(= > spc)
+  <=  #(< = spc)
+  *>  #(* > spc)
+  <*  #(< * spc)
   ^.  #(^ .)
-  <|> #(< | >)
-  <$> #(< $ >)
-  <*> #(< * >)
-  >>= #(> > =)
-  =<< #(= < <)
+  -|  #(- - spc | spc)
+  <|> #(< | > spc)
+  <$> #(< $ > spc)
+  <*> #(< * > spc)
+  >>= #(> > = spc)
+  =<< #(= < < spc)
 
   ;; Simple layer switches
   num  (layer-toggle numpad)
@@ -72,17 +75,27 @@
   fun  (layer-toggle fn-keys)
   arr  (layer-toggle arrows)
 
-  ;; Compound switching and tapping buttons
-  L    (tap-hold 200 ret @num)
-  R    (tap-hold 200 esc @sym)
-  cL   (tap-hold 200 tab @fun)
-  cR   (tap-hold 200 @arr @swp)
-
-  ;; Gaming -----------------------------------------------------------------
-
+  ;; Special-use buttons
+  nF   (around-next @fun)
   cr   (tap-next ret lctl)
+  st   (tap-next @nF lsft)
+  Nc   (around-next lctl)
+  Ns   (around-next sft)
+  Ncs  (around-next S-lctl)
+
+
+  ;; Every-day typing mode --------------------------------------------------
+
+  ;; Compound switching and tapping buttons
+  L    (tap-next tab @num)
+  R    (tap-next esc @sym)
+
+
+  ;; Gaming mode layers -----------------------------------------------------
+
   gn   (layer-toggle game-num)
   gf   (layer-toggle game-fun)
+
 
   ;; Changing modes ---------------------------------------------------------
 
@@ -100,29 +113,29 @@
   q    w    f    p    g              j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
   z    x    c    v    b              k    m    ,    .    /
-  @cL  lmet lalt lsft lctl @L   @R  spc  rmet -    bspc  @cR
+  @fun lalt _    @st  @cr   @L   @R  spc  rmet -    bspc @arr
 )
 
 ;; Numpad, punctuation, brackets
 (deflayer numpad
-  X    `    ~    [    ]              X    7    8    9    /
-  @sym "    \_   \(   \)             X    4    5    6    *
-  X    '    |    {    }              =    1    2    3    -
-  _    _    _    _    _    _    @fun _    0    X    .    +
+  _    `    ~    [    ]              _    7    8    9    /
+  _    "    \_   \(   \)             _    4    5    6    *
+  _    '    |    {    }              =    1    2    3    -
+  _    _    _    _    _    _    @fun _    0    _    .    +
 )
 
 ;; Symbols
 (deflayer symbols
-  @^.  @<|> @<$> @<*> @::            X    &    *    =    \\
-  X    @=>  @->  @*>  @>>=           X    $    %    ^    X
-  X    @<=  @<-  @<*  @=<<           X    !    @    #    X
+  @^.  @<|> @<$> @<*> @::            _     &    *    =   \\
+  @-|  @=>  @->  @*>  @>>=           _     $    %    ^   _
+  _    @<=  @<-  @<*  @=<<           _     !    @    #   _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
 ;; Function keys and emacs macros
 (deflayer fn-keys
   _    _    _    _    _              vold F7   F8   F9   F10
-  _    _    _    _    _              volu F4   F5   F6   F11
+  @swp @p/  @svf _    _              volu F4   F5   F6   F11
   _    _    _    _    _              mute F1   F2   F3   F12
   _    _    _    _    _    _    _    _    _    _    _    _
 )
@@ -140,6 +153,7 @@
                                Gaming setup
    -------------------------------------------------------------------------- |#
 
+;; Base gaming layer, QWERTY shifted right by 1 button
 (deflayer game
   esc  q    w    e    r              t    y    u    i    p
   lsft a    s    d    f              g    h    j    k    l
@@ -147,15 +161,17 @@
   tab  lalt m    ret  spc  @gn  @gf  _    _    _    _    _
 )
 
+;; Numpad with C-next and S-next buttons
 (deflayer game-num
-  _    _    _    _    _              _    _    _    _    _
+  _    @Nc  @Ns  _    _              _    _    _    _    _
   1    2    3    4    5              _    _    _    _    _
   6    7    8    9    0              _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
+;; Function layer with access point back to normal mode
 (deflayer game-fun
-  _    _    _    F11  F12            _    _    _    _    _
+  _    _    _    F11  F12            _    _    _    _    @col
   F1   F2   F3   F4   F5             _    _    _    _    _
   F6   F7   F8   F9   F10            _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
