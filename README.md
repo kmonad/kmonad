@@ -10,66 +10,66 @@ Check the doc directory for information on:
 
 
 
-<!-- ## installing -->
+## installing
 
-<!-- ### linux -->
+### linux
 
-<!-- #### compile your own -->
-
-
+#### compile your own
 
 
-<!-- # kmonad -->
-
-<!-- welcome to kmonad! if you are currently running linux and want to experiment -->
-<!-- with this new way of defining keyboard layouts, either: -->
-<!-- - head over to [releases](https://github.com/david-janssen/kmonad/releases) for -->
-<!--   the latest static binary. -->
-<!-- - consult the [installation section](readme.md#compiling) -->
-
-<!-- we now have (limited) windows support! look [down below](readme.md#compiling) -->
-<!-- for instructions on how to build your windows-version of kmonad, or check out -->
-<!-- our [windows binary](https://github.com/david-janssen/kmonad/releases). check -->
-<!-- out the [limitations on windows support](readme.md#windows-limitations) below. -->
-
-<!-- ## what is kmonad? -->
-
-<!-- kmonad is a keyboard remapping utility written to provide functionality that -->
-<!-- aligns with that provided by the amazing [qmk -->
-<!-- firmware](https://github.com/qmk/qmk_firmware/). the qmk firmware is compiled -->
-<!-- and installed on programmable keyboards and allows your keyboards to transform -->
-<!-- from comfortable clacky ("wahaay!" for mechanical switches) to amazingly useful, -->
-<!-- by introducing the ability to overlap various maps of keys, have different -->
-<!-- functionality for the same key when held or tapped, or create buttons that can -->
-<!-- be tapped multiple times to have different effects. -->
-
-<!-- however, we can't always have our programmable keyboard with us, and i -->
-<!-- personally don't like using it with my laptop, because it either becomes a -->
-<!-- balancing act, or i have to sit at a table with my laptop uncomfortably far away -->
-<!-- from me. additionally, there are loads of people who do not have programmable -->
-<!-- keyboards who might enjoy all the bells and whistles that qmk has to offer, and -->
-<!-- so `kmonad` was born. -->
 
 
-<!-- ## getting kmonad -->
+# kmonad
 
-<!-- ### binaries -->
-<!-- kmonad is written in haskell (with a tiny bit of c). the lovely people over at -->
-<!-- https://github.com/nh2/static-haskell-nix have helped me figure how to compile a -->
-<!-- static binary that should work basically on any standard 64-bit linux -->
-<!-- system. you can find the most recent release [on the releases -->
-<!-- page](https://github.com/david-janssen/kmonad/releases). -->
+welcome to kmonad! if you are currently running linux and want to experiment
+with this new way of defining keyboard layouts, either:
+- head over to [releases](https://github.com/david-janssen/kmonad/releases) for
+  the latest static binary.
+- consult the [installation section](readme.md#compiling)
 
-<!-- ### compiling -->
-<!-- #### linux -->
-<!-- probably the easiest way to compile kmonad is using `stack`. if you do not have `stack` -->
-<!-- installed, check https://docs.haskellstack.org/en/stable/readme/ for -->
-<!-- instructions on installing it. after compilation, it can be removed again, since -->
-<!-- `kmomad` does not need to be recompiled upon configuration. -->
+we now have (limited) windows support! look [down below](readme.md#compiling)
+for instructions on how to build your windows-version of kmonad, or check out
+our [windows binary](https://github.com/david-janssen/kmonad/releases). check
+out the [limitations on windows support](readme.md#windows-limitations) below.
 
-<!-- after potentially installing `stack` and cloning this repo, you can build -->
-<!-- `kmonad` by calling: -->
-<!-- ``` shell -->
+## what is kmonad?
+
+kmonad is a keyboard remapping utility written to provide functionality that
+aligns with that provided by the amazing [qmk
+firmware](https://github.com/qmk/qmk_firmware/). the qmk firmware is compiled
+and installed on programmable keyboards and allows your keyboards to transform
+from comfortable clacky ("wahaay!" for mechanical switches) to amazingly useful,
+by introducing the ability to overlap various maps of keys, have different
+functionality for the same key when held or tapped, or create buttons that can
+be tapped multiple times to have different effects.
+
+however, we can't always have our programmable keyboard with us, and i
+personally don't like using it with my laptop, because it either becomes a
+balancing act, or i have to sit at a table with my laptop uncomfortably far away
+from me. additionally, there are loads of people who do not have programmable
+keyboards who might enjoy all the bells and whistles that qmk has to offer, and
+so `kmonad` was born.
+
+
+## getting kmonad
+
+### binaries
+kmonad is written in haskell (with a tiny bit of c). the lovely people over at
+https://github.com/nh2/static-haskell-nix have helped me figure how to compile a
+static binary that should work basically on any standard 64-bit linux
+system. you can find the most recent release [on the releases
+page](https://github.com/david-janssen/kmonad/releases).
+
+### compiling
+#### linux
+probably the easiest way to compile kmonad is using `stack`. if you do not have `stack`
+installed, check https://docs.haskellstack.org/en/stable/readme/ for
+instructions on installing it. after compilation, it can be removed again, since
+`kmomad` does not need to be recompiled upon configuration.
+
+after potentially installing `stack` and cloning this repo, you can build
+`kmonad` by calling:
+``` shell
 <!-- stack build -->
 <!-- ``` -->
 
@@ -129,17 +129,17 @@ Check the doc directory for information on:
 <!--                     (udev-configuration-rules config)))))))) -->
 <!-- ``` -->
 
-<!-- ## running -->
-<!-- kmonad currently requires 1, and exactly 1 input argument: a path to a -->
-<!-- configuration file that describes the keyboard layout to run. for a guide to -->
-<!-- writing valid configuration files, [see the -->
-<!-- syntax -->
-<!-- guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md) -->
-<!-- or [some of the examples](https://github.com/david-janssen/kmonad/tree/master/example). -->
+## running
+kmonad currently requires 1, and exactly 1 input argument: a path to a
+configuration file that describes the keyboard layout to run. for a guide to
+writing valid configuration files, [see the
+syntax
+guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md)
+or [some of the examples](https://github.com/david-janssen/kmonad/tree/master/example).
 
-<!-- once the compiled binary is on the path, running kmonad is as simple as: -->
+once the compiled binary is on the path, running kmonad is as simple as:
 
-<!-- ``` shell -->
+``` shell
 <!-- kmonad /path/to/config/file.kbd -->
 <!-- ``` -->
 
@@ -186,10 +186,10 @@ Check the doc directory for information on:
 <!-- sudo groupadd uinput -->
 <!-- ``` -->
 
-<!-- you then have to add a udev rule (in either `/etc/dev/rules.d` or -->
-<!-- `/lib/udev/rules.d`) with the following content: -->
+you then have to add a udev rule (in either `/etc/dev/rules.d` or
+`/lib/udev/rules.d`) with the following content:
 
-<!-- ``` shell -->
+``` shell
 <!-- kernel=="uinput", mode="0660", group="uinput", options+="static_node=uinput" -->
 <!-- ``` -->
 

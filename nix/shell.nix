@@ -1,10 +1,11 @@
 let
-  nixpkgs = import ./release.nix;
+  config = import ./config.nix;
+  pkgs   = import (import ./pinned-nixpkgs.nix) { inherit config; };
 in
-  nixpkgs.haskellPackages.shellFor {
+  pkgs.haskellPackages.shellFor {
     packages = p: [p.kmonad];
     withHoogle = true;
     buildInputs = [
-      nixpkgs.haskellPackages.cabal-install
+      pkgs.haskellPackages.cabal-install
     ];
   }
