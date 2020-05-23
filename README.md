@@ -1,313 +1,297 @@
 # KMonad
 
-Welcome to KMonad! If you are currently running Linux and want to experiment
-with this new way of defining keyboard layouts, either:
-- Head over to [releases](https://github.com/david-janssen/kmonad/releases) for
-  the latest static binary.
-- Consult the [installation section](README.md#Compiling)
+Welcome to KMonad, a keyboard remapping utility for Linux and Windows.
 
-We now have (limited) Windows support! Look [down below](README.md#Compiling)
-for instructions on how to build your Windows-version of KMonad, or check out
-our [Windows binary](https://github.com/david-janssen/kmonad/releases). Check
-out the [limitations on windows support](README.md#windows-limitations) below.
+Check the doc directory for information on:
+- [installation](doc/installation.md)
+- [configuration syntax](doc/syntax.md)
+- [possible issues](doc/issues.md)
+- [Windows limitation](doc/why_windows_why.md)
 
-## What is KMonad?
 
-KMonad is a keyboard remapping utility written to provide functionality that
-aligns with that provided by the amazing [QMK
-firmware](https://github.com/qmk/qmk_firmware/). The QMK firmware is compiled
-and installed on programmable keyboards and allows your keyboards to transform
-from comfortable clacky ("Wahaay!" for mechanical switches) to amazingly useful,
-by introducing the ability to overlap various maps of keys, have different
-functionality for the same key when held or tapped, or create buttons that can
-be tapped multiple times to have different effects.
 
-However, we can't always have our programmable keyboard with us, and I
-personally don't like using it with my laptop, because it either becomes a
-balancing act, or I have to sit at a table with my laptop uncomfortably far away
-from me. Additionally, there are loads of people who do not have programmable
-keyboards who might enjoy all the bells and whistles that QMK has to offer, and
-so `KMonad` was born.
+<!-- ## installing -->
 
-### What about that name, KMonad?
+<!-- ### linux -->
 
-The name KMonad is a wink at my favorite window manager:
-[XMonad](https://github.com/xmonad/xmonad), but where XMonad manages your
-X Window in its X-monad, we manage your Keys in our K-monad (actually, we call
-it App, but who's checking).
+<!-- #### compile your own -->
 
-### What can I do with KMonad?
 
-Well, there are a variety of customizations you can make. For example, this
-duplicates the functionality of another popular Linux utility: XCAPE, which
-allows you to specify mod-buttons that also emit events when you simply tap
-them. 
 
-For example, look at that useless CapsLock key on your keyboard. It is in a
-**great** position, but do we ever use it? Well, what if you could remap
-CapsLock to a button that behaves like a Ctrl key? That's already quite nice.
-What if it could also emit 'Esc' when you tap it? Yep: all of that is possible
-(Note: some of this is already possible through existing tools or udev rules).
 
-Do you write a lot of Haskell code and define your own operators? Do you want
-your operators to look like this: =>=->->>? That's a lot to type. Why not just
-define a macro that does it for you?
+<!-- # kmonad -->
 
-The same technique can be used to create macros that insert a variety of
-accented or umlauted characters, depending on your OS. Why type `Right-Alt " e`
-when you can put this macro in a layer on a button close to home row?
+<!-- welcome to kmonad! if you are currently running linux and want to experiment -->
+<!-- with this new way of defining keyboard layouts, either: -->
+<!-- - head over to [releases](https://github.com/david-janssen/kmonad/releases) for -->
+<!--   the latest static binary. -->
+<!-- - consult the [installation section](readme.md#compiling) -->
 
-Or more practically: do you really like the Dvorak layout, but do you also wish
-you had very simple, left-handed access to the common Control z x c v shortcuts?
-Have a look at [this dvorak
-example](https://github.com/david-janssen/kmonad/blob/master/example/dvorak_sane_zxcv.kbd)
-to see an easy solution.
+<!-- we now have (limited) windows support! look [down below](readme.md#compiling) -->
+<!-- for instructions on how to build your windows-version of kmonad, or check out -->
+<!-- our [windows binary](https://github.com/david-janssen/kmonad/releases). check -->
+<!-- out the [limitations on windows support](readme.md#windows-limitations) below. -->
 
-For more ideas, check the `example` subdirectory, or the [syntax
-guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md)
-for an overview of different button-types.
+<!-- ## what is kmonad? -->
 
-## Getting KMonad
+<!-- kmonad is a keyboard remapping utility written to provide functionality that -->
+<!-- aligns with that provided by the amazing [qmk -->
+<!-- firmware](https://github.com/qmk/qmk_firmware/). the qmk firmware is compiled -->
+<!-- and installed on programmable keyboards and allows your keyboards to transform -->
+<!-- from comfortable clacky ("wahaay!" for mechanical switches) to amazingly useful, -->
+<!-- by introducing the ability to overlap various maps of keys, have different -->
+<!-- functionality for the same key when held or tapped, or create buttons that can -->
+<!-- be tapped multiple times to have different effects. -->
 
-### Binaries
-KMonad is written in Haskell (with a tiny bit of C). The lovely people over at
-https://github.com/nh2/static-haskell-nix have helped me figure how to compile a
-static binary that should work basically on any standard 64-bit Linux
-system. You can find the most recent release [on the releases
-page](https://github.com/david-janssen/kmonad/releases).
+<!-- however, we can't always have our programmable keyboard with us, and i -->
+<!-- personally don't like using it with my laptop, because it either becomes a -->
+<!-- balancing act, or i have to sit at a table with my laptop uncomfortably far away -->
+<!-- from me. additionally, there are loads of people who do not have programmable -->
+<!-- keyboards who might enjoy all the bells and whistles that qmk has to offer, and -->
+<!-- so `kmonad` was born. -->
 
-### Compiling
-#### Linux
-Probably the easiest way to compile KMonad is using `stack`. If you do not have `stack`
-installed, check https://docs.haskellstack.org/en/stable/README/ for
-instructions on installing it. After compilation, it can be removed again, since
-`kmomad` does not need to be recompiled upon configuration.
 
-After potentially installing `stack` and cloning this repo, you can build
-`kmonad` by calling:
-``` shell
-stack build
-```
+<!-- ## getting kmonad -->
 
-Or call the following (CURRENTLY BROKEN, documentation will be fixed up in the future):
-``` shell
-stack haddock --no-haddock-deps
-```
-to build a KMonad binary and the Haddock documentation. I have put some effort
-into documenting the code if you want to have a look around. It is nowhere near
-perfect, and I hope to do more in the future.
+<!-- ### binaries -->
+<!-- kmonad is written in haskell (with a tiny bit of c). the lovely people over at -->
+<!-- https://github.com/nh2/static-haskell-nix have helped me figure how to compile a -->
+<!-- static binary that should work basically on any standard 64-bit linux -->
+<!-- system. you can find the most recent release [on the releases -->
+<!-- page](https://github.com/david-janssen/kmonad/releases). -->
 
-`stack` will tell you where it saved the compiled binary after which you can
-copy it to somewhere on your path.
+<!-- ### compiling -->
+<!-- #### linux -->
+<!-- probably the easiest way to compile kmonad is using `stack`. if you do not have `stack` -->
+<!-- installed, check https://docs.haskellstack.org/en/stable/readme/ for -->
+<!-- instructions on installing it. after compilation, it can be removed again, since -->
+<!-- `kmomad` does not need to be recompiled upon configuration. -->
 
-#### Windows
-Windows support was added under Windows10 using a [Haskell Platform
-installation](https://www.haskell.org/platform/). Additionally, you might need
-to install [MinGW](http://mingw.org/) to provide `gcc` for windows to compile
-the C-interface to Windows. Once both the Haskell Platform and MinGW are
-installed and available on the path, compiling KMonad should be identical to
-Linux, i.e.:
+<!-- after potentially installing `stack` and cloning this repo, you can build -->
+<!-- `kmonad` by calling: -->
+<!-- ``` shell -->
+<!-- stack build -->
+<!-- ``` -->
 
-``` powershell
-stack build
-```
+<!-- or call the following (currently broken, documentation will be fixed up in the future): -->
+<!-- ``` shell -->
+<!-- stack haddock --no-haddock-deps -->
+<!-- ``` -->
+<!-- to build a kmonad binary and the haddock documentation. i have put some effort -->
+<!-- into documenting the code if you want to have a look around. it is nowhere near -->
+<!-- perfect, and i hope to do more in the future. -->
 
-### Packaged on various distros
+<!-- `stack` will tell you where it saved the compiled binary after which you can -->
+<!-- copy it to somewhere on your path. -->
 
-#### On Void Linux
-You can install `kmonad` via `xbps-install`:
-``` shell
-xbps-install -S kmonad
-```
+<!-- #### windows -->
+<!-- windows support was added under windows10 using a [haskell platform -->
+<!-- installation](https://www.haskell.org/platform/). additionally, you might need -->
+<!-- to install [mingw](http://mingw.org/) to provide `gcc` for windows to compile -->
+<!-- the c-interface to windows. once both the haskell platform and mingw are -->
+<!-- installed and available on the path, compiling kmonad should be identical to -->
+<!-- linux, i.e.: -->
 
-#### Guix
-You can install `kmonad` via the `guix` package manager. You will need to copy
-the udev rules into place manually.
+<!-- ``` powershell -->
+<!-- stack build -->
+<!-- ``` -->
 
-``` shell
-guix install kmonad
-sudo cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/
-```
+<!-- ### packaged on various distros -->
 
-If you use the Guix System to manage your entire machine, you will instead want
-to install udev rules using something like this in your `config.scm`
+<!-- #### on void linux -->
+<!-- you can install `kmonad` via `xbps-install`: -->
+<!-- ``` shell -->
+<!-- xbps-install -s kmonad -->
+<!-- ``` -->
 
-``` scheme
-(use-modules (gnu packages haskell-apps))
+<!-- #### guix -->
+<!-- you can install `kmonad` via the `guix` package manager. you will need to copy -->
+<!-- the udev rules into place manually. -->
 
-(operating-system
- ;; ...
- (services
-  (modify-services %desktop-services
-    (udev-service-type config =>
-      (udev-configuration (inherit config)
-       (rules (cons kmonad
-                    (udev-configuration-rules config))))))))
-```
+<!-- ``` shell -->
+<!-- guix install kmonad -->
+<!-- sudo cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/ -->
+<!-- ``` -->
 
-## Running
-KMonad currently requires 1, and exactly 1 input argument: a path to a
-configuration file that describes the keyboard layout to run. For a guide to
-writing valid configuration files, [see the
-syntax
-guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md)
-or [some of the examples](https://github.com/david-janssen/kmonad/tree/master/example).
+<!-- if you use the guix system to manage your entire machine, you will instead want -->
+<!-- to install udev rules using something like this in your `config.scm` -->
 
-Once the compiled binary is on the PATH, running KMonad is as simple as:
+<!-- ``` scheme -->
+<!-- (use-modules (gnu packages haskell-apps)) -->
 
-``` shell
-kmonad /path/to/config/file.kbd
-```
+<!-- (operating-system -->
+<!--  ;; ... -->
+<!--  (services -->
+<!--   (modify-services %desktop-services -->
+<!--     (udev-service-type config => -->
+<!--       (udev-configuration (inherit config) -->
+<!--        (rules (cons kmonad -->
+<!--                     (udev-configuration-rules config)))))))) -->
+<!-- ``` -->
 
-The method of running KMonad under Windows is exactly the same: you use the
-shell (for example: Powershell) to start KMonad. For example, put the compiled
-KMonad executable and config file in the same directory, start Powershell, cd to
-the directory, and run:
+<!-- ## running -->
+<!-- kmonad currently requires 1, and exactly 1 input argument: a path to a -->
+<!-- configuration file that describes the keyboard layout to run. for a guide to -->
+<!-- writing valid configuration files, [see the -->
+<!-- syntax -->
+<!-- guide](https://github.com/david-janssen/kmonad/blob/master/doc/syntax_guide.md) -->
+<!-- or [some of the examples](https://github.com/david-janssen/kmonad/tree/master/example). -->
 
-``` powershell
-./kmonad config_file.kbd
-```
+<!-- once the compiled binary is on the path, running kmonad is as simple as: -->
 
-This has the added benefit that, if KMonad experiences issues, you can use your
-mouse to close the powershell and hopefully release the keyboard-hook.
+<!-- ``` shell -->
+<!-- kmonad /path/to/config/file.kbd -->
+<!-- ``` -->
 
-Note that this interface is extremely provisional and subject to change.
+<!-- the method of running kmonad under windows is exactly the same: you use the -->
+<!-- shell (for example: powershell) to start kmonad. for example, put the compiled -->
+<!-- kmonad executable and config file in the same directory, start powershell, cd to -->
+<!-- the directory, and run: -->
 
-Any kind of internal KMonad error that indicates that something has gone
-seriously wrong with our representation of the computation will terminate KMonad
-and display the error to stdout. It is however not uncommon for KMonad to have
-to reacquire a uinput keyboard on resume from suspend. To that extent, any core
-IO exception will cause KMonad to pause for a second and attempt a restart, ad
-infinitum. This means its fine to unplug the mapped keyboard and plug it back
-in, without crashing KMonad. 
+<!-- ``` powershell -->
+<!-- ./kmonad config_file.kbd -->
+<!-- ``` -->
 
-## Common issues
+<!-- this has the added benefit that, if kmonad experiences issues, you can use your -->
+<!-- mouse to close the powershell and hopefully release the keyboard-hook. -->
 
-### Uinput permissions
-Currently, the only supported operating system is Linux. KMonad uses the
-`uinput` subsystem to write events to the operating system. If you want to be
-able to run KMonad without using sudo (highly recommended to avoid sudo wherever
-possible), you will need to ensure that your user is part of the `uinput` group.
-On most Linux's this can be achieved by:
+<!-- note that this interface is extremely provisional and subject to change. -->
 
-``` shell
-sudo usermod -aG uinput username
-```
+<!-- any kind of internal kmonad error that indicates that something has gone -->
+<!-- seriously wrong with our representation of the computation will terminate kmonad -->
+<!-- and display the error to stdout. it is however not uncommon for kmonad to have -->
+<!-- to reacquire a uinput keyboard on resume from suspend. to that extent, any core -->
+<!-- io exception will cause kmonad to pause for a second and attempt a restart, ad -->
+<!-- infinitum. this means its fine to unplug the mapped keyboard and plug it back -->
+<!-- in, without crashing kmonad.  -->
 
-If the `uinput` group does not exist, check whether your system has an `input`
-group and try adding your user to that one instead. If this does not work,
-create a new group with:
+<!-- ## common issues -->
 
-``` shell
-sudo groupadd uinput
-```
+<!-- ### uinput permissions -->
+<!-- currently, the only supported operating system is linux. kmonad uses the -->
+<!-- `uinput` subsystem to write events to the operating system. if you want to be -->
+<!-- able to run kmonad without using sudo (highly recommended to avoid sudo wherever -->
+<!-- possible), you will need to ensure that your user is part of the `uinput` group. -->
+<!-- on most linux's this can be achieved by: -->
 
-You then have to add a udev rule (in either `/etc/dev/rules.d` or
-`/lib/udev/rules.d`) with the following content:
+<!-- ``` shell -->
+<!-- sudo usermod -ag uinput username -->
+<!-- ``` -->
 
-``` shell
-KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
-```
+<!-- if the `uinput` group does not exist, check whether your system has an `input` -->
+<!-- group and try adding your user to that one instead. if this does not work, -->
+<!-- create a new group with: -->
 
-Additionally, you might need to ensure that the `uinput` drivers are loaded
-before starting KMonad, this can be achieved through:
+<!-- ``` shell -->
+<!-- sudo groupadd uinput -->
+<!-- ``` -->
 
-``` shell
-sudo modprobe uinput
-```
+<!-- you then have to add a udev rule (in either `/etc/dev/rules.d` or -->
+<!-- `/lib/udev/rules.d`) with the following content: -->
 
-This might have to be repeated whenever you restart your computer. There are
-various techniques for getting the `uinput` subsystem to load automatically, but
-I didn't manage to get any of them to work.
+<!-- ``` shell -->
+<!-- kernel=="uinput", mode="0660", group="uinput", options+="static_node=uinput" -->
+<!-- ``` -->
 
-### Figuring out which event-file corresponds to your keyboard 
-Sometimes you can find your keyboard listed under `/dev/input/by-id`. If so,
-this is by far the best solution, since there is no guarantee that a keyboard
-will be assigned the same numbered event-file. If this is not the case, however,
-the easiest way to figure out which event-file corresponds to your keyboard is
-probably to use the `evtest` Linux utility. 
+<!-- additionally, you might need to ensure that the `uinput` drivers are loaded -->
+<!-- before starting kmonad, this can be achieved through: -->
 
-### Getting special characters to work
-Since KMonad only deals in 'raw', primitive keyboard events, there is no such
-thing at that level as a special symbol. Instead we emit common keyboard
-sequences that the operating system needs to map to special characters. To that
-extent, you need to indicate to X11 what key is supposed to trigger a
-special-character macro.
+<!-- ``` shell -->
+<!-- sudo modprobe uinput -->
+<!-- ``` -->
 
-There are two ways of doing this:
-1. Manually, after launching KMonad, use either `xmodmap` or `setxkbmap` to
-   indicate to your OS that 'Right-Alt' should be used as the compose key
-   (support for other compose keys is coming in the future). For example:
+<!-- this might have to be repeated whenever you restart your computer. there are -->
+<!-- various techniques for getting the `uinput` subsystem to load automatically, but -->
+<!-- i didn't manage to get any of them to work. -->
 
-``` shell
-# Either
-xmodmap -e "keysym Alt_R = Multi_key" 
-# or:
-setxkbmap option compose:ralt
-```
+<!-- ### figuring out which event-file corresponds to your keyboard  -->
+<!-- sometimes you can find your keyboard listed under `/dev/input/by-id`. if so, -->
+<!-- this is by far the best solution, since there is no guarantee that a keyboard -->
+<!-- will be assigned the same numbered event-file. if this is not the case, however, -->
+<!-- the easiest way to figure out which event-file corresponds to your keyboard is -->
+<!-- probably to use the `evtest` linux utility.  -->
 
-It is probably better to use `setxkbmap` here, since it resets your config
-before applying modifications, whereas repeated calls to `xmodmap` can run into
-errors because you are trying to map to buttons that have already been remapped.
+<!-- ### getting special characters to work -->
+<!-- since kmonad only deals in 'raw', primitive keyboard events, there is no such -->
+<!-- thing at that level as a special symbol. instead we emit common keyboard -->
+<!-- sequences that the operating system needs to map to special characters. to that -->
+<!-- extent, you need to indicate to x11 what key is supposed to trigger a -->
+<!-- special-character macro. -->
 
-2. Automatically, through the UINPUT_SINK token. If you consult [the syntax
-   guide](doc/syntax_guide.md#Output) you will see exactly how you can provide
-   KMonad with a shell-command to execute whenever a new uinput sink is created.
-   This has the added benefit that, whenever we need to recreate the uinput sink
-   (this is sometimes necessary after resuming from suspend, for example), the
-   command is automatically called again for you.
+<!-- there are two ways of doing this: -->
+<!-- 1. manually, after launching kmonad, use either `xmodmap` or `setxkbmap` to -->
+<!--    indicate to your os that 'right-alt' should be used as the compose key -->
+<!--    (support for other compose keys is coming in the future). for example: -->
+
+<!-- ``` shell -->
+<!-- # either -->
+<!-- xmodmap -e "keysym alt_r = multi_key"  -->
+<!-- # or: -->
+<!-- setxkbmap option compose:ralt -->
+<!-- ``` -->
+
+<!-- it is probably better to use `setxkbmap` here, since it resets your config -->
+<!-- before applying modifications, whereas repeated calls to `xmodmap` can run into -->
+<!-- errors because you are trying to map to buttons that have already been remapped. -->
+
+<!-- 2. automatically, through the uinput_sink token. if you consult [the syntax -->
+<!--    guide](doc/syntax_guide.md#output) you will see exactly how you can provide -->
+<!--    kmonad with a shell-command to execute whenever a new uinput sink is created. -->
+<!--    this has the added benefit that, whenever we need to recreate the uinput sink -->
+<!--    (this is sometimes necessary after resuming from suspend, for example), the -->
+<!--    command is automatically called again for you. -->
    
-Note that there is a small interval between creating a uinput sink and it
-actually being registered by the OS, so whether you manually call `setxkbmap` or
-use the UINPUT_SINK token to pass a shell command, you need to ensure that it
-contains a small period of time for the OS to register the keyboard. I have
-found that 1 second is more than sufficient, but experiment yourself.
+<!-- note that there is a small interval between creating a uinput sink and it -->
+<!-- actually being registered by the os, so whether you manually call `setxkbmap` or -->
+<!-- use the uinput_sink token to pass a shell command, you need to ensure that it -->
+<!-- contains a small period of time for the os to register the keyboard. i have -->
+<!-- found that 1 second is more than sufficient, but experiment yourself. -->
 
-### Windows Limitations
-#### Cannot distinguish between keyboards
-The low-level API to the operating system differs significantly between Windows
-and Linux, which means that the Windows version is currently more limited in
-what it can do. There is an active issue on this topic [over
-here](https://github.com/david-janssen/kmonad/issues/10), and if you have
-experience with `Win32` programming, any help would be greatly appreciated. So
-if you want to help, or just want a more technical overview of the windows
-limitations head on over there.
+<!-- ### windows limitations -->
+<!-- #### cannot distinguish between keyboards -->
+<!-- the low-level api to the operating system differs significantly between windows -->
+<!-- and linux, which means that the windows version is currently more limited in -->
+<!-- what it can do. there is an active issue on this topic [over -->
+<!-- here](https://github.com/david-janssen/kmonad/issues/10), and if you have -->
+<!-- experience with `win32` programming, any help would be greatly appreciated. so -->
+<!-- if you want to help, or just want a more technical overview of the windows -->
+<!-- limitations head on over there. -->
 
-Currently, we cannot distinguish between different input keyboards, so whereas a
-Linux version of KMonad can be started for a variety of different keyboards, and
-handle them all in different ways, the Windows version of KMonad catches *all*
-keyboard input signals. The only distinction KMonad makes under Windows is
-between 'real' keyboard events and simulated keyboard events. Anything simulated
-is automatically passed on to the OS (that is also how KMonad avoids handling
-its own simulated output). 
+<!-- currently, we cannot distinguish between different input keyboards, so whereas a -->
+<!-- linux version of kmonad can be started for a variety of different keyboards, and -->
+<!-- handle them all in different ways, the windows version of kmonad catches *all* -->
+<!-- keyboard input signals. the only distinction kmonad makes under windows is -->
+<!-- between 'real' keyboard events and simulated keyboard events. anything simulated -->
+<!-- is automatically passed on to the os (that is also how kmonad avoids handling -->
+<!-- its own simulated output).  -->
 
-#### No native support for compose sequences
-Windows does not support the same compose-sequences as X11, meaning that the
-special-character-emitting macros won't work out of the box. Luckily there is
-[WinCompose](https://github.com/SamHocevar/wincompose), a windows utility that
-maps compose-key sequences to special characters. They say they have full
-support for all X11 based compose-sequences, and in my limited test I did not
-run into any problems. We currently do not support remapping the compose-key
-internally, but the KMonad default lines up with the X11 default and the
-WinCompose default (right Alt).
+<!-- #### no native support for compose sequences -->
+<!-- windows does not support the same compose-sequences as x11, meaning that the -->
+<!-- special-character-emitting macros won't work out of the box. luckily there is -->
+<!-- [wincompose](https://github.com/samhocevar/wincompose), a windows utility that -->
+<!-- maps compose-key sequences to special characters. they say they have full -->
+<!-- support for all x11 based compose-sequences, and in my limited test i did not -->
+<!-- run into any problems. we currently do not support remapping the compose-key -->
+<!-- internally, but the kmonad default lines up with the x11 default and the -->
+<!-- wincompose default (right alt). -->
 
-**NOTE**: For WinCompose to work with KMonad you *have* to enable support for
-handling injected key events, which is *off* by default.
+<!-- **note**: for wincompose to work with kmonad you *have* to enable support for -->
+<!-- handling injected key events, which is *off* by default. -->
 
-#### No idea how this interacts with AHK
-Since KMonad essentially grabs *all* standard keyboard input and lets through
-only simulated events, there is no guarantee at all of this playing nice with
-AutoHotKey at the moment. Additionally, I am not entirely sure how Windows deals
-with its low-level keyboard hooks and how AHK tries to get at keyboard input,
-but it might even be the case that different startup-orders could result in
-different behavior. I have no experience with AHK at all, and rarely use
-Windows. If you run into any issues, please file them, and I'm sure that in time
-we can resolve everything.
+<!-- #### no idea how this interacts with ahk -->
+<!-- since kmonad essentially grabs *all* standard keyboard input and lets through -->
+<!-- only simulated events, there is no guarantee at all of this playing nice with -->
+<!-- autohotkey at the moment. additionally, i am not entirely sure how windows deals -->
+<!-- with its low-level keyboard hooks and how ahk tries to get at keyboard input, -->
+<!-- but it might even be the case that different startup-orders could result in -->
+<!-- different behavior. i have no experience with ahk at all, and rarely use -->
+<!-- windows. if you run into any issues, please file them, and i'm sure that in time -->
+<!-- we can resolve everything. -->
 
-### Why can't I remap the Fn key on my laptop?
-Many laptops have a Fn key that mimics some of the functionality that KMonad
-tries to offer: it changes the mapping of certain keys, like creating a numpad
-in the middle of the laptop keyboard. This remapping happens in the hardware,
-before any event is ever registered with the operating system, therefore KMonad
-has no way to 'get' at any of those events. This means that we cannot remap them
-in any way.
+<!-- ### why can't i remap the fn key on my laptop? -->
+<!-- many laptops have a fn key that mimics some of the functionality that kmonad -->
+<!-- tries to offer: it changes the mapping of certain keys, like creating a numpad -->
+<!-- in the middle of the laptop keyboard. this remapping happens in the hardware, -->
+<!-- before any event is ever registered with the operating system, therefore kmonad -->
+<!-- has no way to 'get' at any of those events. this means that we cannot remap them -->
+<!-- in any way. -->
