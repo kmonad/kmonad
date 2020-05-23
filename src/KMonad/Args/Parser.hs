@@ -195,6 +195,10 @@ moddedP = KAround <$> prfx <*> buttonP
                , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
+-- | Parse Pxxx as pauses (useful in macros)
+pauseP :: Parser DefButton
+pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
+
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
 rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
@@ -237,6 +241,7 @@ buttonP = (lexeme . choice . map try $
   , lexeme $ fromNamed buttonNames
   , try moddedP
   , lexeme $ try rmTapMacroP
+  , lexeme $ try pauseP
   , KEmit <$> keycodeP
   , KComposeSeq <$> deadkeySeqP
   , KComposeSeq <$> composeSeqP

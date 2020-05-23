@@ -47,6 +47,7 @@ import KPrelude
 import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
+import KMonad.Util
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -85,6 +86,7 @@ data DefButton
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
+  | KPause Milliseconds                    -- ^ Pause for a period of time
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
