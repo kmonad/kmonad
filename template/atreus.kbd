@@ -28,7 +28,8 @@
 ;; Basic system config
 (defcfg
   input  (device-file "/dev/input/by-id/usb-Technomancy_Atreus_0-event-kbd")
-  output (uinput-sink "KMonad: Atreus")
+  output (uinput-sink "KMonad: Atreus"
+            "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
 )
 
 ;; Source-layer. Lines up with the static layer defined in my QMK driver.
@@ -83,19 +84,16 @@
   Ns   (around-next sft)
   Ncs  (around-next S-lctl)
 
-
   ;; Every-day typing mode --------------------------------------------------
 
   ;; Compound switching and tapping buttons
   L    (tap-next tab @num)
   R    (tap-next esc @sym)
 
-
   ;; Gaming mode layers -----------------------------------------------------
 
   gn   (layer-toggle game-num)
   gf   (layer-toggle game-fun)
-
 
   ;; Changing modes ---------------------------------------------------------
 
@@ -118,9 +116,9 @@
 
 ;; Numpad, punctuation, brackets
 (deflayer numpad
-  _    `    ~    [    ]              _    7    8    9    /
-  _    "    \_   \(   \)             _    4    5    6    *
-  _    '    |    {    }              =    1    2    3    -
+  +`   `    ~    [    ]              _    7    8    9    /
+  +'   "    \_   \(   \)             _    4    5    6    *
+  +~   '    |    {    }              =    1    2    3    -
   _    _    _    _    _    _    @fun _    0    _    .    +
 )
 
