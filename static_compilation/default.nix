@@ -8,7 +8,7 @@ let
 
   # Define basic configuration
   cabalPackageName = "kmonad";
-  compiler         = "ghc883";
+  compiler         = "ghc865";
 
   # Grab the most recent version of `static-haskell-nix` (at time of writing)
   static-haskell-nix = nixpkgs.fetchFromGitHub
@@ -17,6 +17,7 @@ let
       rev    = "dbce18f4808d27f6a51ce31585078b49c86bd2b5";
       sha256 = "084hxnrywsgb73zr41argdkbhkxzm1rqn058pv1l4cp9g1gjr2rr";
     };
+# fetchTarball https://github.com/nh2/static-haskell-nix/archive/d1b20f35ec7d3761e59bd323bbe0cca23b3dfc82.tar.gz;
 
   # Import the pkgs provided by `static-haskell-nix`
   pkgs = import "${static-haskell-nix}/nixpkgs.nix";
@@ -24,7 +25,7 @@ let
   # Point the script at pwd, using a recent stackage snapshot
   stack2nix-script = import "${static-haskell-nix}/static-stack2nix-builder/stack2nix-script.nix" {
     inherit pkgs;
-    stack-project-dir = toString ./..;
+    stack-project-dir = toString ./.;
     hackageSnapshot   = "2020-05-24T00:00:00Z";
   };
 
