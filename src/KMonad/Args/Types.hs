@@ -138,11 +138,13 @@ data DefLayer = DefLayer
 -- | All different input-tokens KMonad can take
 data IToken
   = KDeviceSource FilePath
+  | KLowLevelHookSource
   deriving Show
 
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
+  | KSendEventSink
   deriving Show
 
 -- | All possible single settings

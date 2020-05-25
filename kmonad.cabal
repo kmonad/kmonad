@@ -84,6 +84,8 @@ library
   if os(windows)
     exposed-modules:
       KMonad.Keyboard.IO.Windows.LowLevelHookSource
+      KMonad.Keyboard.IO.Windows.SendEventSink
+      KMonad.Keyboard.IO.Windows.Types
     c-sources:
       c_src/keyio_win.c
     build-depends:

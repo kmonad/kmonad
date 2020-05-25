@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-|
 Module      : KMonad.Args.Joiner
 Description : The code that turns tokens into a DaemonCfg
@@ -14,6 +15,8 @@ We perform configuration parsing in 2 steps:
 
 This module covers step 2.
 
+NOTE: This is where we make a distinction between operating systems.
+
 -}
 module KMonad.Args.Joiner
   ( joinConfigIO
@@ -29,8 +32,16 @@ import KMonad.Action
 import KMonad.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
+
+#ifdef linux_HOST_OS
 import KMonad.Keyboard.IO.Linux.DeviceSource
 import KMonad.Keyboard.IO.Linux.UinputSink
+#endif
+
+#ifdef mingw32_HOST_OS
+import KMonad.Keyboard.IO.Windows.LowLevelHookSource
+import KMonad.Keyboard.IO.Windows.SendEventSink
+#endif
 
 import Control.Monad.Except
 
@@ -53,23 +64,25 @@ data JoinError
   | MissingLayer     Text
   | MissingSetting   Text
   | DuplicateSetting Text
+  | InvalidOS        Text
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
 
 instance Show JoinError where
   show e = case e of
-    DuplicateBlock t     -> "Encountered duplicate block of type: " <> T.unpack t
-    MissingBlock   t     -> "Missing at least 1 block of type: "    <> T.unpack t
-    DuplicateAlias t     -> "Multiple aliases of the same name: "   <> T.unpack t
-    DuplicateLayer t     -> "Multiple layers of the same name: "    <> T.unpack t
-    MissingAlias   t     -> "Reference to non-existent alias: "     <> T.unpack t
-    MissingLayer   t     -> "Reference to non-existent layer: "     <> T.unpack t
-    MissingSetting t     -> "Missing setting in 'defcfg': "         <> T.unpack t
-    DuplicateSetting t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
-    NestedTrans          -> "Encountered 'Transparent' ouside of top-level layer"
-    InvalidComposeKey    -> "Encountered invalid button as Compose key"
-    LengthMismatch t l s -> mconcat
+    DuplicateBlock    t   -> "Encountered duplicate block of type: " <> T.unpack t
+    MissingBlock      t   -> "Missing at least 1 block of type: "    <> T.unpack t
+    DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
+    DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
+    MissingAlias      t   -> "Reference to non-existent alias: "     <> T.unpack t
+    MissingLayer      t   -> "Reference to non-existent layer: "     <> T.unpack t
+    MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
+    DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
+    InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
+    NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
+    InvalidComposeKey     -> "Encountered invalid button as Compose key"
+    LengthMismatch t l s  -> mconcat
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
@@ -181,22 +194,49 @@ getI :: J (LogFunc -> IO (Acquire KeySource))
 getI = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SIToken $ cfg of
-    Right (KDeviceSource pth) -> pure $ runLF (deviceSource64 pth)
-    Left  None                -> throwError $ MissingSetting "input"
-    Left  Duplicate           -> throwError $ DuplicateSetting "input"
+    Right i          -> pickInput i
+    Left  None       -> throwError $ MissingSetting "input"
+    Left  Duplicate  -> throwError $ DuplicateSetting "input"
 
 -- | Extract the KeySource-loader from a 'KExpr's
 getO :: J (LogFunc -> IO (Acquire KeySink))
 getO = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SOToken $ cfg of
-    Right (KUinputSink t init) -> pure $ runLF
-      (uinputSink
-        (defUinputCfg { _keyboardName = T.unpack t
-                      , _postInit     = T.unpack <$> init}))
-    Left  None                 -> throwError $ MissingSetting "input"
-    Left  Duplicate            -> throwError $ DuplicateSetting "input"
+    Right o         -> pickOutput o
+    Left  None      -> throwError $ MissingSetting "input"
+    Left  Duplicate -> throwError $ DuplicateSetting "input"
 
+
+#ifdef linux_HOST_OS
+
+-- | The Linux correspondence between IToken and actual code
+pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
+pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
+pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+
+-- | The Linux correspondence between OToken and actual code
+pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
+pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
+  where cfg = defUinputCfg { _keyboardName = T.unpack t
+                           , _postInit     = T.unpack <$> init }
+pickOutput KSendEventSink = throwError $ InvalidOS "SendEventSink"
+
+#endif
+
+#ifdef mingw32_HOST_OS
+
+-- | The Windows correspondence between IToken and actual code
+pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
+pickInput KLowLevelHookSource = pure $ runLF llHook
+pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
+
+-- | The Windows correspondence between OToken and actual code
+pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
+pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
+pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
+
+#endif
 
 --------------------------------------------------------------------------------
 -- $als
