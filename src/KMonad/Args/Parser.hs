@@ -257,11 +257,15 @@ buttonP = (lexeme . choice . map try $
 
 -- | Parse an input token
 itokenP :: Parser IToken
-itokenP = statement "device-file" $ KDeviceSource <$> (T.unpack <$> textP)
+itokenP = choice
+  [ statement "device-file"    $ KDeviceSource <$> (T.unpack <$> textP)
+  , statement "low-level-hook" $ pure KLowLevelHookSource ]
 
 -- | Parse an output token
 otokenP :: Parser OToken
-otokenP = statement "uinput-sink" $ KUinputSink <$> lexeme textP <*> optional textP
+otokenP = choice
+  [ statement "uinput-sink"     $ KUinputSink <$> lexeme textP <*> optional textP
+  , statement "send-event-sink" $ pure KSendEventSink ]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
