@@ -10,10 +10,44 @@ license-file:   LICENSE
 build-type:     Simple
 
 library
+  default-language:
+      Haskell2010
+  hs-source-dirs:
+      src
   ghc-options:
     -Wall
     -Wno-name-shadowing
     -Wno-unused-imports
+  build-depends:
+      base
+    , cereal
+    , lens
+    , megaparsec
+    , mtl
+    , optparse-applicative
+    , resourcet
+    , rio
+    , time
+    , unliftio
+  default-extensions:
+      ConstraintKinds
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      MultiParamTypeClasses
+      MultiWayIf
+      NoImplicitPrelude
+      OverloadedStrings
+      RankNTypes
+      TemplateHaskell
+      TupleSections
+      TypeFamilies
+
   exposed-modules:
       Data.LayerStack
       Data.MultiMap
@@ -34,152 +68,39 @@ library
       KMonad.Keyboard.Keycode
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
-      KMonad.Keyboard.IO.Linux.DeviceSource
-      KMonad.Keyboard.IO.Linux.Types
-      KMonad.Keyboard.IO.Linux.UinputSink
       KMonad.Prelude
       KMonad.Util
 
-  -- if os(linux)
-  --   exposed-modules:
-  --     KMonad.Api.KeyIO.Linux.DeviceSource
-  --     KMonad.Api.KeyIO.Linux.Types
-  --     KMonad.Api.KeyIO.Linux.UinputSink
-  -- if os(windows)
-  --   exposed-modules:
-  --     KMonad.Api.KeyIO.Windows.LowLevelHookSource
-  --     KMonad.Api.KeyIO.Windows.SendEventSink
-  --     KMonad.Api.KeyIO.Windows.Types
-  --     Test
-  other-modules:
-      -- Paths_kmonad
-  hs-source-dirs:
-      src
-  default-extensions:
-      BangPatterns
-      BinaryLiterals
-      ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveTraversable
-      DerivingStrategies
-      DoAndIfThenElse
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
-      LambdaCase
-      MultiParamTypeClasses
-      MultiWayIf
-      NamedFieldPuns
-      NoImplicitPrelude
-      OverloadedStrings
-      PartialTypeSignatures
-      PatternGuards
-      PolyKinds
-      RankNTypes
-      RecordWildCards
-      ScopedTypeVariables
-      StandaloneDeriving
-      TemplateHaskell
-      TupleSections
-      TypeApplications
-      TypeOperators
-      TypeFamilies
-      TypeSynonymInstances
-      ViewPatterns
   if os(linux)
+    exposed-modules:
+      KMonad.Keyboard.IO.Linux.DeviceSource
+      KMonad.Keyboard.IO.Linux.Types
+      KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
+    build-depends:
+      unix
+
   if os(windows)
+    exposed-modules:
+      KMonad.Keyboard.IO.Windows.LowLevelHookSource
     c-sources:
       c_src/keyio_win.c
-  build-depends:
-                    base
-                , cereal
-                , hspec
-                , lens
-                , megaparsec
-                , mtl
-                , network
-                , optparse-applicative
-                , resourcet
-                , rio
-                , time
-                , transformers
-                , unliftio
-  if os(linux)
-     build-depends: unix
-  if os(windows)
-     build-depends: Win32
+    build-depends:
+      Win32
 
-  default-language: Haskell2010
 
 executable kmonad
-  main-is: Main.hs
-  other-modules:
-      -- Paths_kmonad
-  default-extensions:
-      -- AutoDeriveTypeable
-      -- BangPatterns
-      -- BinaryLiterals
-      -- ConstraintKinds
-      -- DataKinds
-      -- DefaultSignatures
-      -- DeriveDataTypeable
-      -- DeriveFoldable
-      -- DeriveFunctor
-      -- DeriveGeneric
-      -- DeriveTraversable
-      -- DerivingStrategies
-      -- DoAndIfThenElse
-      -- EmptyDataDecls
-      -- ExistentialQuantification
-      -- FlexibleContexts
-      -- FlexibleInstances
-      -- FunctionalDependencies
-      -- GADTs
-      -- GeneralizedNewtypeDeriving
-      -- InstanceSigs
-      -- KindSignatures
-      -- LambdaCase
-      -- MonadFailDesugaring
-      -- MultiParamTypeClasses
-      -- MultiWayIf
-      -- NamedFieldPuns
-      -- NoImplicitPrelude
-      -- OverloadedStrings
-      -- PartialTypeSignatures
-      -- PatternGuards
-      -- PolyKinds
-      -- RankNTypes
-      -- RecordWildCards
-      -- ScopedTypeVariables
-      -- StandaloneDeriving
-      -- TemplateHaskell
-      -- TupleSections
-      -- TypeApplications
-      -- TypeOperators
-      -- TypeFamilies
-      -- TypeSynonymInstances
-      -- ViewPatterns
-  hs-source-dirs:
-      app
   ghc-options:
       -threaded
       -rtsopts
       -with-rtsopts=-N
+  main-is:
+      Main.hs
+  default-language:
+      Haskell2010
+  hs-source-dirs:
+      app
   build-depends:
-                    base
-                , kmonad
-                , transformers
-  default-language: Haskell2010
+      base
+    , kmonad
