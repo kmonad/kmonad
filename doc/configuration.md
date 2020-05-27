@@ -17,13 +17,26 @@ additional definitions. Each configuration must contain:
 - Any number of [(defalias ...)](./configuration.md#defalias-block) block
 - 1 or more [(deflayer ...)](./configuration.md#deflayer-block) blocks
 
-### defcfg block
+### `defcfg` block
 The `defcfg` block contains some basic settings like how to read events from the
 OS and how to send events to the OS. Each configuration option is named, and its
 value must follow its fixed name. The minimal complete definition includes an
-`input` and an `output` value.
+`input` and an `output` value. The `defcfg` block is designed to allow future
+addition of different IO options, but at the moment it does not provide many
+choices.
 
 #### Linux
 Under Linux, the only valid values are:
 - `input`:  `(device-file "/path/to/file")`.
-- `output`: `(uinput-sink "Name of keyboard" "post-init command")`
+- `output`: `(uinput-sink "Name of keyboard" "optional post-init command")`
+
+#### Windows
+Under Windows the `defcfg` block is even simpler, you have no options.
+- `input`: `(low-level-hook)`
+- `output`: `(send-event-sink)`
+
+### `defsrc` block
+KMonad translates an input stream of key-events to an output stream of key
+events. The `defsrc` block exists as the specification of the input-layout. In
+the `(deflayer ...)` blocks, buttons will be mapped to the corresponding input
+keycodes from `(defsrc ...)`.
