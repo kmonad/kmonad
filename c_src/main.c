@@ -2,6 +2,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDLib.h>
+#include <IOKit/hid/IOHIDManager.h>
+#include <IOKit/IOKitLib.h>
 
 static bool     gReport         = TRUE;
 static bool     gValue          = FALSE;
@@ -71,8 +73,26 @@ int main (int argc, const char * argv[]) {
         }
     }
     
+    CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
+    UInt32 value;
+    CFNumberRef cfValue;
+    value = kHIDPage_GenericDesktop;
+    cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
+    CFDictionarySetValue(matching_dictionary,
+                         CFSTR(kIOHIDDeviceUsagePageKey),
+                         cfValue);
+    CFRelease(cfValue);
+    value = kHIDUsage_GD_Keyboard;
+    cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
+    CFDictionarySetValue(matching_dictionary,
+                         CFSTR(kIOHIDDeviceUsageKey),
+                         cfValue);
+    CFRelease(cfValue);
+
+    IOHIDManagerSetDeviceMatching(manager,matching_dictionary);
     
-        
+    // CFRelease(matching_dictionary);
+
     IOHIDManagerRegisterDeviceMatchingCallback(manager, __deviceCallback, (void*)TRUE);
     IOHIDManagerRegisterDeviceRemovalCallback(manager, __deviceCallback, (void*)FALSE);
     
@@ -82,7 +102,7 @@ int main (int argc, const char * argv[]) {
         IOHIDManagerRegisterInputValueCallback(manager, __deviceValueCallback, NULL);
     
     IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    IOHIDManagerSetDeviceMatching(manager, NULL);
+    // IOHIDManagerSetDeviceMatching(manager, NULL);
     IOHIDManagerOpen(manager, 0);
     
     CFRunLoopRun();
