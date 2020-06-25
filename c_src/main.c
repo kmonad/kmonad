@@ -5,9 +5,9 @@
 #include <IOKit/hid/IOHIDManager.h>
 #include <IOKit/IOKitLib.h>
 
-static bool     gReport         = TRUE;
-static bool     gValue          = FALSE;
-static bool     gSend           = FALSE;
+static bool     gReport         = FALSE;
+static bool     gValue          = TRUE;
+static bool     gSend           = TRUE;
 
 static char * getReportTypeString(IOHIDReportType type)
 {
@@ -45,6 +45,8 @@ void __deviceValueCallback (void * context, IOReturn result, void * sender, IOHI
 {
     IOHIDElementRef element = IOHIDValueGetElement(value);
     
+    if(IOHIDElementGetUsage(element) == 0xFFFFFFFF ||
+       IOHIDElementGetCookie(element) == 30) return;
     printf("IOHIDDeviceRef[%p]: value=%p timestamp=%lld cookie=%d usagePage=0x%02X usage=0x%02X intValue=%ld\n", sender, value, IOHIDValueGetTimeStamp(value), (uint32_t)IOHIDElementGetCookie(element), IOHIDElementGetUsagePage(element), IOHIDElementGetUsage(element), IOHIDValueGetIntegerValue(value));
 }
 
@@ -89,6 +91,57 @@ int main (int argc, const char * argv[]) {
                          cfValue);
     CFRelease(cfValue);
 
+
+    
+    //IOHIDDeviceRef device = IOHIDDeviceCreate(kCFAllocatorDefault, service);
+    
+    /*
+      io_iterator_t it = IO_OBJECT_NULL;
+      kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
+      matching_dictionary,
+      &it);
+      printf("%d\n",r);
+    
+      //uint64_t id;
+      //r = IORegistryEntryGetRegistryEntryID(it, &id);
+    
+      // Increment `it' with IOIteratorNext
+      */
+    io_service_t service = 0;
+    IOHIDDeviceRef device = 0;
+    service = IOServiceGetMatchingService(kIOMasterPortDefault,
+                                          matching_dictionary);
+    device = IOHIDDeviceCreate(kCFAllocatorDefault, service);    
+    IOReturn ret = IOHIDDeviceOpen(device,kIOHIDOptionsTypeNone);
+    printf("%x\n",ret);
+
+    //IOHIDDeviceGetProperty();
+    io_name_t devName;
+    IORegistryEntryGetName(service, devName);
+    printf("Device's name = %s\n", devName);
+    IOHIDQueueRef queue = IOHIDQueueCreate(kCFAllocatorDefault,
+                                           device,
+                                           32,
+                                           kIOHIDOptionsTypeNone);
+    CFArrayRef elements = IOHIDDeviceCopyMatchingElements(device,
+                                                          NULL,
+                                                          kIOHIDOptionsTypeNone);
+
+    printf("%ld\n",CFArrayGetCount(elements));
+    for (CFIndex i = 0; i < CFArrayGetCount(elements); ++i) {
+        IOHIDQueueAddElement(queue,
+                             (IOHIDElementRef)CFArrayGetValueAtIndex(elements, i));
+    }
+    CFRelease(elements);
+
+    IOHIDQueueStart(queue);
+    while(1) {
+        IOHIDValueRef value = IOHIDQueueCopyNextValue(queue);
+        if(value)
+            printf("%p\n",value);
+    }
+
+    /*
     IOHIDManagerSetDeviceMatching(manager,matching_dictionary);
     
     // CFRelease(matching_dictionary);
@@ -108,4 +161,5 @@ int main (int argc, const char * argv[]) {
     CFRunLoopRun();
     
     return 0;
+    */
 }
