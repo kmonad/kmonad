@@ -73,6 +73,7 @@ int release_kb() {
     return 0;
 }
 
+#ifdef STANDALONE
 int main() {
     grab_kb();
     struct KeyEvent ke;
@@ -81,3 +82,4 @@ int main() {
         send_key(&ke);
     }
 }       
+#endif
