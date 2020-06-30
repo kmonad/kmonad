@@ -1,5 +1,6 @@
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/IOKitLib.h>
+#include <IOKit/hidsystem/IOHIDLib.h>
 #include <float.h>
 
 IOHIDQueueRef queue;
@@ -75,11 +76,47 @@ int release_kb() {
 
 #ifdef STANDALONE
 int main() {
+    /*
     grab_kb();
     struct KeyEvent ke;
     while(1) {
         wait_key(&ke);
         send_key(&ke);
     }
+    */
+    // I think this method works (unless you run as root)
+    // https://github.com/pqrs-org/Karabiner-Elements/blob/de5a74cf5d5d671672369f76495081af2715f2ba/docs/DEVELOPMENT.md
+    // Note that IOHIDPostEvent is marked as deprecated
+    mach_port_t iter = 0, driver = 0, service = 0, master_port = 0;
+    IOReturn r = IOMasterPort(bootstrap_port, &master_port);
+    if(r) return 1;
+    r = IOServiceGetMatchingServices(master_port, IOServiceMatching(kIOHIDSystemClass), &iter);
+    if(r) return 2;
+    service = IOIteratorNext(iter);
+    if(!service) return 3;
+    r = IOServiceOpen(service, mach_task_self(), kIOHIDParamConnectType, &driver);
+    if(r) return 4;
+    //IOHIDDeviceRef device = IOHIDDeviceCreate(kCFAllocatorDefault, service);
+    io_name_t devName;
+    IORegistryEntryGetName(service, devName);
+    printf("Device's name = %s\n", devName);
+    IOGPoint loc;
+    loc.x = 0;
+    loc.y = 0;
+    NXEventData event;
+    event.key.keyCode = 0x17;
+    event.key.origCharCode = 0;
+    event.key.repeat = 0;
+    event.key.charSet = NX_SYMBOLSET;
+    event.key.charCode = 0;
+    event.key.origCharSet = NX_SYMBOLSET;
+    event.key.keyboardType = 0;
+    IOReturn kr = IOHIDPostEvent(driver, NX_KEYDOWN,
+                                loc, &event, kNXEventDataVersion,
+                                kIOHIDOptionsTypeNone, kIOHIDSetGlobalEventFlags);
+    kr = IOHIDPostEvent(driver, NX_KEYUP,
+                                loc, &event, kNXEventDataVersion,
+                                kIOHIDOptionsTypeNone, kIOHIDSetGlobalEventFlags);
+    return 0;
 }       
 #endif
