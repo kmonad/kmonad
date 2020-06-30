@@ -1,0 +1,3 @@
+[submodule "Karabiner-VirtualHIDDevice"]
+	path = c_src/Karabiner-VirtualHIDDevice
+	url = https://github.com/pqrs-org/Karabiner-VirtualHIDDevice.git
