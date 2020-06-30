@@ -9,11 +9,11 @@ struct KeyEvent {
     uint32_t keycode;
 };
 
-void send_key(struct KeyEvent *e) {
+extern "C" void send_key(struct KeyEvent *e) {
     printf("%u %u\n", e->type, e->keycode);
 }
 
-void wait_key(struct KeyEvent *e) {
+extern "C" void wait_key(struct KeyEvent *e) {
     while(1) {
         // The following call doesn't block, even though the docs say it should:
         // https://developer.apple.com/documentation/iokit/1545832-iohidqueuecopynextvaluewithtimeo
@@ -35,7 +35,7 @@ void wait_key(struct KeyEvent *e) {
     }
 }
 
-int grab_kb() {
+extern "C" int grab_kb() {
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     UInt32 value;
     CFNumberRef cfValue;
@@ -68,7 +68,7 @@ int grab_kb() {
     return 0;
 }
 
-int release_kb() {
+extern "C" int release_kb() {
     IOHIDQueueStop(queue);
     return 0;
 }
