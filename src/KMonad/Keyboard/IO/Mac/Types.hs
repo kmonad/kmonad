@@ -280,12 +280,12 @@ kcMap = M.fromList $
   -- /* 0xA5-0xDF Reserved */
   , (0xE0, KeyLeftCtrl)
   , (0xE1, KeyLeftShift)
-  , (0xE2, KeyLeftMeta) -- this code is Alt(/Option) in macOS
-  , (0xE3, KeyLeftAlt)
+  , (0xE2, KeyLeftAlt)
+  , (0xE3, KeyLeftMeta)
   , (0xE4, KeyRightCtrl)
   , (0xE5, KeyRightShift)
-  , (0xE6, KeyRightMeta)
-  , (0xE7, KeyRightAlt)
+  , (0xE6, KeyRightAlt)
+  , (0xE7, KeyRightMeta)
   -- /* 0xE8-0xFFFF Reserved */
   , (0xFFFF, KeyReserved)
   ]
