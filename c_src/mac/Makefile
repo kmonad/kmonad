@@ -1,3 +1,6 @@
+temp: keyio_mac.c
+	gcc -o main $^ -framework CoreFoundation -framework IOKit -DSTANDALONE -pthread
+
 all: sink-kext.o keyio_mac.o hid.o sink-iokit.o source-hidqueue.o
 	g++ -o main $^ -framework CoreFoundation -framework IOKit
 
