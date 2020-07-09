@@ -58,44 +58,63 @@ import KMonad.Keyboard
 import KMonad.Util
 
 
+
 --------------------------------------------------------------------------------
 -- $pred
 
+
 -- | Whether a predicate matched on a 'KeyEvent' or not.
-data Match = Match KeyEvent | NoMatch deriving (Eq, Show)
+-- data Match = Match KeyEvent | NoMatch deriving (Eq, Show)
 
 -- | A 'KeyPred' is a function that calculates matches against events.
-type KeyPred = KeyEvent -> Match
+type KeyPred = KeyEvent -> Bool
 
--- | Create a 'KeyPred' from a predicate on 'KeyEvent'
-matchOn :: (KeyEvent -> Bool) -> KeyPred
-matchOn p = \e -> if p e then Match e else NoMatch
+-- -- | Create a 'KeyPred' that matches only an exact event
+-- matchEvent :: KeyEvent -> KeyPred
+-- matchEvent = matchOn . (==)
 
--- | Create a 'KeyPred' that matches only an exact event
-matchEvent :: KeyEvent -> KeyPred
-matchEvent = matchOn . (==)
-
--- | A 'KeyPred' that will match on any 'Press' event
-matchPress :: KeyPred
-matchPress = matchOn $ (Press ==) . view switch
+-- -- | A 'KeyPred' that will match on any 'Press' event
+-- matchPress :: KeyPred
+-- matchPress = matchOn $ (Press ==) . view switch
 
 
 --------------------------------------------------------------------------------
 -- $cb
 
+-- | All the different things that can trigger a Callback
+data Trigger
+  = Match   KeyEvent -- ^ Predicate matched on a `KeyEvent`
+  | NoMatch KeyEvent -- ^ Predicate caught but failed to match on a `KeyEvent`
+  | Timeout          -- ^ Timeout of the callback was thrown
+  deriving (Eq, Show)
+ 
 -- | The 'Catch' type is used to signal whether an event should be intercepted.
-data Catch = Catch | NoCatch deriving (Eq, Show)
+data Catch
+  = Catch   -- ^ Interrupt any further processing of the current `KeyEvent`
+  | NoCatch -- ^ Continue processing the current `KeyEvent`
+  deriving (Eq, Show)
 
+-- | The Semigroup instance of Catch is /any 'Catch' implies 'Catch'/
 instance Semigroup Catch where
   NoCatch <> NoCatch = NoCatch
   _       <> _       = Catch
 
+-- | The default is not to 'Catch'
 instance Monoid Catch where
   mempty = NoCatch
 
--- | A 'Callback' is a function that is called on match results
-type Callback m = Match -> m Catch
+-- | A 'Callback' is a function from a 'Trigger' to a 'Catch' in some context
+type Callback m = Trigger -> m Catch
 
+--------------------------------------------------------------------------------
+-- $hook
+
+-- | A 'Hook' value contains all the information necessary to run a hook.
+data Hook m = Hook
+  { hPred     :: KeyPred            -- ^ The predicate used to determine a match
+  , hCallback :: Callback m         -- ^ The callback to perform on a match
+  , hTimeout  :: Maybe Milliseconds -- ^ An optional timeout
+  }
 
 --------------------------------------------------------------------------------
 -- $lop
@@ -124,10 +143,8 @@ class Monad m => MonadK m where
   pause      :: Milliseconds -> m ()
   -- | Pause or unpause event processing
   hold       :: Bool -> m ()
-  -- | Run a hook on only the next 'KeyEvent'
-  hookNext   :: KeyPred -> Callback m -> m ()
-  -- | Run a hook on all 'KeyEvent's until the timer expires,
-  hookWithin :: Milliseconds -> KeyPred -> Callback m -> m ()
+  -- | Register a callback hook
+  hook       :: Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Access the keycode to which the current button is bound
@@ -151,13 +168,13 @@ my s = mkKeyEvent s <$> myBinding
 
 -- | Create a KeyPred that matches the Press or Release of the calling button.
 matchMy :: MonadK m => Switch -> m KeyPred
-matchMy s = matchEvent <$> my s
+matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
 await :: MonadK m => KeyPred -> (KeyEvent -> m Catch) -> m ()
 await p f = hookNext p $ \case
-  Match e -> f e
-  NoMatch -> await p f *> pure NoCatch
+  Match   e -> f e
+  NoMatch _ -> await p f *> pure NoCatch
 
 -- | Execute an action on the detection of the Switch of the active button.
 --
@@ -174,11 +191,12 @@ awaitMy s a = matchMy s >>= \p -> await p (const a)
 -- 'Catch' is signalled, and vice-versa. This is essentially the default
 -- catching behavior, and this function just makes it easy to add it default
 -- catching behavior to handlers.
-catchMatch :: MonadK m => (Match -> m a) -> Callback m
+catchMatch :: MonadK m => (Trigger -> m a) -> Callback m
 catchMatch h = \m -> h m *> case m of
-  Match _ -> pure Catch
-  NoMatch -> pure NoCatch
- 
+  Match   _ -> pure Catch
+  NoMatch _ -> pure NoCatch
+  Timeout   -> pure NoCatch
+
 -- | 'hookNext' except the 'KeyPred' runs in 'MonadK'
 hookNextM :: MonadK m => m KeyPred -> Callback m -> m ()
 hookNextM p c = p >>= \p' -> hookNext p' c
