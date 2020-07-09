@@ -1,5 +1,7 @@
 # KMonad
 
+NOTE: The `refactor` branch is currently stable, and the suggested way to use `kmonad`. The only thing lacking is documentation. Once `refactor` is fully documented, `master` will be switched, but `refactor` should be considered as the recommended way to use `kmonad`.
+
 Welcome to KMonad! If you are currently running Linux and want to experiment
 with this new way of defining keyboard layouts, either:
 - Head over to [releases](https://github.com/david-janssen/kmonad/releases) for
