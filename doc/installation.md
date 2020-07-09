@@ -12,9 +12,9 @@ Jump to
 
 ## Compilation
 ### Using `nix`
-If you the [Nix package manager](https://github.com/NixOS/nix), either because
-you installed it yourself or because you are using NixOS, you can build `kmonad`
-using the following command.
+If you use the [Nix package manager](https://github.com/NixOS/nix), either
+because you installed it yourself or because you are using NixOS, you can build
+`kmonad` using the following command.
 
 ```shell
 nix-build nix/release.nix
@@ -22,7 +22,7 @@ nix-build nix/release.nix
 
 Currently the process ends with an error, however only after the compilation and
 documentation-generation have been completed. If you look through output of
-`nix` you will see the paths it mentions and find both the binary and the
+`nix` you will see the paths it mentions and can find both the binary and the
 documentation. Perhaps someone more well-versed with `nix` can help me fix this
 issue.
 
@@ -60,9 +60,7 @@ installation](https://www.haskell.org/platform). I also needed to install
 
 ## Binaries
 
-FIXME: Only for version 0.3.0 and lower. This will be fixed in the future.
-
-You can download standard 64-bit linux binaries from the [releases page](https://github.com/david-janssen/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
+You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/david-janssen/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
 
 ## Packages
 
