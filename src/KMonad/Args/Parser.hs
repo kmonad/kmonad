@@ -260,14 +260,14 @@ itokenP :: Parser IToken
 itokenP = choice . map try $
   [ statement "device-file"    $ KDeviceSource <$> (T.unpack <$> textP)
   , statement "low-level-hook" $ pure KLowLevelHookSource
-  , statement "hid-source"     $ pure KHIDSource]
+  , statement "iokit-name"     $ KIOKitSource <$> optional textP]
 
 -- | Parse an output token
 otokenP :: Parser OToken
 otokenP = choice . map try $
   [ statement "uinput-sink"     $ KUinputSink <$> lexeme textP <*> optional textP
   , statement "send-event-sink" $ pure KSendEventSink
-  , statement "hid-sink"        $ pure KVirtualHIDSink]
+  , statement "kext"            $ pure KVirtualHIDSink]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings

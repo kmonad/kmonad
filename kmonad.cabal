@@ -97,10 +97,7 @@ library
       KMonad.Keyboard.IO.Mac.VirtualHIDSink
       KMonad.Keyboard.IO.Mac.Types
     c-sources:
-      c_src/mac/hid.c
       c_src/mac/keyio_mac.c
-      c_src/mac/sink-iokit.c
-      c_src/mac/source-hidqueue.c
     cxx-sources:
       c_src/mac/sink-kext.cpp
     cxx-options:

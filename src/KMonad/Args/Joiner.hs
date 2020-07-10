@@ -219,7 +219,7 @@ getO = do
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
 pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
-pickInput KHIDSource          = throwError $ InvalidOS "HIDSource"
+pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Linux correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
@@ -237,7 +237,7 @@ pickOutput KVirtualHIDSink      = throwError $ InvalidOS "VirtualHIDSink"
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
 pickInput KLowLevelHookSource = pure $ runLF llHook
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
-pickInput KHIDSource          = throwError $ InvalidOS "HIDSource"
+pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Windows correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
@@ -251,7 +251,7 @@ pickOutput KVirtualHIDSink   = throwError $ InvalidOS "VirtualHIDSink"
 
 -- | The Linux correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput KHIDSource          = pure $ runLF hidSource
+pickInput (KIOKitSource name) = pure $ runLF (hidSource (T.unpack <$> name))
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 

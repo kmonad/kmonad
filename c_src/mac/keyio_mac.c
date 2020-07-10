@@ -2,6 +2,8 @@
 #include <IOKit/hidsystem/IOHIDShared.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "sink-kext.h"
+#include "keyevent.h"
 
 int keymap[] = { 0x0,
                  0x0,
@@ -236,30 +238,25 @@ int keymap[] = { 0x0,
                  0x3c,
                  0x3d,
                  0x36 };
-/*
-constexpr value_t apple_vendor_keyboard_dashboard(0x82);
-constexpr value_t apple_vendor_keyboard_function(0x3f);
-constexpr value_t apple_vendor_keyboard_launchpad(0x83);
-constexpr value_t apple_vendor_keyboard_expose_all(0xa0);
 
-constexpr value_t apple_vendor_top_case_keyboard_fn(0x3f); // apple_vendor_top_case_keyboard_fn == apple_vendor_keyboard_function
-*/
-
-struct KeyEvent {
-    uint8_t type;
-    uint32_t keycode;
-};
-
+static mach_port_t sink;
+static pthread_t thread_id;
 static IOHIDDeviceRef source_device;
 static int fd[2];
-static mach_port_t sink;
+
+/*
+static int apple_keycodes = { 10,
+                              10,
+                              10};
+*/
 
 void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value) {
     struct KeyEvent e;
     CFIndex integer_value = IOHIDValueGetIntegerValue(value);
     IOHIDElementRef element = IOHIDValueGetElement(value);
-    uint32_t usage_page = IOHIDElementGetUsagePage(element);
-    uint32_t usage = IOHIDElementGetUsage(element);
+    uint16_t usage_page = IOHIDElementGetUsagePage(element);
+    uint16_t usage = IOHIDElementGetUsage(element);
+    printf("%x %x\n", usage_page, usage);
     if((usage_page == kHIDPage_KeyboardOrKeypad &&
         kHIDUsage_KeyboardErrorUndefined < usage &&
         usage < kHIDUsage_Keyboard_Reserved) ||
@@ -271,23 +268,31 @@ void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value)
 }
 
 int send_key(struct KeyEvent *e) {
+    kext_post(e);
+    /*
     int action;
     IOOptionBits flags;
+    IOOptionBits options;
     IOGPoint loc;
     NXEventData event;
-    event.key.keyCode = keymap[e->keycode];
-    printf("%x\n",event.key.keyCode);
+    bzero(&event, sizeof(NXEventData));
+        //printf("%x\n",event.key.keyCode);
     if(e->keycode >= 0xE0) {
         action = NX_FLAGSCHANGED;
-        flags = e->type? 0 : 0x40001;
+        flags = NX_SHIFTMASK;//e->type? 0 : 0x40001;
+        options = 1;
     } else {
+        event.key.keyCode = keymap[e->keycode];
+        event.key.origCharSet = event.key.charSet = NX_ASCIISET;
+        event.key.origCharCode = event.key.charCode = 0;
         action = e->type? NX_KEYUP : NX_KEYDOWN;
         flags = kIOHIDOptionsTypeNone;
+        options = kIOHIDSetGlobalEventFlags;
     }
     IOReturn kr = IOHIDPostEvent(sink, action,
                                  loc, &event, kNXEventDataVersion,
                                  flags, kIOHIDSetGlobalEventFlags);
-    printf("%x\n",kr);
+    */
     return 0;
 }
 
@@ -296,7 +301,41 @@ int wait_key(struct KeyEvent *e) {
     return 0;
 }
 
-int grab_kb() {
+void *monitor_kb(void *ctx) {
+    IOHIDDeviceScheduleWithRunLoop(source_device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+    CFRunLoopRun();
+    return NULL;
+}
+
+void list_kb() {
+    CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
+    UInt32 value;
+    CFNumberRef cfValue;
+    value = kHIDPage_GenericDesktop;
+    cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
+    CFDictionarySetValue(matching_dictionary, CFSTR(kIOHIDDeviceUsagePageKey), cfValue);
+    CFRelease(cfValue);
+    value = kHIDUsage_GD_Keyboard;
+    cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
+    CFDictionarySetValue(matching_dictionary,CFSTR(kIOHIDDeviceUsageKey),cfValue);
+    CFRelease(cfValue);
+    io_iterator_t iter = 0;
+    kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
+                                                   matching_dictionary, //IOServiceMatching(kIOHIKeyboardClass)
+                                                   &iter);
+    for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
+        /*
+        io_name_t devName;
+        IORegistryEntryGetName(curr, devName);
+        printf("Device's name = %s\n", devName);
+        */
+        CFTypeRef str = IORegistryEntryCreateCFProperty(curr, CFSTR("Product"), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+        CFShow(str);
+    }
+}
+
+// product can be empty, in which case any keyboard is chosen
+int grab_kb(char *product) {
     // Source
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     UInt32 value;
@@ -309,8 +348,34 @@ int grab_kb() {
     cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
     CFDictionarySetValue(matching_dictionary,CFSTR(kIOHIDDeviceUsageKey),cfValue);
     CFRelease(cfValue);
-    io_service_t service = IOServiceGetMatchingService(kIOMasterPortDefault,
-                                                       matching_dictionary);
+    io_iterator_t iter = 0;
+    kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
+                                                   matching_dictionary, //IOServiceMatching(kIOHIKeyboardClass)
+                                                   &iter);
+    mach_port_t service = IOIteratorNext(iter);
+    if(product) {
+        printf("Got: %s\n",product);
+        // This should be achieved in the matching dictionary, but wouldn't work]
+        CFStringRef cf_product = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
+        while(service) {
+            //io_name_t devName;
+            //IORegistryEntryGetName(curr, devName);
+            //printf("Device's name = %s\n", devName);
+            CFTypeRef cf_curr_product = IORegistryEntryCreateCFProperty(service, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+            /*
+            if(CFGetTypeID(cf_curr_product) == CFStringGetTypeID()) printf("string");
+            else if(CFGetTypeID(cf_curr_product) == CFNumberGetTypeID()) printf("num");
+            else printf("other");
+            int x;
+            printf("success? %d\n",CFNumberGetValue(cf_curr_product, CFNumberGetType(cf_curr_product), &x));
+            printf("%d\n",x);
+            */
+            if(CFStringCompare(cf_product, cf_curr_product, 0) == kCFCompareEqualTo) {
+                break;
+            }
+            service = IOIteratorNext(iter);
+        }
+    }
     source_device = IOHIDDeviceCreate(kCFAllocatorDefault, service);
     IOHIDDeviceRegisterInputValueCallback(source_device, callback, NULL);
     if (pipe(fd) == -1) { 
@@ -321,57 +386,39 @@ int grab_kb() {
     if(ret == kIOReturnNotPrivileged) {
         printf("Run as root\n");
     }
+    pthread_create(&thread_id, NULL, monitor_kb, NULL);
     // Sink
+    /*
     service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching(kIOHIDSystemClass));
     IOReturn r = IOServiceOpen(service, mach_task_self(), kIOHIDParamConnectType, &sink);
+    */
+    kext_init();
     return 0;
 }
 
 int release_kb() {
     // Source
     IOReturn ret = IOHIDDeviceClose(source_device,kIOHIDOptionsTypeSeizeDevice);
+    pthread_cancel(thread_id);
     // Sink
-    kern_return_t r = IOServiceClose(sink);
+    // kern_return_t r = IOServiceClose(sink);
+    kext_exit();
     return 0;
-}
-
-void *start(void *ctx) {
-    IOHIDDeviceScheduleWithRunLoop(source_device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    CFRunLoopRun();
-    return NULL;
 }
 
 #ifdef STANDALONE
 int main() {
-    grab_kb();
+    /*
+    grab_kb("Apple Internal Keyboard / Trackpad kkkdkdkdkd");
     setuid(501);
-    pthread_t thread_id;
-    pthread_create(&thread_id, NULL, start, NULL);
     struct KeyEvent ke;
     ke.keycode = 0;
     while(ke.keycode != 0x4) {
         wait_key(&ke);
         send_key(&ke);
     }
-    /*
-    pid_t p;
-    p = fork(); 
-    if (p < 0)  { 
-        fprintf(stderr, "fork Failed" ); 
-        return 1; 
-    } else if (p > 0) { 
-        close(fd[1]);  // Close writing end of pipe
-        struct KeyEvent ke;
-        ke.keycode = 0;
-        while(ke.keycode != 0x4) {
-            wait_key(&ke);
-            send_key(&ke);
-        }
-    } else {
-        close(fd[0]);  // Close reading end of pipe
-        //CFRunLoopRun();
-    } 
     release_kb();
     */
+    list_kb();
 }       
 #endif
