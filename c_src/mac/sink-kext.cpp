@@ -1,4 +1,5 @@
 #include "karabiner_virtual_hid_device_methods.hpp"
+#include "karabiner_virtual_hid_device.hpp"
 #include "keyevent.h"
 
 #include <IOKit/hidsystem/IOHIDShared.h>
@@ -7,25 +8,32 @@
 
 mach_port_t connect;
 io_service_t service;
-pqrs::karabiner_virtual_hid_device::hid_report::keyboard_input pressed;
+pqrs::karabiner_virtual_hid_device::hid_report::keyboard_input keyboard;
+pqrs::karabiner_virtual_hid_device::hid_report::apple_vendor_top_case_input top_case;
+pqrs::karabiner_virtual_hid_device::hid_report::apple_vendor_keyboard_input apple_keyboard;
+pqrs::karabiner_virtual_hid_device::hid_report::consumer_input consumer;
 
 extern "C" int kext_post(struct KeyEvent *e) {
-   int key = e->keycode;
-    if(e->type == 0) {
-        if(pressed.keys.exists(key)) {
-            std::cout << "already pressed, hmm...\n";
-        } else {
-            pressed.keys.insert(e->keycode);
-        }
+    pqrs::karabiner_virtual_hid_device::usage_page usage_page = pqrs::karabiner_virtual_hid_device::usage_page(e->keycode >> 16);
+    uint16_t usage = (uint16_t)e->keycode;
+    kern_return_t kr;
+    if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::keyboard_or_keypad) {
+        if(e->type == 0) keyboard.keys.insert(usage);
+        else if (e->type == 1) keyboard.keys.erase(usage);
+        kr = pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, keyboard);
+    } else if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::apple_vendor_top_case) {
+        if(e->type == 0) top_case.keys.insert(usage);
+        else if (e->type == 1) top_case.keys.erase(usage);
+        kr = pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, top_case);
+    } else if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::apple_vendor_keyboard) {
+        if(e->type == 0) apple_keyboard.keys.insert(usage);
+        else if (e->type == 1) apple_keyboard.keys.erase(usage);
+        kr = pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, apple_keyboard);
+    } else if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::consumer) {
+        if(e->type == 0) consumer.keys.insert(usage);
+        else if (e->type == 1) consumer.keys.erase(usage);
+        kr = pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, consumer);
     }
-    if (e->type == 1) {
-        if(pressed.keys.exists(key)) {
-            pressed.keys.erase(key);
-        } else {
-            std::cout << "never pressed, hmm...\n";
-        }
-    }
-    kern_return_t kr = pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, pressed);
     if (kr != KERN_SUCCESS) {
         std::cout << "post_keyboard_input_report error" << std::endl;
     }
@@ -55,15 +63,15 @@ extern "C" int kext_init() {
         }
 
         while (true) {
-            std::cout << "Checking virtual_hid_keyboard is ready..." << std::endl;
+            //std::cout << "Checking virtual_hid_keyboard is ready..." << std::endl;
 
             bool ready;
             kr = pqrs::karabiner_virtual_hid_device_methods::is_virtual_hid_keyboard_ready(connect, ready);
             if (kr != KERN_SUCCESS) {
-                std::cerr << "is_virtual_hid_keyboard_ready error: " << kr << std::endl;
+                //std::cerr << "is_virtual_hid_keyboard_ready error: " << kr << std::endl;
             } else {
                 if (ready) {
-                    std::cout << "virtual_hid_keyboard is ready." << std::endl;
+                    //std::cout << "virtual_hid_keyboard is ready." << std::endl;
                     break;
                 }
             }

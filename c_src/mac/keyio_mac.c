@@ -256,7 +256,11 @@ void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value)
     IOHIDElementRef element = IOHIDValueGetElement(value);
     uint16_t usage_page = IOHIDElementGetUsagePage(element);
     uint16_t usage = IOHIDElementGetUsage(element);
-    printf("%x %x\n", usage_page, usage);
+    uint32_t keycode = (usage_page << 16) | usage;
+    e.type = !integer_value;
+    e.keycode = keycode;
+    write(fd[1], &e, sizeof(struct KeyEvent));
+    /*
     if((usage_page == kHIDPage_KeyboardOrKeypad &&
         kHIDUsage_KeyboardErrorUndefined < usage &&
         usage < kHIDUsage_Keyboard_Reserved) ||
@@ -265,6 +269,7 @@ void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value)
         e.keycode = usage;
         write(fd[1], &e, sizeof(struct KeyEvent));
     }    
+    */
 }
 
 int send_key(struct KeyEvent *e) {

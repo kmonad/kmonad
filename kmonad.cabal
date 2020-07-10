@@ -103,6 +103,7 @@ library
     cxx-options:
       -std=c++14
     include-dirs:
+      c_src/mac
       c_src/mac/Karabiner-VirtualHIDDevice/dist/include
     extra-libraries:
       c++
