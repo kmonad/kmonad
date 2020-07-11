@@ -37,8 +37,8 @@ module KMonad.Button
   , tapHold
   , multiTap
   , tapNext
+  , tapHoldNext
   , tapMacro
-
   )
 where
 
@@ -159,9 +159,9 @@ around outer inner = Button
 aroundNext ::
      Button -- ^ The outer 'Button'
   -> Button -- ^ The resulting 'Button'
-aroundNext b = onPress $ await matchPress $ \e -> do
+aroundNext b = onPress $ await isPress $ \e -> do
   runAction $ b^.pressAction
-  await (matchEvent $ mkKeyEvent Release (e^.keycode)) $ \_ -> do
+  await (== (mkKeyEvent Release (e^.keycode))) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch
@@ -179,9 +179,31 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = onPress $ hookWithinHeldM ms (matchMy Release) $ catchMatch $ \case
-  Match _ -> tap t
-  NoMatch -> press h
+tapHold ms t h = onPress $ within ms (matchMy Release)
+  (press h)                     -- If we catch timeout before release
+  (const $ tap t *> pure Catch) -- If we catch release before timeout
+
+-- | Create a 'Button' that performs a tap of 1 button if the next event is its
+-- own release, or else switches to holding some other button if the next event
+-- is a different keypress.
+tapNext :: Button -> Button -> Button
+tapNext t h = onPress $ hookF $ \e -> do
+  p <- matchMy Release
+  if p e
+    then tap t   *> pure Catch
+    else press h *> pure NoCatch
+
+-- | Like 'tapNext', except that after some interval it switches anyways
+tapHoldNext :: Milliseconds -> Button -> Button -> Button
+tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> do
+  p <- matchMy Release
+  if p $ tr^.event
+    then tap t   *> pure Catch
+    else press h *> pure NoCatch
+
+  
+
+
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
@@ -191,20 +213,24 @@ multiTap :: Button -> [(Milliseconds, Button)] -> Button
 multiTap l bs = onPress $ go bs
   where
     go :: [(Milliseconds, Button)] -> AnyK ()
-    go []             = press l
-    go ((ms, b'):bs') = hookWithinHeldM ms (matchMy Release) $ catchMatch $ \case
-      Match _ -> hookWithinHeldM ms (matchMy Press) $ catchMatch $ \case
-        Match _ -> go bs'
-        NoMatch -> tap b'
-      NoMatch -> press b'
+    go []            = press l
+    go ((ms, b):bs') = do
+      -- This is a bit complicated. What we do is:
+      -- 1.  We wait for the release of the key that triggered this action
+      -- 2A. If it doesn't occur in the interval we press the button from the list
+      --     and we are done.
+      -- 2B. If we do detect the release, we must now keep waiting to detect another press.
+      -- 3A. If we do not detect a press before the interval is up, we know a tap occured,
+      --     so we tap the current button and we are done.
+      -- 3B. If we detect another press, then the user is descending into the buttons tied
+      --     to this multi-tap, so we recurse on the remaining buttons.
+      let onMatch t = do
+            within (ms - t^.elapsed) (matchMy Press)
+                   (tap b)
+                   (const $ go bs' *> pure Catch)
+            pure Catch
+      within ms (matchMy Release) (press b) onMatch
 
--- | Create a 'Button' that performs a tap of one button if the next event is
--- its own release, or else it presses another button (and releases it when a
--- release is detected).
-tapNext :: Button -> Button -> Button
-tapNext t h = onPress $ hookNextM (matchMy Release) $ catchMatch $ \case
-  Match _ -> tap t
-  NoMatch -> press h
 
 -- | Create a 'Button' that performs a series of taps on press.
 tapMacro :: [Button] -> Button

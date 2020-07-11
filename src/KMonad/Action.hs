@@ -15,18 +15,17 @@ the "KMonad.App" module.
 
 -}
 module KMonad.Action
-  ( -- * Matches
-    -- $pred
-    Match(..)
-  , KeyPred
-  , matchOn
-  , matchEvent
-  , matchPress
-
-    -- * Match target
-    -- $cb
+  (
+    KeyPred
   , Catch(..)
-  , Callback
+  , Trigger(..)
+  , Timeout(..)
+  , Hook(..)
+
+    -- * Lenses
+  , HasHook(..)
+  , HasTimeout(..)
+  , HasTrigger(..)
 
     -- * Layer operations
     -- $lop
@@ -42,79 +41,71 @@ module KMonad.Action
     -- $combs
   , my
   , matchMy
-  , catchMatch
   , await
   , awaitMy
-  , hookNextM
-  , hookWithinM
-  , hookWithinHeldM
+  , tHookF
+  , hookF
+  , within
   )
 
 where
 
-import KMonad.Prelude
+import KMonad.Prelude hiding (timeout)
 
 import KMonad.Keyboard
 import KMonad.Util
 
-
-
 --------------------------------------------------------------------------------
--- $pred
+-- $keyfun
 
+-- | Boolean isomorph signalling wether an event should be caught or not
+data Catch = Catch | NoCatch deriving (Show, Eq)
 
--- | Whether a predicate matched on a 'KeyEvent' or not.
--- data Match = Match KeyEvent | NoMatch deriving (Eq, Show)
-
--- | A 'KeyPred' is a function that calculates matches against events.
-type KeyPred = KeyEvent -> Bool
-
--- -- | Create a 'KeyPred' that matches only an exact event
--- matchEvent :: KeyEvent -> KeyPred
--- matchEvent = matchOn . (==)
-
--- -- | A 'KeyPred' that will match on any 'Press' event
--- matchPress :: KeyPred
--- matchPress = matchOn $ (Press ==) . view switch
-
-
---------------------------------------------------------------------------------
--- $cb
-
--- | All the different things that can trigger a Callback
-data Trigger
-  = Match   KeyEvent -- ^ Predicate matched on a `KeyEvent`
-  | NoMatch KeyEvent -- ^ Predicate caught but failed to match on a `KeyEvent`
-  | Timeout          -- ^ Timeout of the callback was thrown
-  deriving (Eq, Show)
- 
--- | The 'Catch' type is used to signal whether an event should be intercepted.
-data Catch
-  = Catch   -- ^ Interrupt any further processing of the current `KeyEvent`
-  | NoCatch -- ^ Continue processing the current `KeyEvent`
-  deriving (Eq, Show)
-
--- | The Semigroup instance of Catch is /any 'Catch' implies 'Catch'/
 instance Semigroup Catch where
   NoCatch <> NoCatch = NoCatch
   _       <> _       = Catch
 
--- | The default is not to 'Catch'
 instance Monoid Catch where
   mempty = NoCatch
 
--- | A 'Callback' is a function from a 'Trigger' to a 'Catch' in some context
-type Callback m = Trigger -> m Catch
+-- | Predicate on KeyEvent's
+type KeyPred = KeyEvent -> Bool
+
+-- | The packet used to trigger a KeyFun, containing info about the event and
+-- how long since the Hook was registered.
+data Trigger = Trigger
+  { _elapsed :: Milliseconds -- ^ Time elapsed since hook was registered
+  , _event   :: KeyEvent     -- ^ The key event triggering this call
+  }
+makeClassy ''Trigger
+
+-- -- | Run an action when a predicate matches, catching the event, otherwise do nothing.
+-- catch :: Applicative m => KeyPred -> m () -> KeyFun m
+-- catch p a = p >>> \case
+--   True  -> a *> pure Catch
+--   False -> pure NoCatch
+
 
 --------------------------------------------------------------------------------
 -- $hook
+--
+-- The general structure of the 'Hook' record, that defines the most general way
+-- of registering a 'KeyEvent' function.
 
--- | A 'Hook' value contains all the information necessary to run a hook.
-data Hook m = Hook
-  { hPred     :: KeyPred            -- ^ The predicate used to determine a match
-  , hCallback :: Callback m         -- ^ The callback to perform on a match
-  , hTimeout  :: Maybe Milliseconds -- ^ An optional timeout
+-- | A 'Timeout' value describes how long to wait and what to do upon timeout
+data Timeout m = Timeout
+  { _delay  :: Milliseconds -- ^ Delay before timeout action is triggered
+  , _action :: m ()         -- ^ Action to perform upon timeout
   }
+makeClassy ''Timeout
+
+-- | The content for 1 key hook
+data Hook m = Hook
+  { _hTimeout :: Maybe (Timeout m)  -- ^ Optional timeout machinery
+  , _keyH     :: Trigger -> m Catch -- ^ The function to call on the next 'KeyEvent'
+  }
+makeClassy ''Hook
+
 
 --------------------------------------------------------------------------------
 -- $lop
@@ -144,7 +135,7 @@ class Monad m => MonadK m where
   -- | Pause or unpause event processing
   hold       :: Bool -> m ()
   -- | Register a callback hook
-  hook       :: Hook m -> m ()
+  register   :: Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Access the keycode to which the current button is bound
@@ -157,64 +148,51 @@ type AnyK a = forall m. MonadK m => m a
 newtype Action = Action { runAction :: AnyK ()}
 
 --------------------------------------------------------------------------------
--- $combs
---
--- More complicated 'MonadK' operations built from the fundamental
--- components.
+-- $util
 
--- | Create a KeyEvent matching pressing or releasing of the current button
+-- | Create a KeyEvent matching pressing or releasing of the current button.
 my :: MonadK m => Switch -> m KeyEvent
 my s = mkKeyEvent s <$> myBinding
 
--- | Create a KeyPred that matches the Press or Release of the calling button.
+-- | Register a simple hook without a timeout
+hookF :: MonadK m => (KeyEvent -> m Catch) -> m ()
+hookF f = register . Hook Nothing $ \t -> f (t^.event)
+
+-- | Register a hook with a timeout
+tHookF :: MonadK m
+  => Milliseconds         -- ^ The timeout delay for the hook
+  -> m ()                 -- ^ The action to perform on timeout
+  -> (Trigger -> m Catch) -- ^ The action to perform on trigger
+  -> m ()                 -- ^ The resulting action
+tHookF d a f = register $ Hook (Just $ Timeout d a) f
+
+-- | Create a KeyPred that matches the Press or Release of the current button.
 matchMy :: MonadK m => Switch -> m KeyPred
 matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
 await :: MonadK m => KeyPred -> (KeyEvent -> m Catch) -> m ()
-await p f = hookNext p $ \case
-  Match   e -> f e
-  NoMatch _ -> await p f *> pure NoCatch
+await p a = hookF $ \e -> if p e
+  then a e
+  else await p a *> pure NoCatch
 
 -- | Execute an action on the detection of the Switch of the active button.
---
--- Use this, for example, to register a callback from a
--- 'KMonad.Button._pressAction' to explicitly handle the 'Release' of the
--- button.
---
--- NOTE: There is no reason to include the @Match ->@ part of the 'Callback'
--- since this will only ever be run on an 'KeyEvent' that we already know.
 awaitMy :: MonadK m => Switch -> m Catch -> m ()
-awaitMy s a = matchMy s >>= \p -> await p (const a)
+awaitMy s a = matchMy s >>= flip await (const a)
 
--- | Transform a match-handler so that, whenever a 'Match' is detected, a
--- 'Catch' is signalled, and vice-versa. This is essentially the default
--- catching behavior, and this function just makes it easy to add it default
--- catching behavior to handlers.
-catchMatch :: MonadK m => (Trigger -> m a) -> Callback m
-catchMatch h = \m -> h m *> case m of
-  Match   _ -> pure Catch
-  NoMatch _ -> pure NoCatch
-  Timeout   -> pure NoCatch
+-- | Try to call a function on a succesful match of a predicate within a certain
+-- time period. On a timeout, perform an action.
+within :: MonadK m
+  => Milliseconds          -- ^ The time within which this filter is active
+  -> m KeyPred             -- ^ The predicate used to find a match
+  -> m ()                  -- ^ The action to call on timeout
+  -> (Trigger -> m Catch)  -- ^ The action to call on a succesful match
+  -> m ()                  -- ^ The resulting action
+within d p a f = do
+  p' <- p
+  -- define f' to run action on predicate match, or rehook on predicate mismatch
+  let f' t = if p' (t^.event)
+        then f t
+        else within (d - t^.elapsed) p a f *> pure NoCatch
+  tHookF d a f'
 
--- | 'hookNext' except the 'KeyPred' runs in 'MonadK'
-hookNextM :: MonadK m => m KeyPred -> Callback m -> m ()
-hookNextM p c = p >>= \p' -> hookNext p' c
-
--- | 'hookWithin' except the 'KeyPred' runs in 'MonadK'
-hookWithinM :: MonadK m
-  => Milliseconds
-  -> m KeyPred
-  -> Callback m
-  -> m ()
-hookWithinM ms p c = p >>= \p' -> hookWithin ms p' c
-
--- | A 'hookWithinM' action which executes its attempt to catch in the context
--- of a paused input stream. This unpauses the input stream the moment
--- 'hookWithinM' succeeds to match its predicate, or when the timer expires.
-hookWithinHeldM :: MonadK m
-  => Milliseconds
-  -> m KeyPred
-  -> Callback m
-  -> m ()
-hookWithinHeldM ms p f = hold True *> hookWithinM ms p (\e -> f e <* hold False)

@@ -24,6 +24,8 @@ module KMonad.Keyboard
   , mkPress
   , mkRelease
 
+  , isPress
+
     -- * LMaps
     -- $lmap
   , LayerTag
@@ -85,6 +87,10 @@ mkPress = KeyEvent Press
 -- | Create a 'KeyEvent' that represents releaseing a key
 mkRelease :: Keycode -> KeyEvent
 mkRelease = KeyEvent Release
+
+-- | Return whether the provided KeyEvent is a Press
+isPress :: KeyEvent -> Bool
+isPress = (== Press) . view switch
 
 
 --------------------------------------------------------------------------------

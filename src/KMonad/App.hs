@@ -184,8 +184,9 @@ instance MonadK (RIO KEnv) where
   myBinding = view (bEnv.binding)
 
   -- Hooking is performed with the hooks component
-  hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
-  hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
+  register h = view hooks >>= \hs -> Hs.register hs h
+  -- hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
+  -- hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
 
   -- Layer-ops are sent to the 'Keymap'
   layerOp o = view keymap >>= \hl -> Km.layerOp hl o

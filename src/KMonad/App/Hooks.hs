@@ -19,8 +19,7 @@ module KMonad.App.Hooks
   ( Hooks
   , mkHooks
   , pull
-  , hookNext
-  , hookWithin
+  , register
   )
 where
 
@@ -30,9 +29,11 @@ import Data.Semigroup (Any(..))
 import Data.Time.Clock.System
 import Data.Unique
 
-import KMonad.Action hiding (hookNext, hookWithin)
+import KMonad.Action hiding (register)
 import KMonad.Keyboard
 import KMonad.Util
+
+import RIO.Partial (fromJust)
 
 import qualified RIO.HashMap as M
 import qualified RIO.Text    as T
@@ -40,25 +41,35 @@ import qualified RIO.Text    as T
 --------------------------------------------------------------------------------
 -- $hooks
 
--- | A 'Hook' contains the 'KeyPred' and 'Callback'
-newtype Hook = Hook (KeyPred, Callback IO)
-makeWrapped ''Hook
 
--- | Create a new 'Hook' value
-mkHook :: MonadUnliftIO m => KeyPred -> Callback m -> m Hook
-mkHook p c = withRunInIO $ \u -> pure $ Hook (p, (u . c))
 
+-- -- | A 'Hook' contains the 'KeyPred' and 'Callback'
+-- newtype Hook = Hook (KeyPred, Callback IO)
+-- makeWrapped ''Hook
+
+-- -- | Create a new 'Hook' value
+-- mkHook :: MonadUnliftIO m => KeyPred -> Callback m -> m Hook
+-- mkHook p c = withRunInIO $ \u -> pure $ Hook (p, (u . c))
 
 --------------------------------------------------------------------------------
 -- $env
 
+data Entry = Entry
+  { _time :: SystemTime
+  , _eHook :: Hook IO
+  }
+makeLenses ''Entry
+
+instance HasHook Entry IO where hook = eHook
+
+type Store = M.HashMap Unique Entry
+
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent                  -- ^ Where we get our events from
-  , _injectTmr  :: TMVar Unique                 -- ^ Used to signal timeouts
-  , _nextHooks  :: TVar [Hook]                  -- ^ Hooks to run on next event
-  , _timerHooks :: TVar (M.HashMap Unique Hook) -- ^ Storage for timer hooks
+  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
+  , _hooks      :: TVar Store    -- ^ Store of hooks
   }
 makeLenses ''Hooks
 
@@ -66,13 +77,22 @@ makeLenses ''Hooks
 mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
 mkHooks' s = withRunInIO $ \u -> do
   itr <- atomically $ newEmptyTMVar
-  nhs <- atomically $ newTVar []
-  ths <- atomically $ newTVar M.empty
-  pure $ Hooks (u s) itr nhs ths
+  hks <- atomically $ newTVar M.empty
+  pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
 mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
 mkHooks = lift . mkHooks'
+
+-- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
+ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
+ioHook h = withRunInIO $ \u -> do
+
+  t <- case _hTimeout h of
+    Nothing -> pure Nothing
+    Just t' -> pure . Just $ Timeout (t'^.delay) (u (_action t'))
+  let f = \e -> u $ (_keyH h) e
+  pure $ Hook t f
 
 
 --------------------------------------------------------------------------------
@@ -81,53 +101,42 @@ mkHooks = lift . mkHooks'
 -- The following code deals with simple operations on the environment, like
 -- inserting and removing hooks.
 
--- | Implementation of 'hookNext' from "KMonad.Action".
---
--- Add a hook to be called on the next event.
-hookNext :: (HasLogFunc e)
-  => Hooks            -- ^ The 'Hooks' environment
-  -> KeyPred          -- ^ Predicate to match with
-  -> Callback (RIO e) -- ^ The callback to run against the match
-  -> RIO e ()         -- ^ The registering action
-hookNext h p a = do
-  logDebug "Registering <NEXT> hook"
-  nh <- mkHook p a
-  atomically $ modifyTVar (h^.nextHooks) (nh:)
-
--- | Implementation of 'hookWithin' from "KMonad.Action".
---
--- Add a timer-hook with a unique identifier to the 'Hooks' environment, and
--- starts a process that will trigger a timeout.
-hookWithin :: (HasLogFunc e)
+-- | Insert a hook, along with the current time, into the store
+register :: (HasLogFunc e)
   => Hooks
-  -> Milliseconds
-  -> KeyPred
-  -> Callback (RIO e)
+  -> Hook (RIO e)
   -> RIO e ()
-hookWithin h ms p a = do
-  logDebug $ "Registering <TIMER> hook with: " <> display ms <> "ms"
-  kh <- mkHook p a
-  tg <- liftIO newUnique
-  atomically $ modifyTVar (h^.timerHooks) (M.insert tg kh)
-  void . async $ do
-    threadDelay $ 1000 * (fromIntegral ms)
-    atomically $ putTMVar (h^.injectTmr) tg
+register hs h = do
+  -- Insert an entry into the store
+  tag <- liftIO newUnique
+  e   <- Entry <$> liftIO getSystemTime <*> ioHook h
+  logDebug $ "Registering hook: " <> display (hashUnique tag)
+  atomically $ modifyTVar (hs^.hooks) (M.insert tag e)
+  -- If the hook has a timeout, start a thread that will signal timeout
+  case h^.hTimeout of
+    Nothing -> pure ()
+    Just t' -> void . async $ do
+      threadDelay $ 1000 * (fromIntegral $ t'^.delay)
+      atomically $ putTMVar (hs^.injectTmr) tag
 
--- | Try to cancel a hook stored in 'timerHooks'.
---
--- If it doesn't exist (due to a race), do nothing. If it does, remove it from
--- the map and perform its callback on a NoMatch.
-cancelTimer :: (HasLogFunc e) => Hooks -> Unique -> RIO e ()
-cancelTimer h t = withRunInIO $ \u -> do
-  join . atomically $ do
-    m <- readTVar $ h^.timerHooks
-    let cncl (Hook (_, go)) = do
-          modifyTVar (h^.timerHooks) (M.delete t)
-          pure . liftIO $ do
-            u . logDebug $ display (T.replicate 80 "-")
-                        <> "\nCancelling <TIMER> hook"
-            void $ go NoMatch
-    maybe (pure $ pure ()) cncl $ M.lookup t m
+-- | Cancel a hook by removing it from the store
+cancelHook :: (HasLogFunc e)
+  => Hooks
+  -> Unique
+  -> RIO e ()
+cancelHook hs tag = do
+  e <- atomically $ do
+    m <- readTVar $ hs^.hooks
+    let v = M.lookup tag m
+    when (isJust v) $ modifyTVar (hs^.hooks) (M.delete tag)
+    pure v
+  case e of
+    Nothing ->
+      logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
+    Just e' -> do
+      logDebug $ "Cancelling hook: " <> display (hashUnique tag)
+      liftIO $ e' ^. hTimeout . to fromJust . action
+
 
 --------------------------------------------------------------------------------
 -- $run
@@ -135,70 +144,22 @@ cancelTimer h t = withRunInIO $ \u -> do
 -- The following code deals with how we check hooks against incoming events, and
 -- how this updates the 'Hooks' environment.
 
--- | Print out information about hooks and matches
-debugReport :: Hooks -> KeyEvent -> RIO e Text
-debugReport h _ = do
+-- | Run the function stored in a Hook on the event and the elapsed time
+runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
+runEntry t e v = liftIO . (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
-  -- Generate the report for the 'NEXT' hooks
-  nhs <- atomically . readTVar $ h^.nextHooks
-  let ntxt = "Running " <> textDisplay (length nhs) <> " <NEXT> hooks\n"
-
-  -- Generate the report for the 'TIMER' hooks
-  ths <- M.elems <$> (atomically . readTVar $ h^.timerHooks)
-  let ttxt = "Running " <> textDisplay (length ths) <> " <TIMER> hooks"
-
-  pure $ ntxt <> ttxt
-
--- | Run a 'Hook' from 'hookNext'
-runNextHook :: ()
-  => KeyEvent -- ^ The 'KeyEvent' to compare against
-  -> Hook     -- ^ The 'Hook' to use
-  -> IO Catch -- ^ Monoidal result
-runNextHook e (Hook (p, f)) = f . p $ e
-
--- | Run timer 'Hook' on a 'KeyEvent'
---
--- This takes a 'KeyEvent' and a 'Hook' and returns a result tuple consisting
--- of:
--- 1. Either an empty (matched) or singleton (no match) hashmap with the id and timer
--- 2. Either the IO action to run on the Event or else an empty IO action
-runTimerHook :: ()
-  => KeyEvent                          -- ^ The 'KeyEvent to compare against'
-  -> (Unique, Hook)                    -- ^ The timer 'Hook' and its 'Unique' identifier
-  -> (M.HashMap Unique Hook, IO Catch) -- ^ Monoidal result
-runTimerHook e (u, it@(Hook (p, f))) = case m of
-  Match _ -> (M.empty, f m)
-  NoMatch -> (M.singleton u it, pure NoCatch)
-  where m = p e
-
--- | Run all hooks on the provided keyevent.
---
--- NOTE: The hooks are run very differently:
---
--- - A /next/ 'Hook' is run only once, if it matches, its 'Match' action is run,
---   if it doesn't match, its 'NoMatch' action is run. Either way, the hook is
---   removed from the 'Hooks' action is run.
---
--- - A /timer/ 'Hook' is checked against any Event as long as it remains in the
---   'Hooks'. The moment a timer hook matches an input, its 'Match' action is
---   run, and it is removed. However, when a timer doesn't match on a Event, no
---   action is performed, but the hook remains in the store. The way a /timer/
---   hook registers a 'NoMatch' is when its timer-event occurs when it is still
---   in the 'Hooks'.
-runHooks :: (HasLogFunc e) => Hooks -> KeyEvent -> RIO e (Maybe KeyEvent)
-runHooks h e = do
-  logDebug . display =<< debugReport h e
-
-  -- NOTE: this happens atomically in STM, so we will never be interrupted by a
-  -- timer terminating in the middle of this operation.
-  c <- liftIO . join . atomically $ do
-    -- These foldMap calls use the monoidal nature of the 'Catch' results
-    nio       <- foldMap (runNextHook e) <$> swapTVar (h^.nextHooks) []
-    (ts, tio) <- foldMap (runTimerHook e) . M.toList <$> readTVar (h^.timerHooks)
-    writeTVar (h^.timerHooks) ts
-    pure $ nio <> tio
-
-  pure $ if c == Catch then Nothing else Just e
+-- | Run all hooks on the current event and reset the store
+runHooks :: (HasLogFunc e)
+  => Hooks
+  -> KeyEvent
+  -> RIO e (Maybe KeyEvent)
+runHooks hs e = do
+  logDebug "Running hooks"
+  m   <- atomically $ swapTVar (hs^.hooks) M.empty
+  now <- liftIO getSystemTime
+  foldMapM (runEntry now e) (M.elems m) >>= \case
+    Catch   -> pure $ Nothing
+    NoCatch -> pure $ Just e
 
 
 --------------------------------------------------------------------------------
@@ -227,8 +188,8 @@ step h = do
   -- Keep taking and cancelling timers until we encounter a key event, then run
   -- the hooks on that event.
   let read = atomically next >>= \case
-        Left  t -> cancelTimer h t >> read -- We caught a cancellation
-        Right e -> runHooks h e            -- We caught a real event
+        Left  t -> cancelHook h t >> read -- We caught a cancellation
+        Right e -> runHooks h e           -- We caught a real event
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
