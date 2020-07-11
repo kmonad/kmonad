@@ -1,18 +1,31 @@
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDShared.h>
 #include <unistd.h>
+#include <errno.h>
 #include <thread>
 #include <vector>
 #include <iostream>
 
 #include "karabiner_virtual_hid_device_methods.hpp"
 
+/*
+ * Key event information that's shared between C++ and Haskell.
+ * 
+ * type: represents key up or key down
+ *
+ * keycode: 16 uppermost bits represent IOKit usage page
+ *          16 lowermost bits represent IOKit usage
+ */
 struct KeyEvent {
     uint8_t type;
     uint32_t keycode;
 };
 
-// Sink
+/*
+ * Resources needed to post altered key events back to the OS. They
+ * are global so that they can be kept track of in the C++ code rather
+ * than in the Haskell.
+ */
 static mach_port_t connect;
 static io_service_t service;
 static pqrs::karabiner_virtual_hid_device::hid_report::keyboard_input keyboard;
@@ -20,12 +33,21 @@ static pqrs::karabiner_virtual_hid_device::hid_report::apple_vendor_top_case_inp
 static pqrs::karabiner_virtual_hid_device::hid_report::apple_vendor_keyboard_input apple_keyboard;
 static pqrs::karabiner_virtual_hid_device::hid_report::consumer_input consumer;
 
-// Source
+/*
+ * These are needed to receive unaltered key events from the OS.
+ */
 static std::thread thread;
 static CFRunLoopRef listener_loop;
 static std::vector<IOHIDDeviceRef> source_device;
 static int fd[2];
 
+/*
+ * We'll register this callback to run whenever an IOHIDDevice
+ * (representing a keyboard) sends input from the user.
+ *
+ * It passes the relevant information into a pipe that will be read
+ * from with wait_key.
+ */
 void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value) {
     struct KeyEvent e;
     CFIndex integer_value = IOHIDValueGetIntegerValue(value);
@@ -37,6 +59,9 @@ void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value)
     write(fd[1], &e, sizeof(struct KeyEvent));
 }
 
+/*
+ * This gets us some code reuse (see the send_key overload below)
+ */
 template<typename T>
 int send_key(T &keyboard, struct KeyEvent *e) {
     if(e->type == 0) keyboard.keys.insert((uint16_t)e->keycode);
@@ -44,6 +69,11 @@ int send_key(T &keyboard, struct KeyEvent *e) {
     return pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, keyboard);
 }
 
+/*
+ * Haskell calls this with a new key event to send back to the OS. It
+ * posts the information to the karabiner kernel extension (which
+ * represents a virtual keyboard).
+ */
 extern "C" int send_key(struct KeyEvent *e) {
     pqrs::karabiner_virtual_hid_device::usage_page usage_page = pqrs::karabiner_virtual_hid_device::usage_page(e->keycode >> 16);
     if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::keyboard_or_keypad)
@@ -58,10 +88,19 @@ extern "C" int send_key(struct KeyEvent *e) {
         return 1;
 }
 
+/*
+ * Reads a new key event from the pipe, blocking until a new event is
+ * ready.
+ */
 extern "C" int wait_key(struct KeyEvent *e) {
     return read(fd[0], e, sizeof(struct KeyEvent)) == sizeof(struct KeyEvent);
 }
 
+/*
+ * For each keyboard, registers an asynchronous callback to run when
+ * new input from the user is available from that keyboard. Then
+ * sleeps indefinitely, ready to received asynchronous callbacks.
+ */
 void monitor_kb() {
     listener_loop = CFRunLoopGetCurrent();
     for(IOHIDDeviceRef d : source_device) {
@@ -70,8 +109,24 @@ void monitor_kb() {
     CFRunLoopRun();
 }
 
-io_iterator_t get_device_iterator() {
+/*
+ * Opens and seizes input from each keyboard device whose product name
+ * matches the parameter (if NULL is received, then it opens all
+ * keyboard devices). Spawns a thread to receive asynchronous input
+ * and opens a pipe for this thread to send key event data to the main
+ * thread.
+ *
+ * Loads a the karabiner kernel extension that will send key events
+ * back to the OS.
+ */
+extern "C" int grab_kb(char *product) {
+    kern_return_t kr;
+    // Source
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
+    if(!matching_dictionary) {
+        std::cerr << "IOServiceMatching error" << std::endl;
+        return 1;
+    }
     UInt32 value;
     CFNumberRef cfValue;
     value = kHIDPage_GenericDesktop;
@@ -82,23 +137,21 @@ io_iterator_t get_device_iterator() {
     cfValue = CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt32Type, &value );
     CFDictionarySetValue(matching_dictionary,CFSTR(kIOHIDDeviceUsageKey),cfValue);
     CFRelease(cfValue);
-    io_iterator_t iter = 0;
-    kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
-                                                   matching_dictionary,
-                                                   &iter);
-    if(r != KERN_SUCCESS) return IO_OBJECT_NULL;
-    return iter;
-}
-
-extern "C" int grab_kb(char *product) {
-    // Source
-    io_iterator_t iter = get_device_iterator();
-    if(!iter) {
-        std::cerr << "get_device_iterator failed" << std::endl;
+    io_iterator_t iter = IO_OBJECT_NULL;
+    kr = IOServiceGetMatchingServices(kIOMasterPortDefault,
+                                      matching_dictionary,
+                                      &iter);
+    if(kr != KERN_SUCCESS) {
+        std::cerr << "IOServiceGetMatchingServices error: " << kr << std::endl;
+        return kr;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
         if(product) {
             CFStringRef product_name = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
+            if(product_name == NULL) {
+                std::cerr << "CFStringCreateWithCString error" << std::endl;
+                return 1;
+            }
             CFStringRef port_name = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
             bool match = CFStringCompare(product_name, port_name, 0) == kCFCompareEqualTo;
             CFRelease(product_name);
@@ -108,19 +161,21 @@ extern "C" int grab_kb(char *product) {
         IOHIDDeviceRef dev = IOHIDDeviceCreate(kCFAllocatorDefault, curr);
         source_device.push_back(dev);
         IOHIDDeviceRegisterInputValueCallback(dev, callback, NULL);
-        IOReturn ret = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
-        if(ret == kIOReturnNotPrivileged) {
-            std::cerr << "Process must have root privileges to capture keyboard input, see README" << std::endl;
-            return 1;
+        kr = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
+        if(kr != kIOReturnSuccess) {
+            std::cerr << "IOHIDDeviceOpen error: " << kr << std::endl;
+            if(kr == kIOReturnNotPrivileged) {
+                std::cerr << "IOHIDDeviceOpen requires root privileges when called with kIOHIDOptionsTypeSeizeDevice" << std::endl;
+                return kr;
+            }
         }
     }
     if (pipe(fd) == -1) { 
-        std::cerr << "Pipe Failed" << std::endl;
-        return 1; 
+        std::cerr << "pipe error: " << errno << std::endl;
+        return errno; 
     }
     thread = std::thread{monitor_kb};
     // Sink
-    kern_return_t kr;
     connect = IO_OBJECT_NULL;
     service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceNameMatching(pqrs::karabiner_virtual_hid_device::get_virtual_hid_root_name()));
     if (!service) {
@@ -129,76 +184,90 @@ extern "C" int grab_kb(char *product) {
     }
     kr = IOServiceOpen(service, mach_task_self(), kIOHIDServerConnectType, &connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceOpen error" << std::endl;
-        return 1;
+        std::cerr << "IOServiceOpen error: " << kr << std::endl;
+        return kr;
     }
     {
-    pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
-    kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
-    if (kr != KERN_SUCCESS) {
-        std::cerr << "initialize_virtual_hid_keyboard error" << std::endl;
-        return 1;
-    }
-    while (true) {
-        bool ready;
-        kr = pqrs::karabiner_virtual_hid_device_methods::is_virtual_hid_keyboard_ready(connect, ready);
+        pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
+        kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
         if (kr != KERN_SUCCESS) {
-            std::cerr << "is_virtual_hid_keyboard_ready error: " << kr << std::endl;
+            std::cerr << "initialize_virtual_hid_keyboard error: " << kr << std::endl;
             return 1;
-        } else {
-            if (ready) {
-                break;
-            }
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+        while (true) {
+            bool ready;
+            kr = pqrs::karabiner_virtual_hid_device_methods::is_virtual_hid_keyboard_ready(connect, ready);
+            if (kr != KERN_SUCCESS) {
+                std::cerr << "is_virtual_hid_keyboard_ready error: " << kr << std::endl;
+                return kr;
+            } else {
+                if (ready) {
+                    break;
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
     {
-    pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
-    properties.country_code = 33;
-    kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
-    if (kr != KERN_SUCCESS) {
-        std::cerr << "initialize_virtual_hid_keyboard error" << std::endl;
-        return 1;
-    }
+        pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
+        properties.country_code = 33;
+        kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
+        if (kr != KERN_SUCCESS) {
+            std::cerr << "initialize_virtual_hid_keyboard error: " << kr << std::endl;
+            return kr;
+        }
     }
     return 0;
 }
 
+/*
+ * Releases the resources needed to receive key events from and send
+ * key events to the OS.
+ */
 extern "C" int release_kb() {
+    int retval = 0;
+    kern_return_t kr;
     // Source
     for(IOHIDDeviceRef dev : source_device) {
-        IOReturn ret = IOHIDDeviceClose(dev,kIOHIDOptionsTypeSeizeDevice);
+        kr = IOHIDDeviceClose(dev,kIOHIDOptionsTypeSeizeDevice);
+        if(kr != KERN_SUCCESS) {
+            std::cerr << "IOHIDDeviceClose error: " << kr << std::endl;
+            retval = 1;
+        }
     }
     if(thread.joinable()) {
         CFRunLoopStop(listener_loop);
         thread.join();
+    } else {
+        std::cerr << "no thread was running!" << std::endl;
+    }
+    if (close(fd[0]) == -1) { 
+        std::cerr << "close error: " << errno << std::endl;
+        retval = 1; 
+    }
+    if (close(fd[1]) == -1) { 
+        std::cerr << "close error: " << errno << std::endl;
+        retval = 1; 
     }
     // Sink
-    kern_return_t kr = pqrs::karabiner_virtual_hid_device_methods::reset_virtual_hid_keyboard(connect);
+    kr = pqrs::karabiner_virtual_hid_device_methods::reset_virtual_hid_keyboard(connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "reset_virtual_hid_keyboard error" << std::endl;
+        std::cerr << "reset_virtual_hid_keyboard error: " << kr << std::endl;
+        retval = 1;
     }
     if (connect) {
-        IOServiceClose(connect);
+        kr = IOServiceClose(connect);
+        if(kr != KERN_SUCCESS) {
+            std::cerr << "IOServiceClose error: " << kr << std::endl;
+            retval = 1;
+        }
     }
     if (service) {
-        IOObjectRelease(service);
+        kr = IOObjectRelease(service);
+        if(kr != KERN_SUCCESS) {
+            std::cerr << "IOObjectRelease error: " << kr << std::endl;
+            retval = 1;
+        }
     }
-    return 0;
+    return retval;
 }
-
-#ifdef STANDALONE
-int main() {
-    io_iterator_t iter = get_device_iterator();
-    for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
-        CFTypeRef str = IORegistryEntryCreateCFProperty(curr,
-                                                        CFSTR("Product"),
-                                                        kCFAllocatorDefault,
-                                                        kIOHIDOptionsTypeNone);
-        CFShow(str);
-    }
-
-}       
-#endif

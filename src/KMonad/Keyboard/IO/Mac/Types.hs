@@ -34,12 +34,14 @@ instance Show MacError where
 -- $typ
 
 type MacSwitch  = Word8  -- ^ Type alias for the switch value
-type MacKeycode = Word32 -- ^ Type alias for the windows encoded keycode
+type MacKeycode = Word32 -- ^ Type alias for the Mac keycode
 
 -- | 'MacKeyEvent' is the C-representation of a a 'KeyEvent' for our Mac API.
 --
--- It contains a 'Word8' signifying whether the event was a Press (0) or Release
--- (1), and a 'Word32' (uint32_t) signifying the *Mac keycode*.
+-- It contains a 'Word8' signifying whether the event was a Press (0)
+-- or Release (1), and a 'Word32' (uint32_t) signifying the Mac
+-- keycode (the upper 16 bits represent the IOKit usage page, and the
+-- lower 16 bits represent the IOKit usage).
 --
 -- NOTE: Mac and Linux keycodes do not line up. Internally we use Linux
 -- Keycodes for everything, we translate at the KeyIO stage (here).
@@ -109,8 +111,8 @@ fromMacKeyEvent (MacKeyEvent (s, c)) = case fromMacKeycode c of
 
 -- | Mac does not use the same keycodes as Linux, so we need to translate.
 --
--- FIXME: There are loads of missing correspondences, mostly for rare-keys. How
--- do these line up? Ideally this mapping would be total.
+-- See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-315.7.16/IOHIDFamily/IOHIDUsageTables.h
+-- See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-700/IOHIDFamily/AppleHIDUsageTables.h.auto.html
 kcMap :: M.HashMap MacKeycode Keycode
 kcMap = M.fromList $
   [ (0x00070000, KeyError) -- There's no documentation on this error code, but
