@@ -96,14 +96,11 @@ library
       KMonad.Keyboard.IO.Mac.HIDQueueSource
       KMonad.Keyboard.IO.Mac.VirtualHIDSink
       KMonad.Keyboard.IO.Mac.Types
-    c-sources:
-      c_src/mac/keyio_mac.c
     cxx-sources:
-      c_src/mac/sink-kext.cpp
+      c_src/mac/keyio_mac.cpp
     cxx-options:
       -std=c++14
     include-dirs:
-      c_src/mac
       c_src/mac/Karabiner-VirtualHIDDevice/dist/include
     extra-libraries:
       c++
