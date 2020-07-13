@@ -101,31 +101,12 @@ extern "C" int wait_key(struct KeyEvent *e) {
  * new input from the user is available from that keyboard. Then
  * sleeps indefinitely, ready to received asynchronous callbacks.
  */
-void monitor_kb() {
-    listener_loop = CFRunLoopGetCurrent();
-    for(IOHIDDeviceRef d : source_device) {
-        IOHIDDeviceScheduleWithRunLoop(d, listener_loop, kCFRunLoopDefaultMode);
-    }
-    CFRunLoopRun();
-}
-
-/*
- * Opens and seizes input from each keyboard device whose product name
- * matches the parameter (if NULL is received, then it opens all
- * keyboard devices). Spawns a thread to receive asynchronous input
- * and opens a pipe for this thread to send key event data to the main
- * thread.
- *
- * Loads a the karabiner kernel extension that will send key events
- * back to the OS.
- */
-extern "C" int grab_kb(char *product) {
+void monitor_kb(char *product) {
     kern_return_t kr;
-    // Source
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     if(!matching_dictionary) {
         std::cerr << "IOServiceMatching error" << std::endl;
-        return 1;
+        return;
     }
     UInt32 value;
     CFNumberRef cfValue;
@@ -143,14 +124,14 @@ extern "C" int grab_kb(char *product) {
                                       &iter);
     if(kr != KERN_SUCCESS) {
         std::cerr << "IOServiceGetMatchingServices error: " << kr << std::endl;
-        return kr;
+        return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
         if(product) {
             CFStringRef product_name = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
             if(product_name == NULL) {
                 std::cerr << "CFStringCreateWithCString error" << std::endl;
-                return 1;
+                return;
             }
             CFStringRef port_name = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
             bool match = CFStringCompare(product_name, port_name, 0) == kCFCompareEqualTo;
@@ -166,16 +147,42 @@ extern "C" int grab_kb(char *product) {
             std::cerr << "IOHIDDeviceOpen error: " << kr << std::endl;
             if(kr == kIOReturnNotPrivileged) {
                 std::cerr << "IOHIDDeviceOpen requires root privileges when called with kIOHIDOptionsTypeSeizeDevice" << std::endl;
-                return kr;
+                return;
             }
         }
     }
+    listener_loop = CFRunLoopGetCurrent();
+    for(IOHIDDeviceRef d : source_device) {
+        IOHIDDeviceScheduleWithRunLoop(d, listener_loop, kCFRunLoopDefaultMode);
+    }
+    CFRunLoopRun();
+    for(IOHIDDeviceRef dev : source_device) {
+        kr = IOHIDDeviceClose(dev,kIOHIDOptionsTypeSeizeDevice);
+        if(kr != KERN_SUCCESS) {
+            std::cerr << "IOHIDDeviceClose error: " << kr << std::endl;
+        }
+    }
+}
+
+/*
+ * Opens and seizes input from each keyboard device whose product name
+ * matches the parameter (if NULL is received, then it opens all
+ * keyboard devices). Spawns a thread to receive asynchronous input
+ * and opens a pipe for this thread to send key event data to the main
+ * thread.
+ *
+ * Loads a the karabiner kernel extension that will send key events
+ * back to the OS.
+ */
+extern "C" int grab_kb(char *product) {
+    // Source
     if (pipe(fd) == -1) { 
         std::cerr << "pipe error: " << errno << std::endl;
         return errno; 
     }
-    thread = std::thread{monitor_kb};
+    thread = std::thread{monitor_kb, product};
     // Sink
+    kern_return_t kr;
     connect = IO_OBJECT_NULL;
     service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceNameMatching(pqrs::karabiner_virtual_hid_device::get_virtual_hid_root_name()));
     if (!service) {
@@ -228,13 +235,6 @@ extern "C" int release_kb() {
     int retval = 0;
     kern_return_t kr;
     // Source
-    for(IOHIDDeviceRef dev : source_device) {
-        kr = IOHIDDeviceClose(dev,kIOHIDOptionsTypeSeizeDevice);
-        if(kr != KERN_SUCCESS) {
-            std::cerr << "IOHIDDeviceClose error: " << kr << std::endl;
-            retval = 1;
-        }
-    }
     if(thread.joinable()) {
         CFRunLoopStop(listener_loop);
         thread.join();
