@@ -48,7 +48,8 @@ static int fd[2];
  * It passes the relevant information into a pipe that will be read
  * from with wait_key.
  */
-void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value) {
+void input_callback(void *context, IOReturn result, void *sender, IOHIDValueRef value) {
+    std::cout << "input: " << CFRunLoopGetCurrent() << std::endl;
     struct KeyEvent e;
     CFIndex integer_value = IOHIDValueGetIntegerValue(value);
     IOHIDElementRef element = IOHIDValueGetElement(value);
@@ -57,6 +58,24 @@ void callback(void *context, IOReturn result, void *sender, IOHIDValueRef value)
     e.type = !integer_value;
     e.keycode = (usage_page << 16) | usage;
     write(fd[1], &e, sizeof(struct KeyEvent));
+}
+
+/*
+ * We'll register this callback to run whenever an IOHIDDevice
+ * (representing a keyboard) is connected to the OS
+ *
+ */
+void matched_callback(void *context, io_iterator_t iter) {
+    std::cout << "matched: " << CFRunLoopGetCurrent() << std::endl;
+}
+
+/*
+ * We'll register this callback to run whenever an IOHIDDevice
+ * (representing a keyboard) is disconnected from the OS
+ *
+ */
+void terminated_callback(void *context, io_iterator_t iter) {
+    std::cout << "terminated: " << CFRunLoopGetCurrent() << std::endl;
 }
 
 /*
@@ -119,6 +138,7 @@ void monitor_kb(char *product) {
     CFDictionarySetValue(matching_dictionary,CFSTR(kIOHIDDeviceUsageKey),cfValue);
     CFRelease(cfValue);
     io_iterator_t iter = IO_OBJECT_NULL;
+    CFRetain(matching_dictionary);
     kr = IOServiceGetMatchingServices(kIOMasterPortDefault,
                                       matching_dictionary,
                                       &iter);
@@ -141,7 +161,7 @@ void monitor_kb(char *product) {
         }
         IOHIDDeviceRef dev = IOHIDDeviceCreate(kCFAllocatorDefault, curr);
         source_device.push_back(dev);
-        IOHIDDeviceRegisterInputValueCallback(dev, callback, NULL);
+        IOHIDDeviceRegisterInputValueCallback(dev, input_callback, NULL);
         kr = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
         if(kr != kIOReturnSuccess) {
             std::cerr << "IOHIDDeviceOpen error: " << kr << std::endl;
@@ -152,6 +172,40 @@ void monitor_kb(char *product) {
         }
     }
     listener_loop = CFRunLoopGetCurrent();
+    IONotificationPortRef notification_port = IONotificationPortCreate(kIOMasterPortDefault);
+    CFRunLoopSourceRef notification_source = IONotificationPortGetRunLoopSource(notification_port);
+    CFRunLoopAddSource(listener_loop, notification_source, kCFRunLoopDefaultMode);
+    CFRetain(matching_dictionary);
+    kr = IOServiceAddMatchingNotification(notification_port,
+                                          kIOMatchedNotification,
+                                          matching_dictionary,
+                                          matched_callback,
+                                          NULL,
+                                          &iter);
+    if(kr != KERN_SUCCESS) {
+        std::cerr << "IOServiceAddMatchingNotification error: " << kr << std::endl;
+        return;
+    }
+    for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
+        CFStringRef port_name = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+        CFShow(port_name);
+    }
+    std::cout << "slkjfaslk" << std::endl;
+    kr = IOServiceAddMatchingNotification(notification_port,
+                                          kIOTerminatedNotification,
+                                          matching_dictionary,
+                                          terminated_callback,
+                                          NULL,
+                                          &iter);
+    for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
+        CFStringRef port_name = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+        CFShow(port_name);
+    }
+    if(kr != KERN_SUCCESS) {
+        std::cerr << "IOServiceAddMatchingNotification error: " << kr << std::endl;
+        return;
+    }
+
     for(IOHIDDeviceRef d : source_device) {
         IOHIDDeviceScheduleWithRunLoop(d, listener_loop, kCFRunLoopDefaultMode);
     }
