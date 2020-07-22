@@ -33,6 +33,7 @@ module KMonad.Action
 
     -- * MonadK
     -- $monadk
+  , MonadKIO(..)
   , MonadK(..)
   , AnyK
   , Action(..)
@@ -68,9 +69,6 @@ instance Semigroup Catch where
 instance Monoid Catch where
   mempty = NoCatch
 
--- | Predicate on KeyEvent's
-type KeyPred = KeyEvent -> Bool
-
 -- | The packet used to trigger a KeyFun, containing info about the event and
 -- how long since the Hook was registered.
 data Trigger = Trigger
@@ -79,12 +77,7 @@ data Trigger = Trigger
   }
 makeClassy ''Trigger
 
--- -- | Run an action when a predicate matches, catching the event, otherwise do nothing.
--- catch :: Applicative m => KeyPred -> m () -> KeyFun m
--- catch p a = p >>> \case
---   True  -> a *> pure Catch
---   False -> pure NoCatch
-
+-- |
 
 --------------------------------------------------------------------------------
 -- $hook
@@ -127,7 +120,7 @@ data LayerOp
 
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.
-class Monad m => MonadK m where
+class Monad m => MonadKIO m where
   -- | Emit a KeyEvent to the OS
   emit       :: KeyEvent -> m ()
   -- | Pause the current thread for n milliseconds
@@ -138,6 +131,8 @@ class Monad m => MonadK m where
   register   :: Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
+
+class MonadKIO m => MonadK m where
   -- | Access the keycode to which the current button is bound
   myBinding  :: m Keycode
 
@@ -155,7 +150,7 @@ my :: MonadK m => Switch -> m KeyEvent
 my s = mkKeyEvent s <$> myBinding
 
 -- | Register a simple hook without a timeout
-hookF :: MonadK m => (KeyEvent -> m Catch) -> m ()
+hookF :: MonadKIO m => (KeyEvent -> m Catch) -> m ()
 hookF f = register . Hook Nothing $ \t -> f (t^.event)
 
 -- | Register a hook with a timeout
@@ -171,7 +166,7 @@ matchMy :: MonadK m => Switch -> m KeyPred
 matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
-await :: MonadK m => KeyPred -> (KeyEvent -> m Catch) -> m ()
+await :: MonadKIO m => KeyPred -> (KeyEvent -> m Catch) -> m ()
 await p a = hookF $ \e -> if p e
   then a e
   else await p a *> pure NoCatch

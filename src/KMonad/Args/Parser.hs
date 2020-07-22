@@ -21,7 +21,7 @@ module KMonad.Args.Parser
   )
 where
 
-import KMonad.Prelude hiding (try)
+import KMonad.Prelude hiding (try, bool)
 
 import KMonad.Args.Types
 import KMonad.Keyboard
@@ -112,6 +112,10 @@ paren = between (symbol "(") (symbol ")")
 statement :: Text -> Parser a -> Parser a
 statement s = paren . (symbol s *>)
 
+-- | Run a parser that parser a bool value
+bool :: Parser Bool
+bool = symbol "true" *> pure True
+   <|> symbol "false" *> pure False
 
 --------------------------------------------------------------------------------
 -- $elem
@@ -275,10 +279,11 @@ defcfgP = some (lexeme settingP)
 settingP :: Parser DefSetting
 settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ SIToken  <$> f "input"    itokenP
-    , SOToken  <$> f "output"   otokenP
-    , SCmpSeq  <$> f "cmp-seq"  buttonP
-    , SInitStr <$> f "init"     textP
+    [ SIToken      <$> f "input"       itokenP
+    , SOToken      <$> f "output"      otokenP
+    , SCmpSeq      <$> f "cmp-seq"     buttonP
+    , SInitStr     <$> f "init"        textP
+    , SFallThrough <$> f "fallthrough" bool
     ])
 
 --------------------------------------------------------------------------------

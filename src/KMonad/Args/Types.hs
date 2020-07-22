@@ -106,6 +106,7 @@ data CfgToken = CfgToken
   , _snk  :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
   , _km   :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
   , _fstL :: LayerTag                          -- ^ Name of initial layer
+  , _flt  :: Bool                              -- ^ How to deal with unhandled events
   }
 makeClassy ''CfgToken
 
@@ -149,10 +150,11 @@ data OToken
 
 -- | All possible single settings
 data DefSetting
-  = SIToken  IToken
-  | SOToken  OToken
-  | SCmpSeq  DefButton
-  | SInitStr Text
+  = SIToken      IToken
+  | SOToken      OToken
+  | SCmpSeq      DefButton
+  | SInitStr     Text
+  | SFallThrough Bool
   deriving Show
 makeClassyPrisms ''DefSetting
 

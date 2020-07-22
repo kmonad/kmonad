@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
 {-|
 Module      : KMonad.App
 Description : The central app-loop of KMonad
@@ -52,14 +53,18 @@ data AppCfg = AppCfg
   , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
   , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
+  , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   }
 makeClassy ''AppCfg
 
 
 -- | Environment of a running KMonad app-loop
 data AppEnv = AppEnv
-  { -- General IO
-    _keLogFunc  :: LogFunc
+  { -- Stored copy of cfg
+    _keAppCfg   :: AppCfg
+   
+    -- General IO
+  , _keLogFunc  :: LogFunc
   , _keySink    :: KeySink
   , _keySource  :: KeySource
 
@@ -74,6 +79,7 @@ data AppEnv = AppEnv
 makeClassy ''AppEnv
 
 instance HasLogFunc AppEnv where logFuncL = keLogFunc
+instance HasAppCfg  AppEnv where appCfg   = keAppCfg
 
 
 --------------------------------------------------------------------------------
@@ -103,7 +109,8 @@ initAppEnv cfg = do
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   pure $ AppEnv
-    { _keLogFunc = lgf
+    { _keAppCfg  = cfg
+    , _keLogFunc = lgf
     , _keySink   = snk
     , _keySource = src
 
@@ -121,10 +128,22 @@ initAppEnv cfg = do
 -- The central app-loop of KMonad.
 
 -- | Trigger the button-action press currently registered to 'Keycode'
-pressKey :: (HasAppEnv e, HasLogFunc e) => Keycode -> RIO e ()
+pressKey :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => Keycode -> RIO e ()
 pressKey c =
   view keymap >>= flip Km.lookupKey c >>= \case
-    Nothing -> pure () -- If the keycode does not occur in our keymap
+
+    -- If the keycode does not occur in our keymap
+    Nothing -> do
+      ft <- view fallThrough
+      if ft
+        then do
+          emit $ mkPress c
+          await (isReleaseOf c) $ \_ -> do
+            emit $ mkRelease c
+            pure Catch
+        else pure ()
+
+    -- If the keycode does occur in our keymap
     Just b  -> runBEnv b Press >>= \case
       Nothing -> pure ()  -- If the previous action on this key was *not* a release
       Just a  -> do
@@ -150,6 +169,27 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
 startApp c = runContT (initAppEnv c) (flip runRIO loop)
 
+instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
+  -- Emitting with the keysink
+  emit e = view keySink >>= flip emitKey e
+
+  -- Pausing is a simple IO action
+  pause = threadDelay . (*1000) . fromIntegral
+
+  -- Holding and rerunning through the sluice and dispatch
+  hold b = do
+    sl <- view sluice
+    di <- view dispatch
+    if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
+
+  -- Hooking is performed with the hooks component
+  register h = view hooks >>= \hs -> Hs.register hs h
+  -- hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
+  -- hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
+
+  -- Layer-ops are sent to the 'Keymap'
+  layerOp o = view keymap >>= \hl -> Km.layerOp hl o
+
 
 --------------------------------------------------------------------------------
 -- $kenv
@@ -168,25 +208,5 @@ instance HasLogFunc KEnv where logFuncL     = kAppEnv.logFuncL
 
 -- | Hook up all the components to the different 'MonadK' functionalities
 instance MonadK (RIO KEnv) where
-  -- Emitting with the keysink
-  emit e = view keySink >>= flip emitKey e
-
-  -- Pausing is a simple IO action
-  pause = threadDelay . (*1000) . fromIntegral
-
-  -- Holding and rerunning through the sluice and dispatch
-  hold b = do
-    sl <- view sluice
-    di <- view dispatch
-    if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
-
   -- Binding is found in the stored 'BEnv'
   myBinding = view (bEnv.binding)
-
-  -- Hooking is performed with the hooks component
-  register h = view hooks >>= \hs -> Hs.register hs h
-  -- hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
-  -- hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
-
-  -- Layer-ops are sent to the 'Keymap'
-  layerOp o = view keymap >>= \hl -> Km.layerOp hl o

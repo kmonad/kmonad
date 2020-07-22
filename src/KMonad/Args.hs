@@ -64,4 +64,5 @@ loadConfig pth = do
     , _keySourceDev = src
     , _keymapCfg    = _km   cgt
     , _firstLayer   = _fstL cgt
+    , _fallThrough  = _flt  cgt
     }

@@ -161,7 +161,7 @@ aroundNext ::
   -> Button -- ^ The resulting 'Button'
 aroundNext b = onPress $ await isPress $ \e -> do
   runAction $ b^.pressAction
-  await (== (mkKeyEvent Release (e^.keycode))) $ \_ -> do
+  await (isReleaseOf $ e^.keycode) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch

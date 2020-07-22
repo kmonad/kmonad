@@ -153,12 +153,13 @@ joinConfig' = do
   es <- view kes
 
   -- Extract the IO settings
-  i <- getI
-  o <- getO
+  i  <- getI
+  o  <- getO
+  ft <- getFT
 
   -- Extract the other blocks and join them into a keymap
-  let als = extract _KDefAlias $ es
-  let lys = extract _KDefLayer $ es
+  let als = extract _KDefAlias    $ es
+  let lys = extract _KDefLayer    $ es
   src      <- oneBlock "defsrc" _KDefSrc
   (km, fl) <- joinKeymap src als lys
 
@@ -167,6 +168,7 @@ joinConfig' = do
     , _src  = i
     , _km   = km
     , _fstL = fl
+    , _flt  = ft
     }
 
 --------------------------------------------------------------------------------
@@ -207,6 +209,14 @@ getO = do
     Left  None      -> throwError $ MissingSetting "input"
     Left  Duplicate -> throwError $ DuplicateSetting "input"
 
+-- | Extract the fallthrough setting
+getFT :: J Bool
+getFT = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne. extract _SFallThrough $ cfg of
+    Right b        -> pure b
+    Left None      -> pure False
+    Left Duplicate -> throwError $ DuplicateSetting "fallthrough"
 
 #ifdef linux_HOST_OS
 
