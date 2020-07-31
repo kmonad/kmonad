@@ -68,14 +68,15 @@ void open_matching_devices(char *product, io_iterator_t iter) {
         CFStringRef cfproduct = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
         if(cfproduct == NULL) {
             std::cerr << "CFStringCreateWithCString error" << std::endl;
-            CFRelease(cfproduct);
             return;
         }
     }
     CFStringRef cfkarabiner = CFStringCreateWithCString(kCFAllocatorDefault, "Karabiner VirtualHIDKeyboard", CFStringGetSystemEncoding());
     if(cfkarabiner == NULL) {
         std::cerr << "CFStringCreateWithCString error" << std::endl;
-        CFRelease(cfkarabiner);
+        if(product) {
+            CFRelease(cfproduct);
+        }
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
