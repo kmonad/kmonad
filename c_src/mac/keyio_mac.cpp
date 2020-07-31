@@ -102,6 +102,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
                 std::cerr << "IOHIDDeviceOpen requires root privileges when called with kIOHIDOptionsTypeSeizeDevice" << std::endl;
             }
         }
+        IOHIDDeviceScheduleWithRunLoop(dev, listener_loop, kCFRunLoopDefaultMode);
     }
     if(product) {
         CFRelease(cfproduct);
@@ -198,8 +199,8 @@ void monitor_kb(char *product) {
         std::cerr << "IOServiceGetMatchingServices error: " << kr << std::endl;
         return;
     }
-    open_matching_devices(product, iter);
     listener_loop = CFRunLoopGetCurrent();
+    open_matching_devices(product, iter);
     IONotificationPortRef notification_port = IONotificationPortCreate(kIOMasterPortDefault);
     CFRunLoopSourceRef notification_source = IONotificationPortGetRunLoopSource(notification_port);
     CFRunLoopAddSource(listener_loop, notification_source, kCFRunLoopDefaultMode);
@@ -226,9 +227,6 @@ void monitor_kb(char *product) {
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {}
-    for(std::pair<const io_service_t,IOHIDDeviceRef> p: source_device) {
-        IOHIDDeviceScheduleWithRunLoop(p.second, listener_loop, kCFRunLoopDefaultMode);
-    }
     CFRunLoopRun();
     for(std::pair<const io_service_t,IOHIDDeviceRef> p: source_device) {
         kr = IOHIDDeviceClose(p.second,kIOHIDOptionsTypeSeizeDevice);
