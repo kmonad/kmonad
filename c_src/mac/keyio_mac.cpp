@@ -10,7 +10,7 @@
 
 /*
  * Key event information that's shared between C++ and Haskell.
- * 
+ *
  * type: represents key up or key down
  *
  * keycode: 16 uppermost bits represent IOKit usage page
@@ -248,14 +248,13 @@ void monitor_kb(char *product) {
  */
 extern "C" int grab_kb(char *product) {
     // Source
-    if (pipe(fd) == -1) { 
+    if (pipe(fd) == -1) {
         std::cerr << "pipe error: " << errno << std::endl;
-        return errno; 
+        return errno;
     }
     if(product) {
         prod = (char *)malloc(strlen(product) + 1);
         strcpy(prod, product);
-        printf(prod);
     }
     thread = std::thread{monitor_kb, prod};
     // Sink
@@ -269,7 +268,6 @@ extern "C" int grab_kb(char *product) {
     kr = IOServiceOpen(service, mach_task_self(), kIOHIDServerConnectType, &connect);
     if (kr != KERN_SUCCESS) {
         std::cerr << "IOServiceOpen error: " << kr << std::endl;
-        printf("%x\n",kr);
         return kr;
     }
     //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -324,13 +322,13 @@ extern "C" int release_kb() {
     if(prod) {
         free(prod);
     }
-    if (close(fd[0]) == -1) { 
+    if (close(fd[0]) == -1) {
         std::cerr << "close error: " << errno << std::endl;
-        retval = 1; 
+        retval = 1;
     }
-    if (close(fd[1]) == -1) { 
+    if (close(fd[1]) == -1) {
         std::cerr << "close error: " << errno << std::endl;
-        retval = 1; 
+        retval = 1;
     }
     // Sink
     kr = pqrs::karabiner_virtual_hid_device_methods::reset_virtual_hid_keyboard(connect);
