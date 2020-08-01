@@ -395,9 +395,6 @@ aliases = Q.mkMultiMap
   , (KeyComma,          ["comm", ","])
   , (KeyDot,            ["."])
   , (KeySlash,          ["/"])
-  , (KeyNextSong,       [">>"])
-  , (KeyPreviousSong,   ["<<"])
-  , (KeyPlayPause,      [">||"])
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
