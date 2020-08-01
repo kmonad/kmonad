@@ -43,6 +43,11 @@ import KMonad.Keyboard.IO.Windows.LowLevelHookSource
 import KMonad.Keyboard.IO.Windows.SendEventSink
 #endif
 
+#ifdef darwin_HOST_OS
+import KMonad.Keyboard.IO.Mac.IOKitSource
+import KMonad.Keyboard.IO.Mac.KextSink
+#endif
+
 import Control.Monad.Except
 
 import RIO.List (uncons, headMaybe)
@@ -224,13 +229,15 @@ getFT = do
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
 pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Linux correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
   where cfg = defUinputCfg { _keyboardName = T.unpack t
                            , _postInit     = T.unpack <$> init }
-pickOutput KSendEventSink = throwError $ InvalidOS "SendEventSink"
+pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
 #endif
 
@@ -240,11 +247,29 @@ pickOutput KSendEventSink = throwError $ InvalidOS "SendEventSink"
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
 pickInput KLowLevelHookSource = pure $ runLF llHook
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
+pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Windows correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
 pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
+pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
+
+#endif
+
+#ifdef darwin_HOST_OS
+
+-- | The Mac correspondence between IToken and actual code
+pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
+pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
+pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
+pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+
+-- | The Mac correspondence between OToken and actual code
+pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
+pickOutput KKextSink            = pure $ runLF kextSink
+pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
+pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
 
 #endif
 

@@ -140,12 +140,14 @@ data DefLayer = DefLayer
 data IToken
   = KDeviceSource FilePath
   | KLowLevelHookSource
+  | KIOKitSource (Maybe Text)
   deriving Show
 
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
   | KSendEventSink
+  | KKextSink
   deriving Show
 
 -- | All possible single settings

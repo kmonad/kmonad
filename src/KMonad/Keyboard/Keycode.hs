@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveAnyClass, CPP #-}
 {-|
 Module      : KMonad.Keyboard.Keycode
 Description : Description of all possible keycodes.
@@ -301,6 +301,14 @@ data Keycode
   | Missing253
   | Missing254
   | Missing255
+#ifdef darwin_HOST_OS
+  | KeyFn
+  | KeyLaunchpad
+  | KeyMissionCtrl
+  | KeyBacklightDown
+  | KeyBacklightUp
+  | KeyError
+#endif
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
 
@@ -387,4 +395,10 @@ aliases = Q.mkMultiMap
   , (KeyComma,          ["comm", ","])
   , (KeyDot,            ["."])
   , (KeySlash,          ["/"])
+#ifdef darwin_HOST_OS
+  , (KeyLaunchpad,      ["lp"])
+  , (KeyMissionCtrl,    ["mctl"])
+  , (KeyBacklightDown,  ["bldn"])
+  , (KeyBacklightUp,    ["blup"])
+#endif
   ]

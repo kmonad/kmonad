@@ -263,13 +263,15 @@ buttonP = (lexeme . choice . map try $
 itokenP :: Parser IToken
 itokenP = choice . map try $
   [ statement "device-file"    $ KDeviceSource <$> (T.unpack <$> textP)
-  , statement "low-level-hook" $ pure KLowLevelHookSource ]
+  , statement "low-level-hook" $ pure KLowLevelHookSource
+  , statement "iokit-name"     $ KIOKitSource <$> optional textP]
 
 -- | Parse an output token
 otokenP :: Parser OToken
 otokenP = choice . map try $
   [ statement "uinput-sink"     $ KUinputSink <$> lexeme textP <*> optional textP
-  , statement "send-event-sink" $ pure KSendEventSink ]
+  , statement "send-event-sink" $ pure KSendEventSink
+  , statement "kext"            $ pure KKextSink]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
