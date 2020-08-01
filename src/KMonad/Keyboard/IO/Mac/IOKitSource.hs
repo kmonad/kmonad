@@ -1,5 +1,5 @@
-module KMonad.Keyboard.IO.Mac.HIDQueueSource
-  ( hidSource
+module KMonad.Keyboard.IO.Mac.IOKitSource
+  ( iokitSource
   )
 where
 
@@ -36,20 +36,20 @@ data EvBuf = EvBuf
 makeLenses ''EvBuf
 
 -- | Return a KeySource using the Mac IOKit approach
-hidSource :: HasLogFunc e
+iokitSource :: HasLogFunc e
   => (Maybe String)
   -> RIO e (Acquire KeySource)
-hidSource name = mkKeySource (hidOpen name) hidClose hidRead
+iokitSource name = mkKeySource (iokitOpen name) iokitClose iokitRead
 
 
 --------------------------------------------------------------------------------
 
--- | Ask Mac to allocate a queue for events from keyboard HID
-hidOpen :: HasLogFunc e
+-- | Ask IOKit to open keyboards matching the specified name
+iokitOpen :: HasLogFunc e
   => (Maybe String)
   -> RIO e EvBuf
-hidOpen m = do
-  logInfo "Opening HID queue"
+iokitOpen m = do
+  logInfo "Opening IOKit devices"
   liftIO $ do
     str <- newCString (case m of
                        Nothing -> ""
@@ -62,9 +62,9 @@ hidOpen m = do
     pure $ EvBuf buf
 
 -- | Ask Mac to close the queue
-hidClose :: HasLogFunc e => EvBuf -> RIO e ()
-hidClose b = do
-  logInfo "Closing HID queue"
+iokitClose :: HasLogFunc e => EvBuf -> RIO e ()
+iokitClose b = do
+  logInfo "Closing IOKit devices"
   liftIO $ do
     _ <- release_kb
     free $ b^.buffer
@@ -72,8 +72,8 @@ hidClose b = do
 -- | Get a new 'KeyEvent' from Mac
 --
 -- NOTE: This can throw an error if the event fails to convert.
-hidRead :: HasLogFunc e => EvBuf -> RIO e KeyEvent
-hidRead b = do
+iokitRead :: HasLogFunc e => EvBuf -> RIO e KeyEvent
+iokitRead b = do
   we <- liftIO $ do
     _ <- wait_key $ b^.buffer
     peek $ b^.buffer

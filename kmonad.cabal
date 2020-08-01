@@ -93,8 +93,8 @@ library
 
   if os(darwin)
     exposed-modules:
-      KMonad.Keyboard.IO.Mac.HIDQueueSource
-      KMonad.Keyboard.IO.Mac.VirtualHIDSink
+      KMonad.Keyboard.IO.Mac.IOKitSource
+      KMonad.Keyboard.IO.Mac.KextSink
       KMonad.Keyboard.IO.Mac.Types
     cxx-sources:
       c_src/mac/keyio_mac.cpp

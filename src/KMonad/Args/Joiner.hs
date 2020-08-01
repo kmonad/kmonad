@@ -44,8 +44,8 @@ import KMonad.Keyboard.IO.Windows.SendEventSink
 #endif
 
 #ifdef darwin_HOST_OS
-import KMonad.Keyboard.IO.Mac.HIDQueueSource
-import KMonad.Keyboard.IO.Mac.VirtualHIDSink
+import KMonad.Keyboard.IO.Mac.IOKitSource
+import KMonad.Keyboard.IO.Mac.KextSink
 #endif
 
 import Control.Monad.Except
@@ -227,7 +227,7 @@ pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
   where cfg = defUinputCfg { _keyboardName = T.unpack t
                            , _postInit     = T.unpack <$> init }
 pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
-pickOutput KVirtualHIDSink      = throwError $ InvalidOS "VirtualHIDSink"
+pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
 #endif
 
@@ -243,21 +243,21 @@ pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
 pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
-pickOutput KVirtualHIDSink   = throwError $ InvalidOS "VirtualHIDSink"
+pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
 
 #endif
 
 #ifdef darwin_HOST_OS
 
--- | The Linux correspondence between IToken and actual code
+-- | The Mac correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput (KIOKitSource name) = pure $ runLF (hidSource (T.unpack <$> name))
+pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 
--- | The Linux correspondence between OToken and actual code
+-- | The Mac correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
-pickOutput KVirtualHIDSink      = pure $ runLF virtualHIDSink
+pickOutput KKextSink            = pure $ runLF kextSink
 pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
 pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
 

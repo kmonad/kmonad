@@ -267,7 +267,7 @@ otokenP :: Parser OToken
 otokenP = choice . map try $
   [ statement "uinput-sink"     $ KUinputSink <$> lexeme textP <*> optional textP
   , statement "send-event-sink" $ pure KSendEventSink
-  , statement "kext"            $ pure KVirtualHIDSink]
+  , statement "kext"            $ pure KKextSink]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
