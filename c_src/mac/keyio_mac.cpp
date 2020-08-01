@@ -97,7 +97,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
         IOHIDDeviceRegisterInputValueCallback(dev, input_callback, NULL);
         kr = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
         if(kr != kIOReturnSuccess) {
-            std::cerr << "IOHIDDeviceOpen error: " << kr << std::endl;
+            std::cerr << "IOHIDDeviceOpen error: " << std::hex << kr << std::endl;
             if(kr == kIOReturnNotPrivileged) {
                 std::cerr << "IOHIDDeviceOpen requires root privileges when called with kIOHIDOptionsTypeSeizeDevice" << std::endl;
             }
@@ -196,7 +196,7 @@ void monitor_kb(char *product) {
                                       matching_dictionary,
                                       &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceGetMatchingServices error: " << kr << std::endl;
+        std::cerr << "IOServiceGetMatchingServices error: " << std::hex << kr << std::endl;
         return;
     }
     listener_loop = CFRunLoopGetCurrent();
@@ -212,7 +212,7 @@ void monitor_kb(char *product) {
                                           product,
                                           &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceAddMatchingNotification error: " << kr << std::endl;
+        std::cerr << "IOServiceAddMatchingNotification error: " << std::hex << kr << std::endl;
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {}
@@ -223,7 +223,7 @@ void monitor_kb(char *product) {
                                           NULL,
                                           &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceAddMatchingNotification error: " << kr << std::endl;
+        std::cerr << "IOServiceAddMatchingNotification error: " << std::hex << kr << std::endl;
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {}
@@ -231,7 +231,7 @@ void monitor_kb(char *product) {
     for(std::pair<const io_service_t,IOHIDDeviceRef> p: source_device) {
         kr = IOHIDDeviceClose(p.second,kIOHIDOptionsTypeSeizeDevice);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOHIDDeviceClose error: " << kr << std::endl;
+            std::cerr << "IOHIDDeviceClose error: " << std::hex << kr << std::endl;
         }
     }
 }
@@ -267,7 +267,7 @@ extern "C" int grab_kb(char *product) {
     }
     kr = IOServiceOpen(service, mach_task_self(), kIOHIDServerConnectType, &connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceOpen error: " << kr << std::endl;
+        std::cerr << "IOServiceOpen error: " << std::hex << kr << std::endl;
         return kr;
     }
     //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -276,14 +276,14 @@ extern "C" int grab_kb(char *product) {
         pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
         kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
         if (kr != KERN_SUCCESS) {
-            std::cerr << "initialize_virtual_hid_keyboard error: " << kr << std::endl;
+            std::cerr << "initialize_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
             return 1;
         }
         while (true) {
             bool ready;
             kr = pqrs::karabiner_virtual_hid_device_methods::is_virtual_hid_keyboard_ready(connect, ready);
             if (kr != KERN_SUCCESS) {
-                std::cerr << "is_virtual_hid_keyboard_ready error: " << kr << std::endl;
+                std::cerr << "is_virtual_hid_keyboard_ready error: " << std::hex << kr << std::endl;
                 return kr;
             } else {
                 if (ready) {
@@ -298,7 +298,7 @@ extern "C" int grab_kb(char *product) {
         properties.country_code = 33;
         kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
         if (kr != KERN_SUCCESS) {
-            std::cerr << "initialize_virtual_hid_keyboard error: " << kr << std::endl;
+            std::cerr << "initialize_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
             return kr;
         }
     }
@@ -333,20 +333,20 @@ extern "C" int release_kb() {
     // Sink
     kr = pqrs::karabiner_virtual_hid_device_methods::reset_virtual_hid_keyboard(connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "reset_virtual_hid_keyboard error: " << kr << std::endl;
+        std::cerr << "reset_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
         retval = 1;
     }
     if (connect) {
         kr = IOServiceClose(connect);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOServiceClose error: " << kr << std::endl;
+            std::cerr << "IOServiceClose error: " << std::hex << kr << std::endl;
             retval = 1;
         }
     }
     if (service) {
         kr = IOObjectRelease(service);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOObjectRelease error: " << kr << std::endl;
+            std::cerr << "IOObjectRelease error: " << std::hex << kr << std::endl;
             retval = 1;
         }
     }
