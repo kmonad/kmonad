@@ -101,6 +101,11 @@
 
   gm   (layer-switch game)
   col  (layer-switch colemak)
+
+  ;; Temporary switch
+
+  tmp  (layer-delay 500 game-fun)
+  tm2  (layer-next symbols)
 )
 
 
@@ -118,7 +123,7 @@
 
 ;; Numpad, punctuation, brackets
 (deflayer numpad
-  +`   `    ~    [    ]              _    7    8    9    /
+  +`   `    ~    [    ]              @tm2 7    8    9    /
   +'   "    \_   \(   \)             _    4    5    6    *
   +~   '    |    {    }              =    1    2    3    -
   _    _    _    _    _    _    @fun _    0    _    .    +
@@ -177,3 +182,17 @@
   F6   F7   F8   F9   F10            _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
+
+
+#| --------------------------------------------------------------------------
+
+Template code that I wished parsed correctly
+
+(defbutton
+    (on-press
+      (push-layer game-fun)
+      (after 500
+        (pop-layer game-fun)))
+)
+
+  -------------------------------------------------------------------------- |#

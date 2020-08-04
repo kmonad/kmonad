@@ -34,6 +34,8 @@ module KMonad.Button
   -- * Button combinators
   -- $combinators
   , aroundNext
+  , layerDelay
+  , layerNext
   , tapHold
   , multiTap
   , tapNext
@@ -201,10 +203,6 @@ tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> 
     then tap t   *> pure Catch
     else press h *> pure NoCatch
 
-  
-
-
-
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
 -- into its list. The moment a delay is exceeded or immediately upon reaching
@@ -236,4 +234,13 @@ multiTap l bs = onPress $ go bs
 tapMacro :: [Button] -> Button
 tapMacro bs = onPress $ mapM_ tap bs
 
+-- | Switch to a layer for a period of time, then automatically switch back
+layerDelay :: Milliseconds -> LayerTag -> Button
+layerDelay d t = onPress $ do
+  layerOp (PushLayer t)
+  after d (layerOp $ PopLayer t)
 
+layerNext :: LayerTag -> Button
+layerNext t = onPress $ do
+  layerOp (PushLayer t)
+  await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)

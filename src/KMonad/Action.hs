@@ -42,6 +42,8 @@ module KMonad.Action
     -- $combs
   , my
   , matchMy
+  , after
+  , whenDone
   , await
   , awaitMy
   , tHookF
@@ -162,6 +164,28 @@ tHookF :: MonadK m
   -> m ()                 -- ^ The resulting action
 tHookF d a f = register $ Hook (Just $ Timeout d a) f
 
+
+-- | Perform an action after a period of time has elapsed
+--
+-- This is essentially just a way to perform async actions using the KMonad hook
+-- system.
+after :: MonadK m
+  => Milliseconds
+  -> m ()
+  -> m ()
+after d a = do
+  let rehook t = after (d - t^.elapsed) a *> pure NoCatch
+  tHookF d a rehook
+
+-- | Perform an action immediately after the current action is finished. NOTE:
+-- there is no guarantee that another event doesn't outrace this, only that it
+-- will happen as soon as the CPU gets to it.
+whenDone :: MonadK m
+  => m ()
+  -> m ()
+whenDone = after 0
+
+
 -- | Create a KeyPred that matches the Press or Release of the current button.
 matchMy :: MonadK m => Switch -> m KeyPred
 matchMy s = (==) <$> my s
@@ -175,6 +199,9 @@ await p a = hookF $ \e -> if p e
 -- | Execute an action on the detection of the Switch of the active button.
 awaitMy :: MonadK m => Switch -> m Catch -> m ()
 awaitMy s a = matchMy s >>= flip await (const a)
+
+
+
 
 -- | Try to call a function on a succesful match of a predicate within a certain
 -- time period. On a timeout, perform an action.

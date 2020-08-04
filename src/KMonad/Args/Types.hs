@@ -88,6 +88,8 @@ data DefButton
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Milliseconds                    -- ^ Pause for a period of time
+  | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
+  | KLayerNext LayerTag                    -- ^ Perform next button in different layer
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
@@ -173,3 +175,7 @@ data KExpr
   | KDefAlias DefAlias
   deriving Show
 makeClassyPrisms ''KExpr
+
+
+--------------------------------------------------------------------------------
+-- $act
