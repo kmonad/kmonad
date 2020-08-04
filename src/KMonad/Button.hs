@@ -179,7 +179,7 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
-tapHold ms t h = onPress $ within ms (matchMy Release)
+tapHold ms t h = onPress $ withinHeld ms (matchMy Release)
   (press h)                     -- If we catch timeout before release
   (const $ tap t *> pure Catch) -- If we catch release before timeout
 

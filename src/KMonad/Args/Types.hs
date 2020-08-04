@@ -81,6 +81,7 @@ data DefButton
   | KLayerSwitch Text                      -- ^ Switch base-layer when pressed
   | KTapNext DefButton DefButton           -- ^ Do 2 things based on behavior
   | KTapHold Int DefButton DefButton       -- ^ Do 2 things based on behavior and delay
+  | KTapHoldNext Int DefButton DefButton   -- ^ Mixture between KTapNext and KTapHold
   | KAroundNext DefButton                  -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another

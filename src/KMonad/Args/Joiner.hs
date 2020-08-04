@@ -296,14 +296,15 @@ joinButton ns als =
       else throwError $ MissingLayer t
 
     -- Various compound buttons
-    KComposeSeq bs -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs   -> jst $ tapMacro       <$> mapM go bs
-    KAround o i    -> jst $ around         <$> go o <*> go i
-    KTapNext t h   -> jst $ tapNext        <$> go t <*> go h
-    KTapHold s t h -> jst $ tapHold (fi s) <$> go t <*> go h
-    KAroundNext b  -> jst $ aroundNext     <$> go b
-    KPause ms      -> jst . pure $ onPress (pause ms)
-    KMultiTap bs d -> jst $ multiTap <$> go d <*> mapM f bs
+    KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
+    KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
+    KAround o i        -> jst $ around             <$> go o <*> go i
+    KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
+    KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
+    KTapHoldNext s t h -> jst $ tapHoldNext (fi s) <$> go t <*> go h
+    KAroundNext b      -> jst $ aroundNext         <$> go b
+    KPause ms          -> jst . pure $ onPress (pause ms)
+    KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
 
     -- Non-action buttons

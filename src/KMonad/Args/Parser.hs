@@ -234,14 +234,15 @@ deadkeySeqP = do
 -- | Parse any button
 buttonP :: Parser DefButton
 buttonP = (lexeme . choice . map try $
-  [ statement "around"       $ KAround      <$> buttonP     <*> buttonP
-  , statement "multi-tap"    $ KMultiTap    <$> timed       <*> buttonP
-  , statement "tap-hold"     $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-next"     $ KTapNext     <$> buttonP     <*> buttonP
-  , statement "layer-toggle" $ KLayerToggle <$> word
-  , statement "layer-switch" $ KLayerSwitch <$> word
-  , statement "around-next"  $ KAroundNext  <$> buttonP
-  , statement "tap-macro"    $ KTapMacro    <$> some buttonP
+  [ statement "around"         $ KAround      <$> buttonP     <*> buttonP
+  , statement "multi-tap"      $ KMultiTap    <$> timed       <*> buttonP
+  , statement "tap-hold"       $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
+  , statement "tap-hold-next"  $ KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
+  , statement "tap-next"       $ KTapNext     <$> buttonP     <*> buttonP
+  , statement "layer-toggle"   $ KLayerToggle <$> word
+  , statement "layer-switch"   $ KLayerSwitch <$> word
+  , statement "around-next"    $ KAroundNext  <$> buttonP
+  , statement "tap-macro"      $ KTapMacro    <$> some buttonP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP

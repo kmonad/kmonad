@@ -47,6 +47,7 @@ module KMonad.Action
   , tHookF
   , hookF
   , within
+  , withinHeld
   )
 
 where
@@ -191,3 +192,13 @@ within d p a f = do
         else within (d - t^.elapsed) p a f *> pure NoCatch
   tHookF d a f'
 
+-- | Like `within`, but acquires a hold when starting, and releases when done
+withinHeld :: MonadK m
+  => Milliseconds          -- ^ The time within which this filter is active
+  -> m KeyPred             -- ^ The predicate used to find a match
+  -> m ()                  -- ^ The action to call on timeout
+  -> (Trigger -> m Catch)  -- ^ The action to call on a succesful match
+  -> m ()                  -- ^ The resulting action
+withinHeld d p a f = do
+  hold True
+  within d p (a <* hold False) (\x -> f x <* hold False)

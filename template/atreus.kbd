@@ -80,7 +80,7 @@
 
   ;; Special-use buttons
   nF   (around-next @fun)
-  cr   (tap-next ret lctl)
+  cr   (tap-hold-next 150 ret lctl)
   st   (tap-next @nF lsft)
   Nc   (around-next lctl)
   Ns   (around-next sft)
@@ -89,7 +89,7 @@
   ;; Every-day typing mode --------------------------------------------------
 
   ;; Compound switching and tapping buttons
-  L    (tap-next tab @num)
+  L    (tap-hold-next 150 tab @num)
   R    (tap-next esc @sym)
 
   ;; Gaming mode layers -----------------------------------------------------
@@ -113,7 +113,7 @@
   q    w    f    p    g              j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
   z    x    c    v    b              k    m    ,    .    /
-  tab  lalt @fun @st  @cr  @num @R   spc  rmet -    bspc @arr
+  tab  lalt @fun @st  @cr  @L   @R   spc  rmet -    bspc @arr
 )
 
 ;; Numpad, punctuation, brackets
