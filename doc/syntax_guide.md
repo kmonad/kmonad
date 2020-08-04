@@ -74,6 +74,17 @@ simply:
 INPUT = LL_KEYBOARD_HOOK
 ```
 
+#### Mac
+Under Mac, KMonad installs a callback for each of the specified
+keyboards. Each callback triggers whenever new input is available
+from its associated keyboard.
+
+Note that capturing key events and stopping them in order to send
+modified events [requires root
+privilege](https://developer.apple.com/library/archive/technotes/tn2187/_index.html#//apple_ref/doc/uid/DTS10004224-CH1-DontLinkElementID_10).
+In the future, privilege separation may be implemented so that just a
+small part of KMonad requires root privilege to run.
+
 ### Output
 #### Linux
 We currently use the `uinput` subsystem to create a simulated keyboard over
@@ -123,6 +134,15 @@ simply:
 ```
 OUTPUT = SEND_EVENT_SINK
 ```
+
+#### Mac
+KMonad under Mac uses a [kernel
+extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
+(kext) that acts as a virtual keyboard to simulate keyboard events.
+
+This kernel extension will become deprecated in Mac 11.0 (Big Sur),
+but its maintainer is working on a
+[replacement](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice).
 
 ## Aliases
 Since we use alignment to indicate button correspondence, it is very cumbersome
