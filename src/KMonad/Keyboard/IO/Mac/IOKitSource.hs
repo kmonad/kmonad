@@ -52,9 +52,12 @@ iokitOpen m = do
   logInfo "Opening IOKit devices"
   liftIO $ do
 
-    void $ case m of
-      Nothing -> grab_kb nullPtr
-      Just s  -> grab_kb =<< newCString s
+    case m of
+      Nothing -> void $ grab_kb nullPtr
+      Just s  -> do
+        str <- newCString s
+        void $ grab_kb str
+        free str
 
     buf <- mallocBytes $ sizeOf (undefined :: MacKeyEvent)
     pure $ EvBuf buf
