@@ -65,7 +65,7 @@ data JoinError
   | MissingSetting   Text
   | DuplicateSetting Text
   | InvalidOS        Text
-  | NestingError
+  | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
 
@@ -80,7 +80,7 @@ instance Show JoinError where
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
-    NestingError          -> "Encountered 'non-action button' outside of top-level layer"
+    NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
     InvalidComposeKey     -> "Encountered invalid button as Compose key"
     LengthMismatch t l s  -> mconcat
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
@@ -179,10 +179,10 @@ getOverride :: J JCfg
 getOverride = do
   env <- ask
   cfg <- oneBlock "defcfg" _KDefCfg
+  let getB = joinButton [] M.empty
   let go e v = case v of
-        SCmpSeq b  -> joinButton [] M.empty b >>= \case
-          LayerEntry p -> pure $ set cmpKey p e
-          _            -> throwError InvalidComposeKey
+        SCmpSeq b  -> getB b >>= maybe (throwError InvalidComposeKey)
+                                       (\b' -> pure $ set cmpKey b' e)
         _ -> pure e
   foldM go env cfg
 
@@ -261,41 +261,30 @@ joinAliases :: LNames -> [DefAlias] -> J Aliases
 joinAliases ns als = foldM f M.empty $ concat als
   where f mp (t, b) = if t `M.member` mp
           then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> joinButtonEntry ns mp b
+          else flip (M.insert t) mp <$> (unnest $ joinButton ns mp b)
 
 --------------------------------------------------------------------------------
 -- $but
 
--- | Extract 'ActionPair' from a Button or throw an error. This is because only
--- 'ActionButton's can exist inside the various button combinators.
+-- | Turn 'Nothing's (caused by joining a KTrans) into the appropriate error.
+-- KTrans buttons may only occur in 'DefLayer' definitions.
+unnest :: J (Maybe Button) -> J Button
+unnest = join . fmap (maybe (throwError NestedTrans) (pure . id))
 
-
--- join . fmap (maybe (throwError NestedTrans) (pure . id))
-
--- | Turn a 'DefButton' into an actual `Button`, this throws a NestingError when
--- encountering a `LayerEntry` value that is not of a `LayerEntry` constructor.
-joinButtonEntry :: LNames -> Aliases -> DefButton -> J Button
-joinButtonEntry ns als b = joinButton ns als b >>= \case
-  LayerEntry b -> pure b
-  _            -> throwError NestingError
-
--- | Turn a button token into an actual KMonad `LayerEntry` `Button` value
-joinButton :: LNames -> Aliases -> DefButton -> J (LayerEntry Button)
+-- | Turn a button token into an actual KMonad `Button` value
+joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
 joinButton ns als =
 
   -- Define some utility functions
-  let ret  = pure . LayerEntry
-      go = joinButtonEntry ns als
-      -- go x = joinButton ns als x >>= \case
-      --   LayerEntry b -> pure $ b
-      --   _            -> throwError NestingError
-      fi  = fromIntegral
-
+  let ret    = pure . Just
+      go     = unnest . joinButton ns als
+      jst    = fmap Just
+      fi     = fromIntegral
   in \case
     -- Variable dereference
     KRef t -> case M.lookup t als of
       Nothing -> throwError $ MissingAlias t
-      Just b  -> pure $ LayerEntry b
+      Just b  -> ret b
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
@@ -307,22 +296,19 @@ joinButton ns als =
       else throwError $ MissingLayer t
 
     -- Various compound buttons
-    KComposeSeq bs -> do
-      c <- view cmpKey
-      ret =<< tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs   -> ret =<< tapMacro       <$> mapM go bs
-    KAround o i    -> ret =<< around         <$> go o <*> go i
-    KTapNext t h   -> ret =<< tapNext        <$> go t <*> go h
-    KTapHold s t h -> ret =<< tapHold (fi s) <$> go t <*> go h
-    KAroundNext b  -> ret =<< aroundNext     <$> go b
-    KPause ms      -> ret $ onPress (pause ms)
-    KMultiTap bs d -> ret =<< multiTap <$> go d <*> mapM f bs
+    KComposeSeq bs -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
+    KTapMacro bs   -> jst $ tapMacro       <$> mapM go bs
+    KAround o i    -> jst $ around         <$> go o <*> go i
+    KTapNext t h   -> jst $ tapNext        <$> go t <*> go h
+    KTapHold s t h -> jst $ tapHold (fi s) <$> go t <*> go h
+    KAroundNext b  -> jst $ aroundNext     <$> go b
+    KPause ms      -> jst . pure $ onPress (pause ms)
+    KMultiTap bs d -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
 
     -- Non-action buttons
-    KTrans       -> pure Transparent
-    KBlock       -> pure Block
-    KFallthrough -> pure FallThrough
+    KTrans -> pure Nothing
+    KBlock -> ret pass
 
 
 --------------------------------------------------------------------------------
@@ -346,16 +332,18 @@ joinLayer ::
   -> LNames                        -- ^ List of valid layer names
   -> DefSrc                        -- ^ Layout of the source layer
   -> DefLayer                      -- ^ The layer token to join
-  -> J (Text, [(Keycode, LayerEntry Button)]) -- ^ The resulting tuple
+  -> J (Text, [(Keycode, Button)]) -- ^ The resulting tuple
 joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
 
   -- Ensure length-match between src and buttons
   when (length bs /= length src) $
     throwError $ LengthMismatch n (length bs) (length src)
-   
-  bs' <- mapM (joinButton ns als) bs
-  pure (n, zip src bs')
 
+  -- Join each button and add it (filtering out KTrans)
+  let f acc (kc, b) = joinButton ns als b >>= \case
+        Nothing -> pure acc
+        Just b' -> pure $ (kc, b') : acc
+  (n,) <$> foldM f [] (zip src bs)
 
 
 --------------------------------------------------------------------------------

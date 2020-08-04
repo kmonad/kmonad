@@ -34,7 +34,6 @@ module KMonad.Keyboard
 
     -- * LMaps
     -- $lmap
-  , LayerEntry(..)
   , LayerTag
   , LMap
 
@@ -126,16 +125,8 @@ isPressOf = (==) . mkPress
 --
 -- Type aliases for specifying stacked-layer mappings
 
--- | A 'LayerEntry' describes the different values a value in a layer can take
-data LayerEntry a
-  = LayerEntry a -- ^ Simply an entry of type 'a'
-  | Transparent  -- ^ Look down further in the stack
-  | Block        -- ^ Block (do nothing) for this entry
-  | FallThrough  -- ^ Treat this entry like we reached bottom of stack without encounter
-  deriving (Show, Eq, Functor)
-
 -- | Layers are identified by a tag that is simply a 'Text' value.
 type LayerTag = Text
 
 -- | 'LMap's are mappings from 'LayerTag'd maps from 'Keycode' to things.
-type LMap a = Ls.LayerStack LayerTag Keycode (LayerEntry a)
+type LMap a = Ls.LayerStack LayerTag Keycode a

@@ -237,5 +237,3 @@ tapMacro :: [Button] -> Button
 tapMacro bs = onPress $ mapM_ tap bs
 
 
---------------------------------------------------------------------------------
--- $button
