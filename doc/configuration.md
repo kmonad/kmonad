@@ -35,6 +35,30 @@ Under Windows the `defcfg` block is even simpler, you have no options.
 - `input`: `(low-level-hook)`
 - `output`: `(send-event-sink)`
 
+#### Mac
+Under Mac, the current valid values are:
+- `input`: `(iokit-name "optional product string")`
+- `output`: `(kext)`
+
+By default, kmonad will modify input from all keyboards. If a product
+string is provided, kmonad will modify input from all keyboards whose
+product string matches the given product string.
+
+To determine the product string of the connected keyboards, you can
+run:
+```shell
+cd c_src/mac
+make
+./list-keyboards
+```
+
+Note: Apple keyboards support a function-lock feature by default,
+where the function keys have special behaviors when held with
+<kbd>fn</kbd> (such as changing brightness or volume). KMonad seizes
+keyboard events before the function-lock feature is
+applied. Therefore, under KMonad, this feature will no longer take
+effect, but may be imitated in your KMonad configuration.
+
 ### `defsrc` block
 KMonad translates an input stream of key-events to an output stream of key
 events. The `defsrc` block exists as the specification of the input-layout. In

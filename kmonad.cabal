@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 2.2
 
 name:           kmonad
 version:        1.0
@@ -91,6 +91,24 @@ library
     build-depends:
       Win32
 
+  if os(darwin)
+    exposed-modules:
+      KMonad.Keyboard.IO.Mac.IOKitSource
+      KMonad.Keyboard.IO.Mac.KextSink
+      KMonad.Keyboard.IO.Mac.Types
+    cxx-sources:
+      c_src/mac/keyio_mac.cpp
+    cxx-options:
+      -std=c++14
+    include-dirs:
+      c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+    extra-libraries:
+      c++
+    build-depends:
+      unix
+    frameworks:
+      CoreFoundation
+      IOKit
 
 executable kmonad
   ghc-options:

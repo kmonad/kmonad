@@ -1,6 +1,6 @@
 # KMonad
 
-Welcome to KMonad, a keyboard remapping utility for Linux and Windows.
+Welcome to KMonad, a keyboard remapping utility for Linux, Windows and Mac.
 
 The docs are not yet completed, but here they are anyways:
 - [installation](doc/installation.md)
