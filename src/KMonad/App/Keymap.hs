@@ -35,7 +35,6 @@ import qualified Data.LayerStack as Ls
 -- $env
 --
 
-
 -- | The 'Keymap' environment containing the current keymap
 --
 -- NOTE: Since the 'Keymap' will never have to deal with anything
@@ -46,14 +45,22 @@ data Keymap = Keymap
   }
 makeClassy ''Keymap
 
--- | Create a 'Keymap' from a 'Keymap' of uninitialized 'Button's and a
+-- | Create a 'Keymap' from an 'LMap' of uninitialized 'Button's and a
 -- tag indicating which layer should start as the base.
 mkKeymap' :: MonadUnliftIO m
   => LayerTag    -- ^ The initial base layer
   -> LMap Button -- ^ The keymap of 'Button's
   -> m Keymap
 mkKeymap' n m = do
-  envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> initBEnv b c
+  -- let go b c =
+  envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> case b of
+    LayerEntry b' -> LayerEntry <$> initBEnv b' c
+    Block -> pure Block
+    Transparent -> pure Transparent
+    FallThrough -> pure FallThrough
+    -- FIXME: This can be prettier
+    -- x -> pure x
+    -- Block         -> pure Block
   Keymap <$> newIORef envs <*> newIORef n
 
 -- | Create a 'Keymap' but do so in the context of a 'ContT' monad to ease nesting.
@@ -111,11 +118,12 @@ layerOp h o = let km = h^.stack in case o of
 lookupKey :: MonadIO m
   => Keymap   -- ^ The 'Keymap' to lookup in
   -> Keycode        -- ^ The 'Keycode' to lookup
-  -> m (Maybe BEnv) -- ^ The resulting action
+  -> m (LayerEntry BEnv) -- ^ The resulting action
 lookupKey h c = do
   m <- readIORef $ h^.stack
   f <- readIORef $ h^.baseL
 
   pure $ case m ^? Ls.atKey c of
-    Nothing -> m ^? Ls.inLayer f c
-    benv    -> benv
+    Nothing -> case m ^? Ls.inLayer f c of
+      Nothing -> pure FallThrough
+    Just benv    -> benv

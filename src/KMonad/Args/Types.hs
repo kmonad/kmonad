@@ -89,6 +89,7 @@ data DefButton
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
+  | KFallthrough                           -- ^ Button that performs fallthrough
   deriving Show
 
 
