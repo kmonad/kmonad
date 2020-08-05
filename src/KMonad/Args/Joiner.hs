@@ -319,6 +319,12 @@ joinButton ns als =
     KLayerSwitch t -> if t `elem` ns
       then ret $ layerSwitch t
       else throwError $ MissingLayer t
+    KLayerAdd t -> if t `elem` ns
+      then ret $ layerAdd t
+      else throwError $ MissingLayer t
+    KLayerRem t -> if t `elem` ns
+      then ret $ layerRem t
+      else throwError $ MissingLayer t
     KLayerDelay s t -> if t `elem` ns
       then ret $ layerDelay (fi s) t
       else throwError $ MissingLayer t
