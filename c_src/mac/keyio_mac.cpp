@@ -65,7 +65,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
     kern_return_t kr;
     CFStringRef cfproduct = NULL;
     if(product) {
-        CFStringRef cfproduct = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
+        cfproduct = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
         if(cfproduct == NULL) {
             std::cerr << "CFStringCreateWithCString error" << std::endl;
             return;
