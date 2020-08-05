@@ -29,6 +29,8 @@ module KMonad.Button
   , modded
   , layerToggle
   , layerSwitch
+  , layerAdd
+  , layerRem
   , pass
 
   -- * Button combinators
@@ -132,6 +134,14 @@ layerToggle t = mkButton
 -- | Create a button that switches the base-layer on a press
 layerSwitch :: LayerTag -> Button
 layerSwitch t = onPress (layerOp $ SetBaseLayer t)
+
+-- | Create a button that adds a layer on a press
+layerAdd :: LayerTag -> Button
+layerAdd t = onPress (layerOp $ PushLayer t)
+
+-- | Create a button that removes the top instance of a layer on a press
+layerRem :: LayerTag -> Button
+layerRem t = onPress (layerOp $ PopLayer t)
 
 -- | Create a button that does nothing (but captures the input)
 pass :: Button
