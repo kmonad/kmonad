@@ -67,10 +67,11 @@ Note: `kmonad` uses a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
 (kext) to post modified key events to the OS. This kext is tedious to
 build from source, and the OS won't load it unless you sign it with an
-"Apple Developer ID."  An easier way to install this kext is to
-install
-[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements),
-which uses the same kext.
+"Apple Developer ID."  An easier way is to install the kext as a
+binary that has been signed by its maintainer. Also note that if you
+have
+[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements)
+installed, then you already have the kext installed.
 
 Compilation under Mac currently works with `stack`. Compilation under
 Mac via `nix` is not tested or planned. To compile on Mac, download
@@ -79,12 +80,16 @@ the kmonad source:
 git clone --recursive https://github.com/david-janssen/kmonad.git
 ```
 
-Then, if you want to attempt building and signing the kext yourself,
-look to [the
-documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-for instructions. Otherwise, make sure you have
+Next, install the kext (if you already have
 [Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements)
-installed.
+installed then skip this step). If you want to attempt building and
+signing the kext yourself, look to [the
+documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
+for instructions. Otherwise, run:
+```shell
+cd c_src/mac/Karabiner-VirtualHIDDevice
+make install
+```
 
 Finally, build kmonad with `stack`:
 ```shell
