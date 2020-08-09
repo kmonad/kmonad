@@ -178,9 +178,9 @@ shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) i
             KeyN, KeyO, KeyP, KeyQ, KeyR, KeyS, KeyT, KeyU, KeyV, KeyW, KeyX, KeyY, KeyZ ]
     num = zip (map T.singleton "!@#$%^&*")
           [ Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8 ]
-    oth = zip (map T.singleton "<>:~\"|{}+")
+    oth = zip (map T.singleton "<>:~\"|{}+?")
           [ KeyComma, KeyDot, KeySemicolon, KeyGrave, KeyApostrophe, KeyBackslash
-          , KeyLeftBrace, KeyRightBrace, KeyEqual]
+          , KeyLeftBrace, KeyRightBrace, KeyEqual, KeySlash]
 
 -- | Names for various buttons
 buttonNames :: [(Text, DefButton)]

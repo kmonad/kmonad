@@ -71,6 +71,7 @@
   <*> #(< * > spc)
   >>= #(> > = spc)
   =<< #(= < < spc)
+  ??? #(? ? ?)
 
   ;; Simple layer switches
   num  (layer-toggle numpad)
@@ -132,7 +133,7 @@
 ;; FIXME, \\ isn't reading as bksl but as |
 ;; Symbols
 (deflayer symbols
-  @^.  @<|> @<$> @<*> @::            _     &    *    =   bksl
+  @^.  @<|> @<$> @<*> @::            @???  &    *    =   bksl
   @-|  @=>  @->  @*>  @>>=           _     $    %    ^   _
   @-^  @<=  @<-  @<*  @=<<           _     !    @    #   _
   _    _    _    _    _    _    _    _    _    _    _    _
