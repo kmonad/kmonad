@@ -238,6 +238,7 @@ buttonP = (lexeme . choice . map try $
   , statement "multi-tap"      $ KMultiTap    <$> timed       <*> buttonP
   , statement "tap-hold"       $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
   , statement "tap-hold-next"  $ KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
+  , statement "tap-next-release" $ KTapNextRelease <$> buttonP <*> buttonP
   , statement "tap-next"       $ KTapNext     <$> buttonP     <*> buttonP
   , statement "layer-toggle"   $ KLayerToggle <$> word
   , statement "layer-switch"   $ KLayerSwitch <$> word

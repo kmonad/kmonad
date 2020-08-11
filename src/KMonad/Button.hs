@@ -42,6 +42,7 @@ module KMonad.Button
   , multiTap
   , tapNext
   , tapHoldNext
+  , tapNextRelease
   , tapMacro
   )
 where
@@ -212,6 +213,29 @@ tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> 
   if p $ tr^.event
     then tap t   *> pure Catch
     else press h *> pure NoCatch
+
+-- | Create a 'Button' that performs a tap of some button if the next release of
+-- any keypress not prior to this keypress comes from this keypress, or else
+-- switches to holding some other button if the next release of any keypress not
+-- prior to this keypress comes from another keypress.
+tapNextRelease :: Button -> Button -> Button
+tapNextRelease t h = onPress $ f []
+  where
+    f :: MonadK m => [Keycode] ->  m ()
+    f l = do
+      hold True
+      g l
+      where
+        g :: MonadK m => [Keycode] ->  m ()
+        g l = hookF $ \e -> do
+          p <- matchMy Release
+          if isRelease e
+            then if p e
+                 then tap t *> pure Catch <* hold False
+                 else if elem (e^.keycode) l
+                      then press h *> pure NoCatch <* hold False
+                      else g l *> pure NoCatch
+            else g ((e^.keycode):l) *> pure NoCatch
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
