@@ -319,6 +319,12 @@ joinButton ns als =
     KLayerSwitch t -> if t `elem` ns
       then ret $ layerSwitch t
       else throwError $ MissingLayer t
+    KLayerAdd t -> if t `elem` ns
+      then ret $ layerAdd t
+      else throwError $ MissingLayer t
+    KLayerRem t -> if t `elem` ns
+      then ret $ layerRem t
+      else throwError $ MissingLayer t
     KLayerDelay s t -> if t `elem` ns
       then ret $ layerDelay (fi s) t
       else throwError $ MissingLayer t
@@ -333,6 +339,7 @@ joinButton ns als =
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
     KTapHoldNext s t h -> jst $ tapHoldNext (fi s) <$> go t <*> go h
+    KTapNextRelease t h -> jst $ tapNextRelease    <$> go t <*> go h
     KAroundNext b      -> jst $ aroundNext         <$> go b
     KPause ms          -> jst . pure $ onPress (pause ms)
     KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs

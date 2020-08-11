@@ -79,9 +79,12 @@ data DefButton
   | KEmit Keycode                          -- ^ Emit a keycode
   | KLayerToggle Text                      -- ^ Toggle to a layer when held
   | KLayerSwitch Text                      -- ^ Switch base-layer when pressed
+  | KLayerAdd Text                         -- ^ Add a layer when pressed
+  | KLayerRem Text                         -- ^ Remove top instance of a layer when pressed
   | KTapNext DefButton DefButton           -- ^ Do 2 things based on behavior
   | KTapHold Int DefButton DefButton       -- ^ Do 2 things based on behavior and delay
   | KTapHoldNext Int DefButton DefButton   -- ^ Mixture between KTapNext and KTapHold
+  | KTapNextRelease DefButton DefButton    -- ^ Do 2 things based on behavior
   | KAroundNext DefButton                  -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
