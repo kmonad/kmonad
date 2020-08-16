@@ -189,7 +189,7 @@ buttonNames = shiftedNames <> escp <> util
     emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
     -- Escaped versions for reserved characters
     escp = [ ("\\(", emitS Key9), ("\\)", emitS Key0)
-           , ("\\_", emitS KeyMinus), ("\\\\", emitS KeyBackslash)]
+           , ("\\_", emitS KeyMinus), ("\\\\", KEmit KeyBackslash)]
     -- Extra names for useful buttons
     util = [("_", KTrans), ("XX", KBlock)]
 
