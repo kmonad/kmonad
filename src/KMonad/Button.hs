@@ -214,29 +214,44 @@ tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> 
     then tap t   *> pure Catch
     else press h *> pure NoCatch
 
--- | Create a 'Button' that performs a tap of some button if the next release of
--- any keypress not prior to this keypress comes from this keypress, or else
--- switches to holding some other button if the next release of any keypress not
--- prior to this keypress comes from another keypress.
+-- | Create a tap-hold style button that makes its decision based on the next
+-- detected release in the following manner:
+-- 1. It is the release of this button: We are tapping
+-- 2. It is of some other button that was pressed *before* this one, ignore.
+-- 3. It is of some other button that was pressed *after* this one, we hold.
+--
+-- It does all of this while holding processing of other buttons, so time will
+-- get rolled back like a TapHold button.
 tapNextRelease :: Button -> Button -> Button
-tapNextRelease t h = onPress $ f []
+tapNextRelease t h = onPress $ do
+  hold True
+  go []
   where
-    f :: MonadK m => [Keycode] ->  m ()
-    f l = do
-      hold True
-      g l
-      where
-        g :: MonadK m => [Keycode] ->  m ()
-        g l = hookF $ \e -> do
-          p <- matchMy Release
-          if isRelease e
-            then if p e
-                 then tap t *> pure Catch <* hold False
-                 else if elem (e^.keycode) l
-                      then press h *> pure NoCatch <* hold False
-                      else g l *> pure NoCatch
-            else g ((e^.keycode):l) *> pure NoCatch
+    go :: MonadK m => [Keycode] ->  m ()
+    go ks = hookF $ \e -> do
+      p <- matchMy Release
+      let isRel = isRelease e
+      if
+        -- If the next event is my own release: we act as if we were tapped
+        | p e -> doTap
+        -- If the next event is the release of some button that was held after me
+        -- we act as if we were held
+        | isRel && (e^.keycode `elem` ks) -> doHold e
+        -- Else, if it is a press, store the keycode and wait again
+        | not isRel                       -> go ((e^.keycode):ks) *> pure NoCatch
+        -- Else, if it is a release of some button held before me, just ignore
+        | otherwise                       -> go ks *> pure NoCatch
 
+    -- Behave like a tap is simple: tap the button `t` and release processing
+    doTap :: MonadK m => m Catch
+    doTap = tap t *> hold False *> pure Catch
+
+    -- Behave like a hold is not simple: first we release the processing hold,
+    -- then we catch the release of ButtonX that triggered this action, and then
+    -- we rethrow this release.
+    doHold :: MonadK m => KeyEvent -> m Catch
+    doHold e = press h *> hold False *> inject e *> pure Catch
+       
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
 -- into its list. The moment a delay is exceeded or immediately upon reaching
