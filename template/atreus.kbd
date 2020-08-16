@@ -136,7 +136,7 @@
   +`   `    ~    [    ]              _    7    8    9    /
   @sym "    \_   \(   \)             _    4    5    6    *
   +~   '    |    {    }              =    1    2    3    -
-  _    _    _    _    _    _    @fun _    0    _    .    +
+  _    _    bksl _    _    _    @fun _    0    _    .    +
 )
 
 ;; FIXME, \\ isn't reading as bksl but as |
