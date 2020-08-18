@@ -115,13 +115,7 @@ fromMacKeyEvent (MacKeyEvent (s, c)) = case fromMacKeycode c of
 -- See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-700/IOHIDFamily/AppleHIDUsageTables.h.auto.html
 kcMap :: M.HashMap MacKeycode Keycode
 kcMap = M.fromList $
-  [ (0x00070000, KeyError) -- There's no documentation on this error code, but
-                           -- I've seen it sent when the rollover is exceeded on
-                           -- my macbook internal keyboard
-  , (0x00070001, KeyError) -- kHIDUsage_KeyErrorRollOver
-  , (0x00070002, KeyError) -- kHIDUsage_KeyPOSTFail
-  , (0x00070003, KeyError) -- kHIDUsage_Undefined
-  , (0x00070004, KeyA)
+  [ (0x00070004, KeyA)
   , (0x00070005, KeyB)
   , (0x00070006, KeyC)
   , (0x00070007, KeyD)
@@ -292,7 +286,6 @@ kcMap = M.fromList $
   , (0x000700E6, KeyRightAlt)
   , (0x000700E7, KeyRightMeta)
   -- /* 0x000700E8-0x0007FFFF Reserved */
-  , (0x0007FFFF, KeyReserved)
   , (0x000C00B5, KeyNextSong)
   , (0x000C00B6, KeyPreviousSong)
   , (0x000C00CD, KeyPlayPause)

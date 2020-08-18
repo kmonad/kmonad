@@ -57,7 +57,12 @@ void input_callback(void *context, IOReturn result, void *sender, IOHIDValueRef 
     uint16_t usage = IOHIDElementGetUsage(element);
     e.type = !integer_value;
     e.keycode = (usage_page << 16) | usage;
-    write(fd[1], &e, sizeof(struct KeyEvent));
+    // "error" and "reserved" key events are ignored
+    // See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-421.6/IOHIDFamily/IOHIDUsageTables.h.auto.html
+    if ((usage > kHIDUsage_KeyboardErrorUndefined && usage < 0xA5) ||
+        (usage > 0xDF && usage < 0xE8)) {
+        write(fd[1], &e, sizeof(struct KeyEvent));
+    }
 }
 
 void open_matching_devices(char *product, io_iterator_t iter) {

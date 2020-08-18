@@ -307,7 +307,6 @@ data Keycode
   | KeyMissionCtrl
   | KeyBacklightDown
   | KeyBacklightUp
-  | KeyError
 #endif
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
