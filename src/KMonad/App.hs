@@ -70,11 +70,13 @@ data AppEnv = AppEnv
 
     -- Pull chain
   , _dispatch   :: Dp.Dispatch
-  , _hooks      :: Hs.Hooks
+  , _inHooks    :: Hs.Hooks
   , _sluice     :: Sl.Sluice
 
     -- Other components
   , _keymap     :: Km.Keymap
+  , _outHooks   :: Hs.Hooks
+  , _outVar     :: TMVar KeyEvent
   }
 makeClassy ''AppEnv
 
@@ -102,12 +104,21 @@ initAppEnv cfg = do
 
   -- Initialize the pull-chain components
   dsp <- Dp.mkDispatch $ awaitKey src
-  hks <- Hs.mkHooks    $ Dp.pull  dsp
-  slc <- Sl.mkSluice   $ Hs.pull  hks
+  ihk <- Hs.mkHooks    $ Dp.pull  dsp
+  slc <- Sl.mkSluice   $ Hs.pull  ihk
 
   -- Initialize the button environments in the keymap
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
+  -- Initialize output components
+  otv <- lift . atomically $ newEmptyTMVar
+  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
+
+  -- Setup thread to read from outHooks and emit to keysink
+  launch_ "emitter_proc" $ do
+    e <- atomically . takeTMVar $ otv
+    emitKey snk e
+  -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
     { _keAppCfg  = cfg
     , _keLogFunc = lgf
@@ -115,10 +126,12 @@ initAppEnv cfg = do
     , _keySource = src
 
     , _dispatch  = dsp
-    , _hooks     = hks
+    , _inHooks   = ihk
     , _sluice    = slc
 
-    , _keymap   = phl
+    , _keymap    = phl
+    , _outHooks  = ohk
+    , _outVar    = otv
     }
 
 
@@ -171,7 +184,8 @@ startApp c = runContT (initAppEnv c) (flip runRIO loop)
 
 instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
-  emit e = view keySink >>= flip emitKey e
+  emit e = view outVar >>= atomically . flip putTMVar e
+  -- emit e = view keySink >>= flip emitKey e
 
   -- Pausing is a simple IO action
   pause = threadDelay . (*1000) . fromIntegral
@@ -183,9 +197,11 @@ instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
     if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
 
   -- Hooking is performed with the hooks component
-  register h = view hooks >>= \hs -> Hs.register hs h
-  -- hookNext      t f = view hooks >>= \hs -> Hs.hookNext   hs    t f
-  -- hookWithin ms t f = view hooks >>= \hs -> Hs.hookWithin hs ms t f
+  register l h = do
+    hs <- case l of
+      InputHook  -> view inHooks
+      OutputHook -> view outHooks
+    Hs.register hs h
 
   -- Layer-ops are sent to the 'Keymap'
   layerOp o = view keymap >>= \hl -> Km.layerOp hl o

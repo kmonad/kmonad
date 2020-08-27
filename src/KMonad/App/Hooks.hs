@@ -25,7 +25,6 @@ where
 
 import KMonad.Prelude
 
-import Data.Semigroup (Any(..))
 import Data.Time.Clock.System
 import Data.Unique
 
@@ -36,7 +35,6 @@ import KMonad.Util
 import RIO.Partial (fromJust)
 
 import qualified RIO.HashMap as M
-import qualified RIO.Text    as T
 
 --------------------------------------------------------------------------------
 -- $hooks
@@ -55,7 +53,7 @@ import qualified RIO.Text    as T
 -- $env
 
 data Entry = Entry
-  { _time :: SystemTime
+  { _time  :: SystemTime
   , _eHook :: Hook IO
   }
 makeLenses ''Entry

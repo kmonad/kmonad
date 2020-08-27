@@ -21,6 +21,12 @@ module KMonad.Util
   , onErr
   , using
   , logRethrow
+
+    -- * Some helpers to launch background process
+  , withLaunch
+  , withLaunch_
+  , launch
+  , launch_
   )
 
 where
@@ -62,6 +68,7 @@ onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 using :: Acquire a -> ContT r (RIO e) a
 using dat = ContT $ (\next -> with dat $ \a -> next a)
 
+
 -- | Log an error message and then rethrow the error
 --
 -- Particularly useful as a suffix using `catch`. i.e.
@@ -74,3 +81,41 @@ logRethrow :: HasLogFunc e
 logRethrow t e = do
   logError $ display t <> ": " <> display e
   throwIO e
+
+--- | Launch a process that repeats an action indefinitely. If an error ever
+--- occurs, print it and rethrow it. Ensure the process is cleaned up upon error
+--- and/or shutdown.
+withLaunch :: HasLogFunc e
+  => Text                   -- ^ The name of this process (for logging)
+  -> RIO e a                -- ^ The action to repeat forever
+  -> ((Async a) -> RIO e b) -- ^ The foreground action to run
+  -> RIO e b                -- ^ The resulting action
+withLaunch n a f = do
+  logInfo $ "Launching process: " <> display n
+  withAsync
+   (forever a
+    `catch`   logRethrow ("Encountered error in <" <> textDisplay n <> ">")
+    `finally` logInfo    ("Closing process: " <> display n))
+   (\a' -> link a' >> f a')
+
+-- | Like withLaunch, but without ever needing access to the async process
+withLaunch_ :: HasLogFunc e
+  => Text    -- ^ The name of this process (for logging)
+  -> RIO e a -- ^ The action to repeat forever
+  -> RIO e b -- ^ The foreground action to run
+  -> RIO e b -- ^ The resulting action
+withLaunch_ n a f = withLaunch n a (const f)
+
+-- | Like 'withLaunch', but in the ContT monad
+launch :: HasLogFunc e
+  => Text    -- ^ The name of this process (for logging)
+  -> RIO e a -- ^ The action to repeat forever
+  -> ContT r (RIO e) (Async a)
+launch n = ContT . withLaunch n
+
+-- | Like 'withLaunch_', but in the ContT monad
+launch_ :: HasLogFunc e
+  => Text    -- ^ The name of this process (for logging)
+  -> RIO e a -- ^ The action to repeat forever
+  -> ContT r (RIO e) ()
+launch_ n a = ContT $ \next -> withLaunch_ n a (next ())

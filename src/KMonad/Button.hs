@@ -199,7 +199,7 @@ tapHold ms t h = onPress $ withinHeld ms (matchMy Release)
 -- own release, or else switches to holding some other button if the next event
 -- is a different keypress.
 tapNext :: Button -> Button -> Button
-tapNext t h = onPress $ hookF $ \e -> do
+tapNext t h = onPress $ hookF InputHook $ \e -> do
   p <- matchMy Release
   if p e
     then tap t   *> pure Catch
