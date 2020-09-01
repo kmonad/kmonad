@@ -141,7 +141,7 @@ data Keycode
   | KeyKatakanaHiragana
   | KeyMuhenkan
   | KeyKpjpcomma
-  | KeyKpenter
+  | KeyKpEnter
   | KeyRightCtrl
   | KeyKpSlash
   | KeySysRq
@@ -395,6 +395,13 @@ aliases = Q.mkMultiMap
   , (KeyComma,          ["comm", ","])
   , (KeyDot,            ["."])
   , (KeySlash,          ["/"])
+  , (KeyNumLock,        ["nlck"])
+  , (KeyKpSlash,        ["kp/"])
+  , (KeyKpEnter,        ["kprt"])
+  , (KeyKpPlus,         ["kp+"])
+  , (KeyKpAsterisk,     ["kp*"])
+  , (KeyKpMinus,        ["kp-"])
+  , (KeyKpDot,          ["kp."])
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
