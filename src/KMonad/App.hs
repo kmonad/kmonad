@@ -206,6 +206,12 @@ instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Layer-ops are sent to the 'Keymap'
   layerOp o = view keymap >>= \hl -> Km.layerOp hl o
 
+  -- Injecting by adding to Dispatch's rerun buffer
+  inject e = do
+    di <- view dispatch
+    logDebug $ "Injecting event: " <> display e
+    Dp.rerun di [e]
+
 
 --------------------------------------------------------------------------------
 -- $kenv

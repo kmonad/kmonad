@@ -140,6 +140,8 @@ class Monad m => MonadKIO m where
   register   :: HookLocation -> Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
+  -- | Insert an event in the input queue
+  inject     :: KeyEvent -> m ()
 
 class MonadKIO m => MonadK m where
   -- | Access the keycode to which the current button is bound
