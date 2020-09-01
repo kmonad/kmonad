@@ -4,7 +4,8 @@
   packageOverrides = p: rec {
     haskellPackages = p.haskell.packages.ghc883.override {
       overrides = self: super:
-        { kmonad = super.callCabal2nix "kmonad" ../. {};
+        {
+          kmonad = super.callCabal2nix "kmonad" ../. {};
         };
     };
   };
