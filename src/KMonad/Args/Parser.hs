@@ -191,7 +191,10 @@ buttonNames = shiftedNames <> escp <> util
     escp = [ ("\\(", emitS Key9), ("\\)", emitS Key0)
            , ("\\_", emitS KeyMinus), ("\\\\", KEmit KeyBackslash)]
     -- Extra names for useful buttons
-    util = [("_", KTrans), ("XX", KBlock)]
+    util = [ ("_", KTrans), ("XX", KBlock)
+           , ("lprn", emitS Key9), ("rprn", emitS Key0)]
+
+
 
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
