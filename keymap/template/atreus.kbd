@@ -1,0 +1,17 @@
+#| --------------------------------------------------------------------------
+
+                            KMonad: Atreus template
+
+  Since the Atreus by definition is a fully programmable keyboard, it makes no
+  sense to provide a `defsrc` definition, since it will differ wildly between
+  people. We do provide a layer template below:
+
+
+(deflayer name
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+)
+
+  -------------------------------------------------------------------------- |#
