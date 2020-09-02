@@ -323,9 +323,16 @@ multiTap l bs = onPress $ go bs
       within ms (matchMy Release) (press b) onMatch
 
 
--- | Create a 'Button' that performs a series of taps on press.
+-- | Create a 'Button' that performs a series of taps on press. Note that the
+-- last button is only released when the tapMacro itself is released.
 tapMacro :: [Button] -> Button
-tapMacro bs = onPress $ mapM_ tap bs
+tapMacro bs = onPress $ go bs
+  where
+    go []      = pure ()
+    go (b:[])  = press b
+    go (b:rst) = tap b >> go rst
+
+  -- $ mapM_ tap bs
 
 -- | Switch to a layer for a period of time, then automatically switch back
 layerDelay :: Milliseconds -> LayerTag -> Button
