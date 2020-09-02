@@ -200,7 +200,9 @@ buttonNames = shiftedNames <> escp <> util
 moddedP :: Parser DefButton
 moddedP = KAround <$> prfx <*> buttonP
   where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
-               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)]
+               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)
+               , ("RS-", KeyRightShift), ("RC-", KeyRightCtrl)
+               , ("RA-", KeyRightAlt),   ("RM-", KeyRightMeta)]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
 -- | Parse Pxxx as pauses (useful in macros)
