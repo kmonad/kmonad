@@ -256,6 +256,7 @@ buttonP = (lexeme . choice . map try $
   , statement "layer-next"     $ KLayerNext   <$> word
   , statement "around-next"    $ KAroundNext  <$> buttonP
   , statement "tap-macro"      $ KTapMacro    <$> some buttonP
+  , statement "pause"          $ KPause . fromIntegral <$> numP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP
