@@ -108,12 +108,13 @@ register hs h = do
   -- Insert an entry into the store
   tag <- liftIO newUnique
   e   <- Entry <$> liftIO getSystemTime <*> ioHook h
-  logDebug $ "Registering hook: " <> display (hashUnique tag)
   atomically $ modifyTVar (hs^.hooks) (M.insert tag e)
   -- If the hook has a timeout, start a thread that will signal timeout
   case h^.hTimeout of
-    Nothing -> pure ()
+    Nothing -> logDebug $ "Registering untimed hook: " <> display (hashUnique tag)
     Just t' -> void . async $ do
+      logDebug $ "Registering " <> display (t'^.delay)
+              <> "ms hook: " <> display (hashUnique tag)
       threadDelay $ 1000 * (fromIntegral $ t'^.delay)
       atomically $ putTMVar (hs^.injectTmr) tag
 
@@ -144,7 +145,8 @@ cancelHook hs tag = do
 
 -- | Run the function stored in a Hook on the event and the elapsed time
 runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
-runEntry t e v = liftIO . (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+runEntry t e v = liftIO $ do
+  (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)

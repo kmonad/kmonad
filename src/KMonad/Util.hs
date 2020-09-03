@@ -33,6 +33,7 @@ where
 
 import KMonad.Prelude
 
+import Data.Time.Clock
 import Data.Time.Clock.System
 
 --------------------------------------------------------------------------------
@@ -48,10 +49,15 @@ tDiff :: ()
   => SystemTime   -- ^ The earlier timepoint
   -> SystemTime   -- ^ The later timepoint
   -> Milliseconds -- ^ The time in milliseconds between the two
-tDiff (MkSystemTime s_a ns_a) (MkSystemTime s_b ns_b) = let
-  s  = fromIntegral $ (s_b  - s_a) * 1000
-  ns = fromIntegral $ (ns_b - ns_a) `div` 1000000
-  in s + ns
+tDiff a b = let
+  a' = systemToUTCTime a
+  b' = systemToUTCTime b
+  d  = diffUTCTime b' a'
+  in round $ d * 1000
+-- tDiff (MkSystemTime s_a ns_a) (MkSystemTime s_b ns_b) = let
+  -- s  = fromIntegral $ (s_b  - s_a) * 1000
+  -- ns = fromIntegral $ (ns_b - ns_a) `div` 1000000
+  -- in s + ns
 
 --------------------------------------------------------------------------------
 -- $util
