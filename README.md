@@ -13,5 +13,7 @@ For information on how to configure KMonad, we refer you to:
 - [the configuration tutorial](keymap/tutorial.kbd)
 - [user configurations](keymap/user)
 
-
-
+## Troubleshooting
+For a number of commonly asked questions regarding various configuration issues,
+please see:
+- [the FAQ](doc/faq.md)

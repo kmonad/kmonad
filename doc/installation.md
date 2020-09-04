@@ -139,3 +139,72 @@ to install udev rules using something like this in your `config.scm`
        (rules (cons kmonad 
                     (udev-configuration-rules config)))))))) 
 ``` 
+
+### NixOS
+
+There is not currently a `kmonad` package in `nixpkgs`, however the following instructions show
+how to create your own adhoc derivation, and how to configure udev rules in nixos.
+
+#### The Derivation
+Create a `kmonad.nix` derivation such as this one which fetches a static binary release of kmonad and packages it in the nix-store:
+```
+let
+  pkgs = import <nixpkgs> { };
+
+  kmonad-bin = pkgs.fetchurl {
+    url = "https://github.com/david-janssen/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
+    sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
+  };
+in
+pkgs.runCommand "kmonad" {}
+    ''
+      #!${pkgs.stdenv.shell}
+      mkdir -p $out/bin
+      cp ${kmonad-bin} $out/bin/kmonad
+      chmod +x $out/bin/*
+    ''
+```
+
+#### Configuration.nix
+
+1. Import `kmonad.nix` into your `configuration.nix` file using a `let` expression:
+```
+let
+  kmonad =  import /path/to/kmonad.nix;
+in {
+  <your_config>
+}
+```
+
+2. Add `kmonad` to `environment.systemPackages`:
+```
+  environment.systemPackages = with pkgs; [
+    ...
+    kmonad
+    ...
+  ];
+```
+
+3. Create the `uinput` group and add your user to `uinput` and `input`:
+```
+  users.groups = { uinput = {}; };
+
+  users.extraUsers.userName = {
+    ...
+    extraGroups = [ ... "input" "uinput" ];
+  };
+```
+
+4. Add `udev` rules:
+```
+  services.udev.extraRules =
+    ''
+      # KMonad user access to /dev/uinput
+      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+    '';
+```
+
+5. Rebuild system:
+```
+sudo nixos-rebuild switch
+```
