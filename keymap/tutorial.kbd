@@ -34,7 +34,7 @@
   - block comments between: #| and its reverse
   - line comments following: ;;
 
-  Unlike standard lisp, a single ; does not denote a comma, but instead the
+  Unlike standard lisp, a single ; does not denote a command, but instead the
   keycode for semicolon.
 
   Also, as you might have noticed, whitespace is possible anywhere.
@@ -147,7 +147,7 @@
   explains the layout on which we specify our `deflayer`s down the line.
 
   It is important to realize that the `defsrc` block doesn't *necessarily* have
-  to coincide with your input actual keyboard. You can specify a full 100%
+  to coincide with your actual input keyboard. You can specify a full 100%
   `defsrc` block, but only use a 40% keyboard. This will mean that every
   `deflayer` you specify will also have to match your 100% `defsrc`, and that
   your actual keyboard would be physically unable to trigger about 60% of your
@@ -167,7 +167,7 @@
 
   The layouting in the `defsrc` block is completely free, whitespace simply gets
   ignored. We strive to provide a name for every keycode that is no longer than
-  4 characters, so we find that layout out your keymap in columns of 5 works out
+  4 characters, so we find that laying out your keymap in columns of 5 works out
   quite nicely (although wider columns will allow for more informative aliases,
   see below).
 
@@ -176,7 +176,7 @@
   its Keycode name, but all lower-case and with the 'Key' prefix removed. There
   are also various aliases for Keycodes starting around line 350. If you are
   trying to bind a key and there is not a 4-letter alias, please file an issue,
-  or better yet, a pull-request.
+  or better yet, a pull-request, and it will be added promptly.
 
   Also, you can consult './keymap/template/' for various input templates. Here
   we use the input-template for 'us_ansi_60.kbd'
@@ -254,8 +254,8 @@
      some aliases that have not yet been defined, this is not an issue.
 
   3. The '_' character evaluates to transparent. I.e. no handler for that
-     key-event in this layer, causing this event to be handed down the stack
-     layer stack to perhaps be handled by the next layer.
+     key-event in this layer, causing this event to be handed down the layer
+     stack to perhaps be handled by the next layer.
 
   4. The 'XX' character evaluates to blocked. I.e. no action bound to that
      key-event in this layer, but do actually catch event, preventing any
@@ -364,13 +364,21 @@
   md1 (around a (around b c))    ;; abc
   md2 (around a (around lsft b)) ;; aB
   md3 C-A-M-S-l
-  md4 (around % b)               ;; BEWARE: %B, not %b
+  md4 (around % b)               ;; BEWARE: %B, not %b, do you see why?
 )
 
 ;; Now we define the 'tst' button as opening and closing a bunch of layers at
 ;; the same time. If you understand why this works, you're starting to grok
 ;; KMonad.
-
+;;
+;; Explanation: we define a bunch of testing-layers with buttons to illustrate
+;; the various options in KMonad. Each of these layers makes sure to have its
+;; buttons not overlap with the buttons from the other layers, and specifies all
+;; its other buttons as transparent. When we use the nested `around` statement,
+;; whenever we push the button linked to '@tst' (check `qwerty` layer, we bind
+;; it to `rctl`), any button we press when holding `rctl` will be pressed in the
+;; context of those 4 layers overlayed on the stack. When we release `rctl`, all
+;; these layers will be popped again.
 (defalias tst (around (layer-toggle macro-test)
                 (around (layer-toggle layer-test)
                   (around (layer-toggle around-next-test)
@@ -455,8 +463,8 @@
   `layer-toggle` works as described before, 2 things to note:
   1. If you are confused or worried about pressing a key, changing layers, and
      then releasing a key and this causing issues: don't be. KMonad handles
-     presses and releases in very different ways. Presses get passed to directly
-     to the stacked keymap as previously described. When a KMonad button has its
+     presses and releases in very different ways. Presses get passed directly to
+     the stacked keymap as previously described. When a KMonad button has its
      press-action triggered, it then registers a callback that will catch its
      own release before we ever touch the keymap. This guarantees that the
      button triggered by the press of X *will be* the button whose release is
@@ -470,8 +478,8 @@
   milliseconds. Just like `layer-toggle` this will never permanently mess-up the
   layer stack. This button was initially implemented to provide some
   'leader-key' style behavior. Although I think in the future better solutions
-  will be available. For now this will cause temporarily add a layer to the top
-  of the stack:
+  will be available. For now this will temporarily add a layer to the top of the
+  stack:
     (layer-delay 500 my-layer)
 
   `layer-next`, once pressed, primes KMonad to handle the next press from some
@@ -485,9 +493,10 @@
 
   `layer-switch`: change the base-layer of KMonad. As described at the top of
   this document, the first `deflayer` statement is the layer that is active when
-  KMonad starts. Since `layer-toggle` can only ever add and remove on top of
-  that, it can never change the base-layer. The following button will unregister
-  the bottom-most layer the keymap, and instead insert some arbitrary layer.
+  KMonad starts. Since `layer-toggle` can only ever add on and remove from the
+  top of that, it can never change the base-layer. The following button will
+  unregister the bottom-most layer of the keymap, and replace it with another
+  layer.
     (layer-switch my-layer)
 
   This is where things start getting potentially dangerous (i.e. get KMonad into
@@ -506,16 +515,22 @@
 
   `layer-add` and `layer-rem`. This is where you can very quickly cause yourself
   a big headache. Originally I didn't expose these operations, but someone
-  wanted to use them, and I am not one to deny another man a chainsaw. As the
+  wanted to use them, and I am not one to deny someone else a chainsaw. As the
   names might give away:
     (layer-add name) ;; Add a layer to the top of the stack
     (layer-rem name) ;; Remove a layer by name (noop if no such layer)
+
+  To use `layer-add` and `layer-rem` well, you should take a moment to think
+  about how to create a layout that will prevent you from getting into
+  situations where you enter a key-configuration you cannot get out of again.
+  These two operations together, however, are very useful for activating a
+  permanent overlay for a while. This technique is illustrated in the tap-hold
+  overlay a bit further down.
    
 
   -------------------------------------------------------------------------- |#
 
 (defalias
-  ;; Skipping (layer-toggle X) example, there are plenty above
 
   yah (layer-toggle asking-for-trouble) ;; Completely safe
   nah (layer-add asking-for-trouble)    ;; Completely unsafe
@@ -524,13 +539,13 @@
   ld2 (layer-next numbers)      ;; Another way to get a leader key
 
   ;; NOTE, this is safe because both `qwerty` and `colemak` contain the `@tst`
-  ;; button which will get us to the `layer-test` layer, which will get us to
+  ;; button which will get us to the `layer-test` layer, which itself contains
   ;; both `@qwe` and `@col`.
   qwe (layer-switch qwerty) ;; Set qwerty as the base layer
   col (layer-switch colemak) ;; Set colemak as the base layer
 )
 (deflayer layer-test
-  @qwe _    _    _    _    _    _    _    _    _    _    _    @add @nah
+  @qwe _    _    _    _    _    _    _    _    _    _    @add _    @nah
   @col _    _    _    _    _    _    _    _    _    _    _    _    @yah
   _    _    _    _    _    _    _    _    _    _    _    _    _
   _    _    _    _    _    _    _    _    _    @ld1 @ld2 _
@@ -609,7 +624,7 @@
   difference lies in how the decision is made whether to tap or hold. A
   `tap-hold` waits for a particular timeout, if the `tap-hold` is released
   anywhere before that moment we execute a tap immediately. If the timeout
-  occurs and the `tap-hold` is still help, we switch to holding mode.
+  occurs and the `tap-hold` is still held, we switch to holding mode.
 
   The additional feature of a `tap-hold` is that it pauses event-processing
   until it makes its decision and then rolls back processing when the decision
@@ -695,6 +710,9 @@
   button is pressed. If the last button in the list is reached, it is
   immediately pressed.
 
+  Note that you can actually hold the button, so in the below example, going:
+  tap-tap-hold (wait 300ms) will get you a pressed c, until you release again.
+
   -------------------------------------------------------------------------- |#
 
 (defalias
@@ -708,6 +726,9 @@
   next button-press inside some context. This could be the context of 'having
   Shift pressed' or 'being inside some layer' or, less usefully, 'having d
   pressed'. It is a more general and powerful version of `layer-next`.
+
+  I think expansion of this button-style is probably the future of leader-key,
+  hydra-style functionality support in KMonad.
 
   -------------------------------------------------------------------------- |#
 
