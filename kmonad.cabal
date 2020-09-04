@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name:           kmonad
-version:        1.0
+version:        0.4
 synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
 maintainer:     janssen.dhj@gmail.com

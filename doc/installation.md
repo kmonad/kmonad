@@ -29,7 +29,7 @@ because you installed it yourself or because you are using NixOS, you can build
 `kmonad` using the following command.
 
 ```shell
-nix-build nix/release.nix
+nix-build nix
 ```
 
 Currently the process ends with an error, however only after the compilation and
