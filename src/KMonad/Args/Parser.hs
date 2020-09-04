@@ -322,30 +322,3 @@ defsrcP = many $ lexeme keycodeP
 deflayerP :: Parser DefLayer
 deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
 
-
-
---------------------------------------------------------------------------------
--- $tst
-
--- TODO clean me
-
--- fname :: String
--- fname = "/home/david/prj/hask/kmonad/doc/example.kbd"
-
--- testText :: IO Text
--- testText = readFileUtf8 "/home/david/prj/hask/kmonad/doc/test.kbd"
-
--- test2Text :: IO Text
--- test2Text = readFileUtf8  "/home/david/prj/hask/kmonad/doc/test2.kbd"
-
--- test3Text :: IO Text
--- test3Text = readFileUtf8  "/home/david/prj/hask/kmonad/doc/example.kbd"
-
--- test :: IO ()
--- test = parseTest configP =<< testText
-
--- test2 :: IO ()
--- test2 = parseTest (some $ lexeme keycodeP) =<< test2Text
-
--- test3 :: IO ()
--- test3 = parseTest configP =<< test3Text
