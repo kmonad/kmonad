@@ -513,17 +513,17 @@
 (defalias
   ;; Skipping (layer-toggle X) example, there are plenty above
 
-  ;; NOTE, this is safe because both `qwerty` and `colemak` contain the `@tst`
-  ;; button which will get us to the `layer-test` layer, which will get us to
-  ;; both `@qwe` and `@col`.
-  qwe (layer-switch qwerty) ;; Set qwerty as the base layer
-  col (layer-switch colemak) ;; Set colemak as the base layer
-
   yah (layer-toggle asking-for-trouble) ;; Completely safe
   nah (layer-add asking-for-trouble)    ;; Completely unsafe
 
   ld1 (layer-delay 500 numbers) ;; One way to get a leader-key
   ld2 (layer-next numbers)      ;; Another way to get a leader key
+
+  ;; NOTE, this is safe because both `qwerty` and `colemak` contain the `@tst`
+  ;; button which will get us to the `layer-test` layer, which will get us to
+  ;; both `@qwe` and `@col`.
+  qwe (layer-switch qwerty) ;; Set qwerty as the base layer
+  col (layer-switch colemak) ;; Set colemak as the base layer
 )
 (deflayer layer-test
   @qwe _    _    _    _    _    _    _    _    _    _    _    @add @nah
@@ -553,6 +553,14 @@
   @lol @lol @lol           @lol           @lol @lol @lol @lol
 )
 
+;; One way to safely use layer-add and layer-rem: the button bound to layer-add
+;; is the same button bound to layer-rem in the layer that `add` adds to the
+;; stack. I.e., it becomes impossible to add or remove multiple copies of a
+;; layer.
+(defalias
+  add (layer-add multi-overlay) ;; multi-overlay is defined in the next
+  rem (layer-rem multi-overlay) ;; section below this
+  )
 
 #| --------------------------------------------------------------------------
                           Optional: Multi-use buttons
@@ -603,7 +611,7 @@
   until it makes its decision and then rolls back processing when the decision
   has been made.
 
-  So, again with the mini-language, we set foo t:
+  So, again with the mini-language, we set foo to:
     (tap-hold 200 x lsft) ;; Like tap-next, but with a 200ms timeout
   Then:
     Tesc            -> x
@@ -648,21 +656,16 @@
 
   -------------------------------------------------------------------------- |#
 
-;; One way to safely use layer-add and layer-rem: the button bound to layer-add
-;; is the same button bound to layer-rem in the layer that `add` adds to the
-;; stack. I.e., it becomes impossible to add or remove multiple copies of a
-;; layer.
-(defalias
-  add (layer-add multi-overlay)
-  rem (layer-rem multi-overlay)
-  )
 
 (defalias
   xtn (tap-next x lsft)         ;; Shift that does 'x' on tap
   xth (tap-hold 400 x lsft)     ;; Long delay for easier testing
   thn (tap-hold-next 400 x lsft)
   tnr (tap-next-release x lsft)
-  tnh (tap-hold-next-release 400 x lsft)
+  tnh (tap-hold-next-release 2000 x lsft)
+
+  ;; Used it the colemak layer
+  xcp (tap-hold-next 400 esc ctl)
   ;; CONTINUE HERE
 )
 
@@ -673,8 +676,4 @@
   @xtn _    _    _    _    _    _    _    _    _    _    @xth
   @tnr _    _              _              _    _    _    @tnh
 )
-
-(defalias sym x
-
-  xcp x)
 
