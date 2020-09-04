@@ -120,7 +120,10 @@
 (defcfg
   ;; For Linux
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-  output (uinput-sink "My KMonad output")
+  output (uinput-sink "My KMonad output"
+    ;; To understand the importance of the following line, see the section on
+    ;; Compose-key sequences at the near-bottom of this file.
+    "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
 
   ;; For Windows
   ;; input  (low-level-hook)
@@ -269,7 +272,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl @num lalt           spc            ralt rmet cmp  @tst
+  lctl @num lalt           spc            ralt rmet @sym @tst
 )
 
 
@@ -370,7 +373,8 @@
 
 (defalias tst (around (layer-toggle macro-test)
                 (around (layer-toggle layer-test)
-                        (layer-toggle modded-test))))
+                  (around (layer-toggle around-next-test)
+                          (layer-toggle modded-test)))))
 
 (deflayer modded-test
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
@@ -539,7 +543,7 @@
   tab  q    w    f    p    g    j    l    u    y    ;    [    ]    \
   @xcp a    r    s    t    d    h    n    e    i    o    '    ret
   lsft z    x    c    v    b    k    m    ,    .    /    rsft
-  lctl @num lalt           spc            ralt rmet cmp  @tst
+  lctl @num lalt           spc            ralt rmet @sym @tst
 )
 
 (defalias lol #(: - D))
@@ -666,14 +670,101 @@
 
   ;; Used it the colemak layer
   xcp (tap-hold-next 400 esc ctl)
-  ;; CONTINUE HERE
 )
 
+;; Some of the buttons used here are defined in the next section
 (deflayer multi-overlay
-  _    _    _    _    _    _    _    _    _    _    _    _    @rem _
+  @mt  _    _    _    _    _    _    _    _    _    _    _    @rem _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
   @thn _    _    _    _    _    _    _    _    _    _    _    _
   @xtn _    _    _    _    _    _    _    _    _    _    @xth
   @tnr _    _              _              _    _    _    @tnh
 )
 
+
+#| --------------------------------------------------------------------------
+                              Optional: Multi-tap
+
+  Besides the tap-hold style buttons there is another multi-use button (with.
+  only 1 variant, at the moment). The `multi-tap`.
+
+  A `multi-tap` codes for different buttons depending on how often it is tapped.
+  It is defined by a series of delays and buttons, followed by a last button
+  without delay. As long as you tap the `multi-tap` within the delay specified,
+  it will jump to the next button. Once the delay is exceeded the selected
+  button is pressed. If the last button in the list is reached, it is
+  immediately pressed.
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  mt  (multi-tap 300 a 300 b 300 c 300 d e))
+
+
+#| --------------------------------------------------------------------------
+                              Optional: Around-next
+
+  The `around-next` function creates a button that primes KMonad to perform the
+  next button-press inside some context. This could be the context of 'having
+  Shift pressed' or 'being inside some layer' or, less usefully, 'having d
+  pressed'. It is a more general and powerful version of `layer-next`.
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  ns  (around-next sft)  ;; Shift the next press
+  nnm (around-next @num) ;; Perform next press in numbers layer
+  nd  (around-next d)    ;; Silly, but possible
+
+)
+
+(deflayer around-next-test
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  @nd  _    _    _    _    _    _    _    _    _    _    _    _
+  @nnm _    _    _    _    _    _    _    _    _    _    _
+  @ns  _    _              _              _    _    _    _
+)
+
+#| --------------------------------------------------------------------------
+                        Optional: Compose-key sequences
+
+  Compose-key sequences are series of button-presses that your operating system
+  will interpret as the insertion of a special character, like accented
+  characters, or various special-languages. In that sense, they are just
+  syntactic sugar for keyboard macros.
+
+  To get this to work on Linux you will need to set your compose-key to RightAlt
+  (customization of this option is forthcoming). The line in the `defcfg` block
+  at the top of this file should work. Note that you need to wait ever so
+  slightly for the keyboard to register with linux before the command gets
+  executed, that's why the `sleep 1`. Also, note that all the
+  `/run/current-system` stuff is because the author uses NixOS. Just find a
+  shell-command that will:
+  1. Sleep a moment
+  2. Set the compose-key to ralt
+
+  After this, this should work out of the box under Linux. Windows does not
+  recognize the same compose-key sequences, but WinCompose will make most of the
+  sequences line up with KMonad: http://wincompose.info/
+  This has not in any way been tested on Mac.
+
+  In addition to hard-coded symbols, we also provide 'uncompleted' macros. Since
+  a compose-key sequence is literally just a series of keystrokes, we can omit
+  the last one, and enter the sequence for 'add an umlaut' and let the user then
+  press some letter to add this umlaut to. These are created using the `+"`
+  syntax.
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  sym (layer-toggle symbols)
+
+)
+
+(deflayer symbols
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    ä    é    ©    _    _    _    _    _    _    _    _    _    _
+  _    +'   +~   +`   +^   _    _    _    _    _    _    _    _
+  _    +"   _    _    _    _    _    _    _    _    _    _
+  _    _    _              _              _    _    _    _)
