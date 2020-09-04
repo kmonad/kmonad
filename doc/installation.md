@@ -104,6 +104,8 @@ You can download binaries for Windows and Linux (64bit) from the [releases page]
 
 Some people have gone out of their way to add `kmonad` into the package-managers of various distros. If you want to add `kmonad` to your distro and add a pull-request to update the documentation to reflect that, please feel free. 
 
+NOTE: These packages might be out of date.
+
 #### Void Linux 
 You can install `kmonad` via `xbps-install`: 
 ``` shell 

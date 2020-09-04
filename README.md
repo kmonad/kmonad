@@ -2,13 +2,13 @@
 
 Welcome to KMonad, a keyboard remapping utility for Linux, Windows and Mac.
 
-The docs are not yet completed, but here they are anyways:
+For more information on how to install KMonad, we refer you to:
 - [installation](doc/installation.md)
-- [configuration syntax](doc/syntax.md)
-- [possible issues](doc/issues.md)
-- [Windows limitation](doc/why_windows_why.md)
 
-Get started by copying and adapting configs from [the template directory](template/)
+For information on how to configure KMonad, we refer you to:
+- [the configuration tutorial](keymap/tutorial.md)
+- [user configurations](keymap/user)
+
 
 
 
