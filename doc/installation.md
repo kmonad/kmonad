@@ -12,6 +12,17 @@ Jump to
   - [Guix](installation.md#guix)
 
 ## Compilation
+
+### Using `stack`
+The currently recommended, cross-platform solution to compiling KMonad is to use the
+[stack](https://github.com/commercialhaskell/stack) Haskell project manager.
+
+Once you have `stack` installed, you can build `kmonad` thusly:
+```shell
+stack build   # To build only the binary
+stack haddock # To build the binary and the docs
+```
+
 ### Using `nix`
 If you use the [Nix package manager](https://github.com/NixOS/nix), either
 because you installed it yourself or because you are using NixOS, you can build
@@ -35,14 +46,6 @@ using:
 nix-shell nix/shell.nix
 ```
 
-### Using `stack`
-You can compile `kmonad` using the
-[stack](https://github.com/commercialhaskell/stack) Haskell project manager.
-Once you have `stack` installed, you can build `kmonad` thusly:
-```shell
-stack build   # To build only the binary
-stack haddock # To build the binary and the docs
-```
 
 Note: we do also have to compile a little bit of C-code, so make sure `gcc` is
 installed as well.
