@@ -402,6 +402,7 @@ aliases = Q.mkMultiMap
   , (KeyKpAsterisk,     ["kp*"])
   , (KeyKpMinus,        ["kp-"])
   , (KeyKpDot,          ["kp."])
+  , (KeySysReq,         ["ssrq", "sys"])
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
