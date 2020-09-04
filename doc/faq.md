@@ -58,4 +58,7 @@ cannot remap them in any way.
 
 ### Q: Why doesn't the 'Print' keycode work for my print screen button?
 
-A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys") for relatively interesting historical reasons. Have a look at [this issue](https://github.com/david-janssen/kmonad/issues/59) if you want more information.
+A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
+for relatively interesting historical reasons. Have a look at [this
+issue](https://github.com/david-janssen/kmonad/issues/59) if you want more
+information.
