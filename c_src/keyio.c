@@ -29,7 +29,7 @@ int acquire_uinput_keysink(int fd, char *name, int vendor, int product, int vers
   usetup.id.vendor = vendor;
   usetup.id.product = product;
   usetup.id.version = version;
-  /* strcpy(usetup.name, "KMonad - Simulated keyboard"); */
+
   strcpy(usetup.name, name);
   ioctl(fd, UI_DEV_SETUP, &usetup);
 

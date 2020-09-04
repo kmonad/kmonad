@@ -82,7 +82,7 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   WriteFile(writePipe, &ev, sizeof(ev), &dwWritten, NULL);
 }
 
-// Read a file from the pipe and write it to the provided pointer
+// Read an event from the pipe and write it to the provided pointer
 void wait_key(struct KeyEvent* e)
 {
   DWORD dwRead;
@@ -115,9 +115,6 @@ int release_kb()
   PostQuitMessage(0);
   return(0);
 }
-
-// Return ms since system-start: needed for dealing with timestamps later.
-DWORD time_since_start() { GetTickCount(); }
 
 // Send key to the OS
 void sendKey(struct KeyEvent* e)

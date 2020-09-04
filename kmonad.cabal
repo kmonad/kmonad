@@ -1,7 +1,7 @@
-cabal-version: 1.12
+cabal-version: 2.2
 
 name:           kmonad
-version:        0.2.0
+version:        1.0
 synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
 maintainer:     janssen.dhj@gmail.com
@@ -10,160 +10,117 @@ license-file:   LICENSE
 build-type:     Simple
 
 library
-  exposed-modules:
-      KMonad
-      KMonad.Api.App
-      KMonad.Api.Args
-      KMonad.Api.Encode
-      KMonad.Api.EventTracker
-      KMonad.Api.KeyIO
-      KMonad.Api.KeyIO.Types
-      KMonad.Api.LayerStack
-      KMonad.Api.LockManager
-      KMonad.Api.Sluice
-      KMonad.Api.SymbolEncoder
-      KMonad.Core
-      KMonad.Core.Button
-      KMonad.Core.Config
-      KMonad.Core.Event
-      KMonad.Core.Keyboard
-      KMonad.Core.KeyCode
-      KMonad.Core.MapStack
-      KMonad.Core.Matrix
-      KMonad.Core.Parser
-      KMonad.Core.Parser.Parsers.Alias
-      KMonad.Core.Parser.Parsers.Button
-      KMonad.Core.Parser.Parsers.Config
-      KMonad.Core.Parser.Parsers.IO
-      KMonad.Core.Parser.Parsers.KeyCode
-      KMonad.Core.Parser.Parsers.KeySequence
-      KMonad.Core.Parser.Parsers.Layer
-      KMonad.Core.Parser.Parsers.Matrix
-      KMonad.Core.Parser.Parsers.Source
-      KMonad.Core.Parser.Parsers.SpecialSymbol
-      KMonad.Core.Parser.Token
-      KMonad.Core.Parser.Utility
-      KMonad.Core.Pretty
-      KMonad.Core.SpecialSymbol
-      KMonad.Core.Time
-      KMonad.Core.Types
-      KMonad.Domain.Button
-      KMonad.Domain.Button.After
-      KMonad.Domain.Button.Around
-      KMonad.Domain.Button.Block
-      KMonad.Domain.Button.Emit
-      KMonad.Domain.Button.EmitDeadKey
-      KMonad.Domain.Button.EmitSpecial
-      KMonad.Domain.Button.LayerAdd
-      KMonad.Domain.Button.LayerRem
-      KMonad.Domain.Button.LayerToggle
-      KMonad.Domain.Button.Lockers
-      KMonad.Domain.Button.Macro
-      KMonad.Domain.Button.MultiTap
-      KMonad.Domain.Button.TapHold
-      KMonad.Domain.Button.TapNext
-      KMonad.Domain.Effect
-      KMonad.Domain.Loop
-  if os(linux)
-    exposed-modules:
-      KMonad.Api.KeyIO.Linux.DeviceSource
-      KMonad.Api.KeyIO.Linux.Types
-      KMonad.Api.KeyIO.Linux.UinputSink
-  if os(windows)
-    exposed-modules:
-      KMonad.Api.KeyIO.Windows.LowLevelHookSource
-      KMonad.Api.KeyIO.Windows.SendEventSink
-      KMonad.Api.KeyIO.Windows.Types
-      Test
-  other-modules:
-      Paths_kmonad
+  default-language:
+      Haskell2010
   hs-source-dirs:
       src
+  ghc-options:
+    -Wall
+    -Wno-name-shadowing
+    -Wno-unused-imports
+  build-depends:
+      base
+    , cereal
+    , lens
+    , megaparsec
+    , mtl
+    , optparse-applicative
+    , resourcet
+    , rio
+    , time
+    , unliftio
   default-extensions:
-      AutoDeriveTypeable
-      BangPatterns
-      BinaryLiterals
       ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveDataTypeable
-      DeriveFoldable
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
-      DerivingStrategies
-      DoAndIfThenElse
-      EmptyDataDecls
-      ExistentialQuantification
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
-      GADTs
       GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
       LambdaCase
-      MonadFailDesugaring
       MultiParamTypeClasses
       MultiWayIf
-      NamedFieldPuns
+      NoImplicitPrelude
       OverloadedStrings
-      PartialTypeSignatures
-      PatternGuards
-      PolyKinds
       RankNTypes
-      RecordWildCards
-      ScopedTypeVariables
-      StandaloneDeriving
       TemplateHaskell
       TupleSections
-      TypeApplications
-      TypeOperators
       TypeFamilies
-      TypeSynonymInstances
-      ViewPatterns
+
+  exposed-modules:
+      Data.LayerStack
+      Data.MultiMap
+      KMonad.Action
+      KMonad.App
+      KMonad.App.BEnv
+      KMonad.App.Dispatch
+      KMonad.App.Hooks
+      KMonad.App.Keymap
+      KMonad.App.Sluice
+      KMonad.Args
+      KMonad.Args.Cmd
+      KMonad.Args.Parser
+      KMonad.Args.Joiner
+      KMonad.Args.Types
+      KMonad.Button
+      KMonad.Keyboard
+      KMonad.Keyboard.Keycode
+      KMonad.Keyboard.ComposeSeq
+      KMonad.Keyboard.IO
+      KMonad.Prelude
+      KMonad.Util
+
   if os(linux)
+    exposed-modules:
+      KMonad.Keyboard.IO.Linux.DeviceSource
+      KMonad.Keyboard.IO.Linux.Types
+      KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
+    build-depends:
+      unix
+
   if os(windows)
+    exposed-modules:
+      KMonad.Keyboard.IO.Windows.LowLevelHookSource
+      KMonad.Keyboard.IO.Windows.SendEventSink
+      KMonad.Keyboard.IO.Windows.Types
     c-sources:
       c_src/keyio_win.c
-  build-depends:
-      base
-    , bytestring
-    , cereal
-    , containers
-    , exceptions
-    , hashable
-    , lens
-    , megaparsec
-    , monad-logger
-    , mtl
-    , optparse-applicative
-    , process
-    , text
-    , time
-    , unagi-chan
-    , unliftio
-    , unordered-containers
-  if os(linux)
-     build-depends: unix
-  if os(windows)
-     build-depends: Win32
+    build-depends:
+      Win32
 
-  default-language: Haskell2010
+  if os(darwin)
+    exposed-modules:
+      KMonad.Keyboard.IO.Mac.IOKitSource
+      KMonad.Keyboard.IO.Mac.KextSink
+      KMonad.Keyboard.IO.Mac.Types
+    cxx-sources:
+      c_src/mac/keyio_mac.cpp
+    cxx-options:
+      -std=c++14
+    include-dirs:
+      c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+    extra-libraries:
+      c++
+    build-depends:
+      unix
+    frameworks:
+      CoreFoundation
+      IOKit
 
 executable kmonad
-  main-is: Main.hs
-  other-modules:
-      Paths_kmonad
-  hs-source-dirs:
-      app
   ghc-options:
       -threaded
       -rtsopts
       -with-rtsopts=-N
+  main-is:
+      Main.hs
+  default-language:
+      Haskell2010
+  hs-source-dirs:
+      app
   build-depends:
       base
     , kmonad
-  default-language: Haskell2010

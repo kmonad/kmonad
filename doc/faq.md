@@ -1,32 +1,4 @@
-# KMonad
 
-<<<<<<< HEAD
-NOTE: The `refactor` branch is currently stable, and the suggested way to use `kmonad`. The only thing lacking is documentation. Once `refactor` is fully documented, `master` will be switched, but `refactor` should be considered as the recommended way to use `kmonad`.
-
-Welcome to KMonad! If you are currently running Linux and want to experiment
-with this new way of defining keyboard layouts, either:
-- Head over to [releases](https://github.com/david-janssen/kmonad/releases) for
-  the latest static binary.
-- Consult the [installation section](README.md#Compiling)
-=======
-Welcome to KMonad, The Onion of Keyboard Management. Now on Windows, Linux and
-Mac!
->>>>>>> refactor
-
-
-## Installation 
-For more information on how to install KMonad, we refer you to:
-- [installation](doc/installation.md)
-
-## Configuration
-For information on how to configure KMonad, we refer you to:
-- [the configuration tutorial](keymap/tutorial.kbd)
-- [user configurations](keymap/user)
-
-
-
-
-<<<<<<< HEAD
 ### What can I do with KMonad?
 
 Well, there are a variety of customizations you can make. For example, this
