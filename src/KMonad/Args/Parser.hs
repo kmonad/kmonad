@@ -231,7 +231,7 @@ composeSeqP = do
 deadkeySeqP :: Parser [DefButton]
 deadkeySeqP = do
   _ <- prefix (char '+')
-  c <- satisfy (`elem` ("~'´^`\"" :: String))
+  c <- satisfy (`elem` ("~'^`\"" :: String))
   case runParser buttonP "" (T.singleton c) of
     Left  _ -> fail "Could not parse deadkey sequence"
     Right b -> pure [b]
@@ -257,13 +257,13 @@ buttonP = (lexeme . choice . map try $
   , statement "around-next"    $ KAroundNext  <$> buttonP
   , statement "tap-macro"      $ KTapMacro    <$> some buttonP
   , statement "pause"          $ KPause . fromIntegral <$> numP
+  , KComposeSeq <$> deadkeySeqP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP
   , lexeme $ try rmTapMacroP
   , lexeme $ try pauseP
   , KEmit <$> keycodeP
-  , KComposeSeq <$> deadkeySeqP
   , KComposeSeq <$> composeSeqP
   ]) <?> "button"
 
