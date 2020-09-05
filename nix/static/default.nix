@@ -25,7 +25,7 @@ let
   # Point the script at pwd, using a recent stackage snapshot
   stack2nix-script = import "${static-haskell-nix}/static-stack2nix-builder/stack2nix-script.nix" {
     inherit pkgs;
-    stack-project-dir = toString ./..;
+    stack-project-dir = toString ./.;
     hackageSnapshot   = "2020-05-24T00:00:00Z";
   };
 
@@ -50,6 +50,5 @@ in
     static_package = static-stack2nix-builder.static_package;
     inherit fullBuildScript;
     # For debugging:
-    # inherit stack2nix-script;
     # inherit static-stack2nix-builder;
   }

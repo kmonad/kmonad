@@ -32,12 +32,6 @@ because you installed it yourself or because you are using NixOS, you can build
 nix-build nix
 ```
 
-Currently the process ends with an error, however only after the compilation and
-documentation-generation have been completed. If you look through output of
-`nix` you will see the paths it mentions and can find both the binary and the
-documentation. Perhaps someone more well-versed with `nix` can help me fix this
-issue.
-
 Another option with `nix` is to use the `nix-shell` to ensure you have the
 correct environment to run `stack` in. You can enter the development environment
 using:
@@ -49,6 +43,16 @@ nix-shell nix/shell.nix
 
 Note: we do also have to compile a little bit of C-code, so make sure `gcc` is
 installed as well.
+
+### Static compilation
+Every now and then we compile and release a static binary for Linux that should
+run on any Linux regardless of the installed libraries (i.e. `ldd` returns `not a
+dynamic executable`). If, for some reason, you want to compile a static binary for the state of HEAD yourself, please copy the contents of `./nix/static` into the `kmonad` project root, and then call:
+
+```shell
+$(nix-build --no-link -A fullBuildScript)
+```
+
 
 ### Windows environment
 
