@@ -32,6 +32,7 @@ module KMonad.Button
   , layerAdd
   , layerRem
   , pass
+  , cmdButton
 
   -- * Button combinators
   -- $combinators
@@ -149,6 +150,9 @@ layerRem t = onPress (layerOp $ PopLayer t)
 pass :: Button
 pass = onPress $ pure ()
 
+-- | Create a button that executes a shell command on press
+cmdButton :: Text -> Button
+cmdButton t = onPress $ shellCmd t
 
 --------------------------------------------------------------------------------
 -- $combinators
@@ -346,41 +350,3 @@ layerNext t = onPress $ do
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
 
 
--- -- |
--- weirdTapNextRelease :: Button -> Button -> Button
--- weirdTapNextRelease t h = onPress $ do
---   hold True
---   go [] []
---   where
-
---     go :: MonadK m => [Keycode] -> [Keycode] ->  m ()
---     go ks mods = hookF $ \e -> do
---       p <- matchMy Release
---       let isRel = isRelease e
---       if
---         -- If the next event is my own release: we act as if we were tapped
---         | p e -> doTap mods
---         -- If the next event is the release of some button that was held after me
---         -- we act as if we were held
---         | isRel && (e^.keycode `elem` ks) -> doHold e
---         -- If the next event is the release of a modifier, store that modifier and wait again
---         | isRel && (e^.keycode `elem` allmods) -> (go ks ((e^.keycode):mods)) *> pure NoCatch
---         -- Else, if it is a press, store the keycode and wait again
---         | not isRel                       -> go ((e^.keycode):ks) mods *> pure NoCatch
---         -- Else, if it is a release of some button held before me, just ignore
---         | otherwise                       -> go ks mods *> pure NoCatch
-
---     -- Behave like a tap: tap the button `t`, mod as needed, release processing
---     doTap :: MonadK m => [Keycode] -> m Catch
---     doTap [] = tap t *> hold False *> pure Catch
---     doTap mods =
---       case (head mods) of
---         KeySlash    -> tap (modded KeyRightShift t) *> hold False *> pure Catch
---         KeyCapsLock -> tap (modded KeyLeftCtrl t) *> hold False *> pure Catch
---         _           -> tap (modded (head mods) t) *> hold False *> pure Catch
-
---     -- Behave like a hold is not simple: first we release the processing hold,
---     -- then we catch the release of ButtonX that triggered this action, and then
---     -- we rethrow this release.
---     doHold :: MonadK m => KeyEvent -> m Catch
---     doHold e = press h *> hold False *> inject e *> pure Catch

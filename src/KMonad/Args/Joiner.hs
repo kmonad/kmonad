@@ -161,6 +161,7 @@ joinConfig' = do
   i  <- getI
   o  <- getO
   ft <- getFT
+  al <- getAllow
 
   -- Extract the other blocks and join them into a keymap
   let als = extract _KDefAlias    $ es
@@ -169,15 +170,19 @@ joinConfig' = do
   (km, fl) <- joinKeymap src als lys
 
   pure $ CfgToken
-    { _snk  = o
-    , _src  = i
-    , _km   = km
-    , _fstL = fl
-    , _flt  = ft
+    { _snk   = o
+    , _src   = i
+    , _km    = km
+    , _fstL  = fl
+    , _flt   = ft
+    , _allow = al
     }
 
 --------------------------------------------------------------------------------
 -- $settings
+--
+-- TODO: This needs to be seriously refactored: all this code duplication is a
+-- sign that something is amiss.
 
 -- | Return a JCfg with all settings from defcfg applied to the env's JCfg
 getOverride :: J JCfg
@@ -218,10 +223,19 @@ getO = do
 getFT :: J Bool
 getFT = do
   cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne. extract _SFallThrough $ cfg of
+  case onlyOne . extract _SFallThrough $ cfg of
     Right b        -> pure b
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "fallthrough"
+
+-- | Extract the fallthrough setting
+getAllow :: J Bool
+getAllow = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _SAllowCmd $ cfg of
+    Right b        -> pure b
+    Left None      -> pure False
+    Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
 
 #ifdef linux_HOST_OS
 
@@ -313,6 +327,7 @@ joinButton ns als =
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
+    KCommand t -> ret $ cmdButton t
     KLayerToggle t -> if t `elem` ns
       then ret $ layerToggle t
       else throwError $ MissingLayer t

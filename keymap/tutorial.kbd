@@ -53,7 +53,7 @@
   KMonad captures its inputs and how it emits its outputs.
 
   First, let's go over the optional, non-OS specific settings. Currently there is
-  only 1:
+  only 2:
 
   - fallthrough: `true` or `false`, defaults to `false`
 
@@ -62,6 +62,14 @@
     in the `defsrc` block, or if it is, but the current keymap does not map any
     buttons to it), then the event gets quietly ignored. If `fallthrough` is set
     to `true`, any unhandled events simply get reemitted.
+
+  - allow-cmd: `true` or `false`, defaults to `false`
+
+    If this is set to `false`, any action that runs a shell-command will simply
+    log to `stdout` without ever running (log-level info). Don't ever enable
+    this on a configuration that you do not trust, because:
+      (cmd-button "rm -rf ~/*")
+    is a thing.
 
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OS'es, and so do the capabilities of
@@ -135,6 +143,9 @@
 
   ;; Comment this is you want unhandled events not to be emitted
   fallthrough true
+
+  ;; Set this to false to disable any command-execution in KMonad
+  allow-cmd true
 )
 
 
@@ -382,7 +393,8 @@
 (defalias tst (around (layer-toggle macro-test)
                 (around (layer-toggle layer-test)
                   (around (layer-toggle around-next-test)
-                          (layer-toggle modded-test)))))
+                    (around (layer-toggle command-test)
+                            (layer-toggle modded-test))))))
 
 (deflayer modded-test
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
@@ -789,3 +801,34 @@
   _    +'   +~   +`   +^   _    _    _    _    _    _    _    _
   _    +"   _    _    _    _    _    _    _    _    _    _
   _    _    _              _              _    _    _    _)
+
+
+#| --------------------------------------------------------------------------
+                        Optional: Command buttons
+
+  Currently we also provide the ability to launch arbitrary shell-commands from
+  inside kmonad. These commands are simply handed off to the command-shell
+  without any further checking or waiting.
+
+  NOTE: currently only tested on Linux, but should work on any platform, as long
+  as the command is valid for that platform.
+
+  BEWARE: never run anyone's configuration without looking at it. You wouldn't
+  want to push:
+    (cmd-button "rm -rf ~/*") ;; Delete all this user's data
+
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  dat (cmd-button "date >> /tmp/kmonad_example.txt")   ;; Append date to tmpfile
+  pth (cmd-button "echo $PATH > /tmp/kmonad_path.txt") ;; Write out PATH
+)
+
+(deflayer command-test
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    @dat @pth _
+  _    _    _              _              _    _    _    _
+)
