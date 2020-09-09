@@ -1,4 +1,5 @@
-resolver: lts-14.7
+resolver: lts-14.27
 packages:
 - .
 extra-deps:
+pvp-bounds: both

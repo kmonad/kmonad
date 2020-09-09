@@ -1,6 +1,7 @@
 cabal-version: 2.2
 
 name:           kmonad
+category:       Application
 version:        0.4
 synopsis:       Advanced keyboard remapping utility
 author:         David Janssen
@@ -8,6 +9,12 @@ maintainer:     janssen.dhj@gmail.com
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
+description:
+  KMonad is a cross-platform command-line utility that runs as a daemon. It
+  captures keyboard input (exactly how depends on the OS) and remaps it. The
+  mapping is highly configurable, and provides options like (transparent) layer
+  overlays, tap-mod buttons, multi-tap buttons, leader-key style buttons, and
+  keyboard macros. Functionality heavily inspired by the QMK-firmware.
 
 library
   default-language:
