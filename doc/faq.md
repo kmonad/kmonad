@@ -1,3 +1,5 @@
+## Linux
+
 ### Q: How do I get Uinput permissions?
 
 A: In Linux KMonad needs to be able to access the uinput subsystem to inject
@@ -45,6 +47,83 @@ tries to stay as close to the kernel as possible, so you can run it on other
 OSes or without X11. If you want `Hyper_L` to work, you have to make sure that
 X11 lines up well with KMonad. See [this issue](https://github.com/david-janssen/kmonad/issues/22) for more explanation.
 
+## Windows
+
+### How do I start KMonad?
+
+A: This might be confusing if you are used to using a GUI and clicking on
+things. Double clicking KMonad will look like it does nothing. KMonad is a
+command-line utility, so, to run it you need to:
+
+#### Using the command-line
+
+1. Start a 'Command Prompt' (no need for 'as administrator')
+
+2. 'cd' to where you've stored KMonad, like this:
+```powershell
+cd "C:\Users\david\Desktop\Just an Example" 
+``` 
+NOTE: The double-tick marks around the path let you easily use directories with
+spaces in the names.
+
+3. Run the `kmonad` command (make sure the name matches exactly, so for the
+   `0.4.0` version, that would be: `kmonad-0.4.0-windows.exe`, alternatively,
+   rename the `kmonad` file to whatever you like and use that name). Depending
+   on how you call it different things happen.
+
+This will print the help and do nothing.
+```powershell
+kmonad.exe
+```
+
+This will start KMonad with the provided configuration file:
+```powershell
+kmonad.exe my_config.kbd
+```
+
+If the `my_config.cfg` file is not in the same directory as `kmonad`, you will
+need to specify the full path to this file. (See [the
+tutorial](/keymap/tutorial.kbd) for more information on how to write a
+configuration.
+
+```powershell
+kmonad C:\Users\david\Documents\my_config.kbd
+```
+
+You can even launch KMonad from anywhere (without having to do step 2. first) if
+you use the full path for KMonad and the config file like this:
+```powershell
+"C:\Users\david\Desktop\Just an Example\kmonad.exe" C:\Users\david\Documents\my_config.kbd
+```
+
+If you want to really see what is happening on the inside of KMonad as it runs,
+consider adding the `--log-level debug` flag like this:
+```powershell
+C:\pth\to\kmonad.exe some_config.kbd --log-level debug
+```
+
+This will cause KMonad to print out more information about what it is doing
+moment to moment (without affecting anything else).
+
+#### Making a launcher
+
+If you want to start KMonad at the click of a button, consider making a shortcut
+using the 'New' > 'Shortcut' entry on the right-click menu (if you right-click
+the Desktop). Just select 'KMonad' and give it a name. Afterwards, right click
+the shortcut and select 'Properties'. This should put you in the 'Shortcut' tab
+of the properties, here there is a field called 'Target'. This field is exactly
+like the shell command we used above, so copy-paste the exactly command you used
+to start kmonad into 'Target', then click apply, and you should now have a
+clickable KMonad launcher.
+
+## General
+
+### Q: Why doesn't the 'Print' keycode work for my print screen button?
+
+A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
+for relatively interesting historical reasons. Have a look at [this
+issue](https://github.com/david-janssen/kmonad/issues/59) if you want more
+information.
 
 ### Q: Why can't I remap the Fn key on my laptop?
 
@@ -54,11 +133,3 @@ creating a numpad in the middle of the laptop keyboard. This remapping happens
 in the hardware, before any event is ever registered with the operating system,
 therefore KMonad has no way to 'get' at any of those events. This means that we
 cannot remap them in any way.
-
-
-### Q: Why doesn't the 'Print' keycode work for my print screen button?
-
-A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
-for relatively interesting historical reasons. Have a look at [this
-issue](https://github.com/david-janssen/kmonad/issues/59) if you want more
-information.
