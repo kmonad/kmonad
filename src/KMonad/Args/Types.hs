@@ -95,6 +95,7 @@ data DefButton
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
+  | KCommand Text                          -- ^ Execute a shell command
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
@@ -110,11 +111,12 @@ data DefButton
 -- | The 'CfgToken' contains all the data needed to construct an
 -- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src  :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk  :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km   :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL :: LayerTag                          -- ^ Name of initial layer
-  , _flt  :: Bool                              -- ^ How to deal with unhandled events
+  { _src   :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
+  , _snk   :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
+  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
+  , _fstL  :: LayerTag                          -- ^ Name of initial layer
+  , _flt   :: Bool                              -- ^ How to deal with unhandled events
+  , _allow :: Bool                              -- ^ Whether to allow shell commands
   }
 makeClassy ''CfgToken
 
@@ -165,6 +167,7 @@ data DefSetting
   | SCmpSeq      DefButton
   | SInitStr     Text
   | SFallThrough Bool
+  | SAllowCmd    Bool
   deriving Show
 makeClassyPrisms ''DefSetting
 

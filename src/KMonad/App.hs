@@ -18,6 +18,9 @@ where
 
 import KMonad.Prelude
 
+import UnliftIO.Process (spawnCommand)
+import RIO.Text (unpack)
+
 import KMonad.Action
 import KMonad.Button
 import KMonad.Keyboard
@@ -54,6 +57,7 @@ data AppCfg = AppCfg
   , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
+  , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
   }
 makeClassy ''AppCfg
 
@@ -182,7 +186,7 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
 startApp c = runContT (initAppEnv c) (flip runRIO loop)
 
-instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
+instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
   emit e = view outVar >>= atomically . flip putTMVar e
   -- emit e = view keySink >>= flip emitKey e
@@ -212,6 +216,14 @@ instance (HasAppEnv e, HasLogFunc e) => MonadKIO (RIO e) where
     logDebug $ "Injecting event: " <> display e
     Dp.rerun di [e]
 
+  -- Shell-command through spawnCommand
+  shellCmd t = do
+    f <- view allowCmd
+    if f then do
+      logInfo $ "Running command: " <> display t
+      void . spawnCommand . unpack $ t
+    else
+      logInfo $ "Received but not running: " <> display t
 
 --------------------------------------------------------------------------------
 -- $kenv
@@ -224,6 +236,7 @@ data KEnv = KEnv
   }
 makeClassy ''KEnv
 
+instance HasAppCfg  KEnv where appCfg       = kAppEnv.appCfg
 instance HasAppEnv  KEnv where appEnv       = kAppEnv
 instance HasBEnv    KEnv where bEnv         = kBEnv
 instance HasLogFunc KEnv where logFuncL     = kAppEnv.logFuncL

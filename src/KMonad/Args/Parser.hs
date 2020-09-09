@@ -256,6 +256,7 @@ buttonP = (lexeme . choice . map try $
   , statement "layer-next"     $ KLayerNext   <$> word
   , statement "around-next"    $ KAroundNext  <$> buttonP
   , statement "tap-macro"      $ KTapMacro    <$> some buttonP
+  , statement "cmd-button"     $ KCommand     <$> textP
   , statement "pause"          $ KPause . fromIntegral <$> numP
   , KComposeSeq <$> deadkeySeqP
   , KRef  <$> derefP
@@ -301,6 +302,7 @@ settingP = let f s p = symbol s *> p in
     , SCmpSeq      <$> f "cmp-seq"     buttonP
     , SInitStr     <$> f "init"        textP
     , SFallThrough <$> f "fallthrough" bool
+    , SAllowCmd    <$> f "allow-cmd"   bool
     ])
 
 --------------------------------------------------------------------------------

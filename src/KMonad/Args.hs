@@ -10,9 +10,7 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Args
-  ( run
-  , test -- TODO: remove me when done
-  )
+  ( run )
 where
 
 import KMonad.Prelude
@@ -29,10 +27,6 @@ import KMonad.Args.Types
 run :: IO ()
 run = getCmd >>= runCmd
 
--- | Start KMonad with the 'example.kbd' config file
-test :: IO ()
-test = runCmd $ Cmd "../../../doc/example.kbd" False LevelDebug
-
 -- | Execute the provided 'Cmd'
 --
 -- 1. Construct the log-func
@@ -44,7 +38,6 @@ runCmd c = do
   withLogFunc o $ \f -> runRIO f $ do
     cfg <- loadConfig $ c^.cfgFile
     unless (c^.dryRun) $ startApp cfg
-
 
 -- | Parse a configuration file into a 'AppCfg' record
 loadConfig :: HasLogFunc e => FilePath -> RIO e AppCfg
@@ -62,7 +55,8 @@ loadConfig pth = do
   pure $ AppCfg
     { _keySinkDev   = snk
     , _keySourceDev = src
-    , _keymapCfg    = _km   cgt
-    , _firstLayer   = _fstL cgt
-    , _fallThrough  = _flt  cgt
+    , _keymapCfg    = _km    cgt
+    , _firstLayer   = _fstL  cgt
+    , _fallThrough  = _flt   cgt
+    , _allowCmd     = _allow cgt
     }
