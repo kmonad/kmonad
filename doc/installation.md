@@ -23,6 +23,12 @@ stack build   # To build only the binary
 stack haddock # To build the binary and the docs
 ```
 
+If you would like `stack` to automatically copy the binary to a folder on your
+`$PATH`, you can use:
+```shell
+stack install # Builds *and* copies
+```
+
 ### Using `nix`
 If you use the [Nix package manager](https://github.com/NixOS/nix), either
 because you installed it yourself or because you are using NixOS, you can build
