@@ -62,9 +62,6 @@ $(nix-build --no-link -A fullBuildScript)
 
 ### Windows environment
 
-FIXME: Windows support only for version 0.3.0 and lower. This will be fixed in
-the future.
-
 I have little experience with Haskell under windows, but I managed to compile
 `kmonad` under Windows10 using a [Haskell platform
 installation](https://www.haskell.org/platform). I also needed to install
