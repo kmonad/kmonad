@@ -87,7 +87,7 @@ tutorial](/keymap/tutorial.kbd) for more information on how to write a
 configuration.
 
 ```powershell
-kmonad C:\Users\david\Documents\my_config.kbd
+kmonad.exe C:\Users\david\Documents\my_config.kbd
 ```
 
 You can even launch KMonad from anywhere (without having to do step 2. first) if
@@ -112,8 +112,8 @@ using the 'New' > 'Shortcut' entry on the right-click menu (if you right-click
 the Desktop). Just select 'KMonad' and give it a name. Afterwards, right click
 the shortcut and select 'Properties'. This should put you in the 'Shortcut' tab
 of the properties, here there is a field called 'Target'. This field is exactly
-like the shell command we used above, so copy-paste the exactly command you used
-to start kmonad into 'Target', then click apply, and you should now have a
+like the shell command we used above, so copy-paste the exact command you used
+to start KMonad into 'Target', then click apply, and you should now have a
 clickable KMonad launcher.
 
 ## General
