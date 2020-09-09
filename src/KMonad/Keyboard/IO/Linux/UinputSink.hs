@@ -39,10 +39,11 @@ import KMonad.Util
 
 type SinkId = String
 
+-- | A collection of everything that can go wrong with the 'UinputSink'
 data UinputSinkError
-  = UinputRegistrationError SinkId
-  | UinputReleaseError      SinkId
-  | SinkEncodeError         SinkId LinuxKeyEvent
+  = UinputRegistrationError SinkId               -- ^ Could not register device
+  | UinputReleaseError      SinkId               -- ^ Could not release device
+  | SinkEncodeError         SinkId LinuxKeyEvent -- ^ Could not decode event
   deriving Exception
 
 instance Show UinputSinkError where

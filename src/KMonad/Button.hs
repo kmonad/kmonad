@@ -336,7 +336,6 @@ tapMacro bs = onPress $ go bs
     go (b:[])  = press b
     go (b:rst) = tap b >> go rst
 
-  -- $ mapM_ tap bs
 
 -- | Switch to a layer for a period of time, then automatically switch back
 layerDelay :: Milliseconds -> LayerTag -> Button
@@ -344,6 +343,10 @@ layerDelay d t = onPress $ do
   layerOp (PushLayer t)
   after d (layerOp $ PopLayer t)
 
+-- | Switch to a layer for the next button-press and switch back automaically.
+--
+-- NOTE: liable to change, this is essentially just `aroundNext` and
+-- `layerToggle` combined.
 layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)

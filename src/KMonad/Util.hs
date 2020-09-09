@@ -88,9 +88,9 @@ logRethrow t e = do
   logError $ display t <> ": " <> display e
   throwIO e
 
---- | Launch a process that repeats an action indefinitely. If an error ever
---- occurs, print it and rethrow it. Ensure the process is cleaned up upon error
---- and/or shutdown.
+-- | Launch a process that repeats an action indefinitely. If an error ever
+-- occurs, print it and rethrow it. Ensure the process is cleaned up upon error
+-- and/or shutdown.
 withLaunch :: HasLogFunc e
   => Text                   -- ^ The name of this process (for logging)
   -> RIO e a                -- ^ The action to repeat forever

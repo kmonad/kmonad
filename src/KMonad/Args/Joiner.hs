@@ -106,10 +106,12 @@ defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
   (emitB KeyRightAlt)
 
+-- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
   deriving ( Functor, Applicative, Monad
            , MonadError JoinError , MonadReader JCfg)
 
+-- | Perform a joining computation
 runJ :: J a -> JCfg -> Either JoinError a
 runJ j = runReader (runExceptT $ unJ j)
 

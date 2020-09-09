@@ -170,7 +170,7 @@ runHooks hs e = do
 -- check them against the hooks, and for how to keep stepping until an unhandled
 -- event comes through.
 
--- | Pull 1 event from the 'eventSrc'. If that action is not caught by any
+-- | Pull 1 event from the '_eventSrc'. If that action is not caught by any
 -- callback, then return it (otherwise return Nothing). At the same time, keep
 -- reading the timer-cancellation inject point and handle any cancellation as it
 -- comes up.

@@ -13,6 +13,9 @@ this 'MonadK'. This module defines the basic types and operations that make up
 'MonadK'. The implementation of how KMonad implements 'MonadK' can be found in
 the "KMonad.App" module.
 
+NOTE: All of this is a bit muddled, and redoing the way hooks are handled, and
+the basic structuring of MonadK and MonadKIO are liable to change soon.
+
 -}
 module KMonad.Action
   (
@@ -145,6 +148,8 @@ class Monad m => MonadKIO m where
   -- | Run a shell-command
   shellCmd   :: Text -> m ()
 
+-- | 'MonadKIO' contains the additional bindings that get added when we are
+-- currently processing a button.
 class MonadKIO m => MonadK m where
   -- | Access the keycode to which the current button is bound
   myBinding  :: m Keycode
