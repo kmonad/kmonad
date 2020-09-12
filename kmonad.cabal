@@ -16,6 +16,9 @@ description:
   overlays, tap-mod buttons, multi-tap buttons, leader-key style buttons, and
   keyboard macros. Functionality heavily inspired by the QMK-firmware.
 
+extra-source-files:
+    changelog.md
+
 library
   default-language:
       Haskell2010
@@ -107,8 +110,9 @@ library
       c_src/mac/keyio_mac.cpp
     cxx-options:
       -std=c++14
-    include-dirs:
-      c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+    -- Commenting out, interferes with Hackage
+    -- include-dirs:
+    --   c_src/mac/Karabiner-VirtualHIDDevice/dist/include
     extra-libraries:
       c++
     build-depends:
