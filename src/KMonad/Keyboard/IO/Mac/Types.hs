@@ -205,7 +205,7 @@ kcMap = M.fromList $
   , (0x00070055, KeyKpAsterisk)
   , (0x00070056, KeyKpMinus)
   , (0x00070057, KeyKpPlus)
-  , (0x00070058, KeyKpenter)
+  , (0x00070058, KeyKpEnter)
   , (0x00070059, KeyKp1)
   , (0x0007005A, KeyKp2)
   , (0x0007005B, KeyKp3)
