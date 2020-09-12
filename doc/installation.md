@@ -103,7 +103,7 @@ make install
 
 Finally, build kmonad with `stack`:
 ```shell
-stack build
+stack build --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
 
 ## Binaries
