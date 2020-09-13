@@ -147,6 +147,7 @@ ssComposed =
     , ("^ O"      , 'Ô'     , "Ocircumflex")
     , ("~ O"      , 'Õ'     , "Otilde")
     , ("\" O"     , 'Ö'     , "Odiaeresis")
+    , ("\" U"     , 'Ü'     , "Udiaeresis")
     , ("x x"      , '×'     , "multiply")
     , ("/ O"      , 'Ø'     , "Oslash")
     , ("' Y"      , 'Ý'     , "Yacute")
