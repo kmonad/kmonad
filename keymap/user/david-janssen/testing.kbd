@@ -9,6 +9,7 @@
 (defalias
   ;; foo (tap-hold 200 x sft)
   foo (tap-hold-next-release 2000 x sft)
+  ⚥   #(ralt 0 a)
 
 )
 
@@ -22,6 +23,6 @@
 
 (deflayer main
   tab  q    w    e    r    t
-  caps a    r    s    t    d
+  caps @⚥    r    s    t    d
   @foo z    x    c    v    b
   )
