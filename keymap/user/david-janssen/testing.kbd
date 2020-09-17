@@ -4,6 +4,7 @@
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
   output (uinput-sink "KMonad: Testing keyboard"
             "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
+  fallthrough true
   )
 
 (defalias
