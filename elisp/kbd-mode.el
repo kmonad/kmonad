@@ -55,6 +55,14 @@
   '((t :inherit font-lock-variable-name-face))
   "Face for a variables, i.e. layer names, macros in layers,...")
 
+(defvar kbd-mode-show-string
+  '("uinput-sink" "device-file" "cmd-button")
+  "Syntax highlight strings in the S-expressions defined by these keywords")
+
+(defface kbd-mode-string-face
+  '((t :inherit font-lock-string-face))
+  "Face for strings")
+
 (defcustom kbd-mode-show-macros t
   "Whether to syntax highlight macros inside layout definitions.
 Default: t"
@@ -71,12 +79,15 @@ Default: t"
 
 (defvar kbd-mode--font-lock-keywords
   (let ((kexpr-regexp            (regexp-opt kbd-mode-kexpr            'words))
-        (token-regexp            (regexp-opt kbd-mode-token            'words))
+        (token-regexp            (regexp-opt kbd-mode-tokens           'words))
         (defcfg-options-regexp   (regexp-opt kbd-mode-defcfg-options   'words))
         (button-modifiers-regexp (regexp-opt kbd-mode-button-modifiers 'words))
         (function-one-regexp     (concat "\\(?:\\("
                                          (regexp-opt kbd-mode-function-one)
-                                         "\\)\\([[:space:]]+[[:word:]]+\\)\\)")))
+                                         "\\)\\([[:space:]]+[[:word:]]+\\)\\)"))
+        (string-regexp           (concat "\\(['\(]"
+                                         (regexp-opt kbd-mode-show-string)
+                                         "\\)\\(\\S)+\\)\)")))
 
     `((,token-regexp            (1 'kbd-mode-token-face          ))
       (,kexpr-regexp            (1 'kbd-mode-kexpr-face          ))
@@ -84,7 +95,12 @@ Default: t"
       (,defcfg-options-regexp   (1 'kbd-mode-defcfg-option-face  ))
       (,function-one-regexp
        (1 'kbd-mode-kexpr-face        )
-       (2 'kbd-mode-variable-name-face))))
+       (2 'kbd-mode-variable-name-face))
+      (,string-regexp
+       ("\"[^}]*?\""
+        (progn (goto-char (match-beginning 0)) (match-end 0))
+        (goto-char (match-end 0))
+        (0 font-lock-string-face t)))))
   "Keywords to be syntax coloured")
 
 (define-derived-mode kbd-mode lisp-mode "kbd"
@@ -99,9 +115,6 @@ Default: t"
         (font-lock-add-keywords 'kbd-mode macro-regexp)
       (font-lock-remove-keywords 'kbd-mode macro-regexp)))
 
-  (setq syntax-propertize-function 'kbd--fix-quotes)
-  (syntax-propertize (point-max))
-
   (font-lock-flush))
 
 (defun kbd--bracket-hack ()
@@ -109,23 +122,9 @@ Default: t"
   (modify-syntax-entry ?\] "."))
 (add-hook 'kbd-mode-hook #'kbd--bracket-hack)
 
-;; (add-hook 'kbd-mode-hook #'kbd--string-hack)
-;; (defun kbd--string-hack ()
-;;   (modify-syntax-entry ?\" "."))
-
-(defun kbd--fix-quotes (start end)
-  (when (eq major-mode 'kbd-mode)
-    (save-excursion
-      (goto-char start)
-      (while (re-search-forward "\"\\|\"" end t)
-        (when (save-excursion
-                (re-search-backward
-                 "\\(^\\S(*\\s(\\)\\(device-file\\)\\([[:space:]]\"[^\"]+\"\\)\\s)"
-                 nil
-                 t))
-          (put-text-property (point)
-                             (1- (point))
-                             'syntax-table (string-to-syntax ".")))))))
+(add-hook 'kbd-mode-hook #'kbd--string-hack)
+(defun kbd--string-hack ()
+  (modify-syntax-entry ?\" "."))
 
 (provide 'kbd-mode)
 ;;; kbd-mode.el ends here
