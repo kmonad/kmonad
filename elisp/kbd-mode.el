@@ -2,6 +2,10 @@
 
 ;; Copyright 2020  slotThe
 
+;; Author: slotThe <soliditsallgood@mailbox.org>
+;; URL: TBD
+;; Version: 0.0.1
+
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
@@ -113,17 +117,25 @@ Default: t"
   '((t :inherit font-lock-string-face))
   "Face for strings")
 
-;;; (Internal) Vars
+;;; Vars
 
-(defvar kbd-mode--comments-table nil
+(defvar kbd-mode-syntax-table nil
   "Use ;; for regular comments and #| |# for line comments")
-(setq kbd-mode--comments-table
-  (let ((comments-table (make-syntax-table)))
-    (modify-syntax-entry ?\; ". 12b" comments-table)
-    (modify-syntax-entry ?\n "> b"   comments-table)
-    (modify-syntax-entry ?\# ". 14"  comments-table)
-    (modify-syntax-entry ?\| ". 23"  comments-table)
-    comments-table))
+(setq kbd-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    ;; Comments.
+    (modify-syntax-entry ?\; ". 12b" table)
+    (modify-syntax-entry ?\n "> b"   table)
+    (modify-syntax-entry ?\# ". 14"  table)
+    (modify-syntax-entry ?\| ". 23"  table)
+
+    ;; We don't need to highlight brackets, as they're only used inside layouts.
+    (modify-syntax-entry ?\[ "."     table)
+    (modify-syntax-entry ?\] "."     table)
+
+    ;; We highlight the necessary strings ourselves.
+    (modify-syntax-entry ?\" "."     table)
+    table))
 
 (defvar kbd-mode--font-lock-keywords nil
   "Keywords to be syntax highlighted")
@@ -156,23 +168,13 @@ Default: t"
         (goto-char (match-end 0))
         (0 font-lock-string-face t))))))
 
-;;; Hacks
-
-;; We don't need to highlight brackets, as they're only used inside layouts.
-(add-hook 'kbd-mode-hook #'(lambda ()
-                             (modify-syntax-entry ?\[ ".")
-                             (modify-syntax-entry ?\] ".")))
-
-;; We highlight the necessary strings ourselves.
-(add-hook 'kbd-mode-hook #'(lambda () (modify-syntax-entry ?\" ".")))
-
 ;;; Define Major Mode
 
 (define-derived-mode kbd-mode lisp-mode "Kbd"
   "Major mode for editing `.kbd' files"
 
+  (set-syntax-table kbd-mode-syntax-table)
   (font-lock-add-keywords 'kbd-mode kbd-mode--font-lock-keywords)
-  (set-syntax-table kbd-mode--comments-table)
 
   ;; TODO: There *has* to be a better way of doing this
   (let ((macro-regexp '(("\\(:?\\(@[^[:space:]]+\\)\\)"
