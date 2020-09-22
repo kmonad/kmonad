@@ -78,4 +78,6 @@ iokitRead b = do
   we <- liftIO $ do
     _ <- wait_key $ b^.buffer
     peek $ b^.buffer
-  either throwIO pure $ fromMacKeyEvent we
+  case fromMacKeyEvent we of
+    Nothing -> iokitRead b
+    Just e  -> either throwIO pure e

@@ -12,13 +12,13 @@
  * Key event information that's shared between C++ and Haskell.
  *
  * type: represents key up or key down
- *
- * keycode: 16 uppermost bits represent IOKit usage page
- *          16 lowermost bits represent IOKit usage
+ * page: represents IOKit usage page
+ * usage: represents IOKit usage
  */
 struct KeyEvent {
-    uint8_t type;
-    uint32_t keycode;
+    uint64_t type;
+    uint32_t page;
+    uint32_t usage;
 };
 
 /*
@@ -51,12 +51,10 @@ static char *prod = nullptr;
  */
 void input_callback(void *context, IOReturn result, void *sender, IOHIDValueRef value) {
     struct KeyEvent e;
-    CFIndex integer_value = IOHIDValueGetIntegerValue(value);
     IOHIDElementRef element = IOHIDValueGetElement(value);
-    uint16_t usage_page = IOHIDElementGetUsagePage(element);
-    uint16_t usage = IOHIDElementGetUsage(element);
-    e.type = !integer_value;
-    e.keycode = (usage_page << 16) | usage;
+    e.type = IOHIDValueGetIntegerValue(value);
+    e.page = IOHIDElementGetUsagePage(element);
+    e.usage = IOHIDElementGetUsage(element);
     write(fd[1], &e, sizeof(struct KeyEvent));
 }
 
@@ -136,8 +134,9 @@ void terminated_callback(void *context, io_iterator_t iter) {
  */
 template<typename T>
 int send_key(T &keyboard, struct KeyEvent *e) {
-    if(e->type == 0) keyboard.keys.insert((uint16_t)e->keycode);
-    else if (e->type == 1) keyboard.keys.erase((uint16_t)e->keycode);
+    if(e->type == 1) keyboard.keys.insert(e->usage);
+    else if(e->type == 0) keyboard.keys.erase(e->usage);
+    else return 1;
     return pqrs::karabiner_virtual_hid_device_methods::post_keyboard_input_report(connect, keyboard);
 }
 
@@ -147,7 +146,7 @@ int send_key(T &keyboard, struct KeyEvent *e) {
  * represents a virtual keyboard).
  */
 extern "C" int send_key(struct KeyEvent *e) {
-    pqrs::karabiner_virtual_hid_device::usage_page usage_page = pqrs::karabiner_virtual_hid_device::usage_page(e->keycode >> 16);
+    pqrs::karabiner_virtual_hid_device::usage_page usage_page = pqrs::karabiner_virtual_hid_device::usage_page(e->page);
     if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::keyboard_or_keypad)
         return send_key(keyboard, e);
     else if(usage_page == pqrs::karabiner_virtual_hid_device::usage_page::apple_vendor_top_case)
