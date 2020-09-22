@@ -183,7 +183,11 @@ Default: t"
         (font-lock-add-keywords 'kbd-mode macro-regexp)
       (font-lock-remove-keywords 'kbd-mode macro-regexp)))
 
-  (font-lock-flush))
+  ;; HACK: Otherwise the `syntax-table' refreshes more often than our
+  ;;       `font-lock' settings, causing strings to be un-highlighted.
+  (defadvice redisplay (after refresh-font-locking activate)
+    (when (derived-mode-p 'kbd-mode)
+      (font-lock-fontify-buffer))))
 
 (provide 'kbd-mode)
 ;;; kbd-mode.el ends here
