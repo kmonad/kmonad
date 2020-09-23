@@ -110,9 +110,6 @@ library
       c_src/mac/keyio_mac.cpp
     cxx-options:
       -std=c++14
-    -- Commenting out, interferes with Hackage
-    -- include-dirs:
-    --   c_src/mac/Karabiner-VirtualHIDDevice/dist/include
     extra-libraries:
       c++
     build-depends:
