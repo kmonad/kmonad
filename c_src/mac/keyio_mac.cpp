@@ -81,7 +81,6 @@ void open_matching_devices(char *product, io_iterator_t iter) {
         CFStringRef cfcurr = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
         if(cfcurr == NULL) {
             std::cerr << "IORegistryEntryCreateCFProperty error" << std::endl;
-            CFRelease(cfcurr);
             continue;
         }
         bool match = (CFStringCompare(cfcurr, cfkarabiner, 0) != kCFCompareEqualTo);
