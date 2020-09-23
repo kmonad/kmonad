@@ -5,7 +5,7 @@ Jump to
   - [Using nix](installation.md#using-nix)
   - [Using stack](installation.md#using-stack)
   - [Windows environment](installation.md#windows-environment)
-  - [Mac](installation.md#mac)
+  - [macOS](installation.md#macos)
 - [Binaries](installation.md#binaries)
 - [Packages](installation.md#packages)
   - [Void Linux](installation.md#void-linux)
@@ -68,40 +68,58 @@ installation](https://www.haskell.org/platform). I also needed to install
 [mingw](http://mingw.org) to provide `gcc`. With both the Haskell platform and
 `mingw` building `kmonad` under Windows10 should as simple as `stack build`.
 
-### Mac
+### macOS
 
-Mac support only for version 10.12 to 10.15. Support for Mac version
-11.0 is planned.
+kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
+Catalina). Support for macOS 11.0 (Big Sur) is in progress.
 
-Note: `kmonad` uses a [kernel
+Note: under macOS, `kmonad` uses a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-(kext) to post modified key events to the OS. This kext is tedious to
-build from source, and the OS won't load it unless you sign it with an
-"Apple Developer ID."  An easier way is to install the kext as a
-binary that has been signed by its maintainer. Also note that if you
-have
-[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements)
-installed, then you already have the kext installed.
+(kext) to post modified key events to the OS. It is bundled with
+kmonad as a submodule in `c_src/mac/Karabiner-VirtualHIDDevice`.
 
-Compilation under Mac currently works with `stack`. Compilation under
-Mac via `nix` is not tested or planned. To compile on Mac, download
-the kmonad source:
+#### Installing the kext
+
+You can either build the kext from source or you can install it as a
+binary that is signed by its maintainer. Building from source is
+difficult, and macOS won't load your kext unless you sign it with an
+"Apple Developer ID," so we recommend installing the kext as a signed
+binary.
+
+The kext used by kmonad is maintained as part of
+[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements).
+Therefore, if you use Karabiner-Elements, you already have the kext
+installed (though maybe a different version number). Run `kextstat |
+grep Karabiner` to check the version: if
+`org.pqrs.driver.Karabiner.VirtualHIDDevice.v061000 (6.10.0)` is
+listed, then the installed kext is compatibile with kmonad and you can
+move onto [installing kmonad](#installing-kmonad). If another version
+is listed, this may work too (but has not been tested).
+
+If you want to attempt building and signing the kext yourself, look to
+[the
+documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
+for instructions. Otherwise, to install the kext as a signed binary, run:
+
 ```shell
 git clone --recursive https://github.com/david-janssen/kmonad.git
-```
-
-Next, install the kext (if you already have
-[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements)
-installed then skip this step). If you want to attempt building and
-signing the kext yourself, look to [the
-documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-for instructions. Otherwise, run:
-```shell
 cd c_src/mac/Karabiner-VirtualHIDDevice
 make install
 ```
 
-Finally, build kmonad with `stack`:
+#### Installing kmonad
+
+Compilation under Mac currently works with `stack`. Compilation under
+Mac via `nix` is not tested or planned. Installation under Mac via
+Hackage is not tested, but may work for the adveturous. To compile on
+Mac, download the kmonad source:
+
+```shell
+git clone --recursive https://github.com/david-janssen/kmonad.git
+```
+
+Then build kmonad with `stack`:
+
 ```shell
 stack build --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
