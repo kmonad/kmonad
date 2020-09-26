@@ -1,0 +1,136 @@
+(defcfg
+  ;; For Linux
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad output"
+    "/bin/sleep 1 && /bin/setxkbmap us -option compose:ralt")
+
+  ;; For Windows
+  ;; input  (low-level-hook)
+  ;; output (send-event-sink)
+
+  ;; For MacOS
+  ;; input  (iokit-name "my-keyboard-product-string")
+  ;; output (kext)
+
+  ;; Comment this is you want unhandled events not to be emitted
+  fallthrough true
+
+  ;; Set this to false to disable any command-execution in KMonad
+  allow-cmd false
+)
+
+(defsrc
+                 f2   f3             f6
+  grv       1    2    3    4    5    6    7    8    9    0    -    =
+  tab       q    w    e    r    t    y    u    i    o    p    [    ]
+  caps      a    s    d    f    g    h    j    k    l    ;    '    \
+  lsft 102d z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl      lmet lalt          spc             ralt rmet cmp  rctl
+)
+
+(deflayer level1
+              C-pgup C-pgdn          f6
+  tab       1    2    3    4    5    6    7    8    9    0    -    =
+  lmet      v    .    o    u    ä    q    g    @lsp h    f    j    ´
+  @lv3      @cs  @aw  @ec  @i4  y    b    @t4  @rc  @nw  @ss  @lv3 ß
+  @lv2 @lv4 z    @xa  @,3  ü    ö    p    @d3  @wa  m    k    rsft
+  lmet      lctl lalt          spc             XX   rmet _    _
+)
+
+(deflayer level2
+                 f2   f3             _
+;;S-tab     °    §    ℓ    »    «    $    €    „    “    ”    —    ¸
+  S-tab     !    "    §    $    %    &    /    \(   \)   =    ?    ´
+  lmet      V    •    O    U    Ä    Q    G    L    H    F    J    ´
+  _         C    A    E    I    Y    B    T    R    N    S    _    ß
+  @lv2 @lv4 Z    X    -    ü    Ö    P    D    W    M    K    @lv2
+  lmet      lctl lalt          spc             @lv4 rmet _    _
+)
+
+(deflayer level3
+                 _   _               @qwe
+  _         ¹    ²    ³    ›    ‹    ¢    ¥    ‚    ‘    ’    _    _
+  _         @    %    {    }    ^    !    <    >    =    &    €    /
+  _         |    `    \(   \)   *    ?    /    :    -    \_   →    _
+  _    _    #    [    ]    ~    $    +    "    '    \    ;    _
+  _         _    _              _              _    _    _    _
+)
+
+(deflayer level4
+                 _    _              f6
+  _         ¹    ²    ³    ›    ‹    ¢    ¥    ‚    ‘    ’    _    _
+  _         pgup pgdn up   bspc del  :    7    8    9    +    -    "
+  _         home lft  down rght end  -    4    5    6    ,    _    ;
+  lsft XX   ins  tab  ret  esc  _    _    1    2    3    .    rsft
+  _         _    _              0              _    _    _    _
+)
+
+(deflayer special
+                  XX    XX                XX
+  XX        XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  XX        XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  XX      A-lft C-pgup  XX C-pgdn A-rght  XX    XX    XX    XX    XX    XX    XX
+  XX   XX   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  XX        XX    XX          XX                      XX    XX    XX    XX
+)
+
+(deflayer qwertz
+                 f2   f3             _
+  S-6       1    2    3    4    5    6    7    8    9    0    ß    apos
+  tab       q    w    e    r    t    z    u    i    o    p    ü    +
+  @q3       a    s    d    f    g    h    j    k    l    ö    ä    #
+  lsft <    y    x    c    v    b    n    m    ,    .    -    rsft
+  lctl      lmet lalt          spc             ralt rmet cmp  rctl
+)
+
+(deflayer qwertz3
+                 f2   f3             @vou
+  S-6       1    2    3    4    5    6    7    8    9    0    ß    apos
+  tab       q    w    e    r    t    z    u    i    o    p    ü    +
+  caps      a    s    d    f    g    h    j    k    l    ö    ä    #
+  lsft <    y    x    c    v    b    n    m    ,    .    -    rsft
+  lctl      lmet lalt          spc             ralt rmet cmp  rctl
+)
+
+(defalias
+  ;; Switch to QWERTZ layout (and back)
+  qwe (layer-switch qwertz) ;; Set qwertz as the base layer
+  vou (layer-switch level1) ;; Set vou level1 as the base layer
+
+  q3 (layer-toggle qwertz3)
+
+  ;; Bind lvX to a button that switches to a layer
+  lv2 (layer-toggle level2)
+  lv3 (layer-toggle level3)
+  lv4 (layer-toggle level4)
+  spl (layer-toggle special)
+)
+
+(defalias
+  oo (multi-tap 300 o 300 ö #(o o))
+)
+
+(defalias
+  a (tap-hold 200 a ä)
+  o (tap-hold 200 o ö)
+  u (tap-hold 200 u ü)
+  z (tap-hold 200 z ß)
+)
+
+(defalias
+  cs (tap-hold-next-release 500 c @lv2)
+  aw (tap-hold-next-release 500 a lmet)
+  ec (tap-hold-next-release 500 e lctl)
+  i4 (tap-hold-next-release 500 i @lv4)
+  xa (tap-hold-next-release 500 x lalt)
+  ,3 (tap-hold-next-release 500 , @lv3)
+
+  lsp (tap-hold-next-release 500 l @spl)
+  d3  (tap-hold-next-release 500 d @lv3)
+  wa  (tap-hold-next-release 500 w lalt)
+  t4  (tap-hold-next-release 500 t @lv4)
+  rc  (tap-hold-next-release 500 r rctl)
+  nw  (tap-hold-next-release 500 n rmet)
+  ss  (tap-hold-next-release 500 s rsft)
+)
+
