@@ -403,6 +403,9 @@ aliases = Q.mkMultiMap
   , (KeyIso,            ["iso"])
   , (KeyKbdIllumDown,   ["bldn"])
   , (KeyKbdIllumUp,     ["blup"])
+  , (KeyNextSong,       ["next"])
+  , (KeyPlayPause,      ["pp"])
+  , (KeyPreviousSong,   ["prev"])
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
