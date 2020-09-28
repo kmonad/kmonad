@@ -116,6 +116,28 @@ like the shell command we used above, so copy-paste the exact command you used
 to start KMonad into 'Target', then click apply, and you should now have a
 clickable KMonad launcher.
 
+## Mac
+
+### Q: How to use the special features printed on Apple function keys?
+
+A: By default, function keys on Apple keyboards trigger special features
+(changing brightness, volume, etc.) when pressed alone, and act as traditional
+function keys (F1, F2, etc.) when pressed with <kbd>fn</kbd>. Technically, when
+<kbd>F1</kbd> (e.g.) is pressed on an Apple keyboard, it sends the keycode
+corresponding to F1; macOS then translates this keycode to a special feature
+(depending on whether <kbd>fn</kbd> was pressed) in the [keyboard
+driver](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice/issues/1). But
+`kmonad` intercepts key presses before this translation can occur, and it emits
+keypresses through a driver of its own. Therefore macOS does not translate any
+keypresses emitted by kmonad, and the checkbox labeled "Use F1, F2, etc. keys as
+standard function keys" in `System Preferences` will have no effect on keyboards
+modified by kmonad.
+
+However, we can simulate the default behavior of Apple keyboards by emitting
+keycodes that correspond to the special features printed on the function
+keys. See [keymap/template/apple.kbd](../keymap/template/apple.kbd) for an
+example.
+
 ## General
 
 ### Q: Why doesn't the 'Print' keycode work for my print screen button?
