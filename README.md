@@ -19,6 +19,9 @@ For information on how to configure KMonad, we refer you to:
 Want to add your configuration to `./keymap`? Fork KMonad, create a new
 subdirectory using your github username and submit a pull-request.
 
+## Editor Support for the Configuration Language
+- [Emacs](https://github.com/slotThe/kbd-mode)
+
 ## Troubleshooting
 For a number of commonly asked questions regarding various configuration issues,
 please see:
