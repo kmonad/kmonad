@@ -123,6 +123,18 @@ Then build kmonad with `stack`:
 ```shell
 stack build --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
+#### Giving kmonad additional permissions
+
+Since Mac OS X Leopard (10.5), intercepting key events
+[requires](https://developer.apple.com/library/archive/technotes/tn2187/_index.html#//apple_ref/doc/uid/DTS10004224-CH1-DontLinkElementID_10)
+root privilege. Therefore, you must run kmonad as root (using `sudo`,
+e.g.). In the future, privilege separation may be implemented so that
+just a small part of kmonad requires root privilege to run.
+
+Since macOS Catalina (10.15), capturing key events requires explicit
+permission in `System Preferences`. Enable the application(s) that you
+will be using to execute kmonad in `System Preferences` > `Security &
+Privacy` > `Privacy` > `Input Monitoring`.
 
 ## Binaries
 
