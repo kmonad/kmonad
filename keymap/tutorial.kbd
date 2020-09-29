@@ -118,7 +118,10 @@
     (iokit-name "optional product string")
 
   By default this should grab all keyboards, however if a product string is
-  provided, KMonad will only capture those devices that match the provided product string./
+  provided, KMonad will only capture those devices that match the provided
+  product string. If you would like to provide a product string, you can run
+  `make; ./list-keyboards' in c_src/mac to list the product strings of all
+  connected keyboards.
 
   You initialize output on MacOS using:
     (kext)

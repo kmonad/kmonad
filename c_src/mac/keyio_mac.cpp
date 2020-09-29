@@ -5,6 +5,7 @@
 #include <thread>
 #include <map>
 #include <iostream>
+#include <mach/mach_error.h>
 
 #include "karabiner_virtual_hid_device_methods.hpp"
 
@@ -42,6 +43,16 @@ static std::map<io_service_t,IOHIDDeviceRef> source_device;
 static int fd[2];
 static char *prod = nullptr;
 
+void print_iokit_error(const char *fname, int freturn = 0) {
+    std::cerr << fname << " error";
+    if(freturn) {
+        //std::cerr << " " << std::hex << freturn;
+        std::cerr << ": ";
+        std::cerr << mach_error_string(freturn);
+    }
+    std::cerr << std::endl;
+}
+
 /*
  * We'll register this callback to run whenever an IOHIDDevice
  * (representing a keyboard) sends input from the user.
@@ -65,13 +76,13 @@ void open_matching_devices(char *product, io_iterator_t iter) {
     if(product) {
         cfproduct = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
         if(cfproduct == NULL) {
-            std::cerr << "CFStringCreateWithCString error" << std::endl;
+            print_iokit_error("CFStringCreateWithCString");
             return;
         }
     }
     CFStringRef cfkarabiner = CFStringCreateWithCString(kCFAllocatorDefault, "Karabiner VirtualHIDKeyboard", CFStringGetSystemEncoding());
     if(cfkarabiner == NULL) {
-        std::cerr << "CFStringCreateWithCString error" << std::endl;
+        print_iokit_error("CFStringCreateWithCString");
         if(product) {
             CFRelease(cfproduct);
         }
@@ -80,7 +91,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
         CFStringRef cfcurr = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
         if(cfcurr == NULL) {
-            std::cerr << "IORegistryEntryCreateCFProperty error" << std::endl;
+            print_iokit_error("IORegistryEntryCreateCFProperty");
             continue;
         }
         bool match = (CFStringCompare(cfcurr, cfkarabiner, 0) != kCFCompareEqualTo);
@@ -94,10 +105,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
         IOHIDDeviceRegisterInputValueCallback(dev, input_callback, NULL);
         kr = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
         if(kr != kIOReturnSuccess) {
-            std::cerr << "IOHIDDeviceOpen error: " << std::hex << kr << std::endl;
-            if(kr == kIOReturnNotPrivileged) {
-                std::cerr << "IOHIDDeviceOpen requires root privileges when called with kIOHIDOptionsTypeSeizeDevice" << std::endl;
-            }
+            print_iokit_error("IOHIDDeviceOpen", kr);
         }
         IOHIDDeviceScheduleWithRunLoop(dev, listener_loop, kCFRunLoopDefaultMode);
     }
@@ -175,7 +183,7 @@ void monitor_kb(char *product) {
     kern_return_t kr;
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     if(!matching_dictionary) {
-        std::cerr << "IOServiceMatching error" << std::endl;
+        print_iokit_error("IOServiceMatching");
         return;
     }
     UInt32 value;
@@ -194,7 +202,7 @@ void monitor_kb(char *product) {
                                       matching_dictionary,
                                       &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceGetMatchingServices error: " << std::hex << kr << std::endl;
+        print_iokit_error("IOServiceGetMatchingServices", kr);
         return;
     }
     listener_loop = CFRunLoopGetCurrent();
@@ -210,7 +218,7 @@ void monitor_kb(char *product) {
                                           product,
                                           &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceAddMatchingNotification error: " << std::hex << kr << std::endl;
+        print_iokit_error("IOServiceAddMatchingNotification", kr);
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {}
@@ -221,7 +229,7 @@ void monitor_kb(char *product) {
                                           NULL,
                                           &iter);
     if(kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceAddMatchingNotification error: " << std::hex << kr << std::endl;
+        print_iokit_error("IOServiceAddMatchingNotification", kr);
         return;
     }
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {}
@@ -229,7 +237,7 @@ void monitor_kb(char *product) {
     for(std::pair<const io_service_t,IOHIDDeviceRef> p: source_device) {
         kr = IOHIDDeviceClose(p.second,kIOHIDOptionsTypeSeizeDevice);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOHIDDeviceClose error: " << std::hex << kr << std::endl;
+            print_iokit_error("IOHIDDeviceClose", kr);
         }
     }
 }
@@ -260,12 +268,12 @@ extern "C" int grab_kb(char *product) {
     connect = IO_OBJECT_NULL;
     service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceNameMatching(pqrs::karabiner_virtual_hid_device::get_virtual_hid_root_name()));
     if (!service) {
-        std::cerr << "IOServiceGetMatchingService error" << std::endl;
+        print_iokit_error("IOServiceGetMatchingService");
         return 1;
     }
     kr = IOServiceOpen(service, mach_task_self(), kIOHIDServerConnectType, &connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "IOServiceOpen error: " << std::hex << kr << std::endl;
+        print_iokit_error("IOServiceOpen", kr);
         return kr;
     }
     //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -274,14 +282,14 @@ extern "C" int grab_kb(char *product) {
         pqrs::karabiner_virtual_hid_device::properties::keyboard_initialization properties;
         kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
         if (kr != KERN_SUCCESS) {
-            std::cerr << "initialize_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
+            print_iokit_error("initialize_virtual_hid_keyboard", kr);
             return 1;
         }
         while (true) {
             bool ready;
             kr = pqrs::karabiner_virtual_hid_device_methods::is_virtual_hid_keyboard_ready(connect, ready);
             if (kr != KERN_SUCCESS) {
-                std::cerr << "is_virtual_hid_keyboard_ready error: " << std::hex << kr << std::endl;
+                print_iokit_error("is_virtual_hid_keyboard_ready", kr);
                 return kr;
             } else {
                 if (ready) {
@@ -296,7 +304,7 @@ extern "C" int grab_kb(char *product) {
         properties.country_code = 33;
         kr = pqrs::karabiner_virtual_hid_device_methods::initialize_virtual_hid_keyboard(connect, properties);
         if (kr != KERN_SUCCESS) {
-            std::cerr << "initialize_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
+            print_iokit_error("initialize_virtual_hid_keyboard", kr);
             return kr;
         }
     }
@@ -315,7 +323,7 @@ extern "C" int release_kb() {
         CFRunLoopStop(listener_loop);
         thread.join();
     } else {
-        std::cerr << "no thread was running!" << std::endl;
+        std::cerr << "No thread was running!" << std::endl;
     }
     if(prod) {
         free(prod);
@@ -331,20 +339,20 @@ extern "C" int release_kb() {
     // Sink
     kr = pqrs::karabiner_virtual_hid_device_methods::reset_virtual_hid_keyboard(connect);
     if (kr != KERN_SUCCESS) {
-        std::cerr << "reset_virtual_hid_keyboard error: " << std::hex << kr << std::endl;
+        print_iokit_error("reset_virtual_hid_keyboard", kr);
         retval = 1;
     }
     if (connect) {
         kr = IOServiceClose(connect);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOServiceClose error: " << std::hex << kr << std::endl;
+            print_iokit_error("IOServiceClose", kr);
             retval = 1;
         }
     }
     if (service) {
         kr = IOObjectRelease(service);
         if(kr != KERN_SUCCESS) {
-            std::cerr << "IOObjectRelease error: " << std::hex << kr << std::endl;
+            print_iokit_error("IOObjectRelease", kr);
             retval = 1;
         }
     }

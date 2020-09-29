@@ -305,8 +305,6 @@ data Keycode
   | KeyFn
   | KeyLaunchpad
   | KeyMissionCtrl
-  | KeyBacklightDown
-  | KeyBacklightUp
 #endif
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
@@ -403,10 +401,13 @@ aliases = Q.mkMultiMap
   , (KeyKpDot,          ["kp."])
   , (KeySysRq,          ["ssrq", "sys"])
   , (KeyIso,            ["iso"])
+  , (KeyKbdIllumDown,   ["bldn"])
+  , (KeyKbdIllumUp,     ["blup"])
+  , (KeyNextSong,       ["next"])
+  , (KeyPlayPause,      ["pp"])
+  , (KeyPreviousSong,   ["prev"])
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
-  , (KeyBacklightDown,  ["bldn"])
-  , (KeyBacklightUp,    ["blup"])
 #endif
   ]
