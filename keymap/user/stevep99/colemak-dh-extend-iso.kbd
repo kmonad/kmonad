@@ -1,0 +1,76 @@
+(defcfg
+  ;; ** For Linux **
+  input  (device-file "/dev/input/by-id/usb-04d9_USB-HID_Keyboard-event-kbd")
+  ;; input  (device-file "/dev/input/by-id/usb-Matias_Ergo_Pro_Keyboard-event-kbd")
+  output (uinput-sink "KMonad output")
+
+  ;; ** For Windows **
+  ;; input  (low-level-hook)
+  ;; output (send-event-sink)
+
+  ;; ** For MacOS **
+  ;; input  (iokit-name "my-keyboard-product-string")
+  ;; output (kext)
+)
+
+(defsrc
+  esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+  grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab     q    w    e    r    t    y    u    i    o    p    [    ]
+  caps    a    s    d    f    g    h    j    k    l    ;    '    \   ret
+  lsft 102d  z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl    lmet lalt           spc            ralt rmet cmp  rctl
+)
+ 
+(defalias
+  ext  (layer-toggle extend) ;; Bind 'ext' to the Extend Layer
+  sym  (layer-toggle symbols) ;; Bind 'sym' to Symbols Layer
+)
+
+(defalias
+  cpy C-c
+  pst C-v
+  cut C-x
+  udo C-z
+  all C-a
+  fnd C-f
+  bk Back
+  fw Forward
+  £ S-3  ;;UK pound sign
+)
+
+(deflayer colemak-dh
+  _       _    _    _    _    _    _    _    _    _    _    _    _
+  grv      1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab      q    w    f    p    b    j    l    u    y    ;    [    ]
+  @ext     a    r    s    t    g    k    n    e    i    o    '    \\   ret
+  lsft  z    x    c    d    v    102d m    h    ,    .    /    rsft
+  lctl     lmet lalt           spc            @sym rmet _    _
+)
+
+(deflayer extend
+  _        play rewind previoussong nextsong ejectcd refresh brdn brup www mail prog1 prog2
+  _        f1   f2   f3   f4   f5   f6   f7   f8   f9  f10   f11  f12  ret
+  _        esc  @bk  @fnd @fw  ins  pgup home up   end  menu prnt slck
+  _        @all tab  lsft lctl lalt pgdn lft  down rght del  caps _    _
+  _     @udo @cut @cpy @pst @pst _    pgdn bks  f13  f14  comp _
+  _        _    _              ret            _    _    _    _
+)
+
+(deflayer symbols
+  _        _    _    _    _    _    _    _    _    _    _    _    _    
+  _        _    _    _    _    _    _    _    _    _    _    _    _    _
+  _        !    "    @£   $    %    =    kp7  kp8  kp9  kp+  «    »
+  _        \_   [    {    \(   ^    kp*  kp4  kp5  kp6  kp-  _    _    _
+  _    #    ]    }    \)   &    `    kp0  kp1  kp2  kp3  kp/  _
+  _        _    _              _              _    _    _    _
+)
+
+(deflayer empty
+  _        _    _    _    _    _    _    _    _    _    _    _    _    
+  _        _    _    _    _    _    _    _    _    _    _    _    _    _
+  _        _    _    _    _    _    _    _    _    _    _    _    _ 
+  _        _    _    _    _    _    _    _    _    _    _    _    _    _ 
+  _    _     _    _    _    _    _    _    _    _    _    _    _ 
+  _        _    _              _              _    _    _    _
+)
