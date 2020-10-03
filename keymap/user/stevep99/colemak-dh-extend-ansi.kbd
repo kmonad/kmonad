@@ -60,9 +60,9 @@
 (deflayer symbols
   _        _    _    _    _    _    _    _    _    _    _    _    _    
   _        _    _    _    _    _    _    _    _    _    _    _    _    _
-  _        !    "    @£   $    %    =    kp7  kp8  kp9  kp+  «    »    _
-  _        \_   [    {    \(   ^    kp*  kp4  kp5  kp6  kp-  _    _
-  _          ]    }    \)   &    `    kp0  kp1  kp2  kp3  kp/  _
+  _        S-1  S-2  S-3  S-4  S-5  =    kp7  kp8  kp9  kp+  «    »    _
+  _        \_   [    {    \(   S-6  kp*  kp4  kp5  kp6  kp-  _    _
+  _          ]    }    \)   S-7  `    kp0  kp1  kp2  kp3  kp/  _
   _        _    _              _              _    _    _    _
 )
 
