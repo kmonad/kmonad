@@ -1,0 +1,149 @@
+#|                            My Spin of Colemak on an X220
+ |
+ | KMonad configuration for a ThinkPad X220 with an ISO keyboard, using a US
+ | layout as a base.  I tried to recreate the physical layout of the board as
+ | best as I could.
+ |
+ | Template for a new layer:
+ |
+ | (deflayer name
+ |   _    _    _    _                             _    _    _    _    _    _    _
+ |        _    _    _    _    _    _    _    _    _    _    _    _         _    _
+ |   _    _    _    _    _    _    _    _    _    _    _    _    _         _
+ |   _    _    _    _    _    _    _    _    _    _    _    _    _         _
+ |   _    _    _    _    _    _    _    _    _    _    _    _    _
+ |   _    _    _    _    _    _    _    _    _    _    _    _              _
+ |   _    _    _    _              _              _    _    _         _    _    _
+ |                                                                    _    _    _
+ | )
+ |#
+
+#|
+ | Set input/output sinks, as well as the X11 dependent part of the config.
+ |
+ | After setting the proper input device, set a faster default key repeat with
+ | `xset'.  First number is how long (in ms) the key has to be held down before
+ | repeating starts.  Second number is repetitions per second after that.
+ |
+ | I then set my compose key, namely Alt_R (which is a key that will not be on a
+ | layout by itself, but KMonad uses it internally for unicode things).
+ |
+ | The name given as the first argument to `uinput-sink' will be the name given
+ | to the virtual keyboard that KMonad creates.
+ |#
+
+(defcfg
+  input (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink
+          "KMonad: X220"
+          "sleep 0.2s; xset r rate 230 70; sleep 0.2s; setxkbmap -option compose:ralt"))
+
+#|                                 Shortcuts
+ |
+ | I very much prefer a very dense layout and ensure that my grid can fit in
+ | 5-character wide columns.  This means I rename anything that is longer than
+ | 4 characters to some alias.
+ |
+ | First up are layer shortcuts.
+ |#
+
+;; 21jan2020 +slot+ add qwerty layer
+(defalias
+  sym (layer-toggle syms)      ;; Switching to the symbol layer
+  ass (layer-switch qwerty)    ;; Switching to the qwerty layer
+  cmk (layer-switch colemak))  ;; Switch back to a normal layer
+
+#|
+ | Here I define all things tap (holds, nexts, etc.).
+ | The syntax for abbreviations here is:
+ |   >first letter of key1
+ |   >first letter of key2
+ |   >first letter of feature ([h]old, [n]next, etc.)
+ |#
+
+;; 07dec2019 +slot+
+;; 21dec2019 +slot+
+(defalias
+  ecn (tap-next esc lctl)   ;; Escape    when tapped, Control when held
+  bcn (tap-next \   rctl)   ;; Backslash when tapped, Control when held
+  tsn (tap-next tab lmet)   ;; Tab       when tapped, Super   when held
+  bsn (tap-next [   rmet))  ;; Bracket   when tapped, Super   when held
+
+#|
+ | Other aliases.  Yay Haskell ^-^
+ |#
+
+(defalias
+  Ins (around sft ins)
+  >>= #( > > = )
+  =<< #( = < < )
+  <*> #( < * > )
+  *>  #( * >   )
+  <*  #( < *   )
+  <$> #( < $ > )
+  <&> #( < & > )
+  <|> #( < | > )
+  <-  #( < -   )
+  ->  #( - >   )
+  =>  #( = >   ))
+
+#|                                 Layers
+ |
+ | First up is the source (base) layer.
+ | This is used to set the default keys that will be overwritten later.
+ | It is *not* a layer that will be used in the actual layout.
+ |#
+(defsrc
+  esc  mute vold volu                          prnt slck pause ins del  home pgup
+       f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12      end  pgdn
+  grv  1    2    3    4    5    6    7    8    9    0    -     =        bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [     ]        ret
+  caps a    s    d    f    g    h    j    k    l    ;    '     \
+  lsft 102d z    x    c    v    b    n    m    ,    .    /              rsft
+  wkup lctl lmet lalt           spc            ralt cmps rctl      back up   fwd
+                                                                   left down rght
+)
+
+
+#|
+ | Colemak layer.
+ | Since this is the first layer, it's the layout KMonad starts in.
+ |#
+(deflayer colemak
+  esc  mute vold volu                          prnt slck pause @Ins del  home pgup
+       f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12       end  pgdn
+  grv  1    2    3    4    5    6    7    8    9    0    -     =         bspc
+  @tsn q    w    f    p    b    j    l    u    y    ;    @bsn  ]         ret
+  @ecn a    r    s    t    g    k    n    e    i    o    '     @bcn
+  lsft 102d x    c    d    v    z    m    h    ,    .    /               rsft
+  wkup lctl lmet lalt           spc            @sym cmps rctl       back up   fwd
+                                                                    left down rght
+)
+
+#|
+ | Symbol layer.
+ |#
+(deflayer syms
+  esc  mute vold volu                          prnt slck pause @Ins del  home pgup
+       @ass f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12       end  pgdn
+  grv  !    @    #    4    5    6    7    8    9    0    -     =         bspc
+  @<|> @=<< $    %    &    -    @<*  +    ü    *    ;    @bsn  ]         ret
+  @ecn ä    ^    ß    `    ~    left down up   rght ö    '     @bcn
+  bspc 102d @>>= \(   \)   @=>  @*>  @<*> @<$> @<-  @->  @<&>            rsft
+  wkup lctl lmet lalt           spc            ralt cmps rctl       back up   fwd
+                                                                    left down rght
+)
+
+#|
+ | Qwerty layer, in case someone else has to use my keyboard.
+ |#
+(deflayer qwerty
+  esc  mute vold volu                          prnt slck pause ins  del  @cmk pgup
+       f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12       end  pgdn
+  grv  1    2    3    4    5    6    7    8    9    0    -     =         bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [     ]         ret
+  caps a    s    d    f    g    h    j    k    l    ;    '     \
+  lsft 102d z    x    c    v    b    n    m    ,    .    /               rsft
+  wkup lctl lmet lalt           spc            ralt cmps rctl       back up   fwd
+                                                                    left down rght
+)
