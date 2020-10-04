@@ -1,0 +1,8 @@
+include "%L"
+
+<Multi_key> <s> <l> : "ℓ"   # script small l
+<Multi_key> <t> <u> : "👍"  # thumb up
+<Multi_key> <y> <y> : "✔"   # yes yes
+<Multi_key> <n> <n> : "✘"   # no no
+<Multi_key> <s> <t> : "⭐"  # star
+

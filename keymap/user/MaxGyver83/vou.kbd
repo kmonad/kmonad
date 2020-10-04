@@ -31,19 +31,18 @@
 (deflayer level1
               C-pgup C-pgdn          f6
   tab       1    2    3    4    5    6    7    8    9    0    -    =
-  lmet      v    .    o    u    ä    q    g    @lsp h    f    j    ´
+  lmet      v    .    @o   u    ä    q    g    @lsp h    f    j    ´
   @lv3      @cs  @aw  @ec  @i4  y    b    @t4  @rc  @nw  @ss  @lv3 ß
-  @lv2 @lv4 z    @xa  @,3  ü    ö    p    @d3  @wa  m    k    rsft
-  lmet      lctl lalt          spc             XX   rmet _    _
+  lsft @j2  @z   @xa  @,3  ü    ö    p    @d3  @wa  m    k    rsft
+  lmet      lctl lalt          spc             XX   rmet _    @ctlc
 )
 
 (deflayer level2
                  f2   f3             _
-;;S-tab     °    §    ℓ    »    «    $    €    „    “    ”    —    ¸
-  S-tab     !    "    §    $    %    &    /    \(   \)   =    ?    ´
+  S-tab     °    §    @ℓ   »    «    $    €    „    “    ”    —    ¸
   lmet      V    •    O    U    Ä    Q    G    L    H    F    J    ´
   _         C    A    E    I    Y    B    T    R    N    S    _    ß
-  @lv2 @lv4 Z    X    -    ü    Ö    P    D    W    M    K    @lv2
+  XX    J   Z    X    -    @Ü   Ö    P    D    W    M    K    XX
   lmet      lctl lalt          spc             @lv4 rmet _    _
 )
 
@@ -51,15 +50,15 @@
                  _   _               @qwe
   _         ¹    ²    ³    ›    ‹    ¢    ¥    ‚    ‘    ’    _    _
   _         @    %    {    }    ^    !    <    >    =    &    €    /
-  _         |    `    \(   \)   *    ?    /    :    -    \_   →    _
-  _    _    #    [    ]    ~    $    +    "    '    \    ;    _
+  _         |    `    \(   \)   *    ?    /    :    -    \_   _    →
+  _    _    #    [    ]    ~    $    +    S-'  '    \    ;    _
   _         _    _              _              _    _    _    _
 )
 
 (deflayer level4
                  _    _              f6
-  _         ¹    ²    ³    ›    ‹    ¢    ¥    ‚    ‘    ’    _    _
-  _         pgup pgdn up   bspc del  :    7    8    9    +    -    "
+  _         ¹    ²    @✔   @✘   @⭐  ¢    ¥    ‚    ‘    ’    _    _
+  _         pgup pgdn up   bspc del  :    7    8    9    +    -    S-'
   _         home lft  down rght end  -    4    5    6    ,    _    ;
   lsft XX   ins  tab  ret  esc  _    _    1    2    3    .    rsft
   _         _    _              0              _    _    _    _
@@ -68,9 +67,9 @@
 (deflayer special
                   XX    XX                XX
   XX        XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
-  XX        XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  XX      A-pgup A-pgdn XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
   XX      A-lft C-pgup  XX C-pgdn A-rght  XX    XX    XX    XX    XX    XX    XX
-  XX   XX   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  XX   XX   XX    @pb   @nb   XX    XX    XX    XX    XX    XX    XX    XX
   XX        XX    XX          XX                      XX    XX    XX    XX
 )
 
@@ -111,17 +110,18 @@
 )
 
 (defalias
-  a (tap-hold 200 a ä)
-  o (tap-hold 200 o ö)
-  u (tap-hold 200 u ü)
-  z (tap-hold 200 z ß)
+  a (tap-hold 300 a ä)
+  o (tap-hold 300 o ö)
+  u (tap-hold 300 u ü)
+  z (tap-hold 300 z ß)
 )
 
 (defalias
-  cs (tap-hold-next-release 500 c @lv2)
+  cs (tap-hold-next-release 500 c lsft)
   aw (tap-hold-next-release 500 a lmet)
   ec (tap-hold-next-release 500 e lctl)
   i4 (tap-hold-next-release 500 i @lv4)
+  j2 (tap-hold-next-release 500 j @lv2)
   xa (tap-hold-next-release 500 x lalt)
   ,3 (tap-hold-next-release 500 , @lv3)
 
@@ -132,5 +132,23 @@
   rc  (tap-hold-next-release 500 r rctl)
   nw  (tap-hold-next-release 500 n rmet)
   ss  (tap-hold-next-release 500 s rsft)
+
+  ;; ralt = compose key when tapped, rctl when held down
+  ctlc (tap-hold-next-release 500 ralt rctl)
 )
 
+(defalias
+  ;; vim prev/next buffer
+  pb #(esc : b p ret)
+  nb #(esc : b n ret)
+)
+
+(defalias
+  ;; some unicode characters need to be defined in ~/.XCompose
+  ;; (if you use Windows, you have to define something like this in WinCompose)
+  ℓ  #(ralt s l)  ;; script small l (ℓ)
+  Ü  #(ralt " U)  ;; capital Ü (not necessary in commit b7214c4 or newer)
+  ✔  #(ralt y y)  ;; heavy checkmark (✔)
+  ✘  #(ralt n n)  ;; heavy ballot (✘)
+  ⭐ #(ralt s t)  ;; star (⭐)
+)
