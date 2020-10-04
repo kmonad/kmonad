@@ -11,6 +11,8 @@
   ;; ** For MacOS **
   ;; input  (iokit-name "my-keyboard-product-string")
   ;; output (kext)
+
+  fallthrough true
 )
 
 (defsrc
@@ -40,12 +42,12 @@
 )
 
 (deflayer colemak-dh
-  _        _    _    _    _    _    _    _    _    _    _    _    _
+  esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
   grv      1    2    3    4    5    6    7    8    9    0    -    =    bspc
   tab      q    w    f    p    b    j    l    u    y    ;    [    ]    \\
   @ext     a    r    s    t    g    k    n    e    i    o    '    ret
   lsft       x    c    d    v    z    m    h    ,    .    /    rsft
-  lctl     lmet lalt          spc             @sym rmet _    _
+  lctl     lmet lalt           spc            @sym rmet _    _
 )
 
 (deflayer extend
@@ -60,9 +62,9 @@
 (deflayer symbols
   _        _    _    _    _    _    _    _    _    _    _    _    _    
   _        _    _    _    _    _    _    _    _    _    _    _    _    _
-  _        S-1  S-2  S-3  S-4  S-5  =    kp7  kp8  kp9  kp+  «    »    _
-  _        \_   [    {    \(   S-6  kp*  kp4  kp5  kp6  kp-  _    _
-  _          ]    }    \)   S-7  `    kp0  kp1  kp2  kp3  kp/  _
+  _        S-1  S-2  S-3  S-4  S-5  =    7    8    9    +    «    »    _
+  _        \_   [    {    \(   S-6  *    4    5    6    -    _    _
+  _          ]    }    \)   S-7  `    0    1    2    3    /    _
   _        _    _              _              _    _    _    _
 )
 
