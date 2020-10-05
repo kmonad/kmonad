@@ -10,7 +10,8 @@
 (defalias
   ;; foo (tap-hold 200 x sft)
   foo (tap-hold-next-release 2000 x sft)
-  ⚥   #(ralt 0 a)
+
+  toT (layer-toggle test)
 
 )
 
@@ -24,6 +25,12 @@
 
 (deflayer main
   tab  q    w    e    r    t
-  caps @⚥    r    s    t    d
+  @toT a    r    s    t    d
   @foo z    x    c    v    b
+  )
+
+(deflayer test
+  tab  q    w    e    r    t
+  caps a    s    d    f    @toT
+  sft  z    x    c    v    b
   )

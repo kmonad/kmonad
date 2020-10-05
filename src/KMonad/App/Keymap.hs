@@ -91,9 +91,12 @@ layerOp h o = let km = h^.stack in case o of
 
   (PopLayer n) -> do
     Ls.popLayer n <$> readIORef km >>= \case
-      Left e   -> throwIO e
-      Right m' -> writeIORef km m'
-    debugReport h $ "Popped layer from stack: " <> display n
+      Left (Ls.LayerNotOnStack _) -> do
+        debugReport h $ "WARNING: Tried popping layer that was not on stack " <> display n
+      Left e                      -> throwIO e
+      Right m'                    -> do
+        writeIORef km m'
+        debugReport h $ "Popped layer from stack: " <> display n
 
   (SetBaseLayer n) -> do
     (n `elem`) . view Ls.maps <$> (readIORef km) >>= \case
