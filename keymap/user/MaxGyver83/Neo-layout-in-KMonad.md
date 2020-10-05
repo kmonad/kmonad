@@ -19,7 +19,9 @@ There are already many Neo/AdnW/KOY/Bone implementations/drivers available for W
 
 This config contains empty layers 5 and 6 because greek characters can't be inserted as easy as typing them into the config file. You need to use compose sequences (defined in *WinCompose* or `~/.XCompose`). I have inserted these layers just for showing how to implement layers dependent on other layers (technically you switch to layer 2 or 3 when holding down Shift or Mod3 before you can reach layer 5). (There are layers 5 and 6 defined in a block comment but with all symbols in a wrong order, actually matching the VOU layout).
 
-You can switch temporarily to QWERTZ (and back) by pressing `CapsLock+F6`.
+Level 2 is special: The left shift key is defined as a Neo level 2 modifier. So you get the right symbols when you type `lsft` + number but this key doesn't work for `shift` + `home` or `shift` + mouse click. In these cases you have to use the right shift key. But you'll get QWERTY's level 2 when using `rsft` + number. Both shift keys work for creating capital letters, though. (See Issue #111.)
+
+You can switch temporarily to QWERTZ (and back) by pressing `CapsLock+F6` (not completely QWERTZ, `shift` + number gives you QWERTY symbols).
 
 The caps lock functionality (holding down both shift keys) and level 4 lock are not yet implemented.
 
@@ -32,6 +34,6 @@ By the way, KMonad is designed to be based on US keyboard layouts. So `neo.kbd` 
 
 It shows how to have modifiers in the home row (letter when tapped, modifier when held down).
 
-I don't use Neo's layers 5 and 6 but I have defined a `special` layer instead. I use it for switching tabs (in almost every program) and for going back and forth in Firefox and fish.
+I don't use Neo's layers 5 and 6 but I have defined a `special` layer instead. I use it for switching tabs (in almost every program), switching buffers in vim and for going back and forth in Firefox and fish.
 
-This layout also has defined (but not activated) some aliases for umlauts. If you replace `o` with `@o` in your `level1` definition, you get `ö` when holding `o` for at least 200 ms. If you use `@oo` instead, you get `multi-tap` behaviour: Tapping `o` once = `o`, twice = `ö`, three times = `oo`.
+This layout also has defined some aliases for umlauts (but not all activated). For example, you get `ö` when holding `o` for at least 300 ms. If you use `@oo` instead of `@ö`, you get `multi-tap` behaviour: Tapping `o` once = `o`, twice = `ö`, three times = `oo`.
