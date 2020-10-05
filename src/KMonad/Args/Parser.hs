@@ -248,12 +248,12 @@ buttonP = (lexeme . choice . map try $
   , statement "tap-hold-next-release"
     $ KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP
   , statement "tap-next"       $ KTapNext     <$> buttonP     <*> buttonP
-  , statement "layer-toggle"   $ KLayerToggle <$> word
-  , statement "layer-switch"   $ KLayerSwitch <$> word
-  , statement "layer-add"      $ KLayerAdd    <$> word
-  , statement "layer-rem"      $ KLayerRem    <$> word
-  , statement "layer-delay"    $ KLayerDelay  <$> lexeme numP <*> word
-  , statement "layer-next"     $ KLayerNext   <$> word
+  , statement "layer-toggle"   $ KLayerToggle <$> lexeme word
+  , statement "layer-switch"   $ KLayerSwitch <$> lexeme word
+  , statement "layer-add"      $ KLayerAdd    <$> lexeme word
+  , statement "layer-rem"      $ KLayerRem    <$> lexeme word
+  , statement "layer-delay"    $ KLayerDelay  <$> lexeme numP <*> lexeme word
+  , statement "layer-next"     $ KLayerNext   <$> lexeme word
   , statement "around-next"    $ KAroundNext  <$> buttonP
   , statement "tap-macro"      $ KTapMacro    <$> some buttonP
   , statement "cmd-button"     $ KCommand     <$> textP
