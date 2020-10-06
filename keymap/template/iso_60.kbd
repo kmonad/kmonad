@@ -23,5 +23,5 @@
   tab   q    w    e    r    t    y    u    i    o    p    [    ]    ret
   caps  a    s    d    f    g    h    j    k    l    ;    '    \
   lsft iso   z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl lmet lalt           spc            ralt rmet cmp  rctl
+  lctl lmet lalt            spc                 ralt rmet cmp  rctl
 )
