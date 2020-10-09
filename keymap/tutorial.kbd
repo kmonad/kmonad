@@ -345,8 +345,9 @@
 
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no Keycodes for these buttons in KMonad, but they are buttons. They simply
-  evaluate to `(around lsft x)`. All shifted numbers have their corresponding
-  characters, the same is true for all capitals, and < > : ~ " | { } + and ?.
+  evaluate to `(around lsft x)`. All shifted numbers ( ! @ # $ % ^ & * \( \) )
+  letters (A-Z), and symbols ( ~ \_ + { } | : " < > ? ) represent themselves in
+  this way.
 
   To wrap up 'modded-buttons', let's look back at C-A-del. We have 8 variants:
   C- : (around lctl X)
