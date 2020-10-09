@@ -259,7 +259,8 @@
   1. Any keycode evaluates to a button that, on press, emits the press of that
      keycode, and on release, emits the release of that keycode. Just a 'normal'
      button. The exception is '\', which gets used as an escape character. Use
-     '\\' instead.
+     '\\' instead. Other characters that need to be escaped to match the literal
+     character are '(', ')', and '_'.
 
   2. An @-prefixed name evaluates to an alias lookup. We named two buttons in
      the `defalias` block above, we could now refer to these buttons using
