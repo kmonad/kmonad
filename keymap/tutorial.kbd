@@ -442,10 +442,8 @@
   2. Anyone who knows about the button can get clear-text representation of your
   password with any text editor, shell, or text-input field.
 
-  Support is coming for triggering shell commands directly from KMonad, for now
-  just hook up your favorite hotkey-daemon to gpg and give it some obscure
-  keybinding that doesn't interfere with anything (like C-A-S-M-l from above)
-  and bind that to a key.
+  Support for triggering shell commands directly from KMonad is described in the
+  command buttons section below.
 
   This concludes this public service announcement.
 
