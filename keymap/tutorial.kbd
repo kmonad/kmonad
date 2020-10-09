@@ -612,7 +612,7 @@
     - the letters a s d f are bound to themselves
     - Px  signifies the press of button x on the keyboard
     - Rx  signifies the release of said button
-    - Tx  signifies the sequential and near instantaneous press and release of a
+    - Tx  signifies the sequential and near instantaneous press and release of x
     - 100 signifies 100ms pass
 
   So for example:
