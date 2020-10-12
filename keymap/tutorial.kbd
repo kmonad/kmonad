@@ -190,7 +190,9 @@
   its Keycode name, but all lower-case and with the 'Key' prefix removed. There
   are also various aliases for Keycodes starting around line 350. If you are
   trying to bind a key and there is not a 4-letter alias, please file an issue,
-  or better yet, a pull-request, and it will be added promptly.
+  or better yet, a pull-request, and it will be added promptly. Also see
+  './keymap/template/us_ansi_100.kbd' for all the keycodes used in the 104-key
+  US QWERTY layout.
 
   Also, you can consult './keymap/template/' for various input templates. Here
   we use the input-template for 'us_ansi_60.kbd'
