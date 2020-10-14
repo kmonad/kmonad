@@ -39,6 +39,8 @@
 
   Also, as you might have noticed, whitespace is possible anywhere.
 
+  To check for syntax errors while editing, invoke kmonad with the -d option
+  from your editor.
   -------------------------------------------------------------------------- |#
 
 
