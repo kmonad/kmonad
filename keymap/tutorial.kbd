@@ -39,8 +39,7 @@
 
   Also, as you might have noticed, whitespace is possible anywhere.
 
-  To check for syntax errors while editing, invoke kmonad with the -d option
-  from your editor.
+  To check for syntax errors while editing, invoke kmonad with the -d option.
   -------------------------------------------------------------------------- |#
 
 
@@ -192,12 +191,11 @@
   its Keycode name, but all lower-case and with the 'Key' prefix removed. There
   are also various aliases for Keycodes starting around line 350. If you are
   trying to bind a key and there is not a 4-letter alias, please file an issue,
-  or better yet, a pull-request, and it will be added promptly. Also see
-  './keymap/template/us_ansi_100.kbd' for all the keycodes used in the 104-key
-  US QWERTY layout.
+  or better yet, a pull-request, and it will be added promptly.
 
-  Also, you can consult './keymap/template/' for various input templates. Here
-  we use the input-template for 'us_ansi_60.kbd'
+  Also, you can consult './keymap/template/' for various input templates to use
+  directly or to look up keycodes by position. Here we use the input-template
+  for 'us_ansi_60.kbd'
 
   -------------------------------------------------------------------------- |#
 
@@ -349,9 +347,8 @@
 
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no Keycodes for these buttons in KMonad, but they are buttons. They simply
-  evaluate to `(around lsft x)`. All shifted numbers ( ! @ # $ % ^ & * \( \) )
-  letters (A-Z), and symbols ( ~ \_ + { } | : " < > ? ) represent themselves in
-  this way.
+  evaluate to `(around lsft x)`. All shifted numbers have their corresponding
+  characters, the same is true for all capitals, and < > : ~ " | { } \_ + and ?.
 
   To wrap up 'modded-buttons', let's look back at C-A-del. We have 8 variants:
   C- : (around lctl X)
