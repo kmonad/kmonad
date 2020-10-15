@@ -7,6 +7,9 @@
   keys, arrows, and home-cluster removed. Copy out the 'defsrc' layer to start
   your own keyboard configuration. Copy out the `deflayer` template to easily
   start a new layer with matching `transparent` buttons.
+  `lsgt`, the key on the right of the left shift key, stands for "less (<) / greater (>)".
+  `nubs`, short for "Non-US backslash", can also be used in place of `lsgt`.
+  `102d` is yet another valid name for that key.
 
 (deflayer name
   _     _    _    _    _    _    _    _    _    _    _    _    _    _
@@ -22,6 +25,6 @@
   grv   1    2    3    4    5    6    7    8    9    0    -    =    bspc
   tab   q    w    e    r    t    y    u    i    o    p    [    ]    ret
   caps  a    s    d    f    g    h    j    k    l    ;    '    \
-  lsft iso   z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl lmet lalt           spc            ralt rmet cmp  rctl
+  lsft lsgt  z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt            spc                 ralt rmet cmp  rctl
 )
