@@ -39,6 +39,7 @@
 
   Also, as you might have noticed, whitespace is possible anywhere.
 
+  To check for syntax errors while editing, invoke kmonad with the -d option.
   -------------------------------------------------------------------------- |#
 
 
@@ -192,8 +193,9 @@
   trying to bind a key and there is not a 4-letter alias, please file an issue,
   or better yet, a pull-request, and it will be added promptly.
 
-  Also, you can consult './keymap/template/' for various input templates. Here
-  we use the input-template for 'us_ansi_60.kbd'
+  Also, you can consult './keymap/template/' for various input templates to use
+  directly or to look up keycodes by position. Here we use the input-template
+  for 'us_ansi_60.kbd'
 
   -------------------------------------------------------------------------- |#
 
@@ -259,7 +261,8 @@
   1. Any keycode evaluates to a button that, on press, emits the press of that
      keycode, and on release, emits the release of that keycode. Just a 'normal'
      button. The exception is '\', which gets used as an escape character. Use
-     '\\' instead.
+     '\\' instead. Other characters that need to be escaped to match the literal
+     character are '(', ')', and '_'.
 
   2. An @-prefixed name evaluates to an alias lookup. We named two buttons in
      the `defalias` block above, we could now refer to these buttons using
@@ -345,7 +348,7 @@
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no Keycodes for these buttons in KMonad, but they are buttons. They simply
   evaluate to `(around lsft x)`. All shifted numbers have their corresponding
-  characters, the same is true for all capitals, and < > : ~ " | { } + and ?.
+  characters, the same is true for all capitals, and < > : ~ " | { } \_ + and ?.
 
   To wrap up 'modded-buttons', let's look back at C-A-del. We have 8 variants:
   C- : (around lctl X)
@@ -440,10 +443,8 @@
   2. Anyone who knows about the button can get clear-text representation of your
   password with any text editor, shell, or text-input field.
 
-  Support is coming for triggering shell commands directly from KMonad, for now
-  just hook up your favorite hotkey-daemon to gpg and give it some obscure
-  keybinding that doesn't interfere with anything (like C-A-S-M-l from above)
-  and bind that to a key.
+  Support for triggering shell commands directly from KMonad is described in the
+  command buttons section below.
 
   This concludes this public service announcement.
 
@@ -612,7 +613,7 @@
     - the letters a s d f are bound to themselves
     - Px  signifies the press of button x on the keyboard
     - Rx  signifies the release of said button
-    - Tx  signifies the sequential and near instantaneous press and release of a
+    - Tx  signifies the sequential and near instantaneous press and release of x
     - 100 signifies 100ms pass
 
   So for example:
