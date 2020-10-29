@@ -18,7 +18,7 @@ where
 
 import KMonad.Prelude
 
-import UnliftIO.Process (spawnCommand)
+import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 import RIO.Text (unpack)
 
 import KMonad.Action
@@ -221,9 +221,13 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
     f <- view allowCmd
     if f then do
       logInfo $ "Running command: " <> display t
-      void . spawnCommand . unpack $ t
+      spawnCommand . unpack $ t
     else
       logInfo $ "Received but not running: " <> display t
+   where
+    spawnCommand :: MonadIO m => String -> m ()
+    spawnCommand cmd =
+      createProcess_ "spawnCommand" (shell cmd){ close_fds = True } $> ()
 
 --------------------------------------------------------------------------------
 -- $kenv
