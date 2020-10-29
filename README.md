@@ -19,6 +19,8 @@ The core maintainer is currently experiencing some troublesome health
 difficulties. If responses to issues or pull requests are a bit slow, my
 apologies. When I am able to respond, I will, I am just not often able lately.
 
+## Introduction
+
 KMonad is an advanced tool that lets you infinitely customize and extend the functionalities of almost any keyboard. For a detailed list of features, see [here](#features).
 
 If you want to get started with the latest, stable binary release, please check out the master branch, if you are interested in the latest additions and tweaks, switch on over to develop and compile your own binary.
