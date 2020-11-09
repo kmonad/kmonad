@@ -143,8 +143,8 @@ numP = L.decimal
 -- | Parse text with escaped characters between "s
 textP :: Parser Text
 textP = do
-  _ <- char '\"'
-  s <- manyTill L.charLiteral (char '\"')
+  _ <- char '\"' <|> char '\''
+  s <- manyTill L.charLiteral (char '\"' <|> char '\'')
   pure . T.pack $ s
 
 -- | Parse a variable reference
