@@ -171,6 +171,18 @@ data DefSetting
   deriving Show
 makeClassyPrisms ''DefSetting
 
+-- | 'Eq' instance for a 'DefSetting'. Because every one of these options may be
+-- given at most once, we only need to check the outermost constructor in order
+-- to test for equality
+instance Eq DefSetting where
+  SIToken{}      == SIToken{}      = True
+  SOToken{}      == SOToken{}      = True
+  SCmpSeq{}      == SCmpSeq{}      = True
+  SInitStr{}     == SInitStr{}     = True
+  SFallThrough{} == SFallThrough{} = True
+  SAllowCmd{}    == SAllowCmd{}    = True
+  _              == _              = False
+
 -- | A list of different 'DefSetting' values
 type DefSettings = [DefSetting]
 
