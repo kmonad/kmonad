@@ -1,0 +1,41 @@
+(defcfg
+  input   (device-file "/dev/input/by-id/usb-HK-ZYYK-US-A1-02-00_USB_KEYBOARD-event-kbd")
+  output  (uinput-sink
+            "KMonad: GPD Win2"
+            "/usr/bin/sleep 1 && /usr/bin/setxkbmap -option compose:ralt -option caps:none")
+)
+
+
+(defalias
+  ssft    M-lsft
+
+  caps    (tap-hold 130 esc lctl)
+  lmet    (tap-hold 250 f12 lmet)
+  rmet    (tap-hold 250 keydocuments rmet)
+)
+
+
+(defsrc
+  esc   f1    f2    f3    f4    f5    f6         mute  vold  volu
+  ins   `     1     2     3     4     5     6    7     8     9     0     -     =     bspc
+  tab   q     w     e     r     t     y     u    i     o     p     [     ]     \     del
+  caps  a     s     d     f     g     h     j    k     l     ;     '     ret
+  lsft  z     x     c     v     b     n     m    ,     .     /     up    rsft
+  lctl  lalt        lmet  spc                    ralt  rctl  lft   down  rght  cmp
+
+  f7    f8    f9    f10   f11   f12   brdn  brup home  pgup  pgdn  end
+)
+
+(deflayer def
+  esc   f1    f2    f3    f4    f5    f6          mute  vold  volu
+  ins   `     1     2     3     4     5     6     7     8     9     0     -     =     bspc
+  tab   q     w     e     r     t     y     u     i     o     p     [     ]     \     del
+  @caps a     s     d     f     g     h     j     k     l     ;     '     ret
+  lsft  z     x     c     v     b     n     m     ,     .     /     up    rsft
+  @ssft lalt        @lmet spc                     @rmet rctl  lft   down  rght  @ssft
+
+  f7    f8    f9    f10   f11   f12   brdn  brup  home  pgup  pgdn  end
+)
+
+
+;; vim: ft=elisp
