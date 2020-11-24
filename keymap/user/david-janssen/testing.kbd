@@ -7,30 +7,14 @@
   fallthrough true
   )
 
-(defalias
-  ;; foo (tap-hold 200 x sft)
-  foo (tap-hold-next-release 2000 x sft)
-
-  toT (layer-toggle test)
-
+(defsrc
+ a
+ b
+ lsft
 )
 
-
-(defsrc
-  tab  q    w    e    r    t
-  caps a    s    d    f    g
-  sft  z    x    c    v    b
-  )
-
-
-(deflayer main
-  tab  q    w    e    r    t
-  @toT a    r    s    t    d
-  @foo z    x    c    v    b
-  )
-
-(deflayer test
-  tab  q    w    e    r    t
-  caps a    s    d    f    @toT
-  sft  z    x    c    v    b
-  )
+(deflayer layer1
+  a
+  (tap-hold-next-release 2000 b lctl)
+  (around-next lsft)
+)

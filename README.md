@@ -1,3 +1,12 @@
+
+# Disclaimer
+
+The core maintainer is currently chronically (but not terminally) ill, and is
+unable to give KMonad the attention it deserves. We are currently looking for
+maintainers. Please see [this
+issue](https://github.com/david-janssen/kmonad/issues/142) for more information.
+
+
 <h1 align="center">
 KMonad
 <br>
@@ -12,12 +21,6 @@ KMonad
 <a href="#configuration">Configuration</a> •
 <a href="#troubleshooting">Troubleshooting</a> •
 </p>
-
-## Disclaimer
-
-The core maintainer is currently experiencing some troublesome health
-difficulties. If responses to issues or pull requests are a bit slow, my
-apologies. When I am able to respond, I will, I am just not often able lately.
 
 ## Introduction
 
