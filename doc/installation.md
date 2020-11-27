@@ -180,7 +180,7 @@ to install udev rules using something like this in your `config.scm`
 ### NixOS
 
 There is not currently a `kmonad` package in `nixpkgs`, however the following instructions show
-how to create your own adhoc derivation, and how to configure udev rules in nixos.
+how to create your own adhoc derivation, and how to configure udev rules in nixos. There is also a NixOS module included in this repository that can be used instead of a manual configuration.
 
 #### The Derivation
 Create a `kmonad.nix` derivation such as this one which fetches a static binary release of kmonad and packages it in the nix-store:
@@ -242,6 +242,51 @@ in {
 ```
 
 5. Rebuild system:
+```
+sudo nixos-rebuild switch
+```
+
+#### The NixOS module
+
+1. Clone this repository or copy the file `nix/nixos-module.nix` somewhere to your system.
+
+2. Add `nixos-module.nix` into your `configuration.nix` as an import:
+```
+  imports =
+    [
+      /path/to/nixos-module.nix;
+    ];
+```
+
+3. Configure the module:
+
+```
+  services.kmonad = {
+    enable = true; # disable to not run kmonad at startup
+    configfile = /path/to/config.kbd;
+	# Modify the following line if you copied nixos-module.nix elsewhere or if you want to use the derivation described above
+	# package = import /pack/to/kmonad.nix;
+  };
+```
+
+4. If you've set `enable = true;` at the previous step, do not put a `setxkbmap` line in your `config.kbd`. Instead, set the options like this:
+
+```
+  services.xserver = {
+    xkbOptions = "compose:ralt";
+    layout = "us";
+  };
+```
+
+5. If you want your main user to use kmonad, add it to the `uinput` and `input` groups:
+```
+  users.extraUsers.userName = {
+    ...
+    extraGroups = [ ... "input" "uinput" ];
+  };
+```
+
+6. Rebuild system:
 ```
 sudo nixos-rebuild switch
 ```
