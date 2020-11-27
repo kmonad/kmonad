@@ -47,6 +47,11 @@ tries to stay as close to the kernel as possible, so you can run it on other
 OSes or without X11. If you want `Hyper_L` to work, you have to make sure that
 X11 lines up well with KMonad. See [this issue](https://github.com/david-janssen/kmonad/issues/22) for more explanation.
 
+### Q: How does Unicode entry work?
+
+A: Unicode entry works via X11 compose-key sequences. For information on how to
+configure kmonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
+
 ## Windows
 
 ### How do I start KMonad?
@@ -61,8 +66,8 @@ command-line utility, so, to run it you need to:
 
 2. 'cd' to where you've stored KMonad, like this:
 ```powershell
-cd "C:\Users\david\Desktop\Just an Example" 
-``` 
+cd "C:\Users\david\Desktop\Just an Example"
+```
 NOTE: The double-tick marks around the path let you easily use directories with
 spaces in the names.
 

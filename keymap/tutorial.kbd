@@ -72,6 +72,14 @@
       (cmd-button "rm -rf ~/*")
     is a thing.
 
+  There are also some optional OS specific settings that we support:
+
+  - `cmp-seq': KEY, defaults to `RightAlt' (Linux X11 specific)
+
+    This sets your compose key for Unicode input. For more information, as well
+    as a workaround to also make this work on windows, see the section on
+    Compose-key sequences below.
+
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OS'es, and so do the capabilities of
   these interfaces.
@@ -136,6 +144,7 @@
     ;; To understand the importance of the following line, see the section on
     ;; Compose-key sequences at the near-bottom of this file.
     "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
+  cmp-seq ralt  ;; Set the compose key to `RightAlt'
 
   ;; For Windows
   ;; input  (low-level-hook)
@@ -542,7 +551,7 @@
   These two operations together, however, are very useful for activating a
   permanent overlay for a while. This technique is illustrated in the tap-hold
   overlay a bit further down.
-   
+
 
   -------------------------------------------------------------------------- |#
 
@@ -771,15 +780,24 @@
   characters, or various special-languages. In that sense, they are just
   syntactic sugar for keyboard macros.
 
-  To get this to work on Linux you will need to set your compose-key to RightAlt
-  (customization of this option is forthcoming). The line in the `defcfg` block
-  at the top of this file should work. Note that you need to wait ever so
-  slightly for the keyboard to register with linux before the command gets
-  executed, that's why the `sleep 1`. Also, note that all the
-  `/run/current-system` stuff is because the author uses NixOS. Just find a
+  To get this to work on Linux you will need to set your compose-key with a tool
+  like `setxkbmap', as well as tell kmonad that information. See the `defcfg'
+  block at the top of this file for a working example. Note that you need to
+  wait ever so slightly for the keyboard to register with linux before the
+  command gets executed, that's why the `sleep 1`. Also, note that all the
+  `/run/current-system' stuff is because the author uses NixOS. Just find a
   shell-command that will:
-  1. Sleep a moment
-  2. Set the compose-key to ralt
+
+    1. Sleep a moment
+    2. Set the compose-key to your desired key
+
+  Please be aware that what `setxkbmap' calls the `menu' key is not actually the
+  `menu' key! If you want to use the often suggested
+
+      setxkbmap -option compose:menu
+
+  you will have to set your compose key within kmonad to `compose' and not
+  `menu'.
 
   After this, this should work out of the box under Linux. Windows does not
   recognize the same compose-key sequences, but WinCompose will make most of the
