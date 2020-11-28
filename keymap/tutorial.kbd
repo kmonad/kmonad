@@ -68,8 +68,11 @@
     If this is set to `false`, any action that runs a shell-command will simply
     log to `stdout` without ever running (log-level info). Don't ever enable
     this on a configuration that you do not trust, because:
+
       (cmd-button "rm -rf ~/*")
-    is a thing.
+
+    is a thing. For more information on the `cmd-button' function, see the
+    section on Command buttons below.
 
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OS'es, and so do the capabilities of
@@ -813,8 +816,13 @@
   NOTE: currently only tested on Linux, but should work on any platform, as long
   as the command is valid for that platform.
 
+  The `cmd-button' function takes two arguments, the second one of which is
+  optional. These represent the commands to be executed on pressing and
+  releasing the button respectively.
+
   BEWARE: never run anyone's configuration without looking at it. You wouldn't
   want to push:
+
     (cmd-button "rm -rf ~/*") ;; Delete all this user's data
 
 
@@ -823,6 +831,9 @@
 (defalias
   dat (cmd-button "date >> /tmp/kmonad_example.txt")   ;; Append date to tmpfile
   pth (cmd-button "echo $PATH > /tmp/kmonad_path.txt") ;; Write out PATH
+  ;; `dat' on press and `pth' on release
+  bth (cmd-button "date >> /tmp/kmonad_example.txt"
+                  "echo $PATH > /tmp/kmonad_path.txt")
 )
 
 (deflayer command-test
