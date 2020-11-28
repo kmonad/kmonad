@@ -273,7 +273,7 @@ keywordButtons =
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
   , ("tap-macro"      , KTapMacro    <$> some buttonP)
-  , ("cmd-button"     , KCommand     <$> textP)
+  , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   ]
  where

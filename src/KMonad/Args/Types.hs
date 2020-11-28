@@ -95,7 +95,8 @@ data DefButton
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
-  | KCommand Text                          -- ^ Execute a shell command
+  | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
+                                           --   as possibly on release
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
