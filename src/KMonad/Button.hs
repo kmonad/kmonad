@@ -151,9 +151,10 @@ layerRem t = onPress (layerOp $ PopLayer t)
 pass :: Button
 pass = onPress $ pure ()
 
--- | Create a button that executes a shell command on press
-cmdButton :: Text -> Button
-cmdButton t = onPress $ shellCmd t
+-- | Create a button that executes a shell command on press and possibly on
+-- release
+cmdButton :: Text -> Maybe Text -> Button
+cmdButton pr mbR = mkButton (shellCmd pr) (maybe (pure ()) shellCmd mbR)
 
 --------------------------------------------------------------------------------
 -- $combinators

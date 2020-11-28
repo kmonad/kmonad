@@ -329,7 +329,7 @@ joinButton ns als =
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
-    KCommand t -> ret $ cmdButton t
+    KCommand pr mbR -> ret $ cmdButton pr mbR
     KLayerToggle t -> if t `elem` ns
       then ret $ layerToggle t
       else throwError $ MissingLayer t
