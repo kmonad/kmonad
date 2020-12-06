@@ -3,6 +3,7 @@
 This folder contains these two *KMonad* configurations:
 
 - `neo.kbd`: A first try of implementing the *Neo* keyboard layout.
+- `neo-de.kbd`: A first try of implementing the *Neo* keyboard layout based on German QWERTZ.
 - `vou.kbd`: My personal keyboard layout based on *Neo*, showing how to use some additional *KMonad* features.
 
 ## Why KMonad?
@@ -25,7 +26,7 @@ You can switch temporarily to QWERTZ (and back) by pressing `CapsLock+F6` (not c
 
 The caps lock functionality (holding down both shift keys) and level 4 lock are not yet implemented.
 
-By the way, KMonad is designed to be based on US keyboard layouts. So `neo.kbd` changes the keyboard layout (`setxkbmap us`) on Linux. On Windows, you have to change your layout manually to `English/USA` in the System Settings. You can also use `English (International)`. Then you've got `ä`, `ö`, `ü` and `ß` available without compose sequences but there is an issue (#84).
+By the way, KMonad is designed to be based on US keyboard layouts. So `neo.kbd` changes the keyboard layout (`setxkbmap us`) on Linux. On Windows, you have to change your layout manually to `English/USA` in the System Settings. You can also use `English (International)`. Then you've got `ä`, `ö`, `ü` and `ß` available without compose sequences but there is an issue (#84). You can also try `neo-de.kbd` with the system layout set to `German/QWERTZ` (not yet tested in Windows).
 
 
 ## VOU
