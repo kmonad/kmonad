@@ -3,6 +3,7 @@
 This folder contains these two *KMonad* configurations:
 
 - `neo.kbd`: A first try of implementing the *Neo* keyboard layout.
+- `neo-de.kbd`: A first try of implementing the *Neo* keyboard layout based on German QWERTZ.
 - `vou.kbd`: My personal keyboard layout based on *Neo*, showing how to use some additional *KMonad* features.
 
 ## Why KMonad?
@@ -17,7 +18,7 @@ There are already many Neo/AdnW/KOY/Bone implementations/drivers available for W
 
 `neo.kbd` implements Neo but it's neither complete nor completely correct. Consider it as a starting point, in case you want to use KMonad as your Neo keyboard driver.
 
-This config contains empty layers 5 and 6 because greek characters can't be inserted as easy as typing them into the config file. You need to use compose sequences (defined in *WinCompose* or `~/.XCompose`). I have inserted these layers just for showing how to implement layers dependent on other layers (technically you switch to layer 2 or 3 when holding down Shift or Mod3 before you can reach layer 5). (There are layers 5 and 6 defined in a block comment but with all symbols in a wrong order, actually matching the VOU layout).
+This config contains empty layers 5 and 6 because greek characters can't be inserted as easy as typing them into the config file. You need to use compose sequences (defined in *WinCompose* or `~/.XCompose`). I have inserted these layers just for showing how to implement layers dependent on other layers (technically you switch to layer 2 or 3 when holding down Shift or Mod3 before you can reach layer 5). There are layers 5 and 6 defined in a block comment but you would have to create aliases for the greek letters in order to make them work.
 
 Level 2 is special: The left shift key is defined as a Neo level 2 modifier. So you get the right symbols when you type `lsft` + number but this key doesn't work for `shift` + `home` or `shift` + mouse click. In these cases you have to use the right shift key. But you'll get QWERTY's level 2 when using `rsft` + number. Both shift keys work for creating capital letters, though. (See Issue #111.)
 
@@ -25,7 +26,7 @@ You can switch temporarily to QWERTZ (and back) by pressing `CapsLock+F6` (not c
 
 The caps lock functionality (holding down both shift keys) and level 4 lock are not yet implemented.
 
-By the way, KMonad is designed to be based on US keyboard layouts. So `neo.kbd` changes the keyboard layout (`setxkbmap us`) on Linux. On Windows, you have to change your layout manually to `English/USA` in the System Settings. You can also use `English (International)`. Then you've got `ä`, `ö`, `ü` and `ß` available without compose sequences but there is an issue (#84).
+By the way, KMonad is designed to be based on US keyboard layouts. So `neo.kbd` changes the keyboard layout (`setxkbmap us`) on Linux. On Windows, you have to change your layout manually to `English/USA` in the System Settings. You can also use `English (International)`. Then you've got `ä`, `ö`, `ü` and `ß` available without compose sequences but there is an issue (#84). You can also try `neo-de.kbd` with the system layout set to `German/QWERTZ` (not yet tested in Windows).
 
 
 ## VOU
