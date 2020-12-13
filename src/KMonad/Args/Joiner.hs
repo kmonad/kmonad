@@ -50,7 +50,7 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (uncons, headMaybe)
+import RIO.List (headMaybe, intersperse, uncons)
 import RIO.Partial (fromJust)
 import qualified Data.LayerStack  as L
 import qualified RIO.HashMap      as M
@@ -321,6 +321,7 @@ joinButton ns als =
       go     = unnest . joinButton ns als
       jst    = fmap Just
       fi     = fromIntegral
+      isps l = traverse go . maybe l ((`intersperse` l) . KPause . fi)
   in \case
     -- Variable dereference
     KRef t -> case M.lookup t als of
@@ -351,7 +352,7 @@ joinButton ns als =
 
     -- Various compound buttons
     KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
+    KTapMacro bs mbD   -> jst $ tapMacro           <$> mapM go (isps bs mbD)
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
