@@ -21,11 +21,15 @@ Then I tap-hold-mapped the `a` and `;` keys as `shift` so I don't have to move m
 
 The idea with this config was to replicate the behaviour of my 40% keyboard on my laptop soa s not to be lost when I go from one to the other. Having no `raise` and `lower` key on the Macbook, and with the inability to chop the spacebar into five equal parts (big sigh) the next best thing was to map `c` and `m` (which are right next to my thumbs) as `lower` and `raise` respectively. This needed some trial-and-error to get right with the tap-hold delays but I feel like I'm close. Once again I'm not sure if I need to adjust the timings or if I just need to get used to typing just right.
 
+**Accents and number row**
+
 Being a frenchman typing on a qwerty keyboard I did need access to all frequently-used accented letters in French, so these are on the raise and lower layers. The whole numbers row is moved to the home row, with numbers on the `lower` layer and symbols on the `raise` layer.
 
 If you look closely at the config you'll see I also added a `shift-raise` and a `shift-lower` layer, those were the only way I could have capitalised accented letters in a sensible way. Note that `Ê` has a whole layer just for himself. lucky bastard. I don't think it'll get much usage, either, but you never know.
 
-**Finally**, there's the `space` layer on the spacebar (with of course the same tap-hold behaviour as the `c`, `m`, `a` and `;`) which for now is only used to have the arrow keys right under my fingers on `hjkl`, because I've recently started using vim and there *are* some habits that come *very* quickly. This lets me use the spacebar arrow keys in conjuction with my free left hand to hold `command`, `alt` or `shift` to move to the beginning/end of a line, move by word and/or select stuff.
+**Arrow keys**
+
+Finally, there's the `space` layer on the spacebar (with of course the same tap-hold behaviour as the `c`, `m`, `a` and `;`) which for now is only used to have the arrow keys right under my fingers on `hjkl`, because I've recently started using vim and there *are* some habits that come *very* quickly. This lets me use the spacebar arrow keys in conjuction with my free left hand to hold `command`, `alt` or `shift` to move to the beginning/end of a line, move by word and/or select stuff.
 
 ### The... forbidden key?
 
