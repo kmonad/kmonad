@@ -172,6 +172,7 @@ data DefSetting
   | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
+  | SCmpSeqDelay Int
   deriving Show
 makeClassyPrisms ''DefSetting
 
