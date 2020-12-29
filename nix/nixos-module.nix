@@ -14,12 +14,12 @@ with lib;
       '';
     };
 
-    configfile = mkOption {
-      type = types.path;
-      default = "";
-      example = "my-config.kbd";
+    configfiles = mkOption {
+      type = types.listOf types.path;
+      default = [];
+      example = "[ my-config.kbd ]";
       description = ''
-        The config file for kmonad.
+        Config files for dedicated kmonad instances.
       '';
     };
 
@@ -44,14 +44,22 @@ with lib;
         KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
       '';
 
-    systemd.services.kmonad = mkIf cfg.enable {
-      enable = true;
-      description = "KMonad";
-      serviceConfig = {
-        Type = "simple";
-        ExecStart = "${cfg.package}/bin/kmonad " + cfg.configfile;
-      };
-      wantedBy = [ "graphical.target" ];
-    };
+    systemd.services = with lib; with builtins;
+      let
+        mk-kmonad-service = kbd-path:
+          let conf-name = lists.last (strings.splitString "/" (toString kbd-path));
+          in {
+          name = "kmonad-" +conf-name;
+          value = {
+            enable = true;
+            description = "KMonad Instance for: " +conf-name;
+            serviceConfig = {
+              Type = "simple";
+              ExecStart = "${cfg.package}/bin/kmonad " + kbd-path;
+            };
+            wantedBy = [ "graphical.target" ];
+          };
+        };
+      in mkIf cfg.enable (listToAttrs (map mk-kmonad-service cfg.configfiles));
   };
 }
