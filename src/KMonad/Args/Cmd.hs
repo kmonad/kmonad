@@ -120,7 +120,7 @@ fallThrghP = SFallThrough <$> switch
 initStrP :: Parser (Maybe DefSetting)
 initStrP = optional $ SInitStr <$> strOption
   (  long "init"
-  <> short 'i'
+  <> short 't'
   <> metavar "STRING"
   <> help "TODO"
   )
@@ -130,7 +130,7 @@ cmpSeqP :: Parser (Maybe DefSetting)
 cmpSeqP = optional $ SCmpSeq <$> option
   (tokenParser keywordButtons <|> megaReadM (choice noKeywordButtons))
   (  long "cmp-seq"
-  <> short 'c'
+  <> short 's'
   <> metavar "BUTTON"
   <> help "Which key to use to emit compose-key sequences"
   )
