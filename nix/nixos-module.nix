@@ -44,10 +44,19 @@ with lib;
         KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
       '';
 
-    systemd.services = with lib; with builtins;
+    systemd = with lib; with builtins;
       let
+        make-group = length cfg.configfiles > 1;
+        wantedBy = [ "graphical.target" ];
+        mk-kmonad-target = services: {
+          description = "KMonad target";
+          requires = map (service: service.name + ".service") services;
+          inherit wantedBy;
+        };
         mk-kmonad-service = kbd-path:
-          let conf-name = lists.last (strings.splitString "/" (toString kbd-path));
+          let
+            conf-file = lists.last (strings.splitString "/" (toString kbd-path));
+            conf-name = lists.head (strings.splitString "." conf-file);
           in {
           name = "kmonad-" +conf-name;
           value = {
@@ -55,11 +64,15 @@ with lib;
             description = "KMonad Instance for: " +conf-name;
             serviceConfig = {
               Type = "simple";
-              ExecStart = "${cfg.package}/bin/kmonad " + kbd-path;
+              ExecStart = "${cfg.package}/bin/kmonad ${kbd-path}";
             };
-            wantedBy = [ "graphical.target" ];
-          };
+          } // (if make-group
+                then { partOf = [ "kmonad.target" ]; }
+                else { inherit wantedBy; });
         };
-      in mkIf cfg.enable (listToAttrs (map mk-kmonad-service cfg.configfiles));
+        units = map mk-kmonad-service cfg.configfiles;
+
+      in mkIf cfg.enable ({ services = listToAttrs units; } // (attrsets.optionalAttrs
+        make-group { targets.kmonad = mk-kmonad-target units; }));
   };
 }
