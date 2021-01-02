@@ -177,9 +177,10 @@ around outer inner = Button
 aroundNext ::
      Button -- ^ The outer 'Button'
   -> Button -- ^ The resulting 'Button'
-aroundNext b = onPress $ await isPress $ \e -> do
+aroundNext b = onPress $ await isPress $ \_ -> do
   runAction $ b^.pressAction
-  await (isReleaseOf $ e^.keycode) $ \_ -> do
+  -- Wait for the next *event*, regardless of what it is
+  await (pure True) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch
@@ -351,5 +352,3 @@ layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
-
-
