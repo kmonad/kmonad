@@ -332,6 +332,7 @@ settingP = let f s p = symbol s *> p in
     , SInitStr     <$> f "init"        textP
     , SFallThrough <$> f "fallthrough" bool
     , SAllowCmd    <$> f "allow-cmd"   bool
+    , STapRepeat   <$> f "tap-repeat"  (optional numP)
     ])
 
 --------------------------------------------------------------------------------

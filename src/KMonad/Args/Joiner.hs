@@ -164,6 +164,7 @@ joinConfig' = do
   o  <- getO
   ft <- getFT
   al <- getAllow
+  tr <- getTpRpt
 
   -- Extract the other blocks and join them into a keymap
   let als = extract _KDefAlias    $ es
@@ -178,6 +179,7 @@ joinConfig' = do
     , _fstL  = fl
     , _flt   = ft
     , _allow = al
+    , _tpRpt = fromIntegral <$> tr
     }
 
 --------------------------------------------------------------------------------
@@ -238,6 +240,15 @@ getAllow = do
     Right b        -> pure b
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
+
+-- | Extract the tap-repeat setting
+getTpRpt :: J (Maybe Int)
+getTpRpt = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _STapRepeat $ cfg of
+    Right b        -> pure b
+    Left None      -> pure Nothing
+    Left Duplicate -> throwError $ DuplicateSetting "tap-repeat"
 
 #ifdef linux_HOST_OS
 

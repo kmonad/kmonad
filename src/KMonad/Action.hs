@@ -147,6 +147,8 @@ class Monad m => MonadKIO m where
   inject     :: KeyEvent -> m ()
   -- | Run a shell-command
   shellCmd   :: Text -> m ()
+  -- | Whether tapping tap buttons should repeat them, with a timeout
+  tapRepeat  :: m (Maybe Milliseconds)
 
 -- | 'MonadKIO' contains the additional bindings that get added when we are
 -- currently processing a button.

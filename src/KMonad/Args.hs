@@ -59,6 +59,7 @@ loadConfig cmd = do
     , _firstLayer   = _fstL  cgt
     , _fallThrough  = _flt   cgt
     , _allowCmd     = _allow cgt
+    , _tpRepeat     = _tpRpt cgt
     }
 
 -- | Join the options given from the command line with the one read from the

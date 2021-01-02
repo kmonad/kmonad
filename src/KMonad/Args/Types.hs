@@ -118,6 +118,7 @@ data CfgToken = CfgToken
   , _fstL  :: LayerTag                          -- ^ Name of initial layer
   , _flt   :: Bool                              -- ^ How to deal with unhandled events
   , _allow :: Bool                              -- ^ Whether to allow shell commands
+  , _tpRpt :: (Maybe Milliseconds)              -- ^ Tapping tap buttons repeats them
   }
 makeClassy ''CfgToken
 
@@ -169,6 +170,7 @@ data DefSetting
   | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
+  | STapRepeat   (Maybe Int)
   deriving Show
 makeClassyPrisms ''DefSetting
 
@@ -182,6 +184,7 @@ instance Eq DefSetting where
   SInitStr{}     == SInitStr{}     = True
   SFallThrough{} == SFallThrough{} = True
   SAllowCmd{}    == SAllowCmd{}    = True
+  STapRepeat{}   == STapRepeat{}   = True
   _              == _              = False
 
 -- | A list of different 'DefSetting' values

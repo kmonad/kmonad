@@ -58,6 +58,7 @@ data AppCfg = AppCfg
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
+  , _tpRepeat     :: Maybe Milliseconds-- ^ Tapping a tap button repeats it, with timeout
   }
 makeClassy ''AppCfg
 
@@ -66,7 +67,7 @@ makeClassy ''AppCfg
 data AppEnv = AppEnv
   { -- Stored copy of cfg
     _keAppCfg   :: AppCfg
-   
+
     -- General IO
   , _keLogFunc  :: LogFunc
   , _keySink    :: KeySink
@@ -224,6 +225,9 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
       void . spawnCommand . unpack $ t
     else
       logInfo $ "Received but not running: " <> display t
+
+  -- Tapping a tap button repeats it, with timeout
+  tapRepeat = view tpRepeat
 
 --------------------------------------------------------------------------------
 -- $kenv

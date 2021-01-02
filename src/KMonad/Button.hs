@@ -199,8 +199,8 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- release it when a release is detected).
 tapHold :: Milliseconds -> Button -> Button -> Button
 tapHold ms t h = onPress $ withinHeld ms (matchMy Release)
-  (press h)                     -- If we catch timeout before release
-  (const $ tap t *> pure Catch) -- If we catch release before timeout
+  (press h)                                -- If we catch timeout before release
+  (const $ checkTapRepeat t *> pure Catch) -- If we catch release before timeout
 
 -- | Create a 'Button' that performs a tap of 1 button if the next event is its
 -- own release, or else switches to holding some other button if the next event
@@ -209,16 +209,16 @@ tapNext :: Button -> Button -> Button
 tapNext t h = onPress $ hookF InputHook $ \e -> do
   p <- matchMy Release
   if p e
-    then tap t   *> pure Catch
-    else press h *> pure NoCatch
+    then checkTapRepeat t *> pure Catch
+    else press h          *> pure NoCatch
 
 -- | Like 'tapNext', except that after some interval it switches anyways
 tapHoldNext :: Milliseconds -> Button -> Button -> Button
 tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> do
   p <- matchMy Release
   if p $ tr^.event
-    then tap t   *> pure Catch
-    else press h *> pure NoCatch
+    then checkTapRepeat t *> pure Catch
+    else press h          *> pure NoCatch
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
@@ -239,7 +239,7 @@ tapNextRelease t h = onPress $ do
       let isRel = isRelease e
       if
         -- If the next event is my own release: we act as if we were tapped
-        | p e -> doTap
+        | p e -> checkTapRepeat t *> hold False $> Catch
         -- If the next event is the release of some button that was held after me
         -- we act as if we were held
         | isRel && (e^.keycode `elem` ks) -> doHold e
@@ -248,16 +248,11 @@ tapNextRelease t h = onPress $ do
         -- Else, if it is a release of some button held before me, just ignore
         | otherwise                       -> go ks *> pure NoCatch
 
-    -- Behave like a tap is simple: tap the button `t` and release processing
-    doTap :: MonadK m => m Catch
-    doTap = tap t *> hold False *> pure Catch
-
     -- Behave like a hold is not simple: first we release the processing hold,
     -- then we catch the release of ButtonX that triggered this action, and then
     -- we rethrow this release.
     doHold :: MonadK m => KeyEvent -> m Catch
     doHold e = press h *> hold False *> inject e *> pure Catch
-
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
@@ -283,7 +278,7 @@ tapHoldNextRelease ms t h = onPress $ do
       let isRel = isRelease e
       if
         -- If the next event is my own release: act like tapped
-        | p e -> onRelSelf
+        | p e -> checkTapRepeat t *> hold False $> Catch
         -- If the next event is another release that was pressed after me
         | isRel && (e^.keycode `elem` ks) -> onRelOther e
         -- If the next event is a press, store and recurse
@@ -293,9 +288,6 @@ tapHoldNextRelease ms t h = onPress $ do
 
     onTimeout :: MonadK m =>  m ()
     onTimeout = press h *> hold False
-
-    onRelSelf :: MonadK m => m Catch
-    onRelSelf = tap t *> hold False *> pure Catch
 
     onRelOther :: MonadK m => KeyEvent -> m Catch
     onRelOther e = press h *> hold False *> inject e *> pure Catch
@@ -352,3 +344,21 @@ layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
+
+-- | Check if we should engage the `tap-repeat` machinery.
+--
+-- * If not, just behave like a tap, i.e. tap the `t` button.
+-- * If yes, we wait for the next press in the given timeframe and if
+--   it's me again, press the `t` button.
+checkTapRepeat :: MonadK m => Button -> m ()
+checkTapRepeat t = tap t *> tryTapRepeat
+ where
+  -- | Tap repeat if necessary.
+  tryTapRepeat :: MonadK m => m ()
+  tryTapRepeat = maybe (pure ()) go =<< tapRepeat
+
+  go :: MonadK m => Milliseconds -> m ()
+  go ms = within ms (matchMy Press) (pure ()) $ \_ ->
+      after 5 (press t) $> Catch
+      -- Force execution to be _after_ any cleanup that the button
+      -- itself might want to do
