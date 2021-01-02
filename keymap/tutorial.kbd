@@ -52,8 +52,7 @@
   include at least an 'input' field and an 'output' field. These describe how
   KMonad captures its inputs and how it emits its outputs.
 
-  First, let's go over the optional, non-OS specific settings. Currently there is
-  only 2:
+  First, let's go over the optional, non-OS specific settings.
 
   - fallthrough: `true` or `false`, defaults to `false`
 
@@ -73,6 +72,26 @@
 
     is a thing. For more information on the `cmd-button' function, see the
     section on Command buttons below.
+
+  - tap-repeat: *number*, defaults to not specified!
+
+    This is an inverted version of QMKs `TAPPING_FORCE_HOLD'[1], meaning that
+    the `TAPPING_FORCE_HOLD' functionality is really the default in kmonad and
+    that by setting `tap-repeat' one may achieve QMKs default behaviour. If
+    this is specified and a tap-* style button is quickly tapped and then,
+    within the specified timeout, pressed again and held down, we just press
+    the tap button, allowing the OS to repeat it as needed. This is useful for
+    people who want to bind modifier keys to their home row, but may still want
+    to repeat that key at times. Suppose we had
+
+      (defalias
+        jc (tap-hold-next-release 2000 j lctl))
+
+    bound to `j'. With `tap-repeat', one may execute a quick `Tj Pj` to
+    repeatedly press `j' (and thus, for example, scroll down when using
+    VIM-style keybindings).
+
+    [1] https://beta.docs.qmk.fm/using-qmk/software-features/tap_hold#tapping-force-hold
 
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OS'es, and so do the capabilities of
@@ -541,7 +560,7 @@
   These two operations together, however, are very useful for activating a
   permanent overlay for a while. This technique is illustrated in the tap-hold
   overlay a bit further down.
-   
+
 
   -------------------------------------------------------------------------- |#
 
