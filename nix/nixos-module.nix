@@ -23,6 +23,15 @@ with lib;
       '';
     };
 
+    optionalconfigs = mkOption {
+      type = types.listOf types.path;
+      default = [];
+      example = "[ optional.kbd ]";
+      description = ''
+        Config files for dedicated kmonad instances which may not always be present.
+      '';
+    };
+
     package = mkOption {
       type = types.package;
       default = import ./default.nix;
@@ -46,14 +55,14 @@ with lib;
 
     systemd = with lib; with builtins;
       let
-        make-group = length cfg.configfiles > 1;
+        make-group = (length cfg.configfiles + length cfg.optionalconfigs) > 1;
         wantedBy = [ "graphical.target" ];
         mk-kmonad-target = services: {
           description = "KMonad target";
           requires = map (service: service.name + ".service") services;
           inherit wantedBy;
         };
-        mk-kmonad-service = kbd-path:
+        mk-kmonad-service = { is-optional }: kbd-path:
           let
             conf-file = lists.last (strings.splitString "/" (toString kbd-path));
             conf-name = lists.head (strings.splitString "." conf-file);
@@ -64,15 +73,17 @@ with lib;
             description = "KMonad Instance for: " +conf-name;
             serviceConfig = {
               Type = "simple";
-              ExecStart = "${cfg.package}/bin/kmonad ${kbd-path}";
+              ExecStart = "${cfg.package}/bin/kmonad ${kbd-path}" +
+                          (if is-optional then " || true" else "");
             };
           } // (if make-group
                 then { partOf = [ "kmonad.target" ]; }
                 else { inherit wantedBy; });
         };
-        units = map mk-kmonad-service cfg.configfiles;
+        required-units = map (mk-kmonad-service { is-optional=false; }) cfg.configfiles;
+        optional-units = map (mk-kmonad-service { is-optional=true;  }) cfg.configfiles;
 
-      in mkIf cfg.enable ({ services = listToAttrs units; } // (attrsets.optionalAttrs
-        make-group { targets.kmonad = mk-kmonad-target units; }));
+      in mkIf cfg.enable ({ services = listToAttrs (required-units ++ optional-units); } // (attrsets.optionalAttrs
+        make-group { targets.kmonad = mk-kmonad-target (required-units ++ optional-units); }));
   };
 }
