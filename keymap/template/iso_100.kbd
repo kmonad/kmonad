@@ -1,0 +1,34 @@
+#| --------------------------------------------------------------------------
+
+                     KMonad: ISO 100% template
+
+  This file contains the `defsrc' configuration for a standard ISO ten-key-less
+  keyboard. Modelled on a standard European 100% keyboard.
+
+  Copy out the `defsrc' layer to start your own keyboard configuration. Copy
+  out the `deflayer' template to easily start a new layer with matching
+  `transparent' buttons. `102d', the key on the right of the left shift key,
+  which is named this way because it used to be the 102nd key on a 100% board,
+  is the so called "iso" key. `nubs', short for "Non-US backslash", can also be
+  used in place of `102d'. `lsgt', which stands for "less (<) / greater (>)",
+  is yet another valid name for that key.
+
+(deflayer name
+  _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _                         _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _               _         _    _    _    _
+  _    _    _              _                   _    _    _    _          _    _    _    _    _
+)
+
+  -------------------------------------------------------------------------- |#
+
+(defsrc
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    ret   del  end  pgdn  kp7  kp8  kp9  kp+
+  caps a    s    d    f    g    h    j    k    l    ;    '    \                          kp4  kp5  kp6
+  lsft 102d z    x    c    v    b    n    m    ,    .    /    rsft            up         kp1  kp2  kp3  kprt
+  lctl lmet lalt           spc                 ralt rmet cmp  rctl       left down rght  kp0  kp.
+)
