@@ -71,6 +71,10 @@ Want to add your own keyboard configuration to `./keymap`? Fork KMonad, create a
 ### Editor Support for the Configuration Language
 - [Emacs](https://github.com/slotThe/kbd-mode)
 
+### Startup
+There are startup scripts available for different init systems in
+[startup](startup/).
+
 ## Troubleshooting
 For several commonly asked questions regarding various configuration issues, please see:
 - [the FAQ](doc/faq.md)
