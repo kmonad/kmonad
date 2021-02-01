@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# How to use this runit service:
+#
+# 1. Place this file in the `/etv/sv/kmonad' directory.  You will need
+#    to create this directory; this is most easily done with `xmksv'
+#    from the `xtools' package:
+#
+#      xmksv kmonad
+#
+# 2. Symlink to `/var/service':
+#
+#      ln -s /etc/sv/kmonad /var/service
+#
+# Note that any X11-specific functionality has to be placed in an
+# appropriate place (e.g. `~/.xinitrc'), as the service will execute
+# _before_ the X server is started.
+#
+# The paths below should be absolute paths.  You can put environment
+# variables in a `conf' file that's in the same directory as this file
+# and refer to them here if you want; see [1] for further details.
+#
+# [1] https://docs.voidlinux.org/config/services/index.html#service-directories
+
+exec 1>&2
+exec /path/to/kmonad /path/to/config.kbd || exit 1
