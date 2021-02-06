@@ -88,6 +88,7 @@ data DefButton
   | KTapHoldNextRelease Int DefButton DefButton
     -- ^ Like KTapNextRelease but with a timeout
   | KAroundNext DefButton                  -- ^ Surround a future button
+  | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
