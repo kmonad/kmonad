@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ## [Unreleased]
 
 ### [Added]
+- Added `around-next-single`, a variant of `around-next` that will release its
+  context on any change, as opposed to only on the release of the 'arounded'
+  button.
 - Added default compose sequence for Ü
 
 ### [Changed]
-- Fixed a bug in `around-next` that caused it to affect more than just
-  the next button
 
 ## [0.4.1] - 2020-09-12
 - First release where we start tracking changes.
