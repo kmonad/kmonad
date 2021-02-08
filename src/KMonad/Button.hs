@@ -37,6 +37,7 @@ module KMonad.Button
   -- * Button combinators
   -- $combinators
   , aroundNext
+  , aroundNextSingle
   , layerDelay
   , layerNext
   , tapHold
@@ -180,6 +181,25 @@ aroundNext ::
 aroundNext b = onPress $ await isPress $ \e -> do
   runAction $ b^.pressAction
   await (isReleaseOf $ e^.keycode) $ \_ -> do
+    runAction $ b^.releaseAction
+    pure NoCatch
+  pure NoCatch
+
+-- | A 'Button' that, once pressed, will surround the next button with another.
+--
+-- Think of this as, essentially, a tappable mod. For example, an 'aroundNext
+-- KeyCtrl' would, once tapped, then make the next keypress C-<whatever>.
+--
+-- This differs from 'aroundNext' in that it explicitly releases the modifier
+-- immediately after the first event, where `aroundSingle` waits around for the
+-- original key that was modified to be released itself.
+aroundNextSingle ::
+     Button -- ^ The outer 'Button'
+  -> Button -- ^ The resulting 'Button'
+aroundNextSingle b = onPress $ await isPress $ \_ -> do
+  runAction $ b^.pressAction
+  -- Wait for the next *event*, regardless of what it is
+  await (pure True) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch
@@ -351,5 +371,3 @@ layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
-
-

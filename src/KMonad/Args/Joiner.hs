@@ -360,6 +360,7 @@ joinButton ns als =
     KTapHoldNextRelease ms t h
       -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h
     KAroundNext b      -> jst $ aroundNext         <$> go b
+    KAroundNextSingle b -> jst $ aroundNextSingle <$> go b
     KPause ms          -> jst . pure $ onPress (pause ms)
     KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
