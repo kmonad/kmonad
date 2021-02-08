@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   context on any change, as opposed to only on the release of the 'arounded'
   button.
 - Added default compose sequence for Ü
+- Added systemd user unit
+- Added runit startup script
 
 ### [Changed]
 
