@@ -1,0 +1,165 @@
+(defcfg
+  input (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad_sm")
+  allow-cmd true
+  )
+
+
+(defsrc
+    esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12       
+    grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  
+    tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     
+    caps a    s    d    f    g    h    j    k    l    ;    '    ret        
+    lsft z    x    c    v    b    n    m    ,    .    /    rsft            
+    lctl lmet lalt           spc            ralt cmp  rctl            
+)
+
+
+;; This Beauutiful archs, btw I use Guix. And write mostly english and lisp
+;; easyblock concept rocks
+;; 8 homerow modifiers
+;; tabret ( on the vowel part
+;; symbol/num switches under pinky
+;; period under ret (nice roll)
+;; sharp under  quote (nice roll)
+;; okay roll for= typing ~/ is art once mastered...
+;; best ; position
+(deflayer nirvana
+    @esc  @f1   @f2   @f3   @f4   @f5   @f6   @f7   @f8   @f9   @f10  @f11  @f12        
+    @grv  @1    @2    @3    @4    @5    @6    @7    @8    @9    @0    @-    @=    @bspc 
+    @tab  @q    @pMet @uAlt @oDog @kM:  @v№   @m%   @rAlt @fMet @j    @]    @]    @\     
+    @MxM! @hSft @iTab @eRet @aCtl @'`   @d&   @tCtl @n-   @s/   @cSft @\[   @ret
+    @CgE3 @znum @y!   @bsp. @,;   @C/#  @w$   @g=   @l*   @b\( @xsym @rsft
+    @lctl @lmet @escl           @spc          @escr @cmp  @rctl
+    )
+
+;; optimized for ,'`$( #'
+(deflayer sym
+    _    _    _    _    _    _    _    _    _    _    _    _    _       
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _  
+    _    _    @]'  @[$  _    _    _    _    _    _    _    _    _    _  
+    _    @ops @>,  @<`  @\(; _    _    _    _    _    _    @rsft    _       
+    _    @F   @V   @K   @A    _    _    _    _    _    _    _       
+    _    _    _              _              _    _    _                
+)
+
+(deflayer num
+    _    _    _      _   _     _    _    _    _    _    _    _    _       
+    _    _    _      _   _     _    _    _    _    _    _    _    _    _  
+    _    _    _      _   _     _    _    _    @3   @6   @7   _    _    _  
+    _    _    _      _   @lsft _    _    @4   @9   @0   @8   _    _       
+    _    _    @+  @- @/  @*    @=   _    @2   @1   @5   _           
+    _    _    _              _              _    _    _                
+)
+
+
+(defalias
+sym (layer-toggle sym)
+num (layer-toggle num)
+CgE3 (tap-hold-next-release 110 C-g #(esc esc esc))
+MxM! (tap-hold-next-release 110 A-x A-!)
+M:LS (tap-hold-next-release 110 A-: #(C-x C-e))
+H #(C-h P50)
+F #(@H  f)
+V #(@H v)
+K #(@H k)
+A #(@H a)
+\[ (tap-hold-next-release 110 \ [)
++ (tap-hold-next-release 110 + +)
+* (tap-hold-next-release 110 * *)
+]' (tap-hold-next-release 110 ] ')
+[$ (tap-hold-next-release 110 [ $)
+ops (tap-hold-next-release 110 \) #)
+>, (tap-hold-next-release 110 > ,)
+<` (tap-hold-next-release 110 < `)
+\(; (tap-hold-next-release 110 \( ;)
+esc (tap-hold-next-release 110 esc k) 
+f1 (tap-hold-next-release 110 f1 k)
+f2 (tap-hold-next-release 110 f2 k)
+f3 (tap-hold-next-release 110 f3 k)
+f4 (tap-hold-next-release 110 f4 k)
+f5 (tap-hold-next-release 110 f5 k)
+f6 (tap-hold-next-release 110 f6 k)
+f7 (tap-hold-next-release 110 f7 k)
+f8 (tap-hold-next-release 110 f8 k)
+f9 (tap-hold-next-release 110 f9 k)
+f10 (tap-hold-next-release 110 f10 k)
+f11 (tap-hold-next-release 110 f11 k)
+f12 (tap-hold-next-release 110 f12 k)
+grv (tap-hold-next-release 110 grv k)
+1 (tap-hold-next-release 110 1 k)
+2 (tap-hold-next-release 110 2 k)
+3 (tap-hold-next-release 110 3 k)
+4 (tap-hold-next-release 110 4 k)
+5 (tap-hold-next-release 110 5 k)
+6 (tap-hold-next-release 110 6 k)
+7 (tap-hold-next-release 110 7 k)
+8 (tap-hold-next-release 110 8 k)
+9 (tap-hold-next-release 110 9 k)
+0 (tap-hold-next-release 110 0 k)
+- (tap-hold-next-release 110 - k)
+= (tap-hold-next-release 110 = k)
+tab (tap-hold-next-release 110 tab tab)
+caps (tap-hold-next-release 110 caps k)
+lsft (tap-hold-next-release 110 lsft lsft)
+lctl (tap-hold-next-release 110 lctl lctl)
+lmet (tap-hold-next-release 110 lmet lmet)
+escl (tap-hold-next-release 110 esc esc)
+spc (tap-hold-next-release 110 spc spc)
+escr (tap-hold-next-release 110 esc esc)
+cmp (tap-hold-next-release 110 cmp cmp)
+rctl (tap-hold-next-release 110 rctl rctl)
+rsft (tap-hold-next-release 110 rsft rsft)
+ret (tap-hold-next-release 110 ret k)
+\ (tap-hold-next-release 110 \ k)
+/ (tap-hold-next-release 110 / k)
+bspc (tap-hold-next-release 110 bspc bspc)
+q (tap-hold-next-release 110 q k)
+pMet (tap-hold-next-release 110 p lmet)
+uAlt (tap-hold-next-release 110 u lalt)
+oDog (tap-hold-next-release 110 o @ )
+kM: (tap-hold-next-release 110 k M-:)
+v№ (tap-hold-next-release 110 v №)
+m% (tap-hold-next-release 110 m %)
+rAlt (tap-hold-next-release 110 r ralt)
+fMet (tap-hold-next-release 110 f rmet)
+j (tap-hold-next-release 110 j k)
+[ (tap-hold-next-release 110 [ k)
+] (tap-hold-next-release 110 ] k)
+hSft (tap-hold-next-release 110 h lsft)
+iTab (tap-hold-next-release 110 i tab)
+eRet (tap-hold-next-release 110 e ret)
+aCtl (tap-hold-next-release 110 a lctl)
+'` (tap-hold-next-release 110 ' `)
+d& (tap-hold-next-release 110 d &)
+tCtl (tap-hold-next-release 110 t rctl)
+n- (tap-hold-next-release 110 n -)
+s/ (tap-hold-next-release 110 s /)
+cSft (tap-hold-next-release 110 c rsft)
+znum (tap-hold-next-release 110 z @num)
+y! (tap-hold-next-release 110 y !)
+bsp. (tap-hold-next-release 110 bspc .)
+,; (tap-hold-next-release 110 , ;)
+C/# (tap-hold-next-release 110 C-/ #)
+w$ (tap-hold-next-release 110 w $)
+g= (tap-hold-next-release 110 g =)
+l* (tap-hold-next-release 110 l *)
+b\( (tap-hold-next-release 110 b \()
+xsym (tap-hold-next-release 110 x @sym)
+)
+
+
+
+#| Easyblock (E) -- the easiest to type and Homeblock (h) -- second easiest
+
+(deflayer layer
+    _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
+    _    _    E    E    h    _    _    h    E    E    _    _    _    _     _    _    _     _    _    _    _
+    _    _    E    E    E    _    _    E    E    E    _    _    _                          _    _    _
+    _    _    h    h    E    _    _    E    h    h    _    _                    _          _    _    _    _
+    _    _    _              _              _    _    _                    _    _    _     _    _
+)
+|#
+
+
