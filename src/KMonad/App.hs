@@ -103,8 +103,8 @@ initAppEnv cfg = do
   lgf <- view logFuncL
 
   -- Acquire the keysource and keysink
-  snk <- using $ cfg^.keySinkDev
   src <- using $ cfg^.keySourceDev
+  snk <- using $ cfg^.keySinkDev
 
   -- Initialize the pull-chain components
   dsp <- Dp.mkDispatch $ awaitKey src

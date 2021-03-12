@@ -131,7 +131,7 @@ lsOpen :: (HasLogFunc e)
   -> FilePath      -- ^ The path to the device file
   -> RIO e DeviceFile
 lsOpen pr pt = do
-  h  <- liftIO . openFd pt ReadOnly Nothing $
+  h  <- liftIO . openFd pt ReadWrite Nothing $
     OpenFileFlags False False False False False
   hd <- liftIO $ fdToHandle h
   logInfo $ "Initiating ioctl grab"
