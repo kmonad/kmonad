@@ -10,6 +10,7 @@ Jump to
 - [Packages](installation.md#packages)
   - [Void Linux](installation.md#void-linux)
   - [Guix](installation.md#guix)
+  - [Arch Linux](installation.md#arch-linux)
 
 ## Compilation
 
@@ -176,6 +177,9 @@ to install udev rules using something like this in your `config.scm`
        (rules (cons kmonad 
                     (udev-configuration-rules config)))))))) 
 ``` 
+
+#### Arch Linux
+Kmonad is available in the Arch User Repository (AUR) as [kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
 
 ### NixOS
 
