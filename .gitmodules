@@ -1,3 +1,6 @@
 [submodule "Karabiner-VirtualHIDDevice"]
 	path = c_src/mac/Karabiner-VirtualHIDDevice
 	url = https://github.com/pqrs-org/Karabiner-VirtualHIDDevice.git
+[submodule "Karabiner-DriverKit-VirtualHIDDevice"]
+	path = c_src/mac/Karabiner-DriverKit-VirtualHIDDevice
+	url = https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice.git
