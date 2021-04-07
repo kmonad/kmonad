@@ -46,6 +46,7 @@ module KMonad.Button
   , tapNextRelease
   , tapHoldNextRelease
   , tapMacro
+  , stickyKey
   )
 where
 
@@ -352,3 +353,32 @@ layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
+
+-- | Make a button into a sticky-key, i.e. a key that acts like it is
+-- pressed for the button after it if that button was pressed in the
+-- given timeframe.
+stickyKey :: Milliseconds -> Button -> Button
+stickyKey ms b = onPress $ go
+ where
+  go :: MonadK m => m ()
+  go = hookF InputHook $ \e -> do
+    p <- matchMy Release
+    if | p e               -> doTap    $> Catch
+         -- My own release; we act as if we were tapped
+       | not (isRelease e) -> doHold e $> Catch
+         -- The press of another button; act like we are held down
+       | otherwise         -> go       $> NoCatch
+         -- The release of some other button; ignore these
+
+  doHold :: MonadK m => KeyEvent -> m ()
+  doHold e = press b *> inject e
+
+  doTap :: MonadK m => m ()
+  doTap =
+    within ms
+           (pure isPress)  -- presses definitely happen after us
+           (pure ())
+           (\t -> (runAction $ b^.pressAction)
+               *> inject (t^.event)
+               *> after 3 (runAction $ b^.releaseAction)
+               $> Catch)
