@@ -275,6 +275,7 @@ keywordButtons =
   , ("tap-macro"      , KTapMacro    <$> some buttonP)
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
+  , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
   ]
  where
   timed :: Parser [(Int, DefButton)]

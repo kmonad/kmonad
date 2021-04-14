@@ -363,6 +363,7 @@ joinButton ns als =
     KPause ms          -> jst . pure $ onPress (pause ms)
     KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
+    KStickyKey s d     -> jst $ stickyKey (fi s) <$> go d
 
     -- Non-action buttons
     KTrans -> pure Nothing
