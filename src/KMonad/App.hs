@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE CPP #-}
 {-|
 Module      : KMonad.App
 Description : The central app-loop of KMonad
@@ -18,8 +19,11 @@ where
 
 import KMonad.Prelude
 
-import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 import RIO.Text (unpack)
+#ifdef linux_HOST_OS
+import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
+#endif
+import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
 import KMonad.Action
 import KMonad.Button
@@ -66,7 +70,7 @@ makeClassy ''AppCfg
 data AppEnv = AppEnv
   { -- Stored copy of cfg
     _keAppCfg   :: AppCfg
-   
+
     -- General IO
   , _keLogFunc  :: LogFunc
   , _keySink    :: KeySink
@@ -184,7 +188,12 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
 
 -- | Run KMonad using the provided configuration
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
-startApp c = runContT (initAppEnv c) (flip runRIO loop)
+startApp c = do
+#ifdef linux_HOST_OS
+  -- Ignore SIGCHLD to avoid zombie processes.
+  liftIO . void $ installHandler sigCHLD Ignore Nothing
+#endif
+  runContT (initAppEnv c) (flip runRIO loop)
 
 instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
@@ -226,8 +235,12 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
       logInfo $ "Received but not running: " <> display t
    where
     spawnCommand :: MonadIO m => String -> m ()
-    spawnCommand cmd =
-      createProcess_ "spawnCommand" (shell cmd){ close_fds = True } $> ()
+    spawnCommand cmd = void $ createProcess_ "spawnCommand"
+      (shell cmd){ -- We don't want the child process to inherit things like
+                   -- our keyboard grab (this would, for example, make it
+                   -- impossible for a command to restart kmonad).
+                   close_fds   = True
+                 }
 
 --------------------------------------------------------------------------------
 -- $kenv
