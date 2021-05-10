@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### [Added]
 - Added `around-next-single`, a variant of `around-next` that will release its
   context on any change, as opposed to only on the release of the 'arounded'
@@ -14,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Added runit startup script
 
 ### [Changed]
+=======
+### [Fixed]
+- Fixed compilation error under Mac, having to do with typo in Keycodes
+>>>>>>> develop
 
 ## [0.4.1] - 2020-09-12
 - First release where we start tracking changes.
