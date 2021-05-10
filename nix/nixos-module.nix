@@ -14,14 +14,6 @@ with lib;
       '';
     };
 
-<<<<<<< HEAD
-    configfile = mkOption {
-      type = types.path;
-      default = "";
-      example = "my-config.kbd";
-      description = ''
-        The config file for kmonad.
-=======
     configfiles = mkOption {
       type = types.listOf types.path;
       default = [];
@@ -37,7 +29,6 @@ with lib;
       example = "[ optional.kbd ]";
       description = ''
         Config files for dedicated kmonad instances which may not always be present.
->>>>>>> develop
       '';
     };
 
@@ -62,17 +53,6 @@ with lib;
         KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
       '';
 
-<<<<<<< HEAD
-    systemd.services.kmonad = mkIf cfg.enable {
-      enable = true;
-      description = "KMonad";
-      serviceConfig = {
-        Type = "simple";
-        ExecStart = "${cfg.package}/bin/kmonad " + cfg.configfile;
-      };
-      wantedBy = [ "graphical.target" ];
-    };
-=======
     systemd = with lib; with builtins;
       let
         # If only one config file is supplied, unify all kmonad units under a target
@@ -132,6 +112,5 @@ with lib;
             attrsets.optionalAttrs make-group
               { targets.kmonad = mk-kmonad-target (required-units ++ optional-units); })
           );
->>>>>>> develop
   };
 }

@@ -249,29 +249,6 @@ deadkeySeqP = do
 -- | Parse any button
 buttonP :: Parser DefButton
 buttonP = (lexeme . choice . map try $
-<<<<<<< HEAD
-  [ statement "around"         $ KAround      <$> buttonP     <*> buttonP
-  , statement "multi-tap"      $ KMultiTap    <$> timed       <*> buttonP
-  , statement "tap-hold"       $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-hold-next"  $ KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-next-release"
-    $ KTapNextRelease <$> buttonP <*> buttonP
-  , statement "tap-hold-next-release"
-    $ KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-next"       $ KTapNext     <$> buttonP     <*> buttonP
-  , statement "layer-toggle"   $ KLayerToggle <$> word
-  , statement "layer-switch"   $ KLayerSwitch <$> word
-  , statement "layer-add"      $ KLayerAdd    <$> word
-  , statement "layer-rem"      $ KLayerRem    <$> word
-  , statement "layer-delay"    $ KLayerDelay  <$> lexeme numP <*> word
-  , statement "layer-next"     $ KLayerNext   <$> word
-  , statement "around-next"    $ KAroundNext  <$> buttonP
-  , statement "around-next-single" $ KAroundNextSingle <$> buttonP
-  , statement "tap-macro"      $ KTapMacro    <$> some buttonP
-  , statement "cmd-button"     $ KCommand     <$> textP
-  , statement "pause"          $ KPause . fromIntegral <$> numP
-  , KComposeSeq <$> deadkeySeqP
-=======
   map (uncurry statement) keywordButtons ++ noKeywordButtons
   ) <?> "button"
 
@@ -308,7 +285,6 @@ keywordButtons =
 noKeywordButtons :: [Parser DefButton]
 noKeywordButtons =
   [ KComposeSeq <$> deadkeySeqP
->>>>>>> develop
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP

@@ -373,8 +373,6 @@ layerNext :: LayerTag -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)
-<<<<<<< HEAD
-=======
 
 -- | Make a button into a sticky-key, i.e. a key that acts like it is
 -- pressed for the button after it if that button was pressed in the
@@ -404,4 +402,3 @@ stickyKey ms b = onPress $ go
                *> inject (t^.event)
                *> after 3 (runAction $ b^.releaseAction)
                $> Catch)
->>>>>>> develop
