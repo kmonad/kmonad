@@ -69,8 +69,11 @@
     If this is set to `false`, any action that runs a shell-command will simply
     log to `stdout` without ever running (log-level info). Don't ever enable
     this on a configuration that you do not trust, because:
+
       (cmd-button "rm -rf ~/*")
-    is a thing.
+
+    is a thing. For more information on the `cmd-button' function, see the
+    section on Command buttons below.
 
   There are also some optional OS specific settings that we support:
 
@@ -393,6 +396,40 @@
   md4 (around % b)               ;; BEWARE: %B, not %b, do you see why?
 )
 
+#| --------------------------------------------------------------------------
+                          Optional: sticky keys
+
+  KMonad also support so called "sticky keys".  These are keys that will
+  behave as if they were pressed after just tapping them.  This behaviour
+  wears off after the next button is pressed, which makes them ideal for
+  things like a quick control or shift.  For example, tapping a sticky and
+  then pressing `abc' will result in `Abc'.
+
+  You can create these keys with the `sticky-key' keyword:
+
+    (defalias
+      slc (sticky-key 500 lctl))
+
+  The number after `sticky-key' is the timeout you want, in milliseconds.  If
+  a key is tapped and that time has passed, it won't act like it's pressed
+  down when we receive the next keypress.
+
+  It is also possible to combine sticky keys.  For example, to
+  get a sticky shift+control you can do
+
+    (defalias
+      ssc (around
+           (sticky-key 500 lsft)
+           (sticky-key 500 lctl)))
+
+  -------------------------------------------------------------------------- |#
+
+;; Let's make both shift keys sticky
+(defalias
+  sl (sticky-key 300 lsft)
+  sr (sticky-key 300 rsft))
+
+
 ;; Now we define the 'tst' button as opening and closing a bunch of layers at
 ;; the same time. If you understand why this works, you're starting to grok
 ;; KMonad.
@@ -582,7 +619,7 @@
   grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
   tab  q    w    f    p    g    j    l    u    y    ;    [    ]    \
   @xcp a    r    s    t    d    h    n    e    i    o    '    ret
-  lsft z    x    c    v    b    k    m    ,    .    /    rsft
+  @sl  z    x    c    v    b    k    m    ,    .    /    @sr
   lctl @num lalt           spc            ralt rmet @sym @tst
 )
 
@@ -835,8 +872,13 @@
   NOTE: currently only tested on Linux, but should work on any platform, as long
   as the command is valid for that platform.
 
+  The `cmd-button' function takes two arguments, the second one of which is
+  optional. These represent the commands to be executed on pressing and
+  releasing the button respectively.
+
   BEWARE: never run anyone's configuration without looking at it. You wouldn't
   want to push:
+
     (cmd-button "rm -rf ~/*") ;; Delete all this user's data
 
 
@@ -845,6 +887,9 @@
 (defalias
   dat (cmd-button "date >> /tmp/kmonad_example.txt")   ;; Append date to tmpfile
   pth (cmd-button "echo $PATH > /tmp/kmonad_path.txt") ;; Write out PATH
+  ;; `dat' on press and `pth' on release
+  bth (cmd-button "date >> /tmp/kmonad_example.txt"
+                  "echo $PATH > /tmp/kmonad_path.txt")
 )
 
 (deflayer command-test
