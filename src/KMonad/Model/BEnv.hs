@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.BEnv
+Module      : KMonad.Model.BEnv
 Description : Implementation details behind 'Button'
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -14,7 +14,7 @@ bound to, to provide the 'myBinding' functionality from 'MonadK'.
 
 -}
 
-module KMonad.App.BEnv
+module KMonad.Model.BEnv
   ( BEnv(..)
   , HasBEnv(..)
   , initBEnv
@@ -24,8 +24,8 @@ where
 
 import KMonad.Prelude
 
-import KMonad.Action
-import KMonad.Button
+import KMonad.Model.Action
+import KMonad.Model.Button
 import KMonad.Keyboard
 
 --------------------------------------------------------------------------------

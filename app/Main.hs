@@ -15,7 +15,4 @@ module Main
   )
 where
 
-import KMonad.Args (run)
-
-main :: IO ()
-main = run
+import KMonad.App (main)

@@ -28,8 +28,8 @@ import KMonad.Prelude hiding (uncons)
 
 import KMonad.Args.Types
 
-import KMonad.Action
-import KMonad.Button
+import KMonad.Model.Action
+import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 

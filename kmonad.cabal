@@ -61,23 +61,28 @@ library
   exposed-modules:
       Data.LayerStack
       Data.MultiMap
-      KMonad.Action
       KMonad.App
-      KMonad.App.BEnv
-      KMonad.App.Dispatch
-      KMonad.App.Hooks
-      KMonad.App.Keymap
-      KMonad.App.Sluice
+      KMonad.App.Main
+      KMonad.App.Types
+      KMonad.Model
+      KMonad.Model.Action
+      KMonad.Model.BEnv
+      KMonad.Model.Button
+      KMonad.Model.Dispatch
+      KMonad.Model.Hooks
+      KMonad.Model.Keymap
+      KMonad.Model.Sluice
       KMonad.Args
       KMonad.Args.Cmd
       KMonad.Args.Parser
       KMonad.Args.Joiner
       KMonad.Args.Types
-      KMonad.Button
       KMonad.Keyboard
-      KMonad.Keyboard.Keycode
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
+      KMonad.Keyboard.Keycode
+      KMonad.Keyboard.Ops
+      KMonad.Keyboard.Types
       KMonad.Prelude
       KMonad.Util
 

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.Hooks
+Module      : KMonad.Model.Hooks
 Description : Component for handling hooks
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -15,7 +15,7 @@ In the sequencing of components, this happens second, right after the
 'KMonad.App.Dispatch.Dispatch' component.
 
 -}
-module KMonad.App.Hooks
+module KMonad.Model.Hooks
   ( Hooks
   , mkHooks
   , pull
@@ -28,7 +28,7 @@ import KMonad.Prelude
 import Data.Time.Clock.System
 import Data.Unique
 
-import KMonad.Action hiding (register)
+import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
 import KMonad.Util
 

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Action
+Module      : KMonad.Model.Action
 Description : Collection of basic operations
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -17,7 +17,7 @@ NOTE: All of this is a bit muddled, and redoing the way hooks are handled, and
 the basic structuring of MonadK and MonadKIO are liable to change soon.
 
 -}
-module KMonad.Action
+module KMonad.Model.Action
   (
     KeyPred
   , Catch(..)
@@ -128,7 +128,7 @@ data LayerOp
 --------------------------------------------------------------------------------
 -- $monadk
 --
--- The fundamental components that make up any 'KMonad.Button.Button' operation.
+-- The fundamental components that make up any 'KMonad.Model.Button.Button' operation.
 
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.

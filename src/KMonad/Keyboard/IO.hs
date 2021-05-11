@@ -26,7 +26,7 @@ where
 
 import KMonad.Prelude
 
-import KMonad.Keyboard
+import KMonad.Keyboard.Types
 import KMonad.Util
 
 import qualified RIO.Text as T

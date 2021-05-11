@@ -1,5 +1,5 @@
-{-|
-Module      : KMonad.App.Dispatch
+{-
+Module      : KMonad.Model.Dispatch
 Description : Component for async reading.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -30,7 +30,7 @@ not worry about wether an event is being rerun or not, it simply treats all
 events as equal.
 
 -}
-module KMonad.App.Dispatch
+module KMonad.Model.Dispatch
   ( -- $env
     Dispatch
   , mkDispatch
