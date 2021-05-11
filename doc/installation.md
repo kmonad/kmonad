@@ -72,12 +72,20 @@ installation](https://www.haskell.org/platform). I also needed to install
 ### macOS
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
-Catalina). Support for macOS 11.0 (Big Sur) is in progress.
+Catalina) and macOS 11.0 (Big Sur).
 
-Note: under macOS, `kmonad` uses a [kernel
+Note: under macOS, `kmonad` uses one of two "system extensions" to
+post modified key events to the OS. For macOS Catalina and prior, we
+use a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-(kext) to post modified key events to the OS. It is bundled with
-kmonad as a submodule in `c_src/mac/Karabiner-VirtualHIDDevice`.
+(kext), which is bundled with kmonad as a submodule in
+`c_src/mac/Karabiner-VirtualHIDDevice`. For macOS Catalina and later,
+we use a [driverkit-based
+extension](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
+(dext), bundled as
+`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice`. Therefore, you must
+install either the kext or dext based on your macOS version (Catalina
+users can choose either one).
 
 #### Installing the kext
 
@@ -108,6 +116,37 @@ cd c_src/mac/Karabiner-VirtualHIDDevice
 make install
 ```
 
+#### Installing the dext
+
+You can either build the dext from source or you can install it as a
+binary that is signed by its maintainer. Building from source is only
+possible with an "Apple Developer ID," unless you build an old version
+of the dext.
+
+The dext used by kmonad is maintained as part of
+[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements).
+Therefore, if you use Karabiner-Elements, you may already have the
+dext installed (though maybe a different version number). Run
+`defaults read
+/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
+CFBundleVersion` to check the version: if `1.15.0` is shown, then the
+installed dext is compatibile with kmonad and you can move onto
+[installing kmonad](#installing-kmonad). If another version is listed,
+this may work too (but has not been tested).
+
+If you want to attempt building and signing the dext yourself, look to
+[the
+documentation](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
+for instructions. Otherwise, to install the dext as a signed binary,
+make sure to initialize the dext submodule (`git clone --recursive
+https://github.com/david-janssen/kmonad.git`, e.g.), then open
+`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
+and install via the installer. Finally, execute:
+
+```shell
+/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
+```
+
 #### Installing kmonad
 
 Compilation under Mac currently works with `stack`. Compilation under
@@ -119,11 +158,18 @@ Mac, download the kmonad source:
 git clone --recursive https://github.com/david-janssen/kmonad.git
 ```
 
-Then build kmonad with `stack`:
+Then build kmonad with `stack`. If you are building against the kext, run:
 
 ```shell
-stack build --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
+
+If you are building against the dext, run
+
+```shell
+stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+```
+
 #### Giving kmonad additional permissions
 
 Since Mac OS X Leopard (10.5), intercepting key events

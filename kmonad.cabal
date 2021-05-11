@@ -19,6 +19,14 @@ description:
 extra-source-files:
     changelog.md
 
+flag kext
+    description: build against the kext [macOS only]
+    default: False
+
+flag dext
+    description: build against the dext [macOS only]
+    default: False
+
 library
   default-language:
       Haskell2010
@@ -111,10 +119,16 @@ library
       KMonad.Keyboard.IO.Mac.IOKitSource
       KMonad.Keyboard.IO.Mac.KextSink
       KMonad.Keyboard.IO.Mac.Types
-    cxx-sources:
-      c_src/mac/keyio_mac.cpp
-    cxx-options:
-      -std=c++14
+    if flag(kext)
+      cxx-sources:
+        c_src/mac/kext.cpp
+      cxx-options:
+        -std=c++14
+    if flag(dext)
+      cxx-sources:
+        c_src/mac/dext.cpp
+      cxx-options:
+        -std=c++2a
     extra-libraries:
       c++
     build-depends:
