@@ -112,7 +112,7 @@ library
       KMonad.Keyboard.IO.Mac.KextSink
       KMonad.Keyboard.IO.Mac.Types
     cxx-sources:
-      c_src/mac/keyio_mac.cpp
+      c_src/mac/kext.cpp
     cxx-options:
       -std=c++14
     extra-libraries:
