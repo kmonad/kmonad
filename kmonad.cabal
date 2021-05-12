@@ -67,8 +67,6 @@ library
       TypeFamilies
 
   exposed-modules:
-      Data.LayerStack
-      Data.MultiMap
       KMonad.App
       KMonad.App.Main
       KMonad.App.Types
@@ -93,6 +91,8 @@ library
       KMonad.Keyboard.Types
       KMonad.Prelude
       KMonad.Util
+      KMonad.Util.LayerStack
+      KMonad.Util.MultiMap
 
   if os(linux)
     exposed-modules:

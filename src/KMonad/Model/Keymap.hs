@@ -29,7 +29,7 @@ import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Model.BEnv
 
-import qualified Data.LayerStack as Ls
+import qualified KMonad.Util.LayerStack as Ls
 
 --------------------------------------------------------------------------------
 -- $env

@@ -41,7 +41,7 @@ import Data.Char
 import RIO.List (sortBy, find)
 
 
-import qualified Data.MultiMap as Q
+import qualified KMonad.Util.MultiMap as Q
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 

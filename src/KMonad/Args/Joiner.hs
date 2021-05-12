@@ -52,7 +52,7 @@ import Control.Monad.Except
 
 import RIO.List (uncons, headMaybe)
 import RIO.Partial (fromJust)
-import qualified Data.LayerStack  as L
+import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
 
