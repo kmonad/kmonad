@@ -22,6 +22,7 @@ module KMonad.Args.Parser
 
   -- * Building Parsers
   , symbol
+  , numP
 
   -- * Parsers for Tokens and Buttons
   , otokens

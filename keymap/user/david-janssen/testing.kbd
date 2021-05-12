@@ -2,8 +2,7 @@
 ;; Basic system config
 (defcfg
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-  output (uinput-sink "KMonad: Testing keyboard"
-            "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
+  output (uinput-sink "KMonad: Testing keyboard")
   fallthrough true
   )
 
@@ -11,10 +10,12 @@
  a
  b
  lsft
+ enter
 )
 
 (deflayer layer1
   a
   (tap-hold-next-release 2000 b lctl)
   (around-next lsft)
+  enter
 )

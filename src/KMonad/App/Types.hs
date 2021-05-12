@@ -18,6 +18,7 @@ import KMonad.Keyboard.IO
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Model.BEnv
+import KMonad.Util
 
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
@@ -49,6 +50,7 @@ data AppCfg = AppCfg
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
+  , _startDelay   :: Milliseconds      -- ^ How long to wait before acquiring the input keyboard
   }
 makeClassy ''AppCfg
 

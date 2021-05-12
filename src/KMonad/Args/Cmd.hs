@@ -17,8 +17,9 @@ module KMonad.Args.Cmd
 where
 
 import KMonad.Prelude hiding (try)
-import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol)
+import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
 import KMonad.Args.Types (DefSetting(..), choice, try)
+import KMonad.Util
 
 import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
 
@@ -32,9 +33,10 @@ import Options.Applicative
 
 -- | Record describing the instruction to KMonad
 data Cmd = Cmd
-  { _cfgFile   :: FilePath -- ^ Which file to read the config from
-  , _dryRun    :: Bool     -- ^ Flag to indicate we are only test-parsing
-  , _logLvl    :: LogLevel -- ^ Level of logging to use
+  { _cfgFile   :: FilePath     -- ^ Which file to read the config from
+  , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
+  , _logLvl    :: LogLevel     -- ^ Level of logging to use
+  , _strtDel   :: Milliseconds -- ^ How long to wait before acquiring the input keyboard
 
     -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
@@ -67,6 +69,7 @@ cmdP =
   Cmd <$> fileP
       <*> dryrunP
       <*> levelP
+      <*> startDelayP
       <*> cmdAllowP
       <*> fallThrghP
       <*> initStrP
@@ -87,6 +90,7 @@ dryrunP = switch
   <> short   'd'
   <> help    "If used, do not start KMonad, only try parsing the config file"
   )
+
 
 -- | Parse the log-level as either a level option or a verbose flag
 levelP :: Parser LogLevel
@@ -153,6 +157,15 @@ iTokenP = optional $ SIToken <$> option (tokenParser itokens)
   <> help "Capture input via ITOKEN"
   )
 
+-- | Parse a flag that disables auto-releasing the release of enter
+startDelayP :: Parser Milliseconds
+startDelayP = option (fromIntegral <$> megaReadM numP)
+  (  long  "start-delay"
+  <> short 'w'
+  <> value 300
+  <> showDefaultWith (show . unMS )
+  <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
+ 
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
 -- optparse-applicative parser
 tokenParser :: [(Text, M.Parser a)] -> ReadM a
