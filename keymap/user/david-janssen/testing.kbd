@@ -2,7 +2,7 @@
 ;; Basic system config
 (defcfg
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-  output (uinput-sink "KMonad: Testing keyboard")
+  output (uinput-sink "KMonad Keyboard")
   fallthrough true
   )
 

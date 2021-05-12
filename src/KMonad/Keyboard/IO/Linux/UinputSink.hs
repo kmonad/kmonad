@@ -44,6 +44,7 @@ data UinputSinkError
   = UinputRegistrationError SinkId               -- ^ Could not register device
   | UinputReleaseError      SinkId               -- ^ Could not release device
   | SinkEncodeError         SinkId LinuxKeyEvent -- ^ Could not decode event
+  | EmptyNameError                               -- ^ Invalid name
   deriving Exception
 
 instance Show UinputSinkError where
@@ -55,6 +56,7 @@ instance Show UinputSinkError where
     , "to bytes for writing to"
     , snk
     ]
+  show EmptyNameError = "Provided empty name for Uinput keyboard"
 
 makeClassyPrisms ''UinputSinkError
 
@@ -138,6 +140,7 @@ send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
 -- | Create a new UinputSink
 usOpen :: HasLogFunc e => UinputCfg -> RIO e UinputSink
 usOpen c = do
+  when (null $ c ^. keyboardName) $ throwM EmptyNameError
   fd <- liftIO . openFd "/dev/uinput" WriteOnly Nothing $
     OpenFileFlags False False False True False
   logInfo "Registering Uinput device"
