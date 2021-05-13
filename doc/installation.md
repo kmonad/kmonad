@@ -81,7 +81,7 @@ scoop install stack
 
 # clone the KMonad repository (assuming you have `git` installed)
 cd $HOME\Downloads
-git clone https://github.com/david-janssen/kmonad.git
+git clone https://github.com/kmonad/kmonad.git
 cd kmonad
 
 # compile KMonad (this will first download GHC and msys2, it takes a while)
