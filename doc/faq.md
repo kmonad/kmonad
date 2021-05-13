@@ -45,7 +45,7 @@ A: By far the best solution is to use the keyboard devices listed under `/dev/in
 A: `Hyper_L` is not a core Linux keycode, but is X11 specific instead. KMonad
 tries to stay as close to the kernel as possible, so you can run it on other
 OSes or without X11. If you want `Hyper_L` to work, you have to make sure that
-X11 lines up well with KMonad. See [this issue](https://github.com/david-janssen/kmonad/issues/22) for more explanation.
+X11 lines up well with KMonad. See [this issue](https://github.com/kmonad/kmonad/issues/22) for more explanation.
 
 ### Q: How does Unicode entry work?
 
@@ -149,7 +149,7 @@ example.
 
 A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
 for relatively interesting historical reasons. Have a look at [this
-issue](https://github.com/david-janssen/kmonad/issues/59) if you want more
+issue](https://github.com/kmonad/kmonad/issues/59) if you want more
 information.
 
 ### Q: Why can't I remap the Fn key on my laptop?

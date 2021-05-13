@@ -132,7 +132,7 @@ documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
 for instructions. Otherwise, to install the kext as a signed binary, run:
 
 ```shell
-git clone --recursive https://github.com/david-janssen/kmonad.git
+git clone --recursive https://github.com/kmonad/kmonad.git
 cd c_src/mac/Karabiner-VirtualHIDDevice
 make install
 ```
@@ -160,7 +160,7 @@ If you want to attempt building and signing the dext yourself, look to
 documentation](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
 for instructions. Otherwise, to install the dext as a signed binary,
 make sure to initialize the dext submodule (`git clone --recursive
-https://github.com/david-janssen/kmonad.git`, e.g.), then open
+https://github.com/kmonad/kmonad.git`, e.g.), then open
 `c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
 and install via the installer. Finally, execute:
 
@@ -176,7 +176,7 @@ Hackage is not tested, but may work for the adveturous. To compile on
 Mac, download the kmonad source:
 
 ```shell
-git clone --recursive https://github.com/david-janssen/kmonad.git
+git clone --recursive https://github.com/kmonad/kmonad.git
 ```
 
 Then build kmonad with `stack`. If you are building against the kext, run:
@@ -206,7 +206,7 @@ Privacy` > `Privacy` > `Input Monitoring`.
 
 ## Binaries
 
-You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/david-janssen/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
+You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/kmonad/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
 
 ## Packages
 
@@ -260,7 +260,7 @@ let
   pkgs = import <nixpkgs> { };
 
   kmonad-bin = pkgs.fetchurl {
-    url = "https://github.com/david-janssen/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
+    url = "https://github.com/kmonad/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
     sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
   };
 in
