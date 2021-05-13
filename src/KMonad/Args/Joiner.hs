@@ -50,7 +50,7 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (uncons, headMaybe)
+import RIO.List (headMaybe, intersperse, uncons)
 import RIO.Partial (fromJust)
 import qualified Data.LayerStack  as L
 import qualified RIO.HashMap      as M
@@ -230,7 +230,7 @@ getFT = do
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "fallthrough"
 
--- | Extract the fallthrough setting
+-- | Extract the allow-cmd setting
 getAllow :: J Bool
 getAllow = do
   cfg <- oneBlock "defcfg" _KDefCfg
@@ -238,6 +238,15 @@ getAllow = do
     Right b        -> pure b
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
+
+-- | Extract the cmp-seq-delay setting
+getCmpSeqDelay :: J (Maybe Int)
+getCmpSeqDelay = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _SCmpSeqDelay $ cfg of
+    Right b        -> pure (Just b)
+    Left None      -> pure Nothing
+    Left Duplicate -> throwError $ DuplicateSetting "cmp-seq-delay"
 
 #ifdef linux_HOST_OS
 
@@ -321,6 +330,7 @@ joinButton ns als =
       go     = unnest . joinButton ns als
       jst    = fmap Just
       fi     = fromIntegral
+      isps l = traverse go . maybe l ((`intersperse` l) . KPause . fi)
   in \case
     -- Variable dereference
     KRef t -> case M.lookup t als of
@@ -350,8 +360,10 @@ joinButton ns als =
       else throwError $ MissingLayer t
 
     -- Various compound buttons
-    KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
+    KComposeSeq bs     -> do csd <- getCmpSeqDelay
+                             c   <- view cmpKey
+                             jst $ tapMacro . (c:) <$> isps bs csd
+    KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
