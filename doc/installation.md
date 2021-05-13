@@ -69,6 +69,27 @@ installation](https://www.haskell.org/platform). I also needed to install
 [mingw](http://mingw.org) to provide `gcc`. With both the Haskell platform and
 `mingw` building `kmonad` under Windows10 should as simple as `stack build`.
 
+You also can install MSYS2, Haskell and stack via [scoop](https://scoop.sh/).
+Simply run these commands in Windows PowerShell:
+
+```posh
+# install scoop (no admin rights required)
+iwr -useb get.scoop.sh | iex
+
+# install stack
+scoop install stack
+
+# clone the KMonad repository (assuming you have `git` installed)
+cd $HOME\Downloads
+git clone https://github.com/david-janssen/kmonad.git
+cd kmonad
+
+# compile KMonad (this will first download GHC and msys2, it takes a while)
+stack build
+
+# the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
+```
+
 ### macOS
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
