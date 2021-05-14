@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.Sluice
+Module      : KMonad.Model.Sluice
 Description : The component that provides pausing functionality
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -12,7 +12,7 @@ of events. This component provides the ability to temporarily pause processing,
 and then resume processing and return all events that were caught while paused.
 
 -}
-module KMonad.App.Sluice
+module KMonad.Model.Sluice
   ( Sluice
   , mkSluice
   , block
@@ -73,7 +73,7 @@ block s = do
 -- location in the 'KMonad.App.App'.
 --
 -- We do this in KMonad by writing the events into the
--- 'KMonad.App.Dispatch.Dispatch's rerun buffer. (this happens in the
+-- 'KMonad.Model.Dispatch.Dispatch's rerun buffer. (this happens in the
 -- "KMonad.App" module.)
 unblock :: HasLogFunc e => Sluice -> RIO e [KeyEvent]
 unblock s = do

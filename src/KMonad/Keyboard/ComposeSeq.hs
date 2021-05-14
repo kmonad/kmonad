@@ -725,9 +725,11 @@ ssComposed =
     , ("_ '"      , '⍘'     , "U2358")
     , ("0 ~"      , '⍬'     , "U236c")
     , ("| ~"      , '⍭'     , "U236d")
+    , ("c /"      , '¢'     , "cent" )
+    , ("< _"      , '≤'     , "U2264")
+    , ("> _"      , '≥'     , "U2265")
 
     -- Sequences that should exist but do not work
     --, ("^ spc", '^', "asciicircum") -- This overlaps with the normal 'shifted-6' macro for
     -- , ("' j", 'j́', "jacute")
     ]
-

@@ -44,7 +44,7 @@ module KMonad.Args.Types
 
 import KMonad.Prelude
 
-import KMonad.Button
+import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
@@ -91,12 +91,15 @@ data DefButton
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
-  | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
+  | KTapMacro [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
-  | KCommand Text                          -- ^ Execute a shell command
+  | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
+                                           --   as possibly on release
+  | KStickyKey Int DefButton               -- ^ Act as if a button is pressed for a period of time
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
@@ -169,8 +172,21 @@ data DefSetting
   | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
+  | SCmpSeqDelay Int
   deriving Show
 makeClassyPrisms ''DefSetting
+
+-- | 'Eq' instance for a 'DefSetting'. Because every one of these options may be
+-- given at most once, we only need to check the outermost constructor in order
+-- to test for equality
+instance Eq DefSetting where
+  SIToken{}      == SIToken{}      = True
+  SOToken{}      == SOToken{}      = True
+  SCmpSeq{}      == SCmpSeq{}      = True
+  SInitStr{}     == SInitStr{}     = True
+  SFallThrough{} == SFallThrough{} = True
+  SAllowCmd{}    == SAllowCmd{}    = True
+  _              == _              = False
 
 -- | A list of different 'DefSetting' values
 type DefSettings = [DefSetting]

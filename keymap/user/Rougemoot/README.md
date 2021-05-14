@@ -33,7 +33,7 @@ Finally, there's the `space` layer on the spacebar (with of course the same tap-
 
 ### The... forbidden key?
 
-Yes. [It is forbidden.](https://github.com/david-janssen/kmonad/issues/106)
+Yes. [It is forbidden.](https://github.com/kmonad/kmonad/issues/106)
 
 ### Wrap-up
 

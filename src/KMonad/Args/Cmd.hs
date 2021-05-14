@@ -16,7 +16,12 @@ module KMonad.Args.Cmd
   )
 where
 
-import KMonad.Prelude
+import KMonad.Prelude hiding (try)
+import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
+import KMonad.Args.Types (DefSetting(..), choice, try)
+import KMonad.Util
+
+import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
 
 import Options.Applicative
 
@@ -28,9 +33,18 @@ import Options.Applicative
 
 -- | Record describing the instruction to KMonad
 data Cmd = Cmd
-  { _cfgFile :: FilePath -- ^ Which file to read the config from
-  , _dryRun  :: Bool     -- ^ Flag to indicate we are only test-parsing
-  , _logLvl  :: LogLevel -- ^ Level of logging to use
+  { _cfgFile   :: FilePath     -- ^ Which file to read the config from
+  , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
+  , _logLvl    :: LogLevel     -- ^ Level of logging to use
+  , _strtDel   :: Milliseconds -- ^ How long to wait before acquiring the input keyboard
+
+    -- All 'KDefCfg' options of a 'KExpr'
+  , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
+  , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
+  , _initStr   :: Maybe DefSetting -- ^ TODO: What does this do?
+  , _cmpSeq    :: Maybe DefSetting -- ^ Key to use for compose-key sequences
+  , _oToken    :: Maybe DefSetting -- ^ How to emit the output
+  , _iToken    :: Maybe DefSetting -- ^ How to capture the input
   }
   deriving Show
 makeClassy ''Cmd
@@ -51,7 +65,17 @@ getCmd = customExecParser (prefs showHelpOnEmpty) $ info (cmdP <**> helper)
 
 -- | Parse the full command
 cmdP :: Parser Cmd
-cmdP = Cmd <$> fileP <*> dryrunP <*> levelP
+cmdP =
+  Cmd <$> fileP
+      <*> dryrunP
+      <*> levelP
+      <*> startDelayP
+      <*> cmdAllowP
+      <*> fallThrghP
+      <*> initStrP
+      <*> cmpSeqP
+      <*> oTokenP
+      <*> iTokenP
 
 -- | Parse a filename that points us at the config-file
 fileP :: Parser FilePath
@@ -67,6 +91,7 @@ dryrunP = switch
   <> help    "If used, do not start KMonad, only try parsing the config file"
   )
 
+
 -- | Parse the log-level as either a level option or a verbose flag
 levelP :: Parser LogLevel
 levelP = option f
@@ -79,3 +104,73 @@ levelP = option f
     f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("warn", LevelWarn)
                                   , ("info",  LevelInfo),  ("error", LevelError) ]
 
+-- | Allow the execution of arbitrary shell-commands
+cmdAllowP :: Parser DefSetting
+cmdAllowP = SAllowCmd <$> switch
+  (  long "allow-cmd"
+  <> short 'c'
+  <> help "Whether to allow the execution of arbitrary shell-commands"
+  )
+
+-- | Re-emit unhandled events
+fallThrghP :: Parser DefSetting
+fallThrghP = SFallThrough <$> switch
+  (  long "fallthrough"
+  <> short 'f'
+  <> help "Whether to simply re-emit unhandled events"
+  )
+
+-- | TODO what does this do?
+initStrP :: Parser (Maybe DefSetting)
+initStrP = optional $ SInitStr <$> strOption
+  (  long "init"
+  <> short 't'
+  <> metavar "STRING"
+  <> help "TODO"
+  )
+
+-- | Key to use for compose-key sequences
+cmpSeqP :: Parser (Maybe DefSetting)
+cmpSeqP = optional $ SCmpSeq <$> option
+  (tokenParser keywordButtons <|> megaReadM (choice noKeywordButtons))
+  (  long "cmp-seq"
+  <> short 's'
+  <> metavar "BUTTON"
+  <> help "Which key to use to emit compose-key sequences"
+  )
+
+-- | Where to emit the output
+oTokenP :: Parser (Maybe DefSetting)
+oTokenP = optional $ SOToken <$> option (tokenParser otokens)
+  (  long "output"
+  <> short 'o'
+  <> metavar "OTOKEN"
+  <> help "Emit output to OTOKEN"
+  )
+
+-- | How to capture the keyboard input
+iTokenP :: Parser (Maybe DefSetting)
+iTokenP = optional $ SIToken <$> option (tokenParser itokens)
+  (  long "input"
+  <> short 'i'
+  <> metavar "ITOKEN"
+  <> help "Capture input via ITOKEN"
+  )
+
+-- | Parse a flag that disables auto-releasing the release of enter
+startDelayP :: Parser Milliseconds
+startDelayP = option (fromIntegral <$> megaReadM numP)
+  (  long  "start-delay"
+  <> short 'w'
+  <> value 300
+  <> showDefaultWith (show . unMS )
+  <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
+ 
+-- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
+-- optparse-applicative parser
+tokenParser :: [(Text, M.Parser a)] -> ReadM a
+tokenParser = megaReadM . choice . map (try . uncurry ((*>) . symbol))
+
+-- | Megaparsec <--> optparse-applicative interface
+megaReadM :: M.Parser a -> ReadM a
+megaReadM p = eitherReader (mapLeft show . M.parse p "" . fromString)

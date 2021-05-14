@@ -15,6 +15,7 @@ module KMonad.Util
   ( -- * Time units and utils
     -- $time
     Milliseconds
+  , unMS
   , tDiff
 
     -- * Random utility helpers that have no better home
@@ -41,7 +42,7 @@ import Data.Time.Clock.System
 --
 
 -- | Newtype wrapper around 'Int' to add type safety to our time values
-newtype Milliseconds = Milliseconds Int
+newtype Milliseconds = Milliseconds { unMS :: Int }
   deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 
 -- | Calculate how much time has elapsed between 2 time points

@@ -18,7 +18,7 @@ as well as the proposed solution.
 ## Making the Change
 
 It's best to create a separate branch in your clone of the [KMonad
-repo](https://github.com/david-janssen/kmonad/) and then push this branch to
+repo](https://github.com/kmonad/kmonad/) and then push this branch to
 your fork.
 
 Please also **never** merge `master` (or `develop`) into the branch you have

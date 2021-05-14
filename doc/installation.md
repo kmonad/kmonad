@@ -10,6 +10,7 @@ Jump to
 - [Packages](installation.md#packages)
   - [Void Linux](installation.md#void-linux)
   - [Guix](installation.md#guix)
+  - [Arch Linux](installation.md#arch-linux)
 
 ## Compilation
 
@@ -68,15 +69,44 @@ installation](https://www.haskell.org/platform). I also needed to install
 [mingw](http://mingw.org) to provide `gcc`. With both the Haskell platform and
 `mingw` building `kmonad` under Windows10 should as simple as `stack build`.
 
+You also can install MSYS2, Haskell and stack via [scoop](https://scoop.sh/).
+Simply run these commands in Windows PowerShell:
+
+```posh
+# install scoop (no admin rights required)
+iwr -useb get.scoop.sh | iex
+
+# install stack
+scoop install stack
+
+# clone the KMonad repository (assuming you have `git` installed)
+cd $HOME\Downloads
+git clone https://github.com/kmonad/kmonad.git
+cd kmonad
+
+# compile KMonad (this will first download GHC and msys2, it takes a while)
+stack build
+
+# the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
+```
+
 ### macOS
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
-Catalina). Support for macOS 11.0 (Big Sur) is in progress.
+Catalina) and macOS 11.0 (Big Sur).
 
-Note: under macOS, `kmonad` uses a [kernel
+Note: under macOS, `kmonad` uses one of two "system extensions" to
+post modified key events to the OS. For macOS Catalina and prior, we
+use a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-(kext) to post modified key events to the OS. It is bundled with
-kmonad as a submodule in `c_src/mac/Karabiner-VirtualHIDDevice`.
+(kext), which is bundled with kmonad as a submodule in
+`c_src/mac/Karabiner-VirtualHIDDevice`. For macOS Catalina and later,
+we use a [driverkit-based
+extension](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
+(dext), bundled as
+`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice`. Therefore, you must
+install either the kext or dext based on your macOS version (Catalina
+users can choose either one).
 
 #### Installing the kext
 
@@ -102,9 +132,40 @@ documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
 for instructions. Otherwise, to install the kext as a signed binary, run:
 
 ```shell
-git clone --recursive https://github.com/david-janssen/kmonad.git
+git clone --recursive https://github.com/kmonad/kmonad.git
 cd c_src/mac/Karabiner-VirtualHIDDevice
 make install
+```
+
+#### Installing the dext
+
+You can either build the dext from source or you can install it as a
+binary that is signed by its maintainer. Building from source is only
+possible with an "Apple Developer ID," unless you build an old version
+of the dext.
+
+The dext used by kmonad is maintained as part of
+[Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements).
+Therefore, if you use Karabiner-Elements, you may already have the
+dext installed (though maybe a different version number). Run
+`defaults read
+/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
+CFBundleVersion` to check the version: if `1.15.0` is shown, then the
+installed dext is compatibile with kmonad and you can move onto
+[installing kmonad](#installing-kmonad). If another version is listed,
+this may work too (but has not been tested).
+
+If you want to attempt building and signing the dext yourself, look to
+[the
+documentation](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
+for instructions. Otherwise, to install the dext as a signed binary,
+make sure to initialize the dext submodule (`git clone --recursive
+https://github.com/kmonad/kmonad.git`, e.g.), then open
+`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
+and install via the installer. Finally, execute:
+
+```shell
+/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
 
 #### Installing kmonad
@@ -115,14 +176,21 @@ Hackage is not tested, but may work for the adveturous. To compile on
 Mac, download the kmonad source:
 
 ```shell
-git clone --recursive https://github.com/david-janssen/kmonad.git
+git clone --recursive https://github.com/kmonad/kmonad.git
 ```
 
-Then build kmonad with `stack`:
+Then build kmonad with `stack`. If you are building against the kext, run:
 
 ```shell
-stack build --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
+
+If you are building against the dext, run
+
+```shell
+stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+```
+
 #### Giving kmonad additional permissions
 
 Since Mac OS X Leopard (10.5), intercepting key events
@@ -138,7 +206,7 @@ Privacy` > `Privacy` > `Input Monitoring`.
 
 ## Binaries
 
-You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/david-janssen/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
+You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/kmonad/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
 
 ## Packages
 
@@ -177,6 +245,9 @@ to install udev rules using something like this in your `config.scm`
                     (udev-configuration-rules config)))))))) 
 ``` 
 
+#### Arch Linux
+Kmonad is available in the Arch User Repository (AUR) as [kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
+
 ### NixOS
 
 There is not currently a `kmonad` package in `nixpkgs`, however the following instructions show
@@ -189,7 +260,7 @@ let
   pkgs = import <nixpkgs> { };
 
   kmonad-bin = pkgs.fetchurl {
-    url = "https://github.com/david-janssen/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
+    url = "https://github.com/kmonad/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
     sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
   };
 in

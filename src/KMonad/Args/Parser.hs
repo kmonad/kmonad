@@ -16,8 +16,19 @@ This module covers step 1.
 
 -}
 module KMonad.Args.Parser
-  ( parseTokens
+  ( -- * Parsing 'KExpr's
+    parseTokens
   , loadTokens
+
+  -- * Building Parsers
+  , symbol
+  , numP
+
+  -- * Parsers for Tokens and Buttons
+  , otokens
+  , itokens
+  , keywordButtons
+  , noKeywordButtons
   )
 where
 
@@ -117,6 +128,11 @@ bool :: Parser Bool
 bool = symbol "true" *> pure True
    <|> symbol "false" *> pure False
 
+-- | Parse a LISP-like keyword of the form @:keyword value@
+keywordP :: Text -> Parser p -> Parser p
+keywordP kw p = lexeme (string (":" <> kw)) *> lexeme p
+  <?> "Keyword " <> ":" <> T.unpack kw
+
 --------------------------------------------------------------------------------
 -- $elem
 --
@@ -133,8 +149,8 @@ numP = L.decimal
 -- | Parse text with escaped characters between "s
 textP :: Parser Text
 textP = do
-  _ <- char '\"'
-  s <- manyTill L.charLiteral (char '\"')
+  _ <- char '\"' <|> char '\''
+  s <- manyTill L.charLiteral (char '\"' <|> char '\'')
   pure . T.pack $ s
 
 -- | Parse a variable reference
@@ -211,7 +227,9 @@ pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
 
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
-rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
+rmTapMacroP =
+  char '#' *> paren (KTapMacro <$> some buttonP
+                               <*> optional (keywordP "delay" numP))
 
 -- | Compose-key sequence
 composeSeqP :: Parser [DefButton]
@@ -239,27 +257,43 @@ deadkeySeqP = do
 -- | Parse any button
 buttonP :: Parser DefButton
 buttonP = (lexeme . choice . map try $
-  [ statement "around"         $ KAround      <$> buttonP     <*> buttonP
-  , statement "multi-tap"      $ KMultiTap    <$> timed       <*> buttonP
-  , statement "tap-hold"       $ KTapHold     <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-hold-next"  $ KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-next-release"
-    $ KTapNextRelease <$> buttonP <*> buttonP
-  , statement "tap-hold-next-release"
-    $ KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP
-  , statement "tap-next"       $ KTapNext     <$> buttonP     <*> buttonP
-  , statement "layer-toggle"   $ KLayerToggle <$> word
-  , statement "layer-switch"   $ KLayerSwitch <$> word
-  , statement "layer-add"      $ KLayerAdd    <$> word
-  , statement "layer-rem"      $ KLayerRem    <$> word
-  , statement "layer-delay"    $ KLayerDelay  <$> lexeme numP <*> word
-  , statement "layer-next"     $ KLayerNext   <$> word
-  , statement "around-next"    $ KAroundNext  <$> buttonP
-  , statement "around-next-single" $ KAroundNextSingle <$> buttonP
-  , statement "tap-macro"      $ KTapMacro    <$> some buttonP
-  , statement "cmd-button"     $ KCommand     <$> textP
-  , statement "pause"          $ KPause . fromIntegral <$> numP
-  , KComposeSeq <$> deadkeySeqP
+  map (uncurry statement) keywordButtons ++ noKeywordButtons
+  ) <?> "button"
+
+-- | Parsers for buttons that have a keyword at the start; the format is
+-- @(keyword, how to parse the token)@
+keywordButtons :: [(Text, Parser DefButton)]
+keywordButtons =
+  [ ("around"         , KAround      <$> buttonP     <*> buttonP)
+  , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
+  , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-hold-next"  , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-next-release"
+    , KTapNextRelease <$> buttonP <*> buttonP)
+  , ("tap-hold-next-release"
+    , KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-next"       , KTapNext     <$> buttonP     <*> buttonP)
+  , ("layer-toggle"   , KLayerToggle <$> lexeme word)
+  , ("layer-switch"   , KLayerSwitch <$> lexeme word)
+  , ("layer-add"      , KLayerAdd    <$> lexeme word)
+  , ("layer-rem"      , KLayerRem    <$> lexeme word)
+  , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
+  , ("layer-next"     , KLayerNext   <$> lexeme word)
+  , ("around-next"    , KAroundNext  <$> buttonP)
+  , ("tap-macro"
+    , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+  , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
+  , ("pause"          , KPause . fromIntegral <$> numP)
+  , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
+  ]
+ where
+  timed :: Parser [(Int, DefButton)]
+  timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
+
+-- | Parsers for buttons that do __not__ have a keyword at the start
+noKeywordButtons :: [Parser DefButton]
+noKeywordButtons =
+  [ KComposeSeq <$> deadkeySeqP
   , KRef  <$> derefP
   , lexeme $ fromNamed buttonNames
   , try moddedP
@@ -267,28 +301,32 @@ buttonP = (lexeme . choice . map try $
   , lexeme $ try pauseP
   , KEmit <$> keycodeP
   , KComposeSeq <$> composeSeqP
-  ]) <?> "button"
-
-  where
-    timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
-
+  ]
 
 --------------------------------------------------------------------------------
 -- $defcfg
 
 -- | Parse an input token
 itokenP :: Parser IToken
-itokenP = choice . map try $
-  [ statement "device-file"    $ KDeviceSource <$> (T.unpack <$> textP)
-  , statement "low-level-hook" $ pure KLowLevelHookSource
-  , statement "iokit-name"     $ KIOKitSource <$> optional textP]
+itokenP = choice $ map (try . uncurry statement) itokens
+
+-- | Input tokens to parse; the format is @(keyword, how to parse the token)@
+itokens :: [(Text, Parser IToken)]
+itokens =
+  [ ("device-file"   , KDeviceSource <$> (T.unpack <$> textP))
+  , ("low-level-hook", pure KLowLevelHookSource)
+  , ("iokit-name"    , KIOKitSource <$> optional textP)]
 
 -- | Parse an output token
 otokenP :: Parser OToken
-otokenP = choice . map try $
-  [ statement "uinput-sink"     $ KUinputSink <$> lexeme textP <*> optional textP
-  , statement "send-event-sink" $ pure KSendEventSink
-  , statement "kext"            $ pure KKextSink]
+otokenP = choice $ map (try . uncurry statement) otokens
+
+-- | Output tokens to parse; the format is @(keyword, how to parse the token)@
+otokens :: [(Text, Parser OToken)]
+otokens =
+  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
+  , ("send-event-sink", pure KSendEventSink)
+  , ("kext"           , pure KKextSink)]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
@@ -298,12 +336,13 @@ defcfgP = some (lexeme settingP)
 settingP :: Parser DefSetting
 settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ SIToken      <$> f "input"       itokenP
-    , SOToken      <$> f "output"      otokenP
-    , SCmpSeq      <$> f "cmp-seq"     buttonP
-    , SInitStr     <$> f "init"        textP
-    , SFallThrough <$> f "fallthrough" bool
-    , SAllowCmd    <$> f "allow-cmd"   bool
+    [ SIToken      <$> f "input"         itokenP
+    , SOToken      <$> f "output"        otokenP
+    , SCmpSeq      <$> f "cmp-seq"       buttonP
+    , SInitStr     <$> f "init"          textP
+    , SFallThrough <$> f "fallthrough"   bool
+    , SAllowCmd    <$> f "allow-cmd"     bool
+    , SCmpSeqDelay <$> f "cmp-seq-delay" numP
     ])
 
 --------------------------------------------------------------------------------
@@ -324,4 +363,3 @@ defsrcP = many $ lexeme keycodeP
 -- $deflayer
 deflayerP :: Parser DefLayer
 deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
-
