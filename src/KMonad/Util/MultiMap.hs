@@ -1,5 +1,5 @@
 {-|
-Module      : Data.MultiMap
+Module      : KMonad.Util.MultiMap
 Description : A `k -> Set v` mapping, with reversing utilities
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -15,7 +15,7 @@ In KMonad we use this exclusively to easily define multiple names for the same
 'KMonad.Keyboard.Keycode' in a reversible manner.
 
 -}
-module Data.MultiMap
+module KMonad.Util.MultiMap
   ( -- * Types
     -- $typ
     MultiMap

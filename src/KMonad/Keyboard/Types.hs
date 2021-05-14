@@ -14,7 +14,7 @@ where
 import KMonad.Prelude
 import KMonad.Keyboard.Keycode
 
-import qualified Data.LayerStack as Ls
+import qualified KMonad.Util.LayerStack as Ls
 
 --------------------------------------------------------------------------------
 -- $event

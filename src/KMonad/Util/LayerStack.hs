@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-|
-Module      : Data.LayerStack
+Module      : KMonad.Util.LayerStack
 Description : A container of overlapping mappings
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -24,7 +24,7 @@ configuration for a keyboard is essentially a set of layers. Each layer maps
 keycodes to buttons, and the entire layers can be overlayed on top of eachother.
 
 -}
-module Data.LayerStack
+module KMonad.Util.LayerStack
   ( -- * Basic types
     -- $types
     Layer
