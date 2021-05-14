@@ -83,6 +83,13 @@
     as a workaround to also make this work on windows, see the section on
     Compose-key sequences below.
 
+  - `cmp-seq-delay': NUMBER (in milliseconds)
+
+    This sets a delay between each pressed key in a compose-key sequence.  Some
+    environments may have troubles recognizing the key sequence if it's pressed
+    too rapidly; if you experience any problems in this direction, you can try
+    setting this value to `5' or `10' and see if that helps.
+
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OS'es, and so do the capabilities of
   these interfaces.
@@ -147,7 +154,8 @@
     ;; To understand the importance of the following line, see the section on
     ;; Compose-key sequences at the near-bottom of this file.
     "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
-  cmp-seq ralt  ;; Set the compose key to `RightAlt'
+  cmp-seq ralt    ;; Set the compose key to `RightAlt'
+  cmp-seq-delay 5 ;; 5ms delay between each compose-key sequence press
 
   ;; For Windows
   ;; input  (low-level-hook)
@@ -478,8 +486,19 @@
   the program time to register all the key-presses. Therefore we also provide
   the 'pause' function, which simply pauses processing for a certain amount of
   milliseconds. Pauses can be created like this:
+
     (pause 20)
     P20
+
+  You an also pause between each key stroke by specifying the `:delay' keyword,
+  as well as a time in ms, at the end of a `tap-macro':
+
+    (tap-macro K M o n a d :delay 5)
+    #(K M o n a d :delay 5)
+
+  The above would be equivalent to e.g.
+
+    (tap-macro K P5 M P5 o P5 n P5 a P5 d)
 
   WARNING: DO NOT STORE YOUR PASSWORDS IN PLAIN TEXT OR IN YOUR KEYBOARD
 

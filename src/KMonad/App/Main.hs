@@ -76,6 +76,9 @@ initAppEnv cfg = do
   -- Get a reference to the logging function
   lgf <- view logFuncL
 
+  -- Wait a bit for the user to release the 'Return' key with which they started KMonad
+  threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
+
   -- Acquire the keysource and keysink
   snk <- using $ cfg^.keySinkDev
   src <- using $ cfg^.keySourceDev

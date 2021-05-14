@@ -22,6 +22,7 @@ module KMonad.Args.Parser
 
   -- * Building Parsers
   , symbol
+  , numP
 
   -- * Parsers for Tokens and Buttons
   , otokens
@@ -127,6 +128,11 @@ bool :: Parser Bool
 bool = symbol "true" *> pure True
    <|> symbol "false" *> pure False
 
+-- | Parse a LISP-like keyword of the form @:keyword value@
+keywordP :: Text -> Parser p -> Parser p
+keywordP kw p = lexeme (string (":" <> kw)) *> lexeme p
+  <?> "Keyword " <> ":" <> T.unpack kw
+
 --------------------------------------------------------------------------------
 -- $elem
 --
@@ -221,7 +227,9 @@ pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
 
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
-rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
+rmTapMacroP =
+  char '#' *> paren (KTapMacro <$> some buttonP
+                               <*> optional (keywordP "delay" numP))
 
 -- | Compose-key sequence
 composeSeqP :: Parser [DefButton]
@@ -272,7 +280,8 @@ keywordButtons =
   , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
-  , ("tap-macro"      , KTapMacro    <$> some buttonP)
+  , ("tap-macro"
+    , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
@@ -327,12 +336,13 @@ defcfgP = some (lexeme settingP)
 settingP :: Parser DefSetting
 settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ SIToken      <$> f "input"       itokenP
-    , SOToken      <$> f "output"      otokenP
-    , SCmpSeq      <$> f "cmp-seq"     buttonP
-    , SInitStr     <$> f "init"        textP
-    , SFallThrough <$> f "fallthrough" bool
-    , SAllowCmd    <$> f "allow-cmd"   bool
+    [ SIToken      <$> f "input"         itokenP
+    , SOToken      <$> f "output"        otokenP
+    , SCmpSeq      <$> f "cmp-seq"       buttonP
+    , SInitStr     <$> f "init"          textP
+    , SFallThrough <$> f "fallthrough"   bool
+    , SAllowCmd    <$> f "allow-cmd"     bool
+    , SCmpSeqDelay <$> f "cmp-seq-delay" numP
     ])
 
 --------------------------------------------------------------------------------

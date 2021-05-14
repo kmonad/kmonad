@@ -35,14 +35,17 @@ loadConfig cmd = do
   snk <- liftIO . _snk cgt $ lf
   src <- liftIO . _src cgt $ lf
 
+  -- Emit the release of <Enter> if requested
+
   -- Assemble the AppCfg record
   pure $ AppCfg
     { _keySinkDev   = snk
     , _keySourceDev = src
-    , _keymapCfg    = _km    cgt
-    , _firstLayer   = _fstL  cgt
-    , _fallThrough  = _flt   cgt
-    , _allowCmd     = _allow cgt
+    , _keymapCfg    = _km      cgt
+    , _firstLayer   = _fstL    cgt
+    , _fallThrough  = _flt     cgt
+    , _allowCmd     = _allow   cgt
+    , _startDelay   = _strtDel cmd
     }
 
 
