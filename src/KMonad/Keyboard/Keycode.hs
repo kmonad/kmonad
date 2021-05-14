@@ -375,7 +375,6 @@ aliases = Q.mkMultiMap
   , (KeyRightMeta,      ["rmeta", "rmet"])
   , (KeyBackspace,      ["bks", "bspc"])
   , (KeyCapsLock,       ["caps"])
-  , (KeyGrave,          ["grv"])
   , (Key102nd,          ["102d", "lsgt", "nubs"])
   , (KeyForward,        ["fwd"])
   , (KeyScrollLock,     ["scrlck", "slck"])
