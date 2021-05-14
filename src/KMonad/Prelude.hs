@@ -11,7 +11,9 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 
 module KMonad.Prelude
-  ( module X )
+  ( module X
+  , MIO, UIO, EnvIO, EnvUIO
+  )
 where
 
 import Control.Lens       as X
@@ -34,4 +36,22 @@ import RIO as X hiding
 
     -- Will import these when I need it
   , some, many
+
+    -- Names I'd like to use myself
+  , wait
   )
+
+--------------------------------------------------------------------------------
+-- $shorthand
+
+-- | Shorthand for a `MonadIO` constraint, I'd prefer using `IO`, but rebinding
+-- actual IO to free up that name seems needlessly confusing
+type MIO m = MonadIO m
+
+-- | Shorthand for MonadUnliftIO
+type UIO m = MonadUnliftIO m
+
+-- | Shorthand for MonadIO and MonadReader
+type EnvIO m e = (MIO m, MonadReader e m)
+
+type EnvUIO m e = (UIO m, MonadReader e m)

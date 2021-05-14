@@ -12,14 +12,15 @@ Acquire datatypes.
 
 -}
 module KMonad.Util
-  ( -- * Time units and utils
+  (
+    -- * Time units and utils
     -- $time
-    Milliseconds
-  , unMS
-  , tDiff
+  --   Milliseconds
+  -- , unMS
+    -- tDiff
 
     -- * Random utility helpers that have no better home
-  , onErr
+    onErr
   , using
   , logRethrow
 
@@ -28,6 +29,8 @@ module KMonad.Util
   , withLaunch_
   , launch
   , launch_
+
+  , module X
   )
 
 where
@@ -37,28 +40,17 @@ import KMonad.Prelude
 import Data.Time.Clock
 import Data.Time.Clock.System
 
+import KMonad.Util.Time as X
+import KMonad.Util.Ctx as X
+
 --------------------------------------------------------------------------------
 -- $time
 --
 
 -- | Newtype wrapper around 'Int' to add type safety to our time values
-newtype Milliseconds = Milliseconds { unMS :: Int }
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
+-- newtype Milliseconds = Milliseconds { unMS :: Int }
+--   deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
 
--- | Calculate how much time has elapsed between 2 time points
-tDiff :: ()
-  => SystemTime   -- ^ The earlier timepoint
-  -> SystemTime   -- ^ The later timepoint
-  -> Milliseconds -- ^ The time in milliseconds between the two
-tDiff a b = let
-  a' = systemToUTCTime a
-  b' = systemToUTCTime b
-  d  = diffUTCTime b' a'
-  in round $ d * 1000
--- tDiff (MkSystemTime s_a ns_a) (MkSystemTime s_b ns_b) = let
-  -- s  = fromIntegral $ (s_b  - s_a) * 1000
-  -- ns = fromIntegral $ (ns_b - ns_a) `div` 1000000
-  -- in s + ns
 
 --------------------------------------------------------------------------------
 -- $util
@@ -117,10 +109,10 @@ withLaunch_ n a f = withLaunch n a (const f)
 launch :: HasLogFunc e
   => Text    -- ^ The name of this process (for logging)
   -> RIO e a -- ^ The action to repeat forever
-  -> ContT r (RIO e) (Async a)
-launch n = ContT . withLaunch n
+  -> Ctx r (RIO e) (Async a)
+launch n = mkCtx . withLaunch n
 
--- | Like 'withLaunch_', but in the ContT monad
+-- | Like 'withLaunch_', but in the Ctx monad
 launch_ :: HasLogFunc e
   => Text    -- ^ The name of this process (for logging)
   -> RIO e a -- ^ The action to repeat forever

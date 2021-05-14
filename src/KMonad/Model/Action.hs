@@ -79,7 +79,7 @@ instance Monoid Catch where
 -- | The packet used to trigger a KeyFun, containing info about the event and
 -- how long since the Hook was registered.
 data Trigger = Trigger
-  { _elapsed :: Milliseconds -- ^ Time elapsed since hook was registered
+  { _elapsed :: Ms -- ^ Time elapsed since hook was registered
   , _event   :: KeyEvent     -- ^ The key event triggering this call
   }
 makeClassy ''Trigger
@@ -99,7 +99,7 @@ data HookLocation
 
 -- | A 'Timeout' value describes how long to wait and what to do upon timeout
 data Timeout m = Timeout
-  { _delay  :: Milliseconds -- ^ Delay before timeout action is triggered
+  { _delay  :: Ms -- ^ Delay before timeout action is triggered
   , _action :: m ()         -- ^ Action to perform upon timeout
   }
 makeClassy ''Timeout
@@ -136,7 +136,7 @@ class Monad m => MonadKIO m where
   -- | Emit a KeyEvent to the OS
   emit       :: KeyEvent -> m ()
   -- | Pause the current thread for n milliseconds
-  pause      :: Milliseconds -> m ()
+  pause      :: Ms -> m ()
   -- | Pause or unpause event processing
   hold       :: Bool -> m ()
   -- | Register a callback hook
@@ -174,7 +174,7 @@ hookF l f = register l . Hook Nothing $ \t -> f (t^.event)
 -- | Register a hook with a timeout
 tHookF :: MonadK m
   => HookLocation         -- ^ Where to install the hook
-  -> Milliseconds         -- ^ The timeout delay for the hook
+  -> Ms         -- ^ The timeout delay for the hook
   -> m ()                 -- ^ The action to perform on timeout
   -> (Trigger -> m Catch) -- ^ The action to perform on trigger
   -> m ()                 -- ^ The resulting action
@@ -185,7 +185,7 @@ tHookF l d a f = register l $ Hook (Just $ Timeout d a) f
 -- This is essentially just a way to perform async actions using the KMonad hook
 -- system.
 after :: MonadK m
-  => Milliseconds
+  => Ms
   -> m ()
   -> m ()
 after d a = do
@@ -218,7 +218,7 @@ awaitMy s a = matchMy s >>= flip await (const a)
 -- | Try to call a function on a succesful match of a predicate within a certain
 -- time period. On a timeout, perform an action.
 within :: MonadK m
-  => Milliseconds          -- ^ The time within which this filter is active
+  => Ms          -- ^ The time within which this filter is active
   -> m KeyPred             -- ^ The predicate used to find a match
   -> m ()                  -- ^ The action to call on timeout
   -> (Trigger -> m Catch)  -- ^ The action to call on a succesful match
@@ -233,7 +233,7 @@ within d p a f = do
 
 -- | Like `within`, but acquires a hold when starting, and releases when done
 withinHeld :: MonadK m
-  => Milliseconds          -- ^ The time within which this filter is active
+  => Ms          -- ^ The time within which this filter is active
   -> m KeyPred             -- ^ The predicate used to find a match
   -> m ()                  -- ^ The action to call on timeout
   -> (Trigger -> m Catch)  -- ^ The action to call on a succesful match

@@ -89,7 +89,7 @@ data DefButton
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
-  | KPause Milliseconds                    -- ^ Pause for a period of time
+  | KPause Ms                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well

@@ -94,7 +94,7 @@ data DefButton
   | KTapMacro [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
-  | KPause Milliseconds                    -- ^ Pause for a period of time
+  | KPause Ms                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well

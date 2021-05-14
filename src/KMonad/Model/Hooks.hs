@@ -30,7 +30,7 @@ import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
-import KMonad.Util
+import KMonad.Util hiding (time)
 
 import RIO.Partial (fromJust)
 

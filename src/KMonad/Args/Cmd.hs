@@ -36,7 +36,7 @@ data Cmd = Cmd
   { _cfgFile   :: FilePath     -- ^ Which file to read the config from
   , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
   , _logLvl    :: LogLevel     -- ^ Level of logging to use
-  , _strtDel   :: Milliseconds -- ^ How long to wait before acquiring the input keyboard
+  , _strtDel   :: Ms -- ^ How long to wait before acquiring the input keyboard
 
     -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
@@ -158,12 +158,12 @@ iTokenP = optional $ SIToken <$> option (tokenParser itokens)
   )
 
 -- | Parse a flag that disables auto-releasing the release of enter
-startDelayP :: Parser Milliseconds
+startDelayP :: Parser Ms
 startDelayP = option (fromIntegral <$> megaReadM numP)
   (  long  "start-delay"
   <> short 'w'
   <> value 300
-  <> showDefaultWith (show . unMS )
+  <> showDefaultWith (\a -> show $ (fromIntegral a :: Int))
   <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
  
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
