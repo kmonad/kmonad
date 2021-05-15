@@ -45,7 +45,7 @@ A layer is a set of keymaps assigned to your keyboard's buttons. You can have as
 
 #### Multi-Use and Multi-Tap Buttons
 
-One of the distinguishing features of KMonad is the vast capabilities with Multi-Use Buttons. You can use have a single button do different things based on whether it is pressed quickly in succession, or pressed once, or held. For example, you can configure the **Caps Lock** key to act as an **Escape** button when pressed once and released, a **Ctrl** modifier when held-down, and a button to jump to a layer when pressed twice quickly in succession. You can make the left and right **Shift** keys to act like left and right parentheses (like the Space Cadet Shift keys) when tapped once, and regular **Shift** keys when held down. The possibilities are infinite!
+One of the distinguishing features of KMonad is the vast capabilities with Multi-Use Buttons. You can have a single button do different things based on whether it is pressed quickly in succession, or pressed once, or held. For example, you can configure the **Caps Lock** key to act as an **Escape** button when pressed once and released, a **Ctrl** modifier when held-down, and a button to jump to a layer when pressed twice quickly in succession. You can make the left and right **Shift** keys to act like left and right parentheses (like the Space Cadet Shift keys) when tapped once, and regular **Shift** keys when held down. The possibilities are infinite!
 
 #### Command Buttons
 
