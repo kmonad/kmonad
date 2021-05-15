@@ -1,12 +1,3 @@
-
-# Disclaimer
-
-The core maintainer is currently chronically (but not terminally) ill, and is
-unable to give KMonad the attention it deserves. We are currently looking for
-maintainers. Please see [this
-issue](https://github.com/kmonad/kmonad/issues/142) for more information.
-
-
 <h1 align="center">
 KMonad
 <br>
