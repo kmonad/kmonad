@@ -34,7 +34,7 @@ import KMonad.Keyboard
 -- never be interrupted, therefore we can simply use 'IORef' and sidestep all
 -- the STM complications.
 data Sluice = Sluice
-  { _eventSrc :: IO KeyEvent      -- ^ Where we get our 'KeyEvent's from
+  { _eventSrc :: OnlyIO KeyEvent  -- ^ Where we get our 'KeyEvent's from
   , _blocked  :: IORef Int        -- ^ How many locks have been applied to the sluice
   , _blockBuf :: IORef [KeyEvent] -- ^ Internal buffer to store events while closed
   }

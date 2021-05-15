@@ -35,6 +35,7 @@ import KMonad.Util hiding (time)
 import RIO.Partial (fromJust)
 
 import qualified RIO.HashMap as M
+import qualified RIO         as R
 
 --------------------------------------------------------------------------------
 -- $hooks
@@ -54,18 +55,18 @@ import qualified RIO.HashMap as M
 
 data Entry = Entry
   { _time  :: SystemTime
-  , _eHook :: Hook IO
+  , _eHook :: Hook R.IO
   }
 makeLenses ''Entry
 
-instance HasHook Entry IO where hook = eHook
+instance HasHook Entry R.IO where hook = eHook
 
 type Store = M.HashMap Unique Entry
 
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  { _eventSrc   :: OnlyIO KeyEvent   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
@@ -83,7 +84,7 @@ mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
-ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
+ioHook :: MonadUnliftIO m => Hook m -> m (Hook R.IO)
 ioHook h = withRunInIO $ \u -> do
 
   t <- case _hTimeout h of

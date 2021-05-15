@@ -16,6 +16,7 @@ module KMonad.Args.Cmd
   )
 where
 
+import KMonad.App.Logging hiding (logLvl)
 import KMonad.Prelude hiding (try)
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
 import KMonad.Args.Types (DefSetting(..), choice, try)
@@ -35,7 +36,7 @@ import Options.Applicative
 data Cmd = Cmd
   { _cfgFile   :: FilePath     -- ^ Which file to read the config from
   , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
-  , _logLvl    :: LogLevel     -- ^ Level of logging to use
+  , _logLev    :: LogLevel     -- ^ Level of logging to use
   , _strtDel   :: Ms -- ^ How long to wait before acquiring the input keyboard
 
     -- All 'KDefCfg' options of a 'KExpr'
@@ -50,7 +51,7 @@ data Cmd = Cmd
 makeClassy ''Cmd
 
 -- | Parse 'Cmd' from the evocation of this program
-getCmd :: IO Cmd
+getCmd :: OnlyIO Cmd
 getCmd = customExecParser (prefs showHelpOnEmpty) $ info (cmdP <**> helper)
   (  fullDesc
   <> progDesc "Start KMonad"
@@ -98,11 +99,10 @@ levelP = option f
   (  long    "log-level"
   <> short   'l'
   <> metavar "Log level"
-  <> value   LevelWarn
-  <> help    "How much info to print out (debug, info, warn, error)" )
+  <> value   LevelError
+  <> help    "How much info to print out (debug, info, error)" )
   where
-    f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("warn", LevelWarn)
-                                  , ("info",  LevelInfo),  ("error", LevelError) ]
+    f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("info",  LevelInfo),  ("error", LevelError) ]
 
 -- | Allow the execution of arbitrary shell-commands
 cmdAllowP :: Parser DefSetting

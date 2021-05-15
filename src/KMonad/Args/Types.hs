@@ -115,8 +115,8 @@ data DefButton
 -- | The 'CfgToken' contains all the data needed to construct an
 -- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src   :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
+  { _src   :: LogFunc -> OnlyIO (Acquire KeySource) -- ^ How to grab the source keyboard
+  , _snk   :: LogFunc -> OnlyIO (Acquire KeySink)   -- ^ How to construct the out keybboard
   , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
   , _fstL  :: LayerTag                          -- ^ Name of initial layer
   , _flt   :: Bool                              -- ^ How to deal with unhandled events

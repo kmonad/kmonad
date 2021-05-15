@@ -35,7 +35,7 @@ import qualified RIO.Text as T
 -- $snk
 
 -- | A 'KeySink' sends key actions to the OS
-newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> IO () }
+newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> OnlyIO () }
 
 -- | Create a new 'KeySink'
 mkKeySink :: HasLogFunc e
@@ -62,7 +62,7 @@ emitKey snk e = do
 -- $src
 
 -- | A 'KeySource' is an action that awaits 'KeyEvent's from the OS
-newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent}
+newtype KeySource = KeySource { awaitKeyWith :: OnlyIO KeyEvent}
 
 -- | Create a new KeySource
 mkKeySource :: HasLogFunc e

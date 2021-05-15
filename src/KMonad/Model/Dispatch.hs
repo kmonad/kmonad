@@ -56,7 +56,7 @@ import qualified RIO.Text as T
 
 -- | The 'Dispatch' environment
 data Dispatch = Dispatch
-  { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
+  { _eventSrc :: OnlyIO KeyEvent            -- ^ How to read 1 event
   , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
   , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
   }

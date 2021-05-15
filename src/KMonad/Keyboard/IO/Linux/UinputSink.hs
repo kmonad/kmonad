@@ -105,13 +105,13 @@ foreign import ccall "acquire_uinput_keysink"
     -> CInt    -- ^ Vendor ID
     -> CInt    -- ^ Product ID
     -> CInt    -- ^ Version ID
-    -> IO Int
+    -> OnlyIO Int
 
 foreign import ccall "release_uinput_keysink"
-  c_release_uinput_keysink :: CInt -> IO Int
+  c_release_uinput_keysink :: CInt -> OnlyIO Int
 
 foreign import ccall "send_event"
-  c_send_event :: CInt -> CInt -> CInt -> CInt -> CInt -> CInt -> IO Int
+  c_send_event :: CInt -> CInt -> CInt -> CInt -> CInt -> CInt -> OnlyIO Int
 
 -- | Create and acquire a Uinput device
 acquire_uinput_keysink :: MonadIO m => Fd -> UinputCfg -> m Int

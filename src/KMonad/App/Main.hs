@@ -18,12 +18,15 @@ where
 
 import KMonad.Prelude
 
+-- import KMonad.App.Invocation
 import KMonad.Args
 import KMonad.App.Types
+import KMonad.App.Logging
 import KMonad.Keyboard
 import KMonad.Util
 import KMonad.Model
 
+-- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
 
 import qualified KMonad.Model.Dispatch as Dp
@@ -45,7 +48,7 @@ import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
 -- | The first command in KMonad
 --
 -- Get the invocation from the command-line, then do something with it.
-main :: IO ()
+main :: OnlyIO ()
 main = getCmd >>= runCmd
 
 -- | Execute the provided 'Cmd'
@@ -53,12 +56,14 @@ main = getCmd >>= runCmd
 -- 1. Construct the log-func
 -- 2. Parse the config-file
 -- 3. Maybe start KMonad
-runCmd :: Cmd -> IO ()
+runCmd :: Cmd -> OnlyIO ()
 runCmd c = do
-  o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logLvl)
-  withLogFunc o $ \f -> runRIO f $ do
+  let logcfg = LogCfg (c ^. logLev ) stdout Nothing
+  runLog logcfg $ do
     cfg <- loadConfig c
     unless (c^.dryRun) $ startApp cfg
+
+
 
 --------------------------------------------------------------------------------
 -- $init
@@ -166,7 +171,7 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
-startApp :: HasLogFunc e => AppCfg -> RIO e ()
+startApp :: AppCfg -> OnlyLIO ()
 startApp c = do
 #ifdef linux_HOST_OS
   -- Ignore SIGCHLD to avoid zombie processes.
