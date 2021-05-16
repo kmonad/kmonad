@@ -40,6 +40,10 @@ import KMonad.Prelude
 import Data.Time.Clock
 import Data.Time.Clock.System
 
+-- FIXME: Cleanup old code, then improve imports
+-- import KMonad.Util.Keyboard as X
+-- import KMonad.Util.FFI as K
+-- import KMonad.Util.Name as X
 import KMonad.Util.Time as X
 import KMonad.Util.Ctx as X
 

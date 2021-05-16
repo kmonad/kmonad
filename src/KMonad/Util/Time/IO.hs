@@ -28,3 +28,6 @@ wait = threadDelay . (1000*) . fromIntegral
 metronome :: IO m => Ms -> m (m Time)
 metronome d = pure $ wait (d * 100) >> getCurrentTime
 
+-- | Run a function that takes a time on the current time
+now :: IO m => (Time -> a) -> m a
+now = (<$> getCurrentTime)

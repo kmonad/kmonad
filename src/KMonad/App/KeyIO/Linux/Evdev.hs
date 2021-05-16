@@ -34,9 +34,7 @@ data EvdevException
   deriving Show
 makeClassyPrisms ''EvdevException
 
-  -- let showErr t n = t <> " '" <> pack (c^.evdevPath)
-  --                     <> "'. With errorcode: " <> tshow n
-
+-- | How to display EvdevExceptions
 instance Exception EvdevException where
   displayException (EvdevCouldNotAcquire c n) = concat
     [ "Failed to acquire ioctl-grab on: '", c^.evdevPath
@@ -50,7 +48,7 @@ instance Exception EvdevException where
     [ "Failed to parse event from: '", c^.evdevPath
     , "' with error message: ", t ]
 
-
+-- | Hooking up lensy exception handling
 instance AsEvdevException SomeException where _EvdevException = exception
 
 
