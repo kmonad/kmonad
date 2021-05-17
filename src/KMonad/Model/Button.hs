@@ -362,6 +362,8 @@ tapMacro bs = onPress $ go bs
     go (b:rst) = tap b >> go rst
 
 
+-- | Create a 'Button' that performs a series of taps on press,
+-- except for the last Button, which is tapped on release.
 tapMacroRelease :: [Button] -> Button
 tapMacroRelease bs = onPress $ go bs
   where

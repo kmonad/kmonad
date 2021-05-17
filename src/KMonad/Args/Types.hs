@@ -92,8 +92,9 @@ data DefButton
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KTapMacro [DefButton] (Maybe Int)
-  | KTapMacroRelease [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
+  | KTapMacroRelease [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
