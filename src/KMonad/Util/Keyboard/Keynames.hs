@@ -1,5 +1,6 @@
 module KMonad.Util.Keyboard.Keynames
-  ( Keynames
+  ( -- * $collection
+    Keynames
   , knAll
   , knLetters
   , knNumbers
@@ -12,10 +13,13 @@ module KMonad.Util.Keyboard.Keynames
 where
 
 import KMonad.Prelude
+import KMonad.Util.Name
+import KMonad.Util.Keyboard.OS
 import KMonad.Util.Keyboard.Types
 
-import qualified RIO.Set  as S
-import qualified RIO.Text as T
+import qualified RIO.HashMap as M
+import qualified RIO.Set     as S
+import qualified RIO.Text    as T
 
 {-
 NOTE:
@@ -26,6 +30,9 @@ will happen 'at the edges' (i.e. at the parser and key-IO). The source-code
 should always reflect standard US-english.
 
 -}
+
+--------------------------------------------------------------------------------
+-- $collection
 
 type Keynames = S.Set Keyname
 
@@ -84,7 +91,8 @@ knKeypad = S.fromList $ map f
 -- rght -> right-arrow
 -- ins  -> insert
 -- del  -> delete
+-- paus -> pause
 knOther :: Keynames
 knOther = S.fromList [ "esc", "tab", "ret", "bspc", "caps", "nlck", "slck"
                      , "spc", "102d", "sys", "pgdn", "pgup", "home", "end"
-                     , "up", "down", "left", "rght", "ins", "del" ]
+                     , "up", "down", "left", "rght", "ins", "del", "paus" ]

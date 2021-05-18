@@ -138,3 +138,4 @@ keycodeNames = M.fromList $
     , "svid", "kbtg", "kbdn", "kbup", "ksnd", "repl", "fwml", "save", "docs"
     , "batt", "blue", "wlan", "uwb", "unkn", "vdnx", "vdpv", "brcc", "brau"
     , "doff", "wwan", "wmax", "rfkl", "mcmu" ]
+
