@@ -110,7 +110,6 @@ library
       KMonad.Util
       KMonad.Util.Ctx
       KMonad.Util.LayerStack
-      KMonad.Util.MultiMap
       KMonad.Util.Time
       KMonad.Util.Time.IO
       KMonad.Util.Time.Operations
