@@ -1,60 +1,16 @@
-{-|
-Module      : KMonad.Args
-Description : How to parse arguments and config files into an AppCfg
-Copyright   : (c) David Janssen, 2019
-License     : MIT
+module KMonad.App.Invocation.Operations
 
-Maintainer  : janssen.dhj@gmail.com
-Stability   : experimental
-Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
-
--}
-module KMonad.Args
-  ( getCmd, loadConfig, Cmd, HasCmd(..))
 where
 
 import KMonad.Prelude
-import KMonad.App.Types
-import KMonad.App.Logging
-import KMonad.Args.Cmd
-import KMonad.Args.Joiner
-import KMonad.Args.Parser
-import KMonad.Args.Types
-
---------------------------------------------------------------------------------
---
-
--- | Parse a configuration file into a 'AppCfg' record
-loadConfig :: Cmd -> OnlyLIO AppCfg
-loadConfig cmd = do
-
-  tks <- loadTokens (cmd^.cfgFile)      -- This can throw a PErrors
-  cgt <- joinConfigIO (joinCLI cmd tks) -- This can throw a JoinError
-
-  -- Try loading the sink and src
-  lf  <- view logFuncL
-  snk <- liftIO . _snk cgt $ lf
-  src <- liftIO . _src cgt $ lf
-
-  -- Emit the release of <Enter> if requested
-
-  -- Assemble the AppCfg record
-  pure $ AppCfg
-    { _keySinkDev   = snk
-    , _keySourceDev = src
-    , _keymapCfg    = _km      cgt
-    , _firstLayer   = _fstL    cgt
-    , _fallThrough  = _flt     cgt
-    , _allowCmd     = _allow   cgt
-    , _startDelay   = _strtDel cmd
-    }
-
+import KMonad.App.Invocation.Types
+import KMonad.App.Parser.Types
 
 -- | Join the options given from the command line with the one read from the
 -- configuration file.
 -- This does not yet throw any kind of exception, as we are simply inserting the
 -- given options into every 'KDefCfg' block that we see.
-joinCLI :: Cmd -> [KExpr] -> [KExpr]
+joinCLI :: Invoc -> [KExpr] -> [KExpr]
 joinCLI cmd = traverse._KDefCfg %~ insertCliOption cliList
  where
   -- | All options and flags that were given on the command line.

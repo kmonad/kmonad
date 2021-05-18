@@ -94,11 +94,11 @@ send_event (Fd h) e = liftIO $ void $ c_send_event h
 --------------------------------------------------------------------------------
 
 -- | Send a keycode to the OS
-sendEvent :: (Switch, Keycode) -> RIO UinputEnv ()
-sendEvent (s, c) = do
+sendEvent :: KeySwitch -> RIO UinputEnv ()
+sendEvent s = do
   h <- view kbf
-  e <- case s of Press   -> mkRaw LinuxPress   c
-                 Release -> mkRaw LinuxRelease c
+  e <- case s^.switch of Press   -> mkRaw LinuxPress   $ s^.code
+                         Release -> mkRaw LinuxRelease $ s^.code
   send_event h e
 
   -- Send the sync-event to signal to linux to update the driver state

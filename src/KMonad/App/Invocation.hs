@@ -5,8 +5,8 @@ command-line into a 'Invoc' record.
 
 -}
 module KMonad.App.Invocation
-  ( getInvoc, Invoc(..))
+  ( getInvoc, Invoc(..), HasInvoc(..))
 where
 
 import KMonad.App.Invocation.IO (getInvoc)
-import KMonad.App.Invocation.Types (Invoc(..))
+import KMonad.App.Invocation.Types (Invoc(..), HasInvoc(..))

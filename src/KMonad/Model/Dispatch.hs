@@ -58,21 +58,21 @@ import qualified RIO.Text as T
 
 -- | The 'Dispatch' environment
 data Dispatch = Dispatch
-  { _eventSrc :: OnlyIO KeyEvent            -- ^ How to read 1 event
-  , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
-  , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
+  { _eventSrc :: OnlyIO KeySwitch            -- ^ How to read 1 event
+  , _readProc :: TMVar (Async KeySwitch) -- ^ Store for reading process
+  , _rerunBuf :: TVar (Seq KeySwitch)    -- ^ Buffer for rerunning events
   }
 makeLenses ''Dispatch
 
 -- | Create a new 'Dispatch' environment
-mkDispatch' :: MonadUnliftIO m => m KeyEvent -> m Dispatch
+mkDispatch' :: MonadUnliftIO m => m KeySwitch-> m Dispatch
 mkDispatch' s = withRunInIO $ \u -> do
   rpc <- atomically $ newEmptyTMVar
   rrb <- atomically $ newTVar Seq.empty
   pure $ Dispatch (u s) rpc rrb
 
 -- | Create a new 'Dispatch' environment in a 'Ctx' environment
-mkDispatch :: MonadUnliftIO m => m KeyEvent -> Ctx r m Dispatch
+mkDispatch :: MonadUnliftIO m => m KeySwitch -> Ctx r m Dispatch
 mkDispatch = lift . mkDispatch'
 
 --------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull' :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
+pull' :: (HasLogFunc e) => Dispatch -> RIO e KeySwitch
 pull' d = do
   -- Check for an unfinished read attempt started previously. If it exists,
   -- fetch it, otherwise, start a new read attempt.
@@ -111,9 +111,9 @@ pull' d = do
         writeTVar (d^.rerunBuf) b
         pure e
 
-pull :: LIO m e => Dispatch -> m KeyEvent
+pull :: LIO m e => Dispatch -> m KeySwitch
 pull d = view logEnv >>= \env -> runRIO env (pull' d)
 
 -- | Add a list of elements to be rerun.
-rerun :: (HasLogFunc e) => Dispatch -> [KeyEvent] -> RIO e ()
+rerun :: (HasLogFunc e) => Dispatch -> [KeySwitch] -> RIO e ()
 rerun d es = atomically $ modifyTVar (d^.rerunBuf) (>< Seq.fromList es)

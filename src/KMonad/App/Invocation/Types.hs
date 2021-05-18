@@ -5,6 +5,7 @@ module KMonad.App.Invocation.Types
 where
 
 import KMonad.Prelude hiding (try)
+import KMonad.Util.Time
 import KMonad.App.Logging hiding (logLvl)
 
 import KMonad.App.Parser --(itokens, keywordButtons, noKeywordButtons, otokens, symbol)
@@ -25,6 +26,7 @@ data Invoc = Invoc
   { _cfgFile   :: FilePath -- ^ Which file to read the config from
   , _dryRun    :: Bool     -- ^ Flag to indicate we are only test-parsing
   , _logLvl    :: LogLevel -- ^ Level of logging to use
+  , _strtDel   :: Ms       -- ^ How long to wait before acquiring the input keyboard
 
     -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?

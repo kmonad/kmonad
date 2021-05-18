@@ -4,8 +4,10 @@ where
 
 import KMonad.Prelude hiding (try)
 
+import KMonad.Util.Time
+
 import KMonad.App.Logging
-import KMonad.App.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, DefSetting(..))
+import KMonad.App.Parser hiding (Parser)
 import qualified Text.Megaparsec as M
 import qualified KMonad.App.Parser as M (Parser)
 -- import qualified KMonad.App.Parser as M
@@ -29,6 +31,7 @@ invocP = Invoc
   <$> fileP
   <*> dryrunP
   <*> levelP
+  <*> startDelayP
   <*> cmdAllowP
   <*> fallThrghP
   <*> initStrP
@@ -115,6 +118,15 @@ iTokenP = optional $ SIToken <$> option (tokenParser itokens)
   <> help "Capture input via ITOKEN"
   )
 
+-- | Parse a flag that disables auto-releasing the release of enter
+startDelayP :: Parser Ms
+startDelayP = option (fromIntegral <$> megaReadM numP)
+  (  long  "start-delay"
+  <> short 'w'
+  <> value 300
+  <> showDefaultWith (\a -> show $ (fromIntegral a :: Int))
+  <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
+ 
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
 -- optparse-applicative parser
 tokenParser :: [(Text, M.Parser a)] -> ReadM a

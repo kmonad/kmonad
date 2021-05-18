@@ -22,6 +22,7 @@ module KMonad.App.Parser.Tokenizer
 
   -- * Building Parsers
   , symbol
+  , numP
 
   -- * Parsers for Tokens and Buttons
   , otokens

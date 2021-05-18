@@ -35,21 +35,21 @@ import KMonad.Util.Keyboard
 -- never be interrupted, therefore we can simply use 'IORef' and sidestep all
 -- the STM complications.
 data Sluice = Sluice
-  { _eventSrc :: OnlyIO KeyEvent  -- ^ Where we get our 'KeyEvent's from
+  { _eventSrc :: OnlyIO KeySwitch  -- ^ Where we get our 'KeySwitch's from
   , _blocked  :: IORef Int        -- ^ How many locks have been applied to the sluice
-  , _blockBuf :: IORef [KeyEvent] -- ^ Internal buffer to store events while closed
+  , _blockBuf :: IORef [KeySwitch] -- ^ Internal buffer to store events while closed
   }
 makeLenses ''Sluice
 
 -- | Create a new 'Sluice' environment
-mkSluice' :: MonadUnliftIO m => m KeyEvent -> m Sluice
+mkSluice' :: MonadUnliftIO m => m KeySwitch -> m Sluice
 mkSluice' s = withRunInIO $ \u -> do
   bld <- newIORef 0
   buf <- newIORef []
   pure $ Sluice (u s) bld buf
 
 -- | Create a new 'Sluice' environment, but do so in a Ctx context
-mkSluice :: MonadUnliftIO m => m KeyEvent -> Ctx r m Sluice
+mkSluice :: MonadUnliftIO m => m KeySwitch -> Ctx r m Sluice
 mkSluice = lift . mkSluice'
 
 
@@ -76,7 +76,7 @@ block s = do
 -- We do this in KMonad by writing the events into the
 -- 'KMonad.Model.Dispatch.Dispatch's rerun buffer. (this happens in the
 -- "KMonad.App" module.)
-unblock :: HasLogFunc e => Sluice -> RIO e [KeyEvent]
+unblock :: HasLogFunc e => Sluice -> RIO e [KeySwitch]
 unblock s = do
   modifyIORef' (s^.blocked) (\n -> n - 1)
   readIORef (s^.blocked) >>= \case
@@ -102,8 +102,8 @@ unblock s = do
 
 
 -- | Try to read from the Sluice, if we are blocked, store the event internally
--- and return Nothing. If we are unblocked, return Just the KeyEvent.
-step :: HasLogFunc e => Sluice -> RIO e (Maybe KeyEvent)
+-- and return Nothing. If we are unblocked, return Just the KeySwitch.
+step :: HasLogFunc e => Sluice -> RIO e (Maybe KeySwitch)
 step s = do
   e <- liftIO $ s^.eventSrc
   readIORef (s^.blocked) >>= \case
@@ -116,5 +116,5 @@ step s = do
       pure Nothing
 
 -- | Keep trying to read from the Sluice until an event passes through
-pull :: HasLogFunc e => Sluice -> RIO e KeyEvent
+pull :: HasLogFunc e => Sluice -> RIO e KeySwitch
 pull s = step s >>= maybe (pull s) pure

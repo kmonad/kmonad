@@ -79,7 +79,7 @@ data AppEnv = AppEnv
     -- Other components
   , _keymap     :: Km.Keymap
   , _outHooks   :: Hs.Hooks
-  , _outVar     :: TMVar KeyEvent
+  , _outVar     :: TMVar KeySwitch
   }
 makeClassy ''AppEnv
 
@@ -111,8 +111,8 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
   emit e = do
     ov <- view outVar
-    ke <- keyEventNow e
-    atomically $ putTMVar ov ke
+    -- ke <- keyEventNow e
+    atomically $ putTMVar ov e
 
   -- Pausing is a simple IO action
   pause = threadDelay . (*1000) . fromIntegral
@@ -136,9 +136,9 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Injecting by adding to Dispatch's rerun buffer
   inject e = do
     di <- view dispatch
-    ke <- keyEventNow e
-    logDebug $ "Injecting event: " <> display ke
-    Dp.rerun di [ke]
+    -- ke <- keyEventNow e
+    logDebug $ "Injecting event: " <> display e
+    Dp.rerun di [e]
 
   -- Shell-command through spawnCommand
   shellCmd t = do

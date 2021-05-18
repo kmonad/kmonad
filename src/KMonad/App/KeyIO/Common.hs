@@ -16,10 +16,10 @@ import KMonad.Util.Name
 -- Generally useful types used across all OSes
 
 -- | Alias for an action that fetches a (Switch, Keycode) tuple from the OS.
-type GetKey = OnlyIO (Switch, Keycode)
+type GetKey = OnlyIO KeySwitch
 
 -- | Alias for an action that sends (Switch, Keycode) tuples to the OS.
-type PutKey = (Switch, Keycode) -> OnlyIO ()
+type PutKey = KeySwitch -> OnlyIO ()
 
 --------------------------------------------------------------------------------
 -- $cfgs-linux

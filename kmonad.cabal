@@ -74,6 +74,23 @@ library
       KMonad.App.Logging.Types
       KMonad.App.Types
       KMonad.Model
+      KMonad.App.Invocation
+      KMonad.App.Invocation.IO
+      KMonad.App.Invocation.Operations
+      KMonad.App.Invocation.Parser
+      KMonad.App.Invocation.Types
+      KMonad.App.KeyIO
+      KMonad.App.KeyIO.Common
+      KMonad.App.KeyIO.Linux.Evdev
+      KMonad.App.KeyIO.Linux.IO
+      KMonad.App.KeyIO.Linux.Uinput
+      KMonad.App.KeyIO.OS
+      KMonad.App.Parser
+      KMonad.App.Parser.IO
+      KMonad.App.Parser.Operations
+      KMonad.App.Parser.TokenJoiner
+      KMonad.App.Parser.Tokenizer
+      KMonad.App.Parser.Types
       KMonad.Model.Action
       KMonad.Model.BEnv
       KMonad.Model.Button
@@ -81,17 +98,7 @@ library
       KMonad.Model.Hooks
       KMonad.Model.Keymap
       KMonad.Model.Sluice
-      KMonad.Args
-      KMonad.Args.Cmd
-      KMonad.Args.Parser
-      KMonad.Args.Joiner
-      KMonad.Args.Types
-      -- KMonad.Keyboard
-      -- KMonad.Keyboard.ComposeSeq
-      -- KMonad.Keyboard.IO
-      -- KMonad.Keyboard.Keycode
-      -- KMonad.Keyboard.Ops
-      -- KMonad.Keyboard.Types
+      KMonad.Model.Types
       KMonad.Prelude
       KMonad.Prelude.Imports
       KMonad.Prelude.Types
@@ -104,12 +111,22 @@ library
       KMonad.Util.Time.IO
       KMonad.Util.Time.Operations
       KMonad.Util.Time.Types
-
+      KMonad.Util.FFI
+      KMonad.Util.Keyboard
+      KMonad.Util.Keyboard.Compose
+      KMonad.Util.Keyboard.IO
+      KMonad.Util.Keyboard.OS
+      KMonad.Util.Keyboard.Ops
+      KMonad.Util.Keyboard.Types
+      KMonad.Util.Name
+      KMonad.Util.OS
   if os(linux)
     exposed-modules:
-      KMonad.Keyboard.IO.Linux.DeviceSource
-      KMonad.Keyboard.IO.Linux.Types
-      KMonad.Keyboard.IO.Linux.UinputSink
+      KMonad.App.KeyIO.Linux
+      KMonad.Util.Keyboard.Linux
+      -- KMonad.Keyboard.IO.Linux.DeviceSource
+      -- KMonad.Keyboard.IO.Linux.Types
+      -- KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
     build-depends:
