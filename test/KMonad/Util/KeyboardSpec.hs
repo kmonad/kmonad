@@ -3,7 +3,6 @@ module KMonad.Util.KeyboardSpec ( spec ) where
 
 import KMonad.Prelude
 import KMonad.Util.Keyboard
--- import KMonad.Util.Name
 
 import Test.Hspec
 import qualified RIO.HashMap as M
