@@ -27,26 +27,8 @@ flag dext
     description: build against the dext [macOS only]
     default: False
 
-library
-  default-language:
-      Haskell2010
-  hs-source-dirs:
-      src
-  ghc-options:
-    -Wall
-    -Wno-name-shadowing
-    -Wno-unused-imports
-  build-depends:
-      base
-    , cereal
-    , lens
-    , megaparsec
-    , mtl
-    , optparse-applicative
-    , resourcet
-    , rio
-    , time
-    , unliftio
+-- Properties shared between library and test-suite
+common shared-props
   default-extensions:
       ConstraintKinds
       DeriveFunctor
@@ -65,7 +47,29 @@ library
       TemplateHaskell
       TupleSections
       TypeFamilies
+  build-depends:
+      base
+    , cereal
+    , hspec
+    , lens
+    , megaparsec
+    , mtl
+    , optparse-applicative
+    , resourcet
+    , rio
+    , time
+    , unliftio
+  default-language: Haskell2010
 
+
+library
+  import: shared-props
+  hs-source-dirs:
+      src
+  ghc-options:
+    -Wall
+    -Wno-name-shadowing
+    -Wno-unused-imports
   exposed-modules:
       KMonad.App
       KMonad.App.Main
@@ -117,21 +121,22 @@ library
       KMonad.Util.Keyboard.IO
       KMonad.Util.Keyboard.OS
       KMonad.Util.Keyboard.Ops
+      KMonad.Util.Keyboard.Keynames
       KMonad.Util.Keyboard.Types
       KMonad.Util.Name
       KMonad.Util.OS
+
+  -- Linux block
   if os(linux)
     exposed-modules:
       KMonad.App.KeyIO.Linux
       KMonad.Util.Keyboard.Linux
-      -- KMonad.Keyboard.IO.Linux.DeviceSource
-      -- KMonad.Keyboard.IO.Linux.Types
-      -- KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
     build-depends:
       unix
 
+  -- Windows block
   if os(windows)
     exposed-modules:
       KMonad.Keyboard.IO.Windows.LowLevelHookSource
@@ -142,6 +147,7 @@ library
     build-depends:
       Win32
 
+  -- Mac block
   if os(darwin)
     exposed-modules:
       KMonad.Keyboard.IO.Mac.IOKitSource
@@ -179,3 +185,20 @@ executable kmonad
   build-depends:
       base
     , kmonad
+
+test-suite spec
+  import:  shared-props
+  type:    exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options:
+      -Wall
+  build-depends:
+      base
+    , kmonad
+  other-modules:
+      KMonad.Util.KeyboardSpec
+  default-language:
+      Haskell2010
+  build-tool-depends: hspec-discover:hspec-discover == 2.*

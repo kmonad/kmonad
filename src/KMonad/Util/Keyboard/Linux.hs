@@ -112,11 +112,11 @@ keycodeNames = M.fromList $
     , "]", "ret", "lctl", "a", "s", "d", "f" , "g", "h", "j" , "k", "l", ";"
     , "'", "`", "lsft", "\\", "z" , "x", "c", "v", "b" , "n", "m", ",", ".", "/"
     , "rsft", "kp*" , "lalt", "spc", "caps" , "f1", "f2", "f3", "f4", "f5", "f6"
-    , "f7", "f8", "f9", "f10" , "num", "scrl", "kp7", "kp8", "kp9" , "kp-"
+    , "f7", "f8", "f9", "f10" , "nlck", "slck", "kp7", "kp8", "kp9" , "kp-"
     , "kp4", "kp5", "kp6" , "kp+", "kp1", "kp2", "kp3", "kp0" , "kp."] <>
   z [85..120]
     [ "zenk", "102d", "f11", "f12", "ro", "kata", "hira", "henk", "kahi"
-    , "muhe", "kpj,", "kprt", "rctl", "kp/", "ssrq", "ralt", "feed", "home"
+    , "muhe", "kpj,", "kprt", "rctl", "kp/", "sys", "ralt", "feed", "home"
     , "up", "pgup", "left", "rght", "end", "down", "pgdn", "ins", "del", "macr"
     , "mute", "vold", "volu", "pwr", "kp=", "kp+-", "paus", "scl"
     ] <>
