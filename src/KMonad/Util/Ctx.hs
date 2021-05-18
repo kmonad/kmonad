@@ -3,7 +3,7 @@ module KMonad.Util.Ctx
   , mkCtx
   , runCtx
   , nest
-  --  , launch
+  , launch_
   )
 where
 
@@ -62,5 +62,12 @@ nest = traverse id
 
 -- | Modify some action so that some command is running in the background,
 -- forever, untill that action terminates.
-launch :: UIO m => m a -> Ctx r m ()
-launch go = mkCtx $ \f -> withAsync (forever go) (const $ f ())
+launch_ :: UIO m => m a -> Ctx r m ()
+launch_ go = mkCtx $ \f -> withAsync (forever go) (const $ f ())
+
+-- -- | Like `launch`
+-- launch_ :: HasLogFunc e
+--   => Text    -- ^ The name of this process (for logging)
+--   -> RIO e a -- ^ The action to repeat forever
+--   -> ContT r (RIO e) ()
+-- launch_ n a = ContT $ \next -> withLaunch_ n a (next ())

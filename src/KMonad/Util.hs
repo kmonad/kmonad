@@ -25,10 +25,10 @@ module KMonad.Util
   , logRethrow
 
     -- * Some helpers to launch background process
-  , withLaunch
-  , withLaunch_
-  , launch
-  , launch_
+  -- , withLaunch
+  -- , withLaunch_
+  -- , launch
+  -- , launch_
 
   , module X
   )
@@ -68,8 +68,8 @@ onErr :: (MonadUnliftIO m, Exception e) => m Int -> e -> m ()
 onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 
 -- | Embed the action of using an 'Acquire' in a continuation monad
-using :: Acquire a -> ContT r (RIO e) a
-using dat = ContT $ (\next -> with dat $ \a -> next a)
+using :: UIO m => Acquire a -> Ctx r m a
+using dat = mkCtx $ (\next -> with dat $ \a -> next a)
 
 
 -- | Log an error message and then rethrow the error

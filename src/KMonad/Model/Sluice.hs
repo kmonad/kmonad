@@ -22,6 +22,7 @@ module KMonad.Model.Sluice
 where
 
 import KMonad.Prelude
+import KMonad.Util
 
 import KMonad.Keyboard
 
@@ -47,8 +48,8 @@ mkSluice' s = withRunInIO $ \u -> do
   buf <- newIORef []
   pure $ Sluice (u s) bld buf
 
--- | Create a new 'Sluice' environment, but do so in a ContT context
-mkSluice :: MonadUnliftIO m => m KeyEvent -> ContT r m Sluice
+-- | Create a new 'Sluice' environment, but do so in a Ctx context
+mkSluice :: MonadUnliftIO m => m KeyEvent -> Ctx r m Sluice
 mkSluice = lift . mkSluice'
 
 

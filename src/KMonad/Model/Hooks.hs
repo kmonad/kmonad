@@ -24,6 +24,7 @@ module KMonad.Model.Hooks
 where
 
 import KMonad.Prelude
+import KMonad.App.Logging
 
 import Data.Time.Clock.System
 import Data.Unique
@@ -80,7 +81,7 @@ mkHooks' s = withRunInIO $ \u -> do
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
+mkHooks :: MonadUnliftIO m => m KeyEvent -> Ctx r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
@@ -194,7 +195,17 @@ step h = do
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
-pull :: HasLogFunc e
+pull' :: HasLogFunc e
   => Hooks
   -> RIO e KeyEvent
-pull h = step h >>= maybe (pull h) pure
+pull' h = step h >>= maybe (pull' h) pure
+
+-- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
+--
+-- NOTE: This is just a temp fix to get things to compile while we're
+-- reorganizing the code. This should all be replaced by a new model at some
+-- point.
+pull :: LIO m e
+  => Hooks
+  -> m KeyEvent
+pull h = view logEnv >>= \env -> runRIO env (pull' h)
