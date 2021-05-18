@@ -32,7 +32,9 @@ say_ l a = view logEnv >>= \env -> runRIO env $ f (display a)
   where f = case l of
           LevelDebug -> logDebug
           LevelInfo  -> logInfo
+          LevelWarn  -> logWarn
           LevelError -> logError
+          _          -> logInfo
 
 -- | Like 'say_' but already set to debug
 say :: (LIO m env) => Text -> m ()

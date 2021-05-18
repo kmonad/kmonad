@@ -62,10 +62,22 @@ instance Default UinputCfg where
 
 -- TODO: This is where the Mac config records go
 
+-- | Placeholder
+data KIOKitCfg = KIOKitCfg deriving Show
+
+-- | Placeholder
+data KextCfg = KextCfg deriving Show
+
 --------------------------------------------------------------------------------
 -- $cfgs-win
 
 -- TODO: This is where the Win config records go
+
+-- | Placeholder
+data LLHookCfg = LLHookCfg deriving Show
+
+-- | Placeholder
+data SendEventCfg = SendEventCfg deriving Show
 
 --------------------------------------------------------------------------------
 -- $cfgs-sum
@@ -73,12 +85,16 @@ instance Default UinputCfg where
 -- TODO: Here is where the sum-type of input and output configs go
 
 data KeyInputCfg
-  = LinuxEvdevCfg EvdevCfg
+  = LinuxEvdevCfg    EvdevCfg
+  | MacKIOKitCfg     KIOKitCfg
+  | WindowsLLHookCfg LLHookCfg
   deriving Show
 
 
 data KeyOutputCfg
-  = LinuxUinputCfg UinputCfg
+  = LinuxUinputCfg      UinputCfg
+  | MacKextCfg          KextCfg
+  | WindowsSendEventCfg SendEventCfg
   deriving Show
 
 

@@ -200,10 +200,6 @@ getOverride = do
         _ -> pure e
   foldM go env cfg
 
--- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
-runLF :: (forall e. HasLogFunc e => RIO e a) -> LogFunc -> OnlyIO a
-runLF = flip runRIO
-
 
 -- | Extract the KeySource-loader from the 'KExpr's
 getI :: J KeyInputCfg
@@ -243,13 +239,16 @@ getAllow = do
 
 
 pickInput :: IToken -> J KeyInputCfg
-pickInput (KDeviceSource f) = pure . LinuxEvdevCfg . EvdevCfg $ f
-pickInput _ = undefined
+pickInput (KDeviceSource f)     = pure . LinuxEvdevCfg    . EvdevCfg $ f
+pickInput (KIOKitSource _)      = pure . MacKIOKitCfg     $ KIOKitCfg
+pickInput (KLowLevelHookSource) = pure . WindowsLLHookCfg $ LLHookCfg
 
 pickOutput :: OToken -> J KeyOutputCfg
 pickOutput (KUinputSink t init) = pure . LinuxUinputCfg
   $ def { _keyboardName = t
         , _postInit     = unpack <$> init }
+pickOutput KKextSink      = pure . MacKextCfg          $ KextCfg
+pickOutput KSendEventSink = pure . WindowsSendEventCfg $ SendEventCfg
 
 -- #ifdef linux_HOST_OS
 -- -- | The Linux correspondence between IToken and actual code

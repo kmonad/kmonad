@@ -19,6 +19,7 @@ module KMonad.Model.Button
     Button
   , HasButton(..)
   , onPress
+  , onRelease
   , mkButton
   , around
   , tapOn

@@ -88,37 +88,37 @@ logRethrow t e = do
 -- | Launch a process that repeats an action indefinitely. If an error ever
 -- occurs, print it and rethrow it. Ensure the process is cleaned up upon error
 -- and/or shutdown.
-withLaunch :: HasLogFunc e
-  => Text                   -- ^ The name of this process (for logging)
-  -> RIO e a                -- ^ The action to repeat forever
-  -> ((Async a) -> RIO e b) -- ^ The foreground action to run
-  -> RIO e b                -- ^ The resulting action
-withLaunch n a f = do
-  logInfo $ "Launching process: " <> display n
-  withAsync
-   (forever a
-    `catch`   logRethrow ("Encountered error in <" <> textDisplay n <> ">")
-    `finally` logInfo    ("Closing process: " <> display n))
-   (\a' -> link a' >> f a')
+-- withLaunch :: HasLogFunc e
+--   => Text                   -- ^ The name of this process (for logging)
+--   -> RIO e a                -- ^ The action to repeat forever
+--   -> ((Async a) -> RIO e b) -- ^ The foreground action to run
+--   -> RIO e b                -- ^ The resulting action
+-- withLaunch n a f = do
+--   logInfo $ "Launching process: " <> display n
+--   withAsync
+--    (forever a
+--     `catch`   logRethrow ("Encountered error in <" <> textDisplay n <> ">")
+--     `finally` logInfo    ("Closing process: " <> display n))
+--    (\a' -> link a' >> f a')
 
--- | Like withLaunch, but without ever needing access to the async process
-withLaunch_ :: HasLogFunc e
-  => Text    -- ^ The name of this process (for logging)
-  -> RIO e a -- ^ The action to repeat forever
-  -> RIO e b -- ^ The foreground action to run
-  -> RIO e b -- ^ The resulting action
-withLaunch_ n a f = withLaunch n a (const f)
+-- -- | Like withLaunch, but without ever needing access to the async process
+-- withLaunch_ :: HasLogFunc e
+--   => Text    -- ^ The name of this process (for logging)
+--   -> RIO e a -- ^ The action to repeat forever
+--   -> RIO e b -- ^ The foreground action to run
+--   -> RIO e b -- ^ The resulting action
+-- withLaunch_ n a f = withLaunch n a (const f)
 
--- | Like 'withLaunch', but in the ContT monad
-launch :: HasLogFunc e
-  => Text    -- ^ The name of this process (for logging)
-  -> RIO e a -- ^ The action to repeat forever
-  -> Ctx r (RIO e) (Async a)
-launch n = mkCtx . withLaunch n
+-- -- | Like 'withLaunch', but in the ContT monad
+-- launch :: HasLogFunc e
+--   => Text    -- ^ The name of this process (for logging)
+--   -> RIO e a -- ^ The action to repeat forever
+--   -> Ctx r (RIO e) (Async a)
+-- launch n = mkCtx . withLaunch n
 
--- | Like 'withLaunch_', but in the Ctx monad
-launch_ :: HasLogFunc e
-  => Text    -- ^ The name of this process (for logging)
-  -> RIO e a -- ^ The action to repeat forever
-  -> ContT r (RIO e) ()
-launch_ n a = ContT $ \next -> withLaunch_ n a (next ())
+-- -- | Like 'withLaunch_', but in the Ctx monad
+-- launch_ :: HasLogFunc e
+--   => Text    -- ^ The name of this process (for logging)
+--   -> RIO e a -- ^ The action to repeat forever
+--   -> ContT r (RIO e) ()
+-- launch_ n a = ContT $ \next -> withLaunch_ n a (next ())

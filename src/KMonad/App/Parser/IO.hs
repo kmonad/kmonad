@@ -33,11 +33,6 @@ loadConfig pth cmd = do
   tks <- loadTokens pth                 -- This can throw a PErrors
   cgt <- joinConfigIO (joinCLI cmd tks) -- This can throw a JoinError
 
-  -- Try loading the sink and src
-  lf  <- view logFuncL
-  -- snk <- liftIO . _snk cgt $ lf
-  -- src <- liftIO . _src cgt $ lf
-
   -- Assemble the AppCfg record
   pure $ AppCfg
     { _keyInputCfg  = _src   cgt
