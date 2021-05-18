@@ -47,6 +47,7 @@ module KMonad.Model.Button
   , tapNextRelease
   , tapHoldNextRelease
   , tapMacro
+  , tapMacroRelease
   , stickyKey
   )
 where
@@ -86,6 +87,8 @@ mkButton a b = Button (Action a) (Action b)
 onPress :: AnyK () -> Button
 onPress p = mkButton p $ pure ()
 
+onRelease :: AnyK () -> Button
+onRelease p = mkButton (pure ()) p
 
 --------------------------------------------------------------------------------
 -- $running
@@ -358,6 +361,14 @@ tapMacro bs = onPress $ go bs
     go (b:[])  = press b
     go (b:rst) = tap b >> go rst
 
+-- | Create a 'Button' that performs a series of taps on press,
+-- except for the last Button, which is tapped on release.
+tapMacroRelease :: [Button] -> Button
+tapMacroRelease bs = onPress $ go bs
+  where
+    go []      = pure ()
+    go (b:[])  = awaitMy Release $ tap b >> pure Catch
+    go (b:rst) = tap b >> go rst
 
 -- | Switch to a layer for a period of time, then automatically switch back
 layerDelay :: Milliseconds -> LayerTag -> Button

@@ -282,6 +282,8 @@ keywordButtons =
   , ("around-next"    , KAroundNext  <$> buttonP)
   , ("tap-macro"
     , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+  , ("tap-macro-release"
+    , KTapMacroRelease <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)

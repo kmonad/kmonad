@@ -364,6 +364,8 @@ joinButton ns als =
                              c   <- view cmpKey
                              jst $ tapMacro . (c:) <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
+    KTapMacroRelease bs mbD ->
+      jst $ tapMacroRelease           <$> isps bs mbD
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h

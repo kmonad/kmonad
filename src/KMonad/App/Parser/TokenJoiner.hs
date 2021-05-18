@@ -352,6 +352,8 @@ joinButton ns als =
     -- Various compound buttons
     KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
     KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
+    KTapMacroRelease bs ->
+      jst $ tapMacroRelease            <$> mapM go bs
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
