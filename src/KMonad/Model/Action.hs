@@ -60,8 +60,11 @@ where
 
 import KMonad.Prelude hiding (timeout)
 
-import KMonad.Keyboard
+-- import KMonad.Keyboard
 import KMonad.Util
+import KMonad.Util.Keyboard
+
+import KMonad.Model.Types
 
 --------------------------------------------------------------------------------
 -- $keyfun
@@ -80,7 +83,7 @@ instance Monoid Catch where
 -- how long since the Hook was registered.
 data Trigger = Trigger
   { _elapsed :: Ms -- ^ Time elapsed since hook was registered
-  , _event   :: KeyEvent     -- ^ The key event triggering this call
+  , _event   :: KeySwitch     -- ^ The key event triggering this call
   }
 makeClassy ''Trigger
 
@@ -89,12 +92,12 @@ makeClassy ''Trigger
 -- $hook
 --
 -- The general structure of the 'Hook' record, that defines the most general way
--- of registering a 'KeyEvent' function.
+-- of registering a 'KeySwitch' function.
 
 -- | ADT signalling where to install a hook
 data HookLocation
-  = InputHook  -- ^ Install the hook immediately after receiving a 'KeyEvent'
-  | OutputHook -- ^ Install the hook just before emitting a 'KeyEvent'
+  = InputHook  -- ^ Install the hook immediately after receiving a 'KeySwitch'
+  | OutputHook -- ^ Install the hook just before emitting a 'KeySwitch'
   deriving (Eq, Show)
 
 -- | A 'Timeout' value describes how long to wait and what to do upon timeout
@@ -107,7 +110,7 @@ makeClassy ''Timeout
 -- | The content for 1 key hook
 data Hook m = Hook
   { _hTimeout :: Maybe (Timeout m)  -- ^ Optional timeout machinery
-  , _keyH     :: Trigger -> m Catch -- ^ The function to call on the next 'KeyEvent'
+  , _keyH     :: Trigger -> m Catch -- ^ The function to call on the next 'KeySwitch'
   }
 makeClassy ''Hook
 
@@ -116,6 +119,7 @@ makeClassy ''Hook
 -- $lop
 --
 -- Operations that manipulate the layer-stack
+
 
 -- | 'LayerOp' describes all the different layer-manipulations that KMonad
 -- supports.
@@ -133,8 +137,8 @@ data LayerOp
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.
 class Monad m => MonadKIO m where
-  -- | Emit a KeyEvent to the OS
-  emit       :: KeyEvent -> m ()
+  -- | Emit a KeySwitch to the OS
+  emit       :: KeySwitch -> m ()
   -- | Pause the current thread for n milliseconds
   pause      :: Ms -> m ()
   -- | Pause or unpause event processing
@@ -144,7 +148,7 @@ class Monad m => MonadKIO m where
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Insert an event in the input queue
-  inject     :: KeyEvent -> m ()
+  inject     :: KeySwitch -> m ()
   -- | Run a shell-command
   shellCmd   :: Text -> m ()
 
@@ -163,12 +167,12 @@ newtype Action = Action { runAction :: AnyK ()}
 --------------------------------------------------------------------------------
 -- $util
 
--- | Create a KeyEvent matching pressing or releasing of the current button.
-my :: MonadK m => Switch -> m KeyEvent
-my s = mkKeyEvent s <$> myBinding
+-- | Create a KeySwitch matching pressing or releasing of the current button.
+my :: MonadK m => Switch -> m KeySwitch
+my s = mkKeySwitch s <$> myBinding
 
 -- | Register a simple hook without a timeout
-hookF :: MonadKIO m => HookLocation -> (KeyEvent -> m Catch) -> m ()
+hookF :: MonadKIO m => HookLocation -> (KeySwitch -> m Catch) -> m ()
 hookF l f = register l . Hook Nothing $ \t -> f (t^.event)
 
 -- | Register a hook with a timeout
@@ -206,7 +210,7 @@ matchMy :: MonadK m => Switch -> m KeyPred
 matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
-await :: MonadKIO m => KeyPred -> (KeyEvent -> m Catch) -> m ()
+await :: MonadKIO m => KeyPred -> (KeySwitch -> m Catch) -> m ()
 await p a = hookF InputHook $ \e -> if p e
   then a e
   else await p a *> pure NoCatch

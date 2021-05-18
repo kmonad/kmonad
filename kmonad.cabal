@@ -86,12 +86,12 @@ library
       KMonad.Args.Parser
       KMonad.Args.Joiner
       KMonad.Args.Types
-      KMonad.Keyboard
-      KMonad.Keyboard.ComposeSeq
-      KMonad.Keyboard.IO
-      KMonad.Keyboard.Keycode
-      KMonad.Keyboard.Ops
-      KMonad.Keyboard.Types
+      -- KMonad.Keyboard
+      -- KMonad.Keyboard.ComposeSeq
+      -- KMonad.Keyboard.IO
+      -- KMonad.Keyboard.Keycode
+      -- KMonad.Keyboard.Ops
+      -- KMonad.Keyboard.Types
       KMonad.Prelude
       KMonad.Prelude.Imports
       KMonad.Prelude.Types

@@ -26,7 +26,7 @@ import KMonad.Prelude
 
 import KMonad.Model.Action
 import KMonad.Model.Button
-import KMonad.Keyboard
+import KMonad.Util.Keyboard
 
 --------------------------------------------------------------------------------
 -- $benv

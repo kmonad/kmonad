@@ -39,10 +39,12 @@ module KMonad.App.Parser.Types
 
 
 import KMonad.Prelude
-
+import KMonad.App.KeyIO
 import KMonad.Model.Button
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
+import KMonad.Model.Types
+import KMonad.Util.Keyboard
+-- import KMonad.Keyboard
+-- import KMonad.Keyboard.IO
 import KMonad.Util
 
 import Text.Megaparsec
@@ -106,15 +108,14 @@ data DefButton
 -- | The 'CfgToken' contains all the data needed to construct an
 -- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src   :: LogFunc -> OnlyIO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> OnlyIO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag                          -- ^ Name of initial layer
-  , _flt   :: Bool                              -- ^ How to deal with unhandled events
-  , _allow :: Bool                              -- ^ Whether to allow shell commands
+  { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
+  , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
+  , _km    :: LMap Button  -- ^ An 'LMap' of 'Button' actions
+  , _fstL  :: LayerTag     -- ^ Name of initial layer
+  , _flt   :: Bool         -- ^ How to deal with unhandled events
+  , _allow :: Bool         -- ^ Whether to allow shell commands
   }
 makeClassy ''CfgToken
-
 
 --------------------------------------------------------------------------------
 -- $tls

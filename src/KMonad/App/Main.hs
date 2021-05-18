@@ -18,13 +18,16 @@ where
 
 import KMonad.Prelude
 
--- import KMonad.App.Invocation
-import KMonad.Args
+import KMonad.App.Invocation
 import KMonad.App.Types
 import KMonad.App.Logging
-import KMonad.Keyboard
+import KMonad.App.Parser
 import KMonad.Util
+import KMonad.Util.Keyboard
 import KMonad.Model
+
+-- import KMonad.Args
+-- import KMonad.Keyboard
 
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
@@ -49,18 +52,19 @@ import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
 --
 -- Get the invocation from the command-line, then do something with it.
 main :: OnlyIO ()
-main = getCmd >>= runCmd
+main = getInvoc >>= run
 
 -- | Execute the provided 'Cmd'
 --
 -- 1. Construct the log-func
 -- 2. Parse the config-file
 -- 3. Maybe start KMonad
-runCmd :: Cmd -> OnlyIO ()
-runCmd c = do
-  let logcfg = LogCfg (c ^. logLev ) stdout Nothing
+run :: Invoc -> OnlyIO ()
+run c = do
+  let logcfg = LogCfg (c^.logLvl) stdout Nothing
   runLog logcfg $ do
-    cfg <- loadConfig c
+    cfg <- loadConfig c                   -- Load cfg-file as tokens
+    cgt <- joinConfigIO (joinCLI cmd tks) -- Join tokens and invocation into config
     unless (c^.dryRun) $ startApp cfg
 
 
@@ -169,7 +173,7 @@ pressKey c =
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
 loop = forever $ view sluice >>= Sl.pull >>= \case
-  e | e^.switch == Press -> pressKey $ e^.keycode
+  e | e^.switch == Press -> pressKey $ e^.code
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration

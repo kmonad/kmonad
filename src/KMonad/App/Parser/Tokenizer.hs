@@ -33,9 +33,9 @@ where
 
 import KMonad.Prelude hiding (try, bool)
 
+import KMonad.App.Parser.Operations
 import KMonad.App.Parser.Types
-import KMonad.Keyboard
-import KMonad.Keyboard.ComposeSeq
+import KMonad.Util.Keyboard
 
 import Data.Char
 import RIO.List (sortBy, find)
@@ -137,7 +137,10 @@ bool = symbol "true" *> pure True
 
 -- | Parse a keycode
 keycodeP :: Parser Keycode
-keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
+keycodeP = byName keycodeNames <?> "keycode"
+-- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
+-- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
+
 
 -- | Parse an integer
 numP :: Parser Int
@@ -181,41 +184,41 @@ exprP = paren . choice $
 --
 -- All the various ways to refer to buttons
 
+-- | Turn 2 strings into a list of singleton-Text tuples by zipping the lists.
+--
+-- z "abc" "123" -> [("a", "1"), ("b", 2) ...]
+z :: String -> String -> [(Text, Text)]
+z a b = uncurry zip $ over (both.traversed) T.singleton (a, b)
+
 -- | Different ways to refer to shifted versions of keycodes
 shiftedNames :: [(Text, DefButton)]
-shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) in
-                 map f $ cps <> num <> oth
-  where
-    cps = zip (map T.singleton ['A'..'Z'])
-          [ KeyA, KeyB, KeyC, KeyD, KeyE, KeyF, KeyG, KeyH, KeyI, KeyJ, KeyK, KeyL, KeyM,
-            KeyN, KeyO, KeyP, KeyQ, KeyR, KeyS, KeyT, KeyU, KeyV, KeyW, KeyX, KeyY, KeyZ ]
-    num = zip (map T.singleton "!@#$%^&*")
-          [ Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8 ]
-    oth = zip (map T.singleton "<>:~\"|{}+?")
-          [ KeyComma, KeyDot, KeySemicolon, KeyGrave, KeyApostrophe, KeyBackslash
-          , KeyLeftBrace, KeyRightBrace, KeyEqual, KeySlash]
+shiftedNames = map (second shiftedOf) $ cps <> num <> oth where
+  cps = z ['A'..'Z'] ['a'..'z']
+  num = z "!@#$%^&*" "12345678"
+  oth = z "<>:~\"|{}+?" -- NOTE: \" is an escaped " and lines up with '
+          ",.;`'\\[]=/" -- NOTE: \\ is an escaped \ and lines up with |
 
 -- | Names for various buttons
 buttonNames :: [(Text, DefButton)]
 buttonNames = shiftedNames <> escp <> util
   where
-    emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
+    emitS s = KAround (KEmit $ kc "lsft") (KEmit $ kc s)
     -- Escaped versions for reserved characters
-    escp = [ ("\\(", emitS Key9), ("\\)", emitS Key0)
-           , ("\\_", emitS KeyMinus), ("\\\\", KEmit KeyBackslash)]
+    escp = [ ("\\(", emitS "9"), ("\\)", emitS "0")
+           , ("\\_", emitS "-"), ("\\\\", KEmit $ kc "\\")]
     -- Extra names for useful buttons
     util = [ ("_", KTrans), ("XX", KBlock)
-           , ("lprn", emitS Key9), ("rprn", emitS Key0)]
+           , ("lprn", emitS "9"), ("rprn", emitS "0")]
 
 
 
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
 moddedP = KAround <$> prfx <*> buttonP
-  where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
-               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)
-               , ("RS-", KeyRightShift), ("RC-", KeyRightCtrl)
-               , ("RA-", KeyRightAlt),   ("RM-", KeyRightMeta)]
+  where mods = [ ("S-",  kc "lsft"), ("C-",  kc "lctl")
+               , ("A-",  kc "lalt"), ("M-",  kc "lmet")
+               , ("RS-", kc "rsft"), ("RC-", kc "rctl")
+               , ("RA-", kc "ralt"), ("RM-", kc "rmet")]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
 -- | Parse Pxxx as pauses (useful in macros)

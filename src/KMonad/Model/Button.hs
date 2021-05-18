@@ -54,8 +54,11 @@ where
 import KMonad.Prelude
 
 import KMonad.Model.Action
-import KMonad.Keyboard
+import KMonad.Model.Types
+
+-- import KMonad.Keyboard
 import KMonad.Util
+import KMonad.Util.Keyboard
 
 
 --------------------------------------------------------------------------------
@@ -182,7 +185,7 @@ aroundNext ::
   -> Button -- ^ The resulting 'Button'
 aroundNext b = onPress $ await isPress $ \e -> do
   runAction $ b^.pressAction
-  await (isReleaseOf $ e^.keycode) $ \_ -> do
+  await (isReleaseOf $ e^.code) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch
@@ -263,9 +266,9 @@ tapNextRelease t h = onPress $ do
         | p e -> doTap
         -- If the next event is the release of some button that was held after me
         -- we act as if we were held
-        | isRel && (e^.keycode `elem` ks) -> doHold e
+        | isRel && (e^.code `elem` ks) -> doHold e
         -- Else, if it is a press, store the keycode and wait again
-        | not isRel                       -> go ((e^.keycode):ks) *> pure NoCatch
+        | not isRel                       -> go ((e^.code):ks) *> pure NoCatch
         -- Else, if it is a release of some button held before me, just ignore
         | otherwise                       -> go ks *> pure NoCatch
 
@@ -276,7 +279,7 @@ tapNextRelease t h = onPress $ do
     -- Behave like a hold is not simple: first we release the processing hold,
     -- then we catch the release of ButtonX that triggered this action, and then
     -- we rethrow this release.
-    doHold :: MonadK m => KeyEvent -> m Catch
+    doHold :: MonadK m => KeySwitch -> m Catch
     doHold e = press h *> hold False *> inject e *> pure Catch
 
 
@@ -306,9 +309,9 @@ tapHoldNextRelease ms t h = onPress $ do
         -- If the next event is my own release: act like tapped
         | p e -> onRelSelf
         -- If the next event is another release that was pressed after me
-        | isRel && (e^.keycode `elem` ks) -> onRelOther e
+        | isRel && (e^.code `elem` ks) -> onRelOther e
         -- If the next event is a press, store and recurse
-        | not isRel -> go (ms' - r^.elapsed) (e^.keycode : ks) *> pure NoCatch
+        | not isRel -> go (ms' - r^.elapsed) (e^.code : ks) *> pure NoCatch
         -- If the next event is a release of some button pressed before me, recurse
         | otherwise -> go (ms' - r^.elapsed) ks *> pure NoCatch
 
@@ -318,7 +321,7 @@ tapHoldNextRelease ms t h = onPress $ do
     onRelSelf :: MonadK m => m Catch
     onRelSelf = tap t *> hold False *> pure Catch
 
-    onRelOther :: MonadK m => KeyEvent -> m Catch
+    onRelOther :: MonadK m => KeySwitch -> m Catch
     onRelOther e = press h *> hold False *> inject e *> pure Catch
 
 
@@ -390,7 +393,7 @@ stickyKey ms b = onPress $ go
        | otherwise         -> go       $> NoCatch
          -- The release of some other button; ignore these
 
-  doHold :: MonadK m => KeyEvent -> m ()
+  doHold :: MonadK m => KeySwitch -> m ()
   doHold e = press b *> inject e
 
   doTap :: MonadK m => m ()

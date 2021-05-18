@@ -9,8 +9,8 @@ import KMonad.App.Invocation.Parser
 import Options.Applicative
 
 -- | Parse 'Invoc' from the evocation of this program
-getInvoc :: IO Invoc
-getInvoc = customExecParser (prefs showHelpOnEmpty) $ info (invocP <**> helper)
+getInvoc :: IO m => m Invoc
+getInvoc = liftIO $ customExecParser (prefs showHelpOnEmpty) $ info (invocP <**> helper)
   (  fullDesc
   <> progDesc "Start KMonad"
   <> header   "kmonad - an onion of buttons."

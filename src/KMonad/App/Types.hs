@@ -13,11 +13,14 @@ import KMonad.Prelude
 
 import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
+import KMonad.App.KeyIO
+
+import KMonad.Util.Keyboard
+-- import KMonad.Keyboard.IO
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Model.BEnv
+import KMonad.Model.Types
 import KMonad.Util
 
 import qualified KMonad.Model.Dispatch as Dp
@@ -44,8 +47,11 @@ import qualified KMonad.Model.Keymap   as Km
 -- | Record of all the configuration options required to run KMonad's core App
 -- loop.
 data AppCfg = AppCfg
-  { _keySinkDev   :: Acquire KeySink   -- ^ How to open a 'KeySink'
-  , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
+  {
+  --   _keySinkDev   :: Acquire KeySink   -- ^ How to open a 'KeySink'
+  -- , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
+    _keyInputCfg  :: KeyInputCfg       -- ^ The configuration of the input keyboard
+  , _keyOutputCfg :: KeyOutputCfg      -- ^ The configuration of the output keyboard
   , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
@@ -62,8 +68,8 @@ data AppEnv = AppEnv
 
     -- General IO
   , _keLogFunc  :: LogFunc
-  , _keySink    :: KeySink
-  , _keySource  :: KeySource
+  , _keySource  :: GetKey
+  , _keySink    :: PutKey
 
     -- Pull chain
   , _dispatch   :: Dp.Dispatch
@@ -103,8 +109,10 @@ instance MonadK (RIO KEnv) where
 
 instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
-  emit e = view outVar >>= atomically . flip putTMVar e
-  -- emit e = view keySink >>= flip emitKey e
+  emit e = do
+    ov <- view outVar
+    ke <- keyEventNow e
+    atomically $ putTMVar ov ke
 
   -- Pausing is a simple IO action
   pause = threadDelay . (*1000) . fromIntegral
@@ -128,8 +136,9 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Injecting by adding to Dispatch's rerun buffer
   inject e = do
     di <- view dispatch
-    logDebug $ "Injecting event: " <> display e
-    Dp.rerun di [e]
+    ke <- keyEventNow e
+    logDebug $ "Injecting event: " <> display ke
+    Dp.rerun di [ke]
 
   -- Shell-command through spawnCommand
   shellCmd t = do

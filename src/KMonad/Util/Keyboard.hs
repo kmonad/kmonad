@@ -4,4 +4,8 @@ module KMonad.Util.Keyboard
   )
 where
 
-import KMonad.Util.Keyboard.Common as X
+import KMonad.Util.Keyboard.Compose  as X
+import KMonad.Util.Keyboard.IO       as X
+import KMonad.Util.Keyboard.Ops      as X
+import KMonad.Util.Keyboard.OS       as X
+import KMonad.Util.Keyboard.Types    as X

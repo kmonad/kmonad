@@ -24,7 +24,7 @@ where
 import KMonad.Prelude
 import KMonad.Util
 
-import KMonad.Keyboard
+import KMonad.Util.Keyboard
 
 --------------------------------------------------------------------------------
 -- $env

@@ -27,7 +27,8 @@ import KMonad.Util
 
 import KMonad.Model.Action hiding (layerOp)
 import KMonad.Model.Button
-import KMonad.Keyboard
+import KMonad.Model.Types
+import KMonad.Util.Keyboard
 import KMonad.Model.BEnv
 
 import qualified KMonad.Util.LayerStack as Ls
@@ -35,7 +36,6 @@ import qualified KMonad.Util.LayerStack as Ls
 --------------------------------------------------------------------------------
 -- $env
 --
-
 
 -- | The 'Keymap' environment containing the current keymap
 --

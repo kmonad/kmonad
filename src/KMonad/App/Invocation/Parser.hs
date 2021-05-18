@@ -4,11 +4,16 @@ where
 
 import KMonad.Prelude hiding (try)
 
-import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol)
-import KMonad.Args.Types (DefSetting(..), choice, try)
+import KMonad.App.Logging
+import KMonad.App.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, DefSetting(..))
+import qualified Text.Megaparsec as M
+import qualified KMonad.App.Parser as M (Parser)
+-- import qualified KMonad.App.Parser as M
+-- import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol)
+-- import KMonad.Args.Types (DefSetting(..), choice, try)
 
 import KMonad.App.Invocation.Types
-import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
+-- import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
 
 import Options.Applicative
 
@@ -85,7 +90,7 @@ initStrP = optional $ SInitStr <$> strOption
 -- | Key to use for compose-key sequences
 cmpSeqP :: Parser (Maybe DefSetting)
 cmpSeqP = optional $ SCmpSeq <$> option
-  (tokenParser keywordButtons <|> megaReadM (choice noKeywordButtons))
+  (tokenParser keywordButtons <|> megaReadM (M.choice noKeywordButtons))
   (  long "cmp-seq"
   <> short 's'
   <> metavar "BUTTON"
@@ -113,7 +118,7 @@ iTokenP = optional $ SIToken <$> option (tokenParser itokens)
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
 -- optparse-applicative parser
 tokenParser :: [(Text, M.Parser a)] -> ReadM a
-tokenParser = megaReadM . choice . map (try . uncurry ((*>) . symbol))
+tokenParser = megaReadM . M.choice . map (M.try . uncurry ((*>) . symbol))
 
 -- | Megaparsec <--> optparse-applicative interface
 megaReadM :: M.Parser a -> ReadM a

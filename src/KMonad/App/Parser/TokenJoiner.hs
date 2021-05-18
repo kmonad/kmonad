@@ -27,15 +27,17 @@ where
 import KMonad.Prelude hiding (uncons)
 
 import KMonad.App.Parser.Types
+import KMonad.App.KeyIO
 
 import KMonad.Model.Action
 import KMonad.Model.Button
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
+import KMonad.Model.Types
+import KMonad.Util.Keyboard
+-- import KMonad.Keyboard.IO
 
 #ifdef linux_HOST_OS
-import KMonad.Keyboard.IO.Linux.DeviceSource
-import KMonad.Keyboard.IO.Linux.UinputSink
+-- import KMonad.Keyboard.IO.Linux.DeviceSource
+-- import KMonad.Keyboard.IO.Linux.UinputSink
 #endif
 
 #ifdef mingw32_HOST_OS
@@ -104,7 +106,7 @@ makeLenses ''JCfg
 
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
-  (emitB KeyRightAlt)
+  (emitB $ kc "ralt")
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
@@ -204,7 +206,7 @@ runLF = flip runRIO
 
 
 -- | Extract the KeySource-loader from the 'KExpr's
-getI :: J (LogFunc -> OnlyIO (Acquire KeySource))
+getI :: J KeyInputCfg
 getI = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SIToken $ cfg of
@@ -213,7 +215,7 @@ getI = do
     Left  Duplicate  -> throwError $ DuplicateSetting "input"
 
 -- | Extract the KeySource-loader from a 'KExpr's
-getO :: J (LogFunc -> OnlyIO (Acquire KeySink))
+getO :: J KeyOutputCfg
 getO = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SOToken $ cfg of
@@ -239,55 +241,64 @@ getAllow = do
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
 
-#ifdef linux_HOST_OS
 
--- | The Linux correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
-pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
-pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
+pickInput :: IToken -> J KeyInputCfg
+pickInput (KDeviceSource f) = pure . LinuxEvdevCfg . EvdevCfg $ f
+pickInput _ = undefined
 
--- | The Linux correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
-  where cfg = defUinputCfg { _keyboardName = T.unpack t
-                           , _postInit     = T.unpack <$> init }
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
-pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
+pickOutput :: OToken -> J KeyOutputCfg
+pickOutput (KUinputSink t init) = pure . LinuxUinputCfg
+  $ def { _keyboardName = t
+        , _postInit     = unpack <$> init }
 
-#endif
+-- #ifdef linux_HOST_OS
+-- -- | The Linux correspondence between IToken and actual code
+-- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
+-- pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
+-- pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+-- pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
-#ifdef mingw32_HOST_OS
+-- -- | The Linux correspondence between OToken and actual code
+-- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
+-- pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
+--   where cfg = defUinputCfg { _keyboardName = T.unpack t
+--                            , _postInit     = T.unpack <$> init }
+-- pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+-- pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
--- | The Windows correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput KLowLevelHookSource = pure $ runLF llHook
-pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
-pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
+-- #endif
 
--- | The Windows correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
-pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
-pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
+-- #ifdef mingw32_HOST_OS
 
-#endif
+-- -- | The Windows correspondence between IToken and actual code
+-- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
+-- pickInput KLowLevelHookSource = pure $ runLF llHook
+-- pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
+-- pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
-#ifdef darwin_HOST_OS
+-- -- | The Windows correspondence between OToken and actual code
+-- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
+-- pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
+-- pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
+-- pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
 
--- | The Mac correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
-pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
-pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+-- #endif
 
--- | The Mac correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput KKextSink            = pure $ runLF kextSink
-pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+-- #ifdef darwin_HOST_OS
 
-#endif
+-- -- | The Mac correspondence between IToken and actual code
+-- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
+-- pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
+-- pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
+-- pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
+
+-- -- | The Mac correspondence between OToken and actual code
+-- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
+-- pickOutput KKextSink            = pure $ runLF kextSink
+-- pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
+-- pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+
+-- #endif
 
 --------------------------------------------------------------------------------
 -- $als

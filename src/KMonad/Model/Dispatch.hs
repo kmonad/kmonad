@@ -43,7 +43,7 @@ where
 
 import KMonad.Prelude
 import KMonad.Util
-import KMonad.Keyboard
+import KMonad.Util.Keyboard
 import KMonad.App.Logging
 
 import RIO.Seq (Seq(..), (><))
