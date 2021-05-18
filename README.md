@@ -1,12 +1,4 @@
 
-# Disclaimer
-
-The core maintainer is currently chronically (but not terminally) ill, and is
-unable to give KMonad the attention it deserves. We are currently looking for
-maintainers. Please see [this
-issue](https://github.com/kmonad/kmonad/issues/142) for more information.
-
-
 <h1 align="center">
 KMonad
 <br>
@@ -28,11 +20,13 @@ KMonad is an advanced tool that lets you infinitely customize and extend the fun
 
 If you want to get started with the latest, stable binary release, please check out the master branch, if you are interested in the latest additions and tweaks, switch on over to develop and compile your own binary.
 
-
 ## Features
 
 
 KMonad offers advanced customization features such as **layers**, **multi-tap**, **tap-hold**, and much more. These features are usually available at the hardware level on the QMK-firmware enabled keyboards. However, KMonad allows you to enjoy such features in virtually any keyboard by low-level system manipulations.
+
+For a good introduction to KMonad, have a look at [this Youtube video](https://www.youtube.com/watch?v=Dhj1eauljwU).
+
 
 
 #### Key Customizations
