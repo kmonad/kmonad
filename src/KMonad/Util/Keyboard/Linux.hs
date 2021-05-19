@@ -23,6 +23,7 @@ import KMonad.Prelude
 
 import KMonad.Util.Time
 import KMonad.Util.Name
+import KMonad.Util.Keyboard.Common
 
 import qualified RIO.HashMap as M
 
@@ -104,7 +105,7 @@ z :: [a] -> [b] -> [(b, a)]
 z = flip zip
 
 -- | Map of standard names to linux keycodes
-keycodeNames :: NameMap Keycode
+keycodeNames :: M.HashMap CoreName Keycode
 keycodeNames = M.fromList $
   z [1..83]
     [ "esc", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" , "-" , "="

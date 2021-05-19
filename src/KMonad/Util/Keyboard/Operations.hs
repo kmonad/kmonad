@@ -1,4 +1,4 @@
-module KMonad.Util.Keyboard.Ops
+module KMonad.Util.Keyboard.Operations
 
 where
 
@@ -19,10 +19,10 @@ import qualified RIO.HashMap as M
 --
 -- One of the few functions that will just throw an exception.
 --
-kc :: Keyname -> Keycode
+kc :: CoreName -> Keycode
 kc n = case M.lookup n keycodeNames of
   Just c  -> c
-  Nothing -> throw $ NoSuchKeynameException n
+  Nothing -> throw $ NoSuchKeynameException (unCore n)
 
 --------------------------------------------------------------------------------
 -- $shorthand

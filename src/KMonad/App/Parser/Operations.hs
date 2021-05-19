@@ -28,11 +28,11 @@ byName = choice . map go . sortBy f . M.toList where
   go (k, v) = v <$ (try $ string k) -- ^ Match the name and insert the value
 
 -- | Make a button that emits a particular keycode
-emitOf :: Name -> DefButton
+emitOf :: CoreName -> DefButton
 emitOf = KEmit . kc
 
 -- | Make a button that emits a particular shifted keycode
-shiftedOf :: Name -> DefButton
+shiftedOf :: CoreName -> DefButton
 shiftedOf = KAround (emitOf "lsft") . emitOf
 
 -- thing :: [(Text, Text)]

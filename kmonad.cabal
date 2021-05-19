@@ -116,10 +116,11 @@ library
       KMonad.Util.Time.Types
       KMonad.Util.FFI
       KMonad.Util.Keyboard
+      KMonad.Util.Keyboard.Common
       KMonad.Util.Keyboard.Compose
       KMonad.Util.Keyboard.IO
       KMonad.Util.Keyboard.OS
-      KMonad.Util.Keyboard.Ops
+      KMonad.Util.Keyboard.Operations
       KMonad.Util.Keyboard.Keynames
       KMonad.Util.Keyboard.Types
       KMonad.Util.Name

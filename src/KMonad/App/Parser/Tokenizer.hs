@@ -42,6 +42,7 @@ import Data.Char
 import RIO.List (sortBy, find)
 
 
+import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -135,9 +136,12 @@ bool = symbol "true" *> pure True
 --
 -- Parsers for elements that are not stand-alone KExpr's
 
+-- TODO: Add alias and locale-support to keycode parser
+
 -- | Parse a keycode
 keycodeP :: Parser Keycode
-keycodeP = byName keycodeNames <?> "keycode"
+keycodeP = let names = M.fromList . map (first unCore) . M.toList $ keycodeNames
+  in byName names <?> "keycode"
 -- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
 -- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
 
@@ -192,7 +196,7 @@ z a b = uncurry zip $ over (both.traversed) T.singleton (a, b)
 
 -- | Different ways to refer to shifted versions of keycodes
 shiftedNames :: [(Text, DefButton)]
-shiftedNames = map (second shiftedOf) $ cps <> num <> oth where
+shiftedNames = map (second (shiftedOf . CoreName)) $ cps <> num <> oth where
   cps = z ['A'..'Z'] ['a'..'z']
   num = z "!@#$%^&*" "12345678"
   oth = z "<>:~\"|{}+?" -- NOTE: \" is an escaped " and lines up with '

@@ -1,6 +1,8 @@
 module KMonad.Util.Keyboard.Keynames
-  ( -- * $collection
-    Keynames
+  ( -- * $core
+    CoreNames
+
+    -- * $collection
   , knAll
   , knLetters
   , knNumbers
@@ -9,6 +11,9 @@ module KMonad.Util.Keyboard.Keynames
   , knFKeys
   , knKeypad
   , knOther
+
+    -- * $aliases
+  , keyAliases
   )
 where
 
@@ -31,50 +36,57 @@ should always reflect standard US-english.
 
 -}
 
+
 --------------------------------------------------------------------------------
 -- $collection
 
-type Keynames = S.Set Keyname
+
+type CoreNames = S.Set CoreName
 
 -- | Create a list of singleton-text entries from a string
 t :: String -> [Text]
-t = map T.singleton
+t = map (T.singleton)
+
+-- | Turn a list of 'Text's into a CoreNames
+l :: [Text] -> CoreNames
+l = S.fromList . map CoreName
 
 -- | Turn a string into a set of single-letter names
-m :: String -> Keynames
-m = S.fromList . t
+m :: String -> CoreNames
+m = l . t
 
-knAll :: Keynames
+-- | All 'CoreName's used in KMonad
+knAll :: CoreNames
 knAll = S.unions [knLetters, knNumbers, knPunct, knMods
                  , knFKeys, knKeypad, knOther ]
 
 -- | All letter names
-knLetters :: Keynames
+knLetters :: CoreNames
 knLetters = m ['a'..'z']
 
 -- | All number names
-knNumbers :: Keynames
+knNumbers :: CoreNames
 knNumbers = m ['0'..'9']
 
 -- | All punctuation names
-knPunct :: Keynames
+knPunct :: CoreNames
 knPunct = m ",./-=[];'`\\"
 
 -- | All modifier names
-knMods :: Keynames
-knMods = S.fromList $ foldMap f ["ctl", "alt", "met", "sft"] where
+knMods :: CoreNames
+knMods = l $ foldMap f ["ctl", "alt", "met", "sft"] where
   f s = ["l" <> s, "r" <> s]
 
 -- | First 12 function keys
-knFKeys :: Keynames
-knFKeys = S.fromList $ map (("f"<>) . tshow) [1..12 :: Int]
+knFKeys :: CoreNames
+knFKeys = l $ map (("f" <>) . tshow) [1..12 :: Int]
 
 -- | Names for keypad buttons
 --
 -- vague names explained:
 -- kprt -> keypad return
-knKeypad :: Keynames
-knKeypad = S.fromList $ map f
+knKeypad :: CoreNames
+knKeypad = l $ map f
   $ t ['0'..'9'] <> ["-", "+", "*", "/", ".", "rt"]
   where f s = "kp" <> s
 
@@ -92,7 +104,20 @@ knKeypad = S.fromList $ map f
 -- ins  -> insert
 -- del  -> delete
 -- paus -> pause
-knOther :: Keynames
+knOther :: CoreNames
 knOther = S.fromList [ "esc", "tab", "ret", "bspc", "caps", "nlck", "slck"
                      , "spc", "102d", "sys", "pgdn", "pgup", "home", "end"
                      , "up", "down", "left", "rght", "ins", "del", "paus" ]
+
+--------------------------------------------------------------------------------
+-- $keyalias
+
+-- | A collection of alternate ways to refer to keycodes in configurations.
+--
+-- NOTE: the first column of the list is the core name of the keycode, the list
+-- after it are aliases that can be used
+keyAliases :: NameMap Keyname
+keyAliases = let f (n, as) = map (,n) as in M.fromList $ foldMap f $
+  [ ("ret", ["return", "enter", "ent"])
+
+  ]

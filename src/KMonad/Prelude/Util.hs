@@ -3,6 +3,7 @@ module KMonad.Prelude.Util
   ( fi
   , inEnv
   , overMVar
+  , reverseMap
 
 
   , untilJust
@@ -11,6 +12,8 @@ where
 
 import KMonad.Prelude.Imports
 import KMonad.Prelude.Types
+
+import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $uncategorized
@@ -26,6 +29,13 @@ inEnv = flip runRIO
 -- | Slightly different modifyMVar to make 1-liners cleaner
 overMVar :: UIO m =>  m (MVar a) -> (a -> m (a, b))  -> m b
 overMVar a f = a >>= \mv -> modifyMVar mv f
+
+-- | Reverse a map
+--
+-- NOTE: This might overwrite duplicates.
+reverseMap :: (Eq a, Eq b, Hashable a, Hashable b)
+  => M.HashMap a b -> M.HashMap b a
+reverseMap = M.fromList . toListOf (folded . swapped) . M.toList
 
 --------------------------------------------------------------------------------
 -- $maybe-flow

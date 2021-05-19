@@ -39,10 +39,3 @@ insertAliases als nms = foldr go nms als where
     Just a  -> m `M.union` M.fromList (map (,a) ls)
     Nothing -> m
 
--- | Reverse a map
---
--- NOTE: This might overwrite duplicates.
-reverseMap :: (Eq a, Eq b, Hashable a, Hashable b)
-  => M.HashMap a b -> M.HashMap b a
-reverseMap = M.fromList . toListOf (folded . swapped) . M.toList
-
