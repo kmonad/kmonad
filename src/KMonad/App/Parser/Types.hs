@@ -96,8 +96,8 @@ data DefButton
   | KTapMacroRelease [DefButton]           -- ^ Sequence of buttons to tap, tap the last when released
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Ms                    -- ^ Pause for a period of time
-  | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
-  | KLayerNext LayerTag                    -- ^ Perform next button in different layer
+  | KLayerDelay Int Name               -- ^ Switch to a layer for a period of time
+  | KLayerNext Name                    -- ^ Perform next button in different layer
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
                                            --   as possibly on release
   | KStickyKey Int DefButton               -- ^ Act as if a button is pressed for a period of time
@@ -115,7 +115,7 @@ data CfgToken = CfgToken
   { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
   , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
   , _km    :: LMap Button  -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag     -- ^ Name of initial layer
+  , _fstL  :: Name     -- ^ Name of initial layer
   , _flt   :: Bool         -- ^ How to deal with unhandled events
   , _allow :: Bool         -- ^ Whether to allow shell commands
   }

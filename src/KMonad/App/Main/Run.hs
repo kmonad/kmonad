@@ -7,20 +7,18 @@ import KMonad.Prelude
 import KMonad.App.Invocation
 import KMonad.App.KeyIO
 import KMonad.App.Types
-import KMonad.Util.Logging hiding (logLvl)
 import KMonad.App.Parser.IO -- FIXME: change import when invoc/parse separation is clean
-import KMonad.Util
-import KMonad.Util.Keyboard
+import KMonad.Util hiding (logLvl)
 import KMonad.Pullchain
 import KMonad.Pullchain.IO
 import KMonad.App.Main.OS
 
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
-import qualified KMonad.Pullchain.Dispatch as Dp
-import qualified KMonad.Pullchain.Hooks    as Hs
-import qualified KMonad.Pullchain.Sluice   as Sl
-import qualified KMonad.Pullchain.Keymap   as Km
+import qualified KMonad.Pullchain.Components.Dispatch as Dp
+import qualified KMonad.Pullchain.Components.Hooks    as Hs
+import qualified KMonad.Pullchain.Components.Sluice   as Sl
+import qualified KMonad.Pullchain.Components.Keymap   as Km
 {- NOTE:
 
 The normal 'Types', 'IO', 'Operations', subdivision does not make a lot of sense

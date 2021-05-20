@@ -24,11 +24,12 @@ import RIO as X hiding
   , some, many
 
     -- Names I'd like to use myself
-  , wait
+  , wait, timeout
 
     -- Hiding these for simpler logging (see KMonad.Util.Logging)
   , logError, logWarn, logInfo, logDebug
 
     -- Hiding these because I want to rename IO to OnlyIO to be more explicit
   , IO
+
   )

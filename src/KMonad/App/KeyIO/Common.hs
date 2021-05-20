@@ -10,16 +10,6 @@ import KMonad.Util.Name
 {- For KeyIO code shared across platforms. Put configuration-records here -}
 
 
---------------------------------------------------------------------------------
--- $types
---
--- Generally useful types used across all OSes
-
--- | Alias for an action that fetches a (Switch, Keycode) tuple from the OS.
-type GetKey = OnlyIO KeySwitch
-
--- | Alias for an action that sends (Switch, Keycode) tuples to the OS.
-type PutKey = KeySwitch -> OnlyIO ()
 
 --------------------------------------------------------------------------------
 -- $cfgs-linux

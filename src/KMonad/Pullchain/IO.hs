@@ -5,7 +5,7 @@ where
 import KMonad.Prelude
 import KMonad.Util.Keyboard
 import KMonad.App.Types
-import qualified KMonad.Pullchain.Keymap   as Km
+import qualified KMonad.Pullchain.Components.Keymap   as Km
 
 import KMonad.Pullchain -- FIXME: Once Model and App are correctly separated, this import should not be here anymore.
 

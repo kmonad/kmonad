@@ -16,9 +16,7 @@ implemented (like TapHold).
 module KMonad.Pullchain.Button
   ( -- * Button basics
     -- $but
-    Button
-  , HasButton(..)
-  , onPress
+    onPress
   , onRelease
   , mkButton
   , around
@@ -70,13 +68,6 @@ import KMonad.Util.Keyboard
 -- 'Button' is essentially a collection of 2 different actions, 1 to perform on
 -- 'Press' and another on 'Release'.
 
--- | A 'Button' consists of two 'MonadK' actions, one to take when a press is
--- registered from the OS, and another when a release is registered.
-data Button = Button
-  { _pressAction   :: !Action -- ^ Action to take when pressed
-  , _releaseAction :: !Action -- ^ Action to take when released
-  }
-makeClassy ''Button
 
 -- | Create a 'Button' out of a press and release action
 --
@@ -138,21 +129,21 @@ modded ::
 modded modder = around (emitB modder)
 
 -- | Create a button that toggles a layer on and off
-layerToggle :: LayerTag -> Button
+layerToggle :: Name -> Button
 layerToggle t = mkButton
   (layerOp $ PushLayer t)
   (layerOp $ PopLayer  t)
 
 -- | Create a button that switches the base-layer on a press
-layerSwitch :: LayerTag -> Button
+layerSwitch :: Name -> Button
 layerSwitch t = onPress (layerOp $ SetBaseLayer t)
 
 -- | Create a button that adds a layer on a press
-layerAdd :: LayerTag -> Button
+layerAdd :: Name -> Button
 layerAdd t = onPress (layerOp $ PushLayer t)
 
 -- | Create a button that removes the top instance of a layer on a press
-layerRem :: LayerTag -> Button
+layerRem :: Name -> Button
 layerRem t = onPress (layerOp $ PopLayer t)
 
 -- | Create a button that does nothing (but captures the input)
@@ -375,7 +366,7 @@ tapMacroRelease bs = onPress $ go bs
     go (b:rst) = tap b >> go rst
 
 -- | Switch to a layer for a period of time, then automatically switch back
-layerDelay :: Ms -> LayerTag -> Button
+layerDelay :: Ms -> Name -> Button
 layerDelay d t = onPress $ do
   layerOp (PushLayer t)
   after d (layerOp $ PopLayer t)
@@ -384,7 +375,7 @@ layerDelay d t = onPress $ do
 --
 -- NOTE: liable to change, this is essentially just `aroundNext` and
 -- `layerToggle` combined.
-layerNext :: LayerTag -> Button
+layerNext :: Name -> Button
 layerNext t = onPress $ do
   layerOp (PushLayer t)
   await isPress (\_ -> whenDone (layerOp $ PopLayer t) *> pure NoCatch)

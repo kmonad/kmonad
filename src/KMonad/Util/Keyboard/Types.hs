@@ -24,6 +24,10 @@ module KMonad.Util.Keyboard.Types
   , KeyEvent
   , mkKeyEvent
 
+    -- * $io
+  , GetKey
+  , PutKey
+
     -- * Reexports
   , module X
 
@@ -133,3 +137,13 @@ instance HasTime      KeyEvent where time      = eTime
 mkKeyEvent :: Switch -> Keycode -> Time -> KeyEvent
 mkKeyEvent s c = KeyEvent (KeySwitch s c)
 
+--------------------------------------------------------------------------------
+-- $io
+--
+-- Generally useful types for IO
+
+-- | Alias for an action that fetches a (Switch, Keycode) tuple from the OS.
+type GetKey = OnlyIO KeySwitch
+
+-- | Alias for an action that sends (Switch, Keycode) tuples to the OS.
+type PutKey = KeySwitch -> OnlyIO ()

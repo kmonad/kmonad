@@ -95,16 +95,16 @@ library
       KMonad.App.Parser.TokenJoiner
       KMonad.App.Parser.Tokenizer
       KMonad.App.Parser.Types
+      KMonad.Model.Types
       KMonad.Pullchain
       KMonad.Pullchain.Action
-      KMonad.Pullchain.BEnv
       KMonad.Pullchain.Button
-      KMonad.Pullchain.Dispatch
-      KMonad.Pullchain.Hooks
       KMonad.Pullchain.IO
-      KMonad.Pullchain.Keymap
-      KMonad.Pullchain.Sluice
       KMonad.Pullchain.Types
+      KMonad.Pullchain.Components.Dispatch
+      KMonad.Pullchain.Components.Keymap
+      KMonad.Pullchain.Components.Hooks
+      KMonad.Pullchain.Components.Sluice
       KMonad.Prelude
       KMonad.Prelude.Imports
       KMonad.Prelude.Types

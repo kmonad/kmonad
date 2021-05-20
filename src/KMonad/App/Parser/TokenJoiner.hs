@@ -31,7 +31,7 @@ import KMonad.App.KeyIO
 import KMonad.Pullchain.Action
 import KMonad.Pullchain.Button
 import KMonad.Pullchain.Types
-import KMonad.Util.Keyboard
+import KMonad.Util
 
 import Control.Monad.Except
 
@@ -371,7 +371,7 @@ joinButton ns als =
 
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
-joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (LMap Button, LayerTag)
+joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (LMap Button, Name)
 joinKeymap _   _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap src als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)

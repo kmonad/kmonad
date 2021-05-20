@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Pullchain.Keymap
+Module      : KMonad.Pullchain.Components.Keymap
 Description : Implementation of mapping key-presses to button actions
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -13,7 +13,7 @@ the 'Keymap' component that manages the keymap state and ensures that
 incoming events are mapped to
 
 -}
-module KMonad.Pullchain.Keymap
+module KMonad.Pullchain.Components.Keymap
   ( Keymap
   , mkKeymap
   , layerOp
@@ -27,10 +27,9 @@ import KMonad.Util
 import KMonad.Util.Keyboard
 import KMonad.Util.Logging
 
-import KMonad.Pullchain.Action hiding (layerOp)
+import KMonad.Pullchain.Action
 import KMonad.Pullchain.Button
-import KMonad.Pullchain.Types
-import KMonad.Pullchain.BEnv
+import KMonad.Pullchain.Types hiding (layerOp)
 
 import qualified KMonad.Util.LayerStack as Ls
 
@@ -44,22 +43,22 @@ import qualified KMonad.Util.LayerStack as Ls
 -- asynchronously we can simply use 'IORef's here.
 data Keymap = Keymap
   { _stack :: IORef (LMap BEnv)
-  , _baseL :: IORef LayerTag
+  , _baseL :: IORef Name
   }
 makeClassy ''Keymap
 
 -- | Create a 'Keymap' from a 'Keymap' of uninitialized 'Button's and a
 -- tag indicating which layer should start as the base.
 mkKeymap' :: MonadUnliftIO m
-  => LayerTag    -- ^ The initial base layer
+  => Name    -- ^ The initial base layer
   -> LMap Button -- ^ The keymap of 'Button's
   -> m Keymap
 mkKeymap' n m = do
-  envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> initBEnv b c
+  envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> mkBEnv b c
   Keymap <$> newIORef envs <*> newIORef n
 
 -- | Create a 'Keymap' but do so in the context of a 'Ctx' monad to ease nesting.
-mkKeymap :: MonadUnliftIO m => LayerTag -> LMap Button -> Ctx r m Keymap
+mkKeymap :: MonadUnliftIO m => Name -> LMap Button -> Ctx r m Keymap
 mkKeymap n = lift . mkKeymap' n
 
 

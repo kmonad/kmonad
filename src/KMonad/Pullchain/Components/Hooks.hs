@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Pullchain.Hooks
+Module      : KMonad.Pullchain.Components.Hooks
 Description : Component for handling hooks
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -15,7 +15,7 @@ In the sequencing of components, this happens second, right after the
 'KMonad.App.Dispatch.Dispatch' component.
 
 -}
-module KMonad.Pullchain.Hooks
+module KMonad.Pullchain.Components.Hooks
   ( Hooks
   , mkHooks
   , pull
@@ -29,10 +29,9 @@ import KMonad.Util.Logging
 import Data.Time.Clock.System
 import Data.Unique
 
-import KMonad.Pullchain.Action hiding (register)
--- import KMonad.Keyboard
+import KMonad.Pullchain.Action
+import KMonad.Pullchain.Types hiding (register)
 import KMonad.Util hiding (time)
-import KMonad.Util.Keyboard
 
 import RIO.Partial (fromJust)
 

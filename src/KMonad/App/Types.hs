@@ -20,14 +20,13 @@ import KMonad.Util.Keyboard
 import KMonad.Util.Logging
 import KMonad.Pullchain.Action
 import KMonad.Pullchain.Button
-import KMonad.Pullchain.BEnv
 import KMonad.Pullchain.Types
 import KMonad.Util
 
-import qualified KMonad.Pullchain.Dispatch as Dp
-import qualified KMonad.Pullchain.Hooks    as Hs
-import qualified KMonad.Pullchain.Sluice   as Sl
-import qualified KMonad.Pullchain.Keymap   as Km
+import qualified KMonad.Pullchain.Components.Dispatch as Dp
+import qualified KMonad.Pullchain.Components.Hooks    as Hs
+import qualified KMonad.Pullchain.Components.Sluice   as Sl
+import qualified KMonad.Pullchain.Components.Keymap   as Km
 
 --------------------------------------------------------------------------------
 -- $appcfg
@@ -54,7 +53,7 @@ data AppCfg = AppCfg
     _keyInputCfg  :: KeyInputCfg       -- ^ The configuration of the input keyboard
   , _keyOutputCfg :: KeyOutputCfg      -- ^ The configuration of the output keyboard
   , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
-  , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
+  , _firstLayer   :: Name          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
   , _startDelay   :: Ms      -- ^ How long to wait before acquiring the input keyboard

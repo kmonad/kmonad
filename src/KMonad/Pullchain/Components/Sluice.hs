@@ -12,7 +12,7 @@ of events. This component provides the ability to temporarily pause processing,
 and then resume processing and return all events that were caught while paused.
 
 -}
-module KMonad.Pullchain.Sluice
+module KMonad.Pullchain.Components.Sluice
   ( Sluice
   , mkSluice
   , block
@@ -74,7 +74,7 @@ block s = do
 -- location in the 'KMonad.App.App'.
 --
 -- We do this in KMonad by writing the events into the
--- 'KMonad.Pullchain.Dispatch.Dispatch's rerun buffer. (this happens in the
+-- 'KMonad.Pullchain.Components.Dispatch.Dispatch's rerun buffer. (this happens in the
 -- "KMonad.App" module.)
 unblock :: LIO m e => Sluice -> m [KeySwitch]
 unblock s = do
