@@ -125,10 +125,10 @@ keycodeNames = M.fromList $
     [ "kp,", "hang", "hanj", "yen", "lmet", "rmet", "cmps", "stop", "agn"
     , "prps", "undo", "frnt", "copy", "open", "past", "find", "cut", "help"
     , "menu", "calc", "setp", "slp", "wake", "file", "send", "delf", "xfer"
-    , "prg1", "prg2", "www", "msds", "coff", "scnl", "rot", "dir", "cycl"
-    , "mail", "book", "comp", "back", "fwd", "clcd", "ejct", "eccd", "nxsg"
-    , "plps", "prvs", "stcd", "rec", "rew", "phon", "iso", "cfg", "hmpg", "refr"
-    , "exit", "move", "edit", "scup", "scdn", "kp(", "kp)", "new", "redo" ] <>
+    , "prg1", "prg2", "www", "msds", "coff", "rot", "cycl" , "mail", "book"
+    , "comp", "back", "fwd", "clcd", "ejct", "eccd", "nxsg", "plps", "prvs"
+    , "stcd", "rec", "rew", "phon", "iso", "cfg", "hmpg", "refr" , "exit"
+    , "move", "edit", "scup", "scdn", "kp(", "kp)", "new", "redo" ] <>
   z [183..194]
     [ "f13", "f14", "f15", "f16", "f17", "f18", "f19", "f20", "f21", "f22"
     , "f23", "f24"] <>
