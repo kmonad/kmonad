@@ -44,7 +44,7 @@ import qualified KMonad.Model.Keymap   as Km
 --
 -- Get the invocation from the command-line, then do something with it.
 main :: OnlyIO ()
-main = getInvoc >>= run
+main = runCtx withOS $ \_ -> getInvoc >>= run
 
 -- | Execute the provided 'Cmd'
 --
@@ -65,35 +65,26 @@ run c = do
 -- The steps required to turn a configuration into the initial KMonad env
 
 -- | Initialize all the components of the KMonad app-loop
---
--- NOTE: This is written in 'ContT' over our normal RIO monad. This is just to
--- to simplify a bunch of nesting of calls. At no point do we make use of
--- 'callCC' or other 'ContT' functionality.
---
 initAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
 initAppEnv cfg = do
-
-  -- Do any OS-dependent context-management
-  withOS
 
   -- Get a reference to the logging function
   lgf <- lift $ view logEnv
 
-  -- Wait a bit for the user to release the 'Return' key with which they started KMonad
+  -- Wait a bit for the user to release the 'Return' key with which they started
+  -- KMonad. If we don't do this, we run the risk of capturing the keyboard used
+  -- to start KMonad, resulting in a 'stuck' button.
   threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
 
   -- Acquire the keysource and keysink
-  -- snk <- using $ cfg^.keySinkDev
-  -- src <- using $ cfg^.keySourceDev
   src <- withKeyInput  $ cfg^.keyInputCfg
   snk <- withKeyOutput $ cfg^.keyOutputCfg
 
   -- Initialize the pull-chain components
+  -- TODO: Factor out these model-components to the model
   dsp <- Dp.mkDispatch $ liftIO src
   ihk <- Hs.mkHooks    $ Dp.pull  dsp
   slc <- Sl.mkSluice   $ Hs.pull  ihk
-
-  -- Initialize the button environments in the keymap
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   -- Initialize output components
@@ -106,7 +97,8 @@ initAppEnv cfg = do
     e <- atomically . takeTMVar $ otv
     say $ "Emitting: " <> textDisplay e
     liftIO $ snk e
-  -- emit e = view keySink >>= flip emitKey e
+
+  -- Gather it all up in out AppEnv
   pure $ AppEnv
     { _keAppCfg  = cfg
     , _keLogFunc = lgf^.logFuncL

@@ -24,7 +24,8 @@ import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
 -- | This 'Ctx' exists to perform any OS-specific tweaks.
 --
 -- Currently we install a signal-handler for linux, and do nothing for the other
--- OS-es.
+-- OS-es. This 'Ctx' is the very outermost context we run, so it will happen
+-- before anything else, and after everything else.
 withOS :: UIO m => Ctx r m ()
 
 #ifdef linux_HOST_OS
