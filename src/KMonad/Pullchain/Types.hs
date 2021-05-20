@@ -1,4 +1,4 @@
-module KMonad.Model.Types
+module KMonad.Pullchain.Types
 
 where
 
@@ -11,3 +11,5 @@ type KeyPred = KeySwitch -> Bool
 
 -- | 'LMap's are mappings from 'LayerTag'd maps from 'Keycode' to things.
 type LMap a = Ls.LayerStack LayerTag Keycode a
+
+--------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Model.Button
+Module      : KMonad.Pullchain.Button
 Description : How buttons work
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -13,7 +13,7 @@ combine buttons. It is here that most of the complicated` buttons are
 implemented (like TapHold).
 
 -}
-module KMonad.Model.Button
+module KMonad.Pullchain.Button
   ( -- * Button basics
     -- $but
     Button
@@ -55,8 +55,8 @@ where
 
 import KMonad.Prelude
 
-import KMonad.Model.Action
-import KMonad.Model.Types
+import KMonad.Pullchain.Action
+import KMonad.Pullchain.Types
 
 -- import KMonad.Keyboard
 import KMonad.Util

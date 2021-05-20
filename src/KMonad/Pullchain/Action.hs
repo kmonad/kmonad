@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Model.Action
+Module      : KMonad.Pullchain.Action
 Description : Collection of basic operations
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -17,7 +17,7 @@ NOTE: All of this is a bit muddled, and redoing the way hooks are handled, and
 the basic structuring of MonadK and MonadKIO are liable to change soon.
 
 -}
-module KMonad.Model.Action
+module KMonad.Pullchain.Action
   (
     KeyPred
   , Catch(..)
@@ -64,7 +64,7 @@ import KMonad.Prelude hiding (timeout)
 import KMonad.Util
 import KMonad.Util.Keyboard
 
-import KMonad.Model.Types
+import KMonad.Pullchain.Types
 
 --------------------------------------------------------------------------------
 -- $keyfun
@@ -132,7 +132,7 @@ data LayerOp
 --------------------------------------------------------------------------------
 -- $monadk
 --
--- The fundamental components that make up any 'KMonad.Model.Button.Button' operation.
+-- The fundamental components that make up any 'KMonad.Pullchain.Button.Button' operation.
 
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.

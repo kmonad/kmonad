@@ -16,7 +16,7 @@ import qualified Data.Time.Clock.System as T (systemToUTCTime)
 
 -- | Delay a time by some milliseconds
 --
--- TODO: uncomment me when no-longer using delay in KMonad.Model.Action
+-- TODO: uncomment me when no-longer using delay in KMonad.Pullchain.Action
 -- delay :: Ms -> Time -> Time
 -- delay (Ms ms) (Time t) = Time $ T.addUTCTime d t
 --   where d = fromIntegral ms / 1000
@@ -30,7 +30,7 @@ earliest a b | a^.time < b^.time = Left  a
 
 -- | Try to do something within some time-limit, fail otherwise
 --
--- TODO: uncomment me when no longer needed in KMonad.Model.Action
+-- TODO: uncomment me when no longer needed in KMonad.Pullchain.Action
 -- within :: UIO m => Ms -> m a -> m (Maybe a)
 -- within (Ms d) go = race (threadDelay $ d * 1000) go
 --   >>= pure . either (const Nothing) Just

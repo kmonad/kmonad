@@ -2,6 +2,7 @@ module KMonad.Util.Ctx
   ( Ctx
   , mkCtx
   , runCtx
+  , runCtx_
   , nest
   , launch_
   )
@@ -55,6 +56,10 @@ mkCtx = Ctx . ContT
 -- | Run a computation that needs an 'a' in the 'Ctx' that generates said 'a'
 runCtx :: Ctx r m a -> (a -> m r) -> m r
 runCtx = runContT . unCtx
+
+-- | Run a computation that in a 'Ctx', but without any arguments being passed.
+runCtx_ :: Ctx r m a -> m r -> m r
+runCtx_ ctx = runContT (unCtx ctx) . const
 
 -- | Turn a list of contexts into a context that nests all the contexts
 nest :: [Ctx r m a] -> Ctx r m [a]

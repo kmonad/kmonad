@@ -43,8 +43,8 @@ module KMonad.App.Parser.Types
 
 import KMonad.Prelude
 import KMonad.App.KeyIO
-import KMonad.Model.Button
-import KMonad.Model.Types
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Types
 import KMonad.Util.Keyboard
 -- import KMonad.Keyboard
 -- import KMonad.Keyboard.IO

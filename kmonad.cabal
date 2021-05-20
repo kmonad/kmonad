@@ -74,8 +74,9 @@ library
       KMonad.App
       KMonad.App.Main
       KMonad.App.Main.OS
+      KMonad.App.Main.Run
+      KMonad.App.Main.Subtasks
       KMonad.App.Types
-      KMonad.Model
       KMonad.App.Invocation
       KMonad.App.Invocation.IO
       KMonad.App.Invocation.Operations
@@ -94,14 +95,16 @@ library
       KMonad.App.Parser.TokenJoiner
       KMonad.App.Parser.Tokenizer
       KMonad.App.Parser.Types
-      KMonad.Model.Action
-      KMonad.Model.BEnv
-      KMonad.Model.Button
-      KMonad.Model.Dispatch
-      KMonad.Model.Hooks
-      KMonad.Model.Keymap
-      KMonad.Model.Sluice
-      KMonad.Model.Types
+      KMonad.Pullchain
+      KMonad.Pullchain.Action
+      KMonad.Pullchain.BEnv
+      KMonad.Pullchain.Button
+      KMonad.Pullchain.Dispatch
+      KMonad.Pullchain.Hooks
+      KMonad.Pullchain.IO
+      KMonad.Pullchain.Keymap
+      KMonad.Pullchain.Sluice
+      KMonad.Pullchain.Types
       KMonad.Prelude
       KMonad.Prelude.Imports
       KMonad.Prelude.Types
@@ -111,6 +114,7 @@ library
       KMonad.Util.LayerStack
       KMonad.Util.Logging
       KMonad.Util.Logging.IO
+      KMonad.Util.Logging.Operations
       KMonad.Util.Logging.Types
       KMonad.Util.Time
       KMonad.Util.Time.IO

@@ -18,17 +18,16 @@ import KMonad.App.KeyIO
 
 import KMonad.Util.Keyboard
 import KMonad.Util.Logging
--- import KMonad.Keyboard.IO
-import KMonad.Model.Action
-import KMonad.Model.Button
-import KMonad.Model.BEnv
-import KMonad.Model.Types
+import KMonad.Pullchain.Action
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.BEnv
+import KMonad.Pullchain.Types
 import KMonad.Util
 
-import qualified KMonad.Model.Dispatch as Dp
-import qualified KMonad.Model.Hooks    as Hs
-import qualified KMonad.Model.Sluice   as Sl
-import qualified KMonad.Model.Keymap   as Km
+import qualified KMonad.Pullchain.Dispatch as Dp
+import qualified KMonad.Pullchain.Hooks    as Hs
+import qualified KMonad.Pullchain.Sluice   as Sl
+import qualified KMonad.Pullchain.Keymap   as Km
 
 --------------------------------------------------------------------------------
 -- $appcfg

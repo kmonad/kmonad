@@ -1,5 +1,5 @@
 {-
-Module      : KMonad.Model.Dispatch
+Module      : KMonad.Pullchain.Dispatch
 Description : Component for async reading.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -30,7 +30,7 @@ not worry about wether an event is being rerun or not, it simply treats all
 events as equal.
 
 -}
-module KMonad.Model.Dispatch
+module KMonad.Pullchain.Dispatch
   ( -- $env
     Dispatch
   , mkDispatch

@@ -28,9 +28,9 @@ import KMonad.Prelude hiding (uncons)
 import KMonad.App.Parser.Types
 import KMonad.App.KeyIO
 
-import KMonad.Model.Action
-import KMonad.Model.Button
-import KMonad.Model.Types
+import KMonad.Pullchain.Action
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Types
 import KMonad.Util.Keyboard
 
 import Control.Monad.Except

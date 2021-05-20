@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Model.Keymap
+Module      : KMonad.Pullchain.Keymap
 Description : Implementation of mapping key-presses to button actions
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -13,7 +13,7 @@ the 'Keymap' component that manages the keymap state and ensures that
 incoming events are mapped to
 
 -}
-module KMonad.Model.Keymap
+module KMonad.Pullchain.Keymap
   ( Keymap
   , mkKeymap
   , layerOp
@@ -27,10 +27,10 @@ import KMonad.Util
 import KMonad.Util.Keyboard
 import KMonad.Util.Logging
 
-import KMonad.Model.Action hiding (layerOp)
-import KMonad.Model.Button
-import KMonad.Model.Types
-import KMonad.Model.BEnv
+import KMonad.Pullchain.Action hiding (layerOp)
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Types
+import KMonad.Pullchain.BEnv
 
 import qualified KMonad.Util.LayerStack as Ls
 
