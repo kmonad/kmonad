@@ -73,6 +73,7 @@ library
   exposed-modules:
       KMonad.App
       KMonad.App.Main
+      KMonad.App.Main.OS
       KMonad.App.Logging
       KMonad.App.Logging.IO
       KMonad.App.Logging.Types

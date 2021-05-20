@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-|
 Module      : KMonad.App.Parser.TokenJoiner
 Description : The code that turns tokens into a DaemonCfg
@@ -33,22 +32,6 @@ import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Model.Types
 import KMonad.Util.Keyboard
--- import KMonad.Keyboard.IO
-
-#ifdef linux_HOST_OS
--- import KMonad.Keyboard.IO.Linux.DeviceSource
--- import KMonad.Keyboard.IO.Linux.UinputSink
-#endif
-
-#ifdef mingw32_HOST_OS
-import KMonad.Keyboard.IO.Windows.LowLevelHookSource
-import KMonad.Keyboard.IO.Windows.SendEventSink
-#endif
-
-#ifdef darwin_HOST_OS
-import KMonad.Keyboard.IO.Mac.IOKitSource
-import KMonad.Keyboard.IO.Mac.KextSink
-#endif
 
 import Control.Monad.Except
 

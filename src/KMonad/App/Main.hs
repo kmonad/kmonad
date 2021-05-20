@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-|
 Module      : KMonad.App.Main
 Description : The entry-point to KMonad
@@ -26,6 +25,7 @@ import KMonad.App.Parser.IO -- FIXME: change import when invoc/parse separation 
 import KMonad.Util
 import KMonad.Util.Keyboard
 import KMonad.Model
+import KMonad.App.Main.OS
 
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
@@ -34,11 +34,6 @@ import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
 import qualified KMonad.Model.Keymap   as Km
 
--- FIXME: This should live somewhere else
-
-#ifdef linux_HOST_OS
-import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
-#endif
 
 --------------------------------------------------------------------------------
 -- $start
@@ -77,6 +72,10 @@ run c = do
 --
 initAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
 initAppEnv cfg = do
+
+  -- Do any OS-dependent context-management
+  withOS
+
   -- Get a reference to the logging function
   lgf <- lift $ view logEnv
 
@@ -176,8 +175,4 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
 -- | Run KMonad using the provided configuration
 startApp :: AppCfg -> OnlyLIO ()
 startApp c = do
-#ifdef linux_HOST_OS
-  -- Ignore SIGCHLD to avoid zombie processes.
-  liftIO . void $ installHandler sigCHLD Ignore Nothing
-#endif
   runCtx (initAppEnv c) (flip runRIO loop)
