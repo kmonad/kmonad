@@ -35,6 +35,9 @@ module KMonad.App.Parser.Types
     -- * $lenses
   , AsKExpr(..)
   , AsDefSetting(..)
+
+    -- * $reexport
+  , module X
 ) where
 
 
@@ -47,8 +50,8 @@ import KMonad.Util.Keyboard
 -- import KMonad.Keyboard.IO
 import KMonad.Util
 
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import Text.Megaparsec      as X
+import Text.Megaparsec.Char as X
 
 --------------------------------------------------------------------------------
 -- $bsc

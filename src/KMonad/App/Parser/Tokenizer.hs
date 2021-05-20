@@ -34,6 +34,7 @@ where
 
 import KMonad.Prelude hiding (try, bool)
 
+import KMonad.App.Parser.Keycode
 import KMonad.App.Parser.Operations
 import KMonad.App.Parser.Types
 import KMonad.Util.Keyboard
@@ -136,16 +137,6 @@ bool = symbol "true" *> pure True
 --
 -- Parsers for elements that are not stand-alone KExpr's
 
--- TODO: Add alias and locale-support to keycode parser
-
--- | Parse a keycode
-keycodeP :: Parser Keycode
-keycodeP = let names = M.fromList . map (first unCore) . M.toList $ keycodeNames
-  in byName names <?> "keycode"
--- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
--- keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
-
-
 -- | Parse an integer
 numP :: Parser Int
 numP = L.decimal
@@ -213,8 +204,6 @@ buttonNames = shiftedNames <> escp <> util
     -- Extra names for useful buttons
     util = [ ("_", KTrans), ("XX", KBlock)
            , ("lprn", emitS "9"), ("rprn", emitS "0")]
-
-
 
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
@@ -358,7 +347,6 @@ defaliasP = many $ (,) <$> lexeme word <*> buttonP
 
 defsrcP :: Parser DefSrc
 defsrcP = many $ lexeme keycodeP
-
 
 --------------------------------------------------------------------------------
 -- $deflayer

@@ -36,4 +36,3 @@ newtype CoreName = CoreName { unCore :: Text }
 
 instance Show    CoreName where show        = show        . unCore
 instance Display CoreName where textDisplay = textDisplay . unCore
-

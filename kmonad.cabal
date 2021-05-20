@@ -91,6 +91,7 @@ library
       KMonad.App.KeyIO.OS
       KMonad.App.Parser
       KMonad.App.Parser.IO
+      KMonad.App.Parser.Keycode
       KMonad.App.Parser.Operations
       KMonad.App.Parser.TokenJoiner
       KMonad.App.Parser.Tokenizer

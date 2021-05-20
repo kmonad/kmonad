@@ -11,7 +11,6 @@ module KMonad.Util.Keyboard.Types
   , HasCode(..)
 
     -- * $name
-  , Keyname
   , NoSuchKeynameException(..)
   , nameKeycodes
   , kn
@@ -65,11 +64,8 @@ instance HasCode Keycode where code = id
 --------------------------------------------------------------------------------
 -- $name
 
--- | Type alias for names that are applied to keycodes
-type Keyname = Name
-
 -- | The error that is thrown when we encounter an unknown Keyname.
-data NoSuchKeynameException = NoSuchKeynameException Keyname deriving Show
+data NoSuchKeynameException = NoSuchKeynameException Name deriving Show
 instance Exception NoSuchKeynameException where
   displayException (NoSuchKeynameException n) =
     "Encountered unknown keyname in code: " <> unpack n
