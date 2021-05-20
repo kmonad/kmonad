@@ -5,7 +5,7 @@ where
 import KMonad.Prelude hiding (try)
 
 import KMonad.Util.Time
-import KMonad.App.Logging
+import KMonad.Util.Logging
 import KMonad.App.Invocation.Types
 
 -- Have to import carefully to avoid name-clashes between megaparsec (reexported

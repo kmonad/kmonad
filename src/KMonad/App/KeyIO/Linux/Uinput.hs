@@ -11,7 +11,7 @@ import KMonad.Util.Keyboard.Linux
 import KMonad.Util.FFI
 import KMonad.Util.Name
 import KMonad.Util.Time
-import KMonad.App.Logging
+import KMonad.Util.Logging
 import KMonad.App.KeyIO.Common
 
 import Foreign.C.String
@@ -120,20 +120,20 @@ withUinput c = mkCtx $ \f -> do
                 OpenFileFlags False False False True False
 
         -- Register the device-specs with the uinput kernel module
-        say_ LevelInfo "Registering uinput device"
+        logInfo "Registering uinput device"
         acquire_uinput_keysink fd c `onErr` \n
           -> throwing _UinputCouldNotCreate (c, n)
 
         -- Optionally, fork of a command to be run
         for_ (c^.postInit) $ \cmd -> do
-          say_ LevelInfo $ "Running post-uinput-init command: " <> (pack cmd)
+          logInfo $ "Running post-uinput-init command: " <> (pack cmd)
           async . callCommand $ cmd
 
         UinputEnv c le fd <$> newMVar S.empty
 
   let cleanup env = do
         -- Unregister the device from the uinput kernel module
-        say_ LevelInfo $ "Unregistering uinput device"
+        logInfo "Unregistering uinput device"
         let h = env^.kbf
         let rel = release_uinput_keysink h `onErr` \n ->
               throwing _UinputCouldNotDestroy (c, n)

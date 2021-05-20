@@ -22,7 +22,7 @@ module KMonad.Util
     -- * Random utility helpers that have no better home
     onErr
   , using
-  , logRethrow
+  -- , logRethrow
 
     -- * Some helpers to launch background process
   -- , withLaunch
@@ -77,13 +77,13 @@ using dat = mkCtx $ (\next -> with dat $ \a -> next a)
 -- Particularly useful as a suffix using `catch`. i.e.
 --
 -- > doSomething `catch` logRethrow "I caught something"
-logRethrow :: HasLogFunc e
-  => Text
-  -> SomeException -- ^ The error to throw
-  -> RIO e a
-logRethrow t e = do
-  logError $ display t <> ": " <> display e
-  throwIO e
+-- logRethrow :: HasLogFunc e
+--   => Text
+--   -> SomeException -- ^ The error to throw
+--   -> RIO e a
+-- logRethrow t e = do
+--   logError $ display t <> ": " <> display e
+--   throwIO e
 
 -- | Launch a process that repeats an action indefinitely. If an error ever
 -- occurs, print it and rethrow it. Ensure the process is cleaned up upon error

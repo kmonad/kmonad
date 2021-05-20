@@ -6,6 +6,7 @@ module KMonad.App.Types
   , HasAppCfg(..)
   , HasAppEnv(..)
   , HasKEnv(..)
+  , CanK
   )
 where
 
@@ -16,6 +17,7 @@ import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 import KMonad.App.KeyIO
 
 import KMonad.Util.Keyboard
+import KMonad.Util.Logging
 -- import KMonad.Keyboard.IO
 import KMonad.Model.Action
 import KMonad.Model.Button
@@ -67,7 +69,7 @@ data AppEnv = AppEnv
     _keAppCfg   :: AppCfg
 
     -- General IO
-  , _keLogFunc  :: LogFunc
+  , _keLogEnv   :: LogEnv
   , _keySource  :: GetKey
   , _keySink    :: PutKey
 
@@ -83,8 +85,9 @@ data AppEnv = AppEnv
   }
 makeClassy ''AppEnv
 
-instance HasLogFunc AppEnv where logFuncL = keLogFunc
-instance HasAppCfg  AppEnv where appCfg   = keAppCfg
+instance HasLogEnv AppEnv where logEnv = keLogEnv
+instance HasLogCfg AppEnv where logCfg = logEnv.logCfg
+instance HasAppCfg AppEnv where appCfg = keAppCfg
 
 --------------------------------------------------------------------------------
 -- $kenv
@@ -97,17 +100,21 @@ data KEnv = KEnv
   }
 makeClassy ''KEnv
 
-instance HasAppCfg  KEnv where appCfg       = kAppEnv.appCfg
-instance HasAppEnv  KEnv where appEnv       = kAppEnv
-instance HasBEnv    KEnv where bEnv         = kBEnv
-instance HasLogFunc KEnv where logFuncL     = kAppEnv.logFuncL
+instance HasAppCfg KEnv where appCfg  = kAppEnv.appCfg
+instance HasAppEnv KEnv where appEnv  = kAppEnv
+instance HasBEnv   KEnv where bEnv    = kBEnv
+instance HasLogEnv KEnv where logEnv  = kAppEnv.logEnv
+instance HasLogCfg KEnv where logCfg  = logEnv.logCfg
+
+-- | All the prerequisites for an environment to support MonadKIO actions
+type CanK e = (HasAppEnv e, HasAppCfg e, HasLogEnv e, HasLogCfg e)
 
 -- | Hook up all the components to the different 'MonadK' functionalities
 instance MonadK (RIO KEnv) where
   -- Binding is found in the stored 'BEnv'
   myBinding = view (bEnv.binding)
 
-instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
+instance CanK e => MonadKIO (RIO e) where
   -- Emitting with the keysink
   emit e = do
     ov <- view outVar
@@ -137,17 +144,17 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   inject e = do
     di <- view dispatch
     -- ke <- keyEventNow e
-    logDebug $ "Injecting event: " <> display e
+    logDebug $ "Injecting event: " <> tshow e
     Dp.rerun di [e]
 
   -- Shell-command through spawnCommand
   shellCmd t = do
     f <- view allowCmd
     if f then do
-      logInfo $ "Running command: " <> display t
+      logInfo $ "Running command: " <> tshow t
       spawnCommand . unpack $ t
     else
-      logInfo $ "Received but not running: " <> display t
+      logInfo $ "Received but not running: " <> tshow t
    where
     spawnCommand :: MonadIO m => String -> m ()
     spawnCommand cmd = void $ createProcess_ "spawnCommand"

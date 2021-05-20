@@ -20,7 +20,7 @@ import KMonad.Prelude
 import KMonad.App.Invocation
 import KMonad.App.KeyIO
 import KMonad.App.Types
-import KMonad.App.Logging hiding (logLvl)
+import KMonad.Util.Logging hiding (logLvl)
 import KMonad.App.Parser.IO -- FIXME: change import when invoc/parse separation is clean
 import KMonad.Util
 import KMonad.Util.Keyboard
@@ -92,16 +92,16 @@ initAppEnv cfg = do
   ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
 
   -- Setup thread to read from outHooks and emit to keysink
-  lift $ say_ LevelInfo "Launching emitter-process thread"
+  lift $ logInfo "Launching emitter-process thread"
   launch_ $ do
     e <- atomically . takeTMVar $ otv
-    say $ "Emitting: " <> textDisplay e
+    logInfo $ "Emitting: " <> tshow e
     liftIO $ snk e
 
   -- Gather it all up in out AppEnv
   pure $ AppEnv
     { _keAppCfg  = cfg
-    , _keLogFunc = lgf^.logFuncL
+    , _keLogEnv  = lgf
     , _keySink   = snk
     , _keySource = src
 
@@ -122,7 +122,7 @@ initAppEnv cfg = do
 -- FIXME: this needs to live somewhere else
 
 -- | Trigger the button-action press currently registered to 'Keycode'
-pressKey :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => Keycode -> RIO e ()
+pressKey :: CanK e => Keycode -> RIO e ()
 pressKey c =
   view keymap >>= flip Km.lookupKey c >>= \case
 

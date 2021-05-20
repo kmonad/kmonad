@@ -23,8 +23,8 @@ where
 
 import KMonad.Prelude
 import KMonad.Util
-
 import KMonad.Util.Keyboard
+import KMonad.Util.Logging
 
 --------------------------------------------------------------------------------
 -- $env
@@ -60,11 +60,11 @@ mkSluice = lift . mkSluice'
 -- blocking and unblocking the sluice.
 
 -- | Increase the block-count by 1
-block :: HasLogFunc e => Sluice -> RIO e ()
+block :: LIO m e => Sluice -> m ()
 block s = do
   modifyIORef (s^.blocked) (+1)
   readIORef (s^.blocked) >>= \n ->
-    logDebug $ "Block level set to: " <> display n
+    logDebug $ "Block level set to: " <> tshow n
 
 -- | Set the Sluice to unblocked mode, return a list of all the stored events
 -- that should be rerun, in the correct order (head was first-in, etc).
@@ -76,7 +76,7 @@ block s = do
 -- We do this in KMonad by writing the events into the
 -- 'KMonad.Model.Dispatch.Dispatch's rerun buffer. (this happens in the
 -- "KMonad.App" module.)
-unblock :: HasLogFunc e => Sluice -> RIO e [KeySwitch]
+unblock :: LIO m e => Sluice -> m [KeySwitch]
 unblock s = do
   modifyIORef' (s^.blocked) (\n -> n - 1)
   readIORef (s^.blocked) >>= \case
@@ -86,10 +86,10 @@ unblock s = do
       logDebug $ "Unblocking input stream, " <>
         if null es
         then "no stored events"
-        else "rerunning:\n" <> (display . unlines . map textDisplay $ reverse es)
+        else "rerunning:\n" <> (unlines . map textDisplay $ reverse es)
       pure $ reverse es
     n -> do
-      logDebug $ "Block level set to: " <> display n
+      logDebug $ "Block level set to: " <> tshow n
       pure []
 
 
@@ -103,7 +103,7 @@ unblock s = do
 
 -- | Try to read from the Sluice, if we are blocked, store the event internally
 -- and return Nothing. If we are unblocked, return Just the KeySwitch.
-step :: HasLogFunc e => Sluice -> RIO e (Maybe KeySwitch)
+step :: LIO m e => Sluice -> m (Maybe KeySwitch)
 step s = do
   e <- liftIO $ s^.eventSrc
   readIORef (s^.blocked) >>= \case
@@ -112,9 +112,9 @@ step s = do
       modifyIORef' (s^.blockBuf) (e:)
       readIORef (s^.blockBuf) >>= \es -> do
         let xs = map ((" - " <>) . textDisplay) es
-        logDebug . display . unlines $ "Storing event, current store: ":xs
+        logDebug . unlines $ "Storing event, current store: ":xs
       pure Nothing
 
 -- | Keep trying to read from the Sluice until an event passes through
-pull :: HasLogFunc e => Sluice -> RIO e KeySwitch
+pull :: LIO m e => Sluice -> m KeySwitch
 pull s = step s >>= maybe (pull s) pure

@@ -44,7 +44,7 @@ where
 import KMonad.Prelude
 import KMonad.Util
 import KMonad.Util.Keyboard
-import KMonad.App.Logging
+import KMonad.Util.Logging
 
 import RIO.Seq (Seq(..), (><))
 import qualified RIO.Seq  as Seq
@@ -84,7 +84,7 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull' :: (HasLogFunc e) => Dispatch -> RIO e KeySwitch
+pull' :: LUIO m e => Dispatch -> m KeySwitch
 pull' d = do
   -- Check for an unfinished read attempt started previously. If it exists,
   -- fetch it, otherwise, start a new read attempt.
@@ -97,8 +97,8 @@ pull' d = do
   atomically ((Left <$> popRerun) `orElse` (Right <$> waitSTM a)) >>= \case
     -- If we take from the rerunBuf, put the running read-process back in place
     Left e' -> do
-      logDebug $ "\n" <> display (T.replicate 80 "-")
-              <> "\nRerunning event: " <> display e'
+      sepDebug
+      logDebug $ "\nRerunning event: " <> tshow e'
       atomically $ putTMVar (d^.readProc) a
       pure e'
     Right e' -> pure e'
@@ -115,5 +115,5 @@ pull :: LIO m e => Dispatch -> m KeySwitch
 pull d = view logEnv >>= \env -> runRIO env (pull' d)
 
 -- | Add a list of elements to be rerun.
-rerun :: (HasLogFunc e) => Dispatch -> [KeySwitch] -> RIO e ()
+rerun :: LIO m e => Dispatch -> [KeySwitch] -> m ()
 rerun d es = atomically $ modifyTVar (d^.rerunBuf) (>< Seq.fromList es)

@@ -74,9 +74,6 @@ library
       KMonad.App
       KMonad.App.Main
       KMonad.App.Main.OS
-      KMonad.App.Logging
-      KMonad.App.Logging.IO
-      KMonad.App.Logging.Types
       KMonad.App.Types
       KMonad.Model
       KMonad.App.Invocation
@@ -112,6 +109,9 @@ library
       KMonad.Util
       KMonad.Util.Ctx
       KMonad.Util.LayerStack
+      KMonad.Util.Logging
+      KMonad.Util.Logging.IO
+      KMonad.Util.Logging.Types
       KMonad.Util.Time
       KMonad.Util.Time.IO
       KMonad.Util.Time.Operations

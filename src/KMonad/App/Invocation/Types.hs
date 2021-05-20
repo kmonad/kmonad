@@ -6,7 +6,7 @@ where
 
 import KMonad.Prelude hiding (try)
 import KMonad.Util.Time
-import KMonad.App.Logging hiding (logLvl)
+import KMonad.Util.Logging hiding (logLvl)
 
 import KMonad.App.Parser --(itokens, keywordButtons, noKeywordButtons, otokens, symbol)
 -- import KMonad.Parser.Types (DefSetting(..), choice, try)

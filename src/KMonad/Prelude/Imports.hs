@@ -17,10 +17,6 @@ import RIO as X hiding
     view, ASetter, ASetter', Lens, Getting, Lens'
   , SimpleGetter, lens, over, set, sets, to, (^.)
 
-    -- The following line is required for newer stack releases.
-    -- This is also the reason for the OPTIONS_GHC pragma
-    -- , (^..), (^?), preview, (%~), (.~)
-
     -- Some stuff I'd rather default to Text
   , unlines, lines
 
@@ -30,8 +26,8 @@ import RIO as X hiding
     -- Names I'd like to use myself
   , wait
 
-    -- Hiding these so that I can layer my own logging on top
-  , LogLevel(..)
+    -- Hiding these for simpler logging (see KMonad.Util.Logging)
+  , logError, logWarn, logInfo, logDebug
 
     -- Hiding these because I want to rename IO to OnlyIO to be more explicit
   , IO

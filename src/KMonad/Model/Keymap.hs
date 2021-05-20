@@ -24,11 +24,12 @@ where
 
 import KMonad.Prelude
 import KMonad.Util
+import KMonad.Util.Keyboard
+import KMonad.Util.Logging
 
 import KMonad.Model.Action hiding (layerOp)
 import KMonad.Model.Button
 import KMonad.Model.Types
-import KMonad.Util.Keyboard
 import KMonad.Model.BEnv
 
 import qualified KMonad.Util.LayerStack as Ls
@@ -69,41 +70,41 @@ mkKeymap n = lift . mkKeymap' n
 -- 'Keymap'.
 
 -- | Print a header message followed by an enumeration of the layer-stack
-debugReport :: HasLogFunc e => Keymap -> Utf8Builder -> RIO e ()
+debugReport :: LIO m e => Keymap -> Text -> m ()
 debugReport h hdr = do
   st <- view Ls.stack <$> (readIORef $ h^.stack)
-  let ub = foldMap (\(i, n) -> " "  <> display i
-                            <> ". " <> display n <> "\n")
+  let ub = foldMap (\(i, n) -> " "  <> tshow i
+                            <> ". " <> tshow n <> "\n")
              (zip ([1..] :: [Int]) st)
   ls <- readIORef (h^.baseL)
-  logDebug $ hdr <> "\n" <> ub <> "Base-layer: " <> display ls <> "\n"
+  logDebug $ hdr <> "\n" <> ub <> "Base-layer: " <> ls <> "\n"
 
 -- | Perform operations on the layer-stack
-layerOp :: (HasLogFunc e)
-  => Keymap -- ^ The 'Keymap' environment
-  -> LayerOp      -- ^ The 'LayerOp' to perform
-  -> RIO e ()     -- ^ The resulting action
+layerOp :: LIO m e
+  => Keymap  -- ^ The 'Keymap' environment
+  -> LayerOp -- ^ The 'LayerOp' to perform
+  -> m ()    -- ^ The resulting action
 layerOp h o = let km = h^.stack in case o of
   (PushLayer n) -> do
     Ls.pushLayer n <$> readIORef km >>= \case
       Left e   -> throwIO e
       Right m' -> writeIORef km m'
-    debugReport h $ "Pushed layer to stack: " <> display n
+    debugReport h $ "Pushed layer to stack: " <> tshow n
 
   (PopLayer n) -> do
     Ls.popLayer n <$> readIORef km >>= \case
       Left (Ls.LayerNotOnStack _) -> do
-        debugReport h $ "WARNING: Tried popping layer that was not on stack " <> display n
+        debugReport h $ "WARNING: Tried popping layer that was not on stack " <> tshow n
       Left e                      -> throwIO e
       Right m'                    -> do
         writeIORef km m'
-        debugReport h $ "Popped layer from stack: " <> display n
+        debugReport h $ "Popped layer from stack: " <> tshow n
 
   (SetBaseLayer n) -> do
     (n `elem`) . view Ls.maps <$> (readIORef km) >>= \case
       True  -> writeIORef (h^.baseL) n
       False -> throwIO $ Ls.LayerDoesNotExist n
-    debugReport h $ "Set base layer to: " <> display n
+    debugReport h $ "Set base layer to: " <> tshow n
 
 
 --------------------------------------------------------------------------------

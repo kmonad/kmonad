@@ -24,7 +24,7 @@ module KMonad.Model.Hooks
 where
 
 import KMonad.Prelude
-import KMonad.App.Logging
+import KMonad.Util.Logging
 
 import Data.Time.Clock.System
 import Data.Unique
@@ -103,10 +103,10 @@ ioHook h = withRunInIO $ \u -> do
 -- inserting and removing hooks.
 
 -- | Insert a hook, along with the current time, into the store
-register :: (HasLogFunc e)
+register :: LUIO m e
   => Hooks
-  -> Hook (RIO e)
-  -> RIO e ()
+  -> Hook m
+  -> m ()
 register hs h = do
   -- Insert an entry into the store
   tag <- liftIO newUnique
@@ -114,18 +114,18 @@ register hs h = do
   atomically $ modifyTVar (hs^.hooks) (M.insert tag e)
   -- If the hook has a timeout, start a thread that will signal timeout
   case h^.hTimeout of
-    Nothing -> logDebug $ "Registering untimed hook: " <> display (hashUnique tag)
+    Nothing -> logDebug $ "Registering untimed hook: " <> tshow (hashUnique tag)
     Just t' -> void . async $ do
-      logDebug $ "Registering " <> display (t'^.delay)
-              <> "ms hook: " <> display (hashUnique tag)
+      logDebug $ "Registering " <> tshow (t'^.delay)
+              <> "ms hook: " <> tshow (hashUnique tag)
       threadDelay $ 1000 * (fromIntegral $ t'^.delay)
       atomically $ putTMVar (hs^.injectTmr) tag
 
 -- | Cancel a hook by removing it from the store
-cancelHook :: (HasLogFunc e)
+cancelHook :: LIO m e
   => Hooks
   -> Unique
-  -> RIO e ()
+  -> m ()
 cancelHook hs tag = do
   e <- atomically $ do
     m <- readTVar $ hs^.hooks
@@ -134,9 +134,9 @@ cancelHook hs tag = do
     pure v
   case e of
     Nothing ->
-      logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
+      logDebug $ "Tried cancelling expired hook: " <> tshow (hashUnique tag)
     Just e' -> do
-      logDebug $ "Cancelling hook: " <> display (hashUnique tag)
+      logDebug $ "Cancelling hook: " <> tshow (hashUnique tag)
       liftIO $ e' ^. hTimeout . to fromJust . action
 
 
@@ -152,10 +152,10 @@ runEntry t e v = liftIO $ do
   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
-runHooks :: (HasLogFunc e)
+runHooks :: LIO m e
   => Hooks
   -> KeySwitch
-  -> RIO e (Maybe KeySwitch)
+  -> m (Maybe KeySwitch)
 runHooks hs e = do
   logDebug "Running hooks"
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
@@ -177,9 +177,9 @@ runHooks hs e = do
 -- callback, then return it (otherwise return Nothing). At the same time, keep
 -- reading the timer-cancellation inject point and handle any cancellation as it
 -- comes up.
-step :: (HasLogFunc e)
-  => Hooks                  -- ^ The 'Hooks' environment
-  -> RIO e (Maybe KeySwitch) -- ^ An action that returns perhaps the next event
+step :: LUIO m e
+  => Hooks               -- ^ The 'Hooks' environment
+  -> m (Maybe KeySwitch) -- ^ An action that returns perhaps the next event
 step h = do
 
   -- Asynchronously start reading the next event
@@ -196,9 +196,9 @@ step h = do
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeySwitch'
-pull' :: HasLogFunc e
+pull' :: LUIO m e
   => Hooks
-  -> RIO e KeySwitch
+  -> m KeySwitch
 pull' h = step h >>= maybe (pull' h) pure
 
 -- | Keep stepping until we succesfully get an unhandled 'KeySwitch'

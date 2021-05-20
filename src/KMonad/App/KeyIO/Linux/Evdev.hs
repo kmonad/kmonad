@@ -4,7 +4,7 @@ where
 
 import KMonad.Prelude
 import KMonad.Util.Ctx
-import KMonad.App.Logging
+import KMonad.Util.Logging
 import KMonad.App.KeyIO.Common
 
 import Control.Exception.Lens
@@ -131,7 +131,7 @@ withEvdev c = mkCtx $ \f -> do
         hdl' <- liftIO $ fdToHandle fd'
 
         -- Execute ioctl-grab
-        say_ LevelInfo $ "Initiating ioctl grab"
+        logInfo "Initiating ioctl grab"
         ioctl_keyboard fd' True `onErr` \n
           -> throwing _EvdevCouldNotAcquire (c, n)
 
@@ -139,7 +139,7 @@ withEvdev c = mkCtx $ \f -> do
         pure $ EvdevEnv le c hdl' fd'
 
   let cleanup env = do
-        say_ LevelInfo $ "Releasing ioctl grab"
+        logInfo "Releasing ioctl grab"
         ioctl_keyboard (env^.fd) True
           `onErr`   (\n -> throwing _EvdevCouldNotRelease (c, n)) -- throw proper error
           `finally` (liftIO . closeFd $ env^.fd)                  -- always close file
