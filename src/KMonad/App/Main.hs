@@ -22,17 +22,12 @@ import KMonad.App.Invocation
 import KMonad.App.KeyIO
 import KMonad.App.Types
 import KMonad.App.Logging hiding (logLvl)
-import KMonad.App.Parser
-import KMonad.App.Parser.IO -- FIXME: Remove separate import when fixed
+import KMonad.App.Parser.IO -- FIXME: change import when invoc/parse separation is clean
 import KMonad.Util
 import KMonad.Util.Keyboard
 import KMonad.Model
 
--- import KMonad.Args
--- import KMonad.Keyboard
-
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
-
 
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
@@ -67,7 +62,6 @@ run c = do
   runLog logcfg $ do
     cfg <- loadConfig (c^.cfgFile) c -- Load cfg-file and overwrite Invoc settings
     unless (c^.dryRun) $ startApp cfg
-
 
 
 --------------------------------------------------------------------------------

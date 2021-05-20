@@ -41,7 +41,9 @@ keycodeP = fromLexicon allNames <?> "keycode" where
 --
 -- NOTE: Our unit tests guarantee that:
 -- * This list only provides aliases to valid 'CoreName's
--- * No name ever gets overwritten
+-- * There are no duplicate aliases
+-- * No alias overlaps with a 'CoreName'
+--
 keycodeAliases :: [Alias]
 keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
   [ ("ret" , ["return", "ent", "enter"])
@@ -52,7 +54,7 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
   , ("pgdn", ["pagedown"])
   , ("ins" , ["insert"])
   , ("del" , ["delete"])
-  , ("cmps", ["compose", "comp", "cmp"])
+  , ("cmps", ["compose", "cmp"])
   , ("lsft", ["sft", "shft", "lshft", "lshift", "leftshift"])
   , ("rsft", ["rshft", "rshift", "rightshift"])
   , ("lalt", ["alt", "leftalt"])
@@ -83,7 +85,7 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
   , ("kp*" , ["kptimes", "kpasterisk"])
   , ("kp-" , ["kpminus", "kpmin"])
   , ("kp." , ["kpdot"])
-  , ("sys" , ["ssrq", "sys", "psrc", "printscreen"])
+  , ("sys" , ["ssrq", "psrc", "printscreen"])
   ]
 
 --------------------------------------------------------------------------------
