@@ -12,6 +12,8 @@ import KMonad.App.Parser.Types
 import KMonad.App.Parser.Tokenizer (loadTokens)
 import KMonad.App.Parser.TokenJoiner (joinConfigIO)
 
+import KMonad.Model.Types
+
 
 
 
@@ -37,9 +39,12 @@ loadConfig pth cmd = do
   pure $ AppCfg
     { _keyInputCfg  = _src   cgt
     , _keyOutputCfg = _snk   cgt
-    , _keymapCfg    = _km    cgt
-    , _firstLayer   = _fstL  cgt
-    , _fallThrough  = _flt   cgt
+    , _acModelCfg   = ModelCfg
+        { _keymapCfg  = _km    cgt
+        , _firstLayer = _fstL  cgt
+        , _fallThrough  = _flt cgt
+        , _mAllowCmd     = _allow cgt
+        }
     , _allowCmd     = _allow cgt
     , _startDelay   = _strtDel cmd
     }

@@ -3,38 +3,61 @@ module KMonad.Pullchain.IO
 where
 
 import KMonad.Prelude
-import KMonad.Util.Keyboard
+import KMonad.Util hiding (around)
 import KMonad.App.Types
+import KMonad.Model
+
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Env
+import KMonad.Pullchain.Loop (step)
+import KMonad.Pullchain.Operations
+
+import qualified KMonad.Pullchain.Components.Dispatch as Dp
+import qualified KMonad.Pullchain.Components.Hooks    as Hs
+import qualified KMonad.Pullchain.Components.Sluice   as Sl
 import qualified KMonad.Pullchain.Components.Keymap   as Km
 
-import KMonad.Pullchain -- FIXME: Once Model and App are correctly separated, this import should not be here anymore.
+-- | Use the 'ModelCfg' to start the pullchain and provide an API token
+withModel :: LUIO m env => ModelCfg -> Ctx r m ModelAPI
+withModel cfg = do
+  -- Create the model environment
+  env <- initModelEnv cfg
 
--- | Trigger the button-action press currently registered to 'Keycode'
---
--- This is the actual dispatch function used to trigger the model to do things.
-pressKey :: CanK e => Keycode -> RIO e ()
-pressKey c =
-  view keymap >>= flip Km.lookupKey c >>= \case
+  -- Start the thread that runs the model
+  launch_ (runRIO env step)
 
-    -- If the keycode does not occur in our keymap
-    Nothing -> do
-      ft <- view fallThrough
-      if ft
-        then do
-          emit $ mkPress c
-          await (isReleaseOf c) $ \_ -> do
-            emit $ mkRelease c
-            pure Catch
-        else pure ()
+  -- Run the continuation on the API
+  mkCtx $ \f -> f (env^.modelAPI)
 
-    -- If the keycode does occur in our keymap
-    Just b  -> runBEnv b Press >>= \case
-      Nothing -> pure ()  -- If the previous action on this key was *not* a release
-      Just a  -> do
-        -- Execute the press and register the release
-        app <- view appEnv
-        runRIO (KEnv app b) $ do
-          runAction a
-          awaitMy Release $ do
-            runBEnv b Release >>= maybe (pure ()) runAction
-            pure Catch
+-- | Initialize all the components required to run a pullchain model
+initModelEnv :: LUIO m env => ModelCfg -> Ctx r m ModelEnv
+initModelEnv cfg = do
+  -- Fetch the logging env from the caller
+  le <- lift $ view logEnv
+
+  -- Create a new ModelAPI
+  api <- lift mkModelAPI
+  let nxt = view keySwitch <$> recvFromShell
+
+  -- Initialize all the individual buttons
+  let bvs = initKeymap (cfg^.keymapCfg)
+
+  -- Initialize the pull-chain
+  dsp <- Dp.mkDispatch $ runRIO api nxt
+  ihk <- Hs.mkHooks    $ Dp.pull  dsp
+  slc <- Sl.mkSluice   $ Hs.pull  ihk
+  phl <- Km.mkKeymap (cfg^.firstLayer) bvs
+
+  pure $ ModelEnv
+    { -- Components
+      _dispatch   = dsp
+    , _inHooks    = ihk
+    , _sluice     = slc
+    , _keymap     = phl
+
+      -- API
+    , _meModelAPI = api
+    , _meLogEnv   = le
+    , _meModelCfg = cfg
+    }
+

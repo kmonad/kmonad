@@ -8,17 +8,14 @@ import KMonad.App.Invocation
 import KMonad.App.KeyIO
 import KMonad.App.Types
 import KMonad.App.Parser.IO -- FIXME: change import when invoc/parse separation is clean
-import KMonad.Util hiding (logLvl)
-import KMonad.Pullchain
-import KMonad.Pullchain.IO
+import KMonad.App.Main.Loop
 import KMonad.App.Main.OS
+import KMonad.Model hiding (withModel) -- FIXME: change when pullchain is factored out
+import KMonad.Util hiding (logLvl)
+import KMonad.Pullchain.IO
 
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
-import qualified KMonad.Pullchain.Components.Dispatch as Dp
-import qualified KMonad.Pullchain.Components.Hooks    as Hs
-import qualified KMonad.Pullchain.Components.Sluice   as Sl
-import qualified KMonad.Pullchain.Components.Keymap   as Km
 {- NOTE:
 
 The normal 'Types', 'IO', 'Operations', subdivision does not make a lot of sense
@@ -50,38 +47,16 @@ initAppEnv cfg = do
   src <- withKeyInput  $ cfg^.keyInputCfg
   snk <- withKeyOutput $ cfg^.keyOutputCfg
 
-  -- Initialize the pull-chain components
-  -- TODO: Factor out these model-components to the model
-  dsp <- Dp.mkDispatch $ liftIO src
-  ihk <- Hs.mkHooks    $ Dp.pull  dsp
-  slc <- Sl.mkSluice   $ Hs.pull  ihk
-  phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
-
-  -- Initialize output components
-  otv <- lift . atomically $ newEmptyTMVar
-  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
-
-  -- Setup thread to read from outHooks and emit to keysink
-  lift $ logInfo "Launching emitter-process thread"
-  launch_ $ do
-    e <- atomically . takeTMVar $ otv
-    logInfo $ "Emitting: " <> tshow e
-    liftIO $ snk e
+  -- Initialize the model with the model config
+  api <- withModel $ cfg^.modelCfg
 
   -- Gather it all up in out AppEnv
   pure $ AppEnv
-    { _keAppCfg  = cfg
-    , _keLogEnv  = lgf
-    , _keySink   = snk
-    , _keySource = src
-
-    , _dispatch  = dsp
-    , _inHooks   = ihk
-    , _sluice    = slc
-
-    , _keymap    = phl
-    , _outHooks  = ohk
-    , _outVar    = otv
+    { _keAppCfg   = cfg
+    , _keLogEnv   = lgf
+    , _keySink    = snk
+    , _keySource  = src
+    , _aeModelAPI = api
     }
 
    
@@ -101,15 +76,6 @@ initAppEnv cfg = do
 main :: OnlyIO ()
 main = getInvoc >>= run
 
--- | Perform 1 step of KMonad's app loop
---
--- We forever:
--- 1. Pull from the pull-chain until an unhandled event reaches us.
--- 2. If that event is a 'Press' we use our keymap to trigger an action.
-loop :: RIO AppEnv ()
-loop = forever $ view sluice >>= Sl.pull >>= \case
-  e | e^.switch == Press -> pressKey $ e^.code
-  _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
 startApp :: AppCfg -> OnlyLIO ()

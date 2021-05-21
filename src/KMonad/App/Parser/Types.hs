@@ -43,6 +43,7 @@ module KMonad.App.Parser.Types
 
 import KMonad.Prelude
 import KMonad.App.KeyIO
+import KMonad.Model.Types
 import KMonad.Pullchain.Button
 import KMonad.Pullchain.Types
 import KMonad.Util.Keyboard
@@ -114,8 +115,8 @@ data DefButton
 data CfgToken = CfgToken
   { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
   , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
-  , _km    :: LMap Button  -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: Name     -- ^ Name of initial layer
+  , _km    :: Keymap BCfg  -- ^ A collection of layers of button configurations
+  , _fstL  :: Name         -- ^ Name of initial layer
   , _flt   :: Bool         -- ^ How to deal with unhandled events
   , _allow :: Bool         -- ^ Whether to allow shell commands
   }

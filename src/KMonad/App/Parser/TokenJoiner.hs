@@ -28,6 +28,8 @@ import KMonad.Prelude hiding (uncons)
 import KMonad.App.Parser.Types
 import KMonad.App.KeyIO
 
+import KMonad.Model.Types
+
 import KMonad.Pullchain.Action
 import KMonad.Pullchain.Button
 import KMonad.Pullchain.Types
@@ -37,7 +39,6 @@ import Control.Monad.Except
 
 import RIO.List (uncons, headMaybe)
 import RIO.Partial (fromJust)
-import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
 
@@ -82,14 +83,14 @@ instance Exception JoinError
 
 -- | Joining Config
 data JCfg = JCfg
-  { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
+  { _cmpKey  :: BCfg    -- ^ How to prefix compose-sequences
   , _kes     :: [KExpr] -- ^ The source expresions we operate on
   }
 makeLenses ''JCfg
 
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
-  (emitB $ kc "ralt")
+  (BEmit $ kc "ralt")
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
@@ -233,60 +234,11 @@ pickOutput (KUinputSink t init) = pure . LinuxUinputCfg
 pickOutput KKextSink      = pure . MacKextCfg          $ KextCfg
 pickOutput KSendEventSink = pure . WindowsSendEventCfg $ SendEventCfg
 
--- #ifdef linux_HOST_OS
--- -- | The Linux correspondence between IToken and actual code
--- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
--- pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
--- pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
--- pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
-
--- -- | The Linux correspondence between OToken and actual code
--- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
--- pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
---   where cfg = defUinputCfg { _keyboardName = T.unpack t
---                            , _postInit     = T.unpack <$> init }
--- pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
--- pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
-
--- #endif
-
--- #ifdef mingw32_HOST_OS
-
--- -- | The Windows correspondence between IToken and actual code
--- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
--- pickInput KLowLevelHookSource = pure $ runLF llHook
--- pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
--- pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
-
--- -- | The Windows correspondence between OToken and actual code
--- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
--- pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
--- pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
--- pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
-
--- #endif
-
--- #ifdef darwin_HOST_OS
-
--- -- | The Mac correspondence between IToken and actual code
--- pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
--- pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
--- pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
--- pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
-
--- -- | The Mac correspondence between OToken and actual code
--- pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
--- pickOutput KKextSink            = pure $ runLF kextSink
--- pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
--- pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
-
--- #endif
-
 --------------------------------------------------------------------------------
 -- $als
 
-type Aliases = M.HashMap Text Button
-type LNames  = [Text]
+type Aliases = M.HashMap Text BCfg
+type LNames  = [Name]
 
 -- | Build up a hashmap of text to button mappings
 --
@@ -302,11 +254,27 @@ joinAliases ns als = foldM f M.empty $ concat als
 
 -- | Turn 'Nothing's (caused by joining a KTrans) into the appropriate error.
 -- KTrans buttons may only occur in 'DefLayer' definitions.
-unnest :: J (Maybe Button) -> J Button
+unnest :: J (Maybe BCfg) -> J BCfg
 unnest = join . fmap (maybe (throwError NestedTrans) (pure . id))
 
--- | Turn a button token into an actual KMonad `Button` value
-joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
+-- | Turn a 'DefButton' statement into a `BCfg`
+--
+-- This:
+-- * Filters out Trans buttons
+-- * Recursively dereferences all buttons (also those within compound buttons)
+-- * Translates to a 'BCfg' from 'Model.Types'
+--
+-- NOTE: This is a bit of a stop-gap solution that causes a lot of
+-- code-duplication. However, it seemed like the best way to start separating
+-- parsing from model implementation. Ideally we'd figure out a way to parse
+-- 'BCfg's directly from the configuration files, but that would currently make
+-- dereferencing aliases a bit difficult.
+--
+-- The best solution to this problem *seems to me* to be implementing our
+-- Parser's with state, so that we build up a dictionary of aliases as we
+-- proceed. This would break the laziness of our parsing, but I'm fine losing
+-- that on a major version change.
+joinButton :: LNames -> Aliases -> DefButton -> J (Maybe BCfg)
 joinButton ns als =
 
   -- Define some utility functions
@@ -321,49 +289,53 @@ joinButton ns als =
       Just b  -> ret b
 
     -- Various simple buttons
-    KEmit c -> ret $ emitB c
-    KCommand pr mbR -> ret $ cmdButton pr mbR
+    KEmit c -> ret $ BEmit c
+    KCommand pr mbR -> ret $ BCommand pr mbR
     KLayerToggle t -> if t `elem` ns
-      then ret $ layerToggle t
+      then ret $ BLayerToggle t
       else throwError $ MissingLayer t
     KLayerSwitch t -> if t `elem` ns
-      then ret $ layerSwitch t
+      then ret $ BLayerSwitch t
       else throwError $ MissingLayer t
     KLayerAdd t -> if t `elem` ns
-      then ret $ layerAdd t
+      then ret $ BLayerAdd t
       else throwError $ MissingLayer t
     KLayerRem t -> if t `elem` ns
-      then ret $ layerRem t
+      then ret $ BLayerRem t
       else throwError $ MissingLayer t
     KLayerDelay s t -> if t `elem` ns
-      then ret $ layerDelay (fi s) t
+      then ret $ BLayerDelay (fi s) t
       else throwError $ MissingLayer t
     KLayerNext t -> if t `elem` ns
-      then ret $ layerNext t
+      then ret $ BLayerNext t
       else throwError $ MissingLayer t
 
-    -- Various compound buttons
-    KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
-    KTapMacroRelease bs ->
-      jst $ tapMacroRelease            <$> mapM go bs
-    KAround o i        -> jst $ around             <$> go o <*> go i
-    KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
-    KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
-    KTapHoldNext s t h -> jst $ tapHoldNext (fi s) <$> go t <*> go h
-    KTapNextRelease t h -> jst $ tapNextRelease    <$> go t <*> go h
-    KTapHoldNextRelease ms t h
-      -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h
-    KAroundNext b      -> jst $ aroundNext         <$> go b
-    KAroundNextSingle b -> jst $ aroundNextSingle <$> go b
-    KPause ms          -> jst . pure $ onPress (pause ms)
-    KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs
-      where f (ms, b) = (fi ms,) <$> go b
-    KStickyKey s d     -> jst $ stickyKey (fi s) <$> go d
+    -- TODO: Make this its own button type eventually. Keeping 'composeKey'
+    -- setting in the Parser is a bit silly, should just be a configurable app
+    -- or model parameter.
+    KComposeSeq bs     -> view cmpKey >>= \c -> jst $ BTapMacro . (c:) <$> mapM go bs
 
-    -- Non-action buttons
+    -- Various compound buttons
+    KTapMacro bs       -> jst $ BTapMacro <$> mapM go bs
+    KTapMacroRelease bs -> jst $ BTapMacroRelease <$> mapM go bs
+    KAround o i        -> jst $ BAround <$> go o <*> go i
+    KTapNext t h       -> jst $ BTapNext <$> go t <*> go h
+    KTapHold s t h     -> jst $ BTapHold (fi s)     <$> go t <*> go h
+    KTapHoldNext s t h -> jst $ BTapHoldNext (fi s) <$> go t <*> go h
+    KTapNextRelease t h -> jst $ BTapNextRelease <$> go t <*> go h
+    KTapHoldNextRelease ms t h
+      -> jst $ BTapHoldNextRelease (fi ms) <$> go t <*> go h
+    KAroundNext b      -> jst $ BAroundNext <$> go b
+    KAroundNextSingle b -> jst $ BAroundNextSingle <$> go b
+    KMultiTap bs d     -> jst $ BMultiTap <$> mapM f bs <*> go d
+      where f (ms, b) = (fi ms,) <$> go b
+    KStickyKey s d     -> jst $ BStickyKey (fi s) <$> go d
+
+    KBlock -> ret BBlock
+    KPause ms          -> ret $ BPause ms
+
+    -- Filter out all 'KTrans' statements
     KTrans -> pure Nothing
-    KBlock -> ret pass
 
 
 --------------------------------------------------------------------------------
@@ -371,7 +343,7 @@ joinButton ns als =
 
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
-joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (LMap Button, Name)
+joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (Keymap BCfg, Name)
 joinKeymap _   _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap src als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
@@ -379,15 +351,16 @@ joinKeymap src als lys = do
   als' <- joinAliases nms als               -- Join aliases into 1 hashmap
   lys' <- mapM (joinLayer als' nms src) lys -- Join all layers
   -- Return the layerstack and the name of the first layer
-  pure $ (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
+  pure $ ( map (second M.fromList) $ lys'
+         , _layerName . fromJust . headMaybe   $ lys)
 
 -- | Check and join 1 deflayer.
 joinLayer ::
-     Aliases                       -- ^ Mapping of names to buttons
-  -> LNames                        -- ^ List of valid layer names
-  -> DefSrc                        -- ^ Layout of the source layer
-  -> DefLayer                      -- ^ The layer token to join
-  -> J (Text, [(Keycode, Button)]) -- ^ The resulting tuple
+     Aliases                     -- ^ Mapping of names to buttons
+  -> LNames                      -- ^ List of valid layer names
+  -> DefSrc                      -- ^ Layout of the source layer
+  -> DefLayer                    -- ^ The layer token to join
+  -> J (Text, [(Keycode, BCfg)]) -- ^ The resulting tuple
 joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
 
   -- Ensure length-match between src and buttons

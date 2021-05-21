@@ -5,6 +5,7 @@ module KMonad.Util.Ctx
   , runCtx_
   , nest
   , launch_
+  , around
   )
 where
 
@@ -69,6 +70,10 @@ nest = traverse id
 -- forever, untill that action terminates.
 launch_ :: UIO m => m a -> Ctx r m ()
 launch_ go = mkCtx $ \f -> withAsync (forever go) (const $ f ())
+
+-- | Do something before and after some action, even on exception.
+around :: UIO m => m b -> m c -> Ctx r m ()
+around before after = mkCtx $ \f -> bracket_ before after (f ())
 
 -- -- | Like `launch`
 -- launch_ :: HasLogFunc e

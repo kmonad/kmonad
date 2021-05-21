@@ -50,17 +50,16 @@ my :: MonadK m => Switch -> m KeySwitch
 my s = mkKeySwitch s <$> myBinding
 
 -- | Register a simple hook without a timeout
-hookF :: MonadKIO m => HookLocation -> (KeySwitch -> m Catch) -> m ()
-hookF l f = register l . Hook Nothing $ \t -> f (t^.event)
+hookF :: MonadKIO m => (KeySwitch -> m Catch) -> m ()
+hookF f = register $ Hook Nothing $ \t -> f (t^.event)
 
 -- | Register a hook with a timeout
 tHookF :: MonadK m
-  => HookLocation         -- ^ Where to install the hook
-  -> Ms         -- ^ The timeout delay for the hook
+  => Ms                   -- ^ The timeout delay for the hook
   -> m ()                 -- ^ The action to perform on timeout
   -> (Trigger -> m Catch) -- ^ The action to perform on trigger
   -> m ()                 -- ^ The resulting action
-tHookF l d a f = register l $ Hook (Just $ Timeout d a) f
+tHookF d a f = register $ Hook (Just $ Timeout d a) f
 
 -- | Perform an action after a period of time has elapsed
 --
@@ -72,7 +71,7 @@ after :: MonadK m
   -> m ()
 after d a = do
   let rehook t = after (d - t^.elapsed) a *> pure NoCatch
-  tHookF InputHook d a rehook
+  tHookF d a rehook
 
 -- | Perform an action immediately after the current action is finished. NOTE:
 -- there is no guarantee that another event doesn't outrace this, only that it
@@ -89,7 +88,7 @@ matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
 await :: MonadKIO m => KeyPred -> (KeySwitch -> m Catch) -> m ()
-await p a = hookF InputHook $ \e -> if p e
+await p a = hookF $ \e -> if p e
   then a e
   else await p a *> pure NoCatch
 
@@ -111,7 +110,7 @@ within d p a f = do
   let f' t = if p' (t^.event)
         then f t
         else within (d - t^.elapsed) p a f *> pure NoCatch
-  tHookF InputHook d a f'
+  tHookF d a f'
 
 -- | Like `within`, but acquires a hold when starting, and releases when done
 withinHeld :: MonadK m

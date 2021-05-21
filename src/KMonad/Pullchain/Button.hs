@@ -21,6 +21,7 @@ module KMonad.Pullchain.Button
   , mkButton
   , around
   , tapOn
+  , press
 
   -- * Simple buttons
   -- $simple
@@ -32,6 +33,7 @@ module KMonad.Pullchain.Button
   , layerRem
   , pass
   , cmdButton
+  , doPause
 
   -- * Button combinators
   -- $combinators
@@ -56,9 +58,7 @@ import KMonad.Prelude
 import KMonad.Pullchain.Action
 import KMonad.Pullchain.Types
 
--- import KMonad.Keyboard
-import KMonad.Util
-import KMonad.Util.Keyboard
+import KMonad.Util hiding (around)
 
 
 --------------------------------------------------------------------------------
@@ -150,6 +150,9 @@ layerRem t = onPress (layerOp $ PopLayer t)
 pass :: Button
 pass = onPress $ pure ()
 
+doPause :: Ms -> Button
+doPause ms = onPress (pause ms)
+
 -- | Create a button that executes a shell command on press and possibly on
 -- release
 cmdButton :: Text -> Maybe Text -> Button
@@ -225,7 +228,7 @@ tapHold ms t h = onPress $ withinHeld ms (matchMy Release)
 -- own release, or else switches to holding some other button if the next event
 -- is a different keypress.
 tapNext :: Button -> Button -> Button
-tapNext t h = onPress $ hookF InputHook $ \e -> do
+tapNext t h = onPress $ hookF $ \e -> do
   p <- matchMy Release
   if p e
     then tap t   *> pure Catch
@@ -253,7 +256,7 @@ tapNextRelease t h = onPress $ do
   go []
   where
     go :: MonadK m => [Keycode] ->  m ()
-    go ks = hookF InputHook $ \e -> do
+    go ks = hookF $ \e -> do
       p <- matchMy Release
       let isRel = isRelease e
       if
@@ -296,7 +299,7 @@ tapHoldNextRelease ms t h = onPress $ do
   where
 
     go :: MonadK m => Ms -> [Keycode] ->  m ()
-    go ms' ks = tHookF InputHook ms' onTimeout $ \r -> do
+    go ms' ks = tHookF ms' onTimeout $ \r -> do
       p <- matchMy Release
       let e = r^.event
       let isRel = isRelease e
@@ -387,7 +390,7 @@ stickyKey :: Ms -> Button -> Button
 stickyKey ms b = onPress $ go
  where
   go :: MonadK m => m ()
-  go = hookF InputHook $ \e -> do
+  go = hookF $ \e -> do
     p <- matchMy Release
     if | p e               -> doTap    $> Catch
          -- My own release; we act as if we were tapped

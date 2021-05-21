@@ -4,7 +4,6 @@ module KMonad.Pullchain.Types
   , Catch(..)
   , Trigger(..)
   , Timeout(..)
-  , HookLocation(..)
   , Hook(..)
 
     -- * Lenses
@@ -38,7 +37,7 @@ where
 import KMonad.Prelude
 import KMonad.Util
 import qualified KMonad.Util.LayerStack as Ls
-
+import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 type KeyPred = KeySwitch -> Bool
 
 -- | 'LMap's are mappings from 'Name'd maps from 'Keycode' to things.
@@ -72,12 +71,6 @@ makeClassy ''Trigger
 -- The general structure of the 'Hook' record, that defines the most general way
 -- of registering a 'KeySwitch' function.
 
--- | ADT signalling where to install a hook
-data HookLocation
-  = InputHook  -- ^ Install the hook immediately after receiving a 'KeySwitch'
-  | OutputHook -- ^ Install the hook just before emitting a 'KeySwitch'
-  deriving (Eq, Show)
-
 -- | A 'Timeout' value describes how long to wait and what to do upon timeout
 data Timeout m = Timeout
   { _delay  :: Ms -- ^ Delay before timeout action is triggered
@@ -98,7 +91,6 @@ makeClassy ''Hook
 --
 -- Operations that manipulate the layer-stack
 
-
 -- | 'LayerOp' describes all the different layer-manipulations that KMonad
 -- supports.
 data LayerOp
@@ -106,11 +98,11 @@ data LayerOp
   | PopLayer     Name -- ^ Remove the first occurence of a layer
   | SetBaseLayer Name -- ^ Change the base-layer
 
-
 --------------------------------------------------------------------------------
 -- $monadk
 --
 -- The fundamental components that make up any 'KMonad.Pullchain.Button.Button' operation.
+
 
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.
@@ -122,7 +114,7 @@ class Monad m => MonadKIO m where
   -- | Pause or unpause event processing
   hold       :: Bool -> m ()
   -- | Register a callback hook
-  register   :: HookLocation -> Hook m -> m ()
+  register   :: Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Insert an event in the input queue
@@ -180,7 +172,58 @@ runBEnv b a =
     (Press, Release) -> (Press,   Just $ b^.pressAction)
     (Release, Press) -> (Release, Just $ b^.releaseAction)
     _                -> (a,       Nothing)
-   
---------------------------------------------------------------------------------
 
-data PCEnv = PCEnv
+-- --------------------------------------------------------------------------------
+-- -- $monadK
+-- --
+-- -- Overview of all the operations supported in MonadKIO actions
+
+-- instance CanK e => MonadKIO (RIO e) where
+--   -- Emitting with the keysink
+--   emit e = do
+--     ov <- view outVar
+--     -- ke <- keyEventNow e
+--     atomically $ putTMVar ov e
+
+--   -- Pausing is a simple IO action
+--   pause = threadDelay . (*1000) . fromIntegral
+
+--   -- Holding and rerunning through the sluice and dispatch
+--   hold b = do
+--     sl <- view sluice
+--     di <- view dispatch
+--     if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
+
+--   -- Hooking is performed with the hooks component
+--   register l h = do
+--     hs <- case l of
+--       InputHook  -> view inHooks
+--       OutputHook -> view outHooks
+--     Hs.register hs h
+
+--   -- Layer-ops are sent to the 'Keymap'
+--   layerOp o = view keymap >>= \hl -> Km.layerOp hl o
+
+--   -- Injecting by adding to Dispatch's rerun buffer
+--   inject e = do
+--     di <- view dispatch
+--     -- ke <- keyEventNow e
+--     logDebug $ "Injecting event: " <> tshow e
+--     Dp.rerun di [e]
+
+--   -- Shell-command through spawnCommand
+--   shellCmd t = do
+--     f <- view allowCmd
+--     if f then do
+--       logInfo $ "Running command: " <> tshow t
+--       spawnCommand . unpack $ t
+--     else
+--       logInfo $ "Received but not running: " <> tshow t
+--    where
+--     spawnCommand :: MonadIO m => String -> m ()
+--     spawnCommand cmd = void $ createProcess_ "spawnCommand"
+--       (shell cmd){ -- We don't want the child process to inherit things like
+--                    -- our keyboard grab (this would, for example, make it
+--                    -- impossible for a command to restart kmonad).
+--                    close_fds   = True
+--                  }

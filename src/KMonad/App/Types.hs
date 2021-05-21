@@ -1,32 +1,17 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
 module KMonad.App.Types
   ( AppCfg(..)
   , AppEnv(..)
-  , KEnv(..)
   , HasAppCfg(..)
   , HasAppEnv(..)
-  , HasKEnv(..)
-  , CanK
+  , App
   )
 where
 
 import KMonad.Prelude
 
-import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
-
 import KMonad.App.KeyIO
-
-import KMonad.Util.Keyboard
-import KMonad.Util.Logging
-import KMonad.Pullchain.Action
-import KMonad.Pullchain.Button
-import KMonad.Pullchain.Types
+import KMonad.Model.Types
 import KMonad.Util
-
-import qualified KMonad.Pullchain.Components.Dispatch as Dp
-import qualified KMonad.Pullchain.Components.Hooks    as Hs
-import qualified KMonad.Pullchain.Components.Sluice   as Sl
-import qualified KMonad.Pullchain.Components.Keymap   as Km
 
 --------------------------------------------------------------------------------
 -- $appcfg
@@ -47,19 +32,15 @@ import qualified KMonad.Pullchain.Components.Keymap   as Km
 -- | Record of all the configuration options required to run KMonad's core App
 -- loop.
 data AppCfg = AppCfg
-  {
-  --   _keySinkDev   :: Acquire KeySink   -- ^ How to open a 'KeySink'
-  -- , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
-    _keyInputCfg  :: KeyInputCfg       -- ^ The configuration of the input keyboard
-  , _keyOutputCfg :: KeyOutputCfg      -- ^ The configuration of the output keyboard
-  , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
-  , _firstLayer   :: Name          -- ^ Active layer when KMonad starts
-  , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
-  , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
-  , _startDelay   :: Ms      -- ^ How long to wait before acquiring the input keyboard
+  { _keyInputCfg  :: KeyInputCfg  -- ^ The configuration of the input keyboard
+  , _keyOutputCfg :: KeyOutputCfg -- ^ The configuration of the output keyboard
+  , _acModelCfg   :: ModelCfg     -- ^ The keymap/model configuration
+  , _allowCmd     :: Bool         -- ^ Whether shell-commands are allowed
+  , _startDelay   :: Ms           -- ^ How long to wait before acquiring the input keyboard
   }
 makeClassy ''AppCfg
 
+instance HasModelCfg AppCfg where modelCfg = acModelCfg
 
 -- | Environment of a running KMonad app-loop
 data AppEnv = AppEnv
@@ -71,93 +52,14 @@ data AppEnv = AppEnv
   , _keySource  :: GetKey
   , _keySink    :: PutKey
 
-    -- Pull chain
-  , _dispatch   :: Dp.Dispatch
-  , _inHooks    :: Hs.Hooks
-  , _sluice     :: Sl.Sluice
-
-    -- Other components
-  , _keymap     :: Km.Keymap
-  , _outHooks   :: Hs.Hooks
-  , _outVar     :: TMVar KeySwitch
+    -- API to the model
+  , _aeModelAPI :: ModelAPI
   }
 makeClassy ''AppEnv
 
 instance HasLogEnv AppEnv where logEnv = keLogEnv
 instance HasLogCfg AppEnv where logCfg = logEnv.logCfg
 instance HasAppCfg AppEnv where appCfg = keAppCfg
+instance HasModelAPI AppEnv where modelAPI = aeModelAPI
 
---------------------------------------------------------------------------------
--- $kenv
---
-
--- | The complete environment capable of satisfying 'MonadK'
-data KEnv = KEnv
-  { _kAppEnv :: AppEnv -- ^ The app environment containing all the components
-  , _kBEnv   :: BEnv   -- ^ The environment describing the currently active button
-  }
-makeClassy ''KEnv
-
-instance HasAppCfg KEnv where appCfg  = kAppEnv.appCfg
-instance HasAppEnv KEnv where appEnv  = kAppEnv
-instance HasBEnv   KEnv where bEnv    = kBEnv
-instance HasLogEnv KEnv where logEnv  = kAppEnv.logEnv
-instance HasLogCfg KEnv where logCfg  = logEnv.logCfg
-
--- | All the prerequisites for an environment to support MonadKIO actions
-type CanK e = (HasAppEnv e, HasAppCfg e, HasLogEnv e, HasLogCfg e)
-
--- | Hook up all the components to the different 'MonadK' functionalities
-instance MonadK (RIO KEnv) where
-  -- Binding is found in the stored 'BEnv'
-  myBinding = view (bEnv.binding)
-
-instance CanK e => MonadKIO (RIO e) where
-  -- Emitting with the keysink
-  emit e = do
-    ov <- view outVar
-    -- ke <- keyEventNow e
-    atomically $ putTMVar ov e
-
-  -- Pausing is a simple IO action
-  pause = threadDelay . (*1000) . fromIntegral
-
-  -- Holding and rerunning through the sluice and dispatch
-  hold b = do
-    sl <- view sluice
-    di <- view dispatch
-    if b then Sl.block sl else Sl.unblock sl >>= Dp.rerun di
-
-  -- Hooking is performed with the hooks component
-  register l h = do
-    hs <- case l of
-      InputHook  -> view inHooks
-      OutputHook -> view outHooks
-    Hs.register hs h
-
-  -- Layer-ops are sent to the 'Keymap'
-  layerOp o = view keymap >>= \hl -> Km.layerOp hl o
-
-  -- Injecting by adding to Dispatch's rerun buffer
-  inject e = do
-    di <- view dispatch
-    -- ke <- keyEventNow e
-    logDebug $ "Injecting event: " <> tshow e
-    Dp.rerun di [e]
-
-  -- Shell-command through spawnCommand
-  shellCmd t = do
-    f <- view allowCmd
-    if f then do
-      logInfo $ "Running command: " <> tshow t
-      spawnCommand . unpack $ t
-    else
-      logInfo $ "Received but not running: " <> tshow t
-   where
-    spawnCommand :: MonadIO m => String -> m ()
-    spawnCommand cmd = void $ createProcess_ "spawnCommand"
-      (shell cmd){ -- We don't want the child process to inherit things like
-                   -- our keyboard grab (this would, for example, make it
-                   -- impossible for a command to restart kmonad).
-                   close_fds   = True
-                 }
+type App a = RIO AppEnv a

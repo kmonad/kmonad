@@ -15,7 +15,7 @@
 
 (deflayer layer1
   a
-  (tap-hold-next-release 2000 b lctl)
+  (tap-hold-next-release 2000 b lsft)
   (around-next lsft)
   enter
 )

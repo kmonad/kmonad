@@ -75,7 +75,7 @@ library
       KMonad.App.Main
       KMonad.App.Main.OS
       KMonad.App.Main.Run
-      KMonad.App.Main.Subtasks
+      KMonad.App.Main.Loop
       KMonad.App.Types
       KMonad.App.Invocation
       KMonad.App.Invocation.IO
@@ -95,11 +95,16 @@ library
       KMonad.App.Parser.TokenJoiner
       KMonad.App.Parser.Tokenizer
       KMonad.App.Parser.Types
+      KMonad.Model
       KMonad.Model.Types
+      KMonad.Model.IO
       KMonad.Pullchain
       KMonad.Pullchain.Action
       KMonad.Pullchain.Button
+      KMonad.Pullchain.Env
       KMonad.Pullchain.IO
+      KMonad.Pullchain.Loop
+      KMonad.Pullchain.Operations
       KMonad.Pullchain.Types
       KMonad.Pullchain.Components.Dispatch
       KMonad.Pullchain.Components.Keymap

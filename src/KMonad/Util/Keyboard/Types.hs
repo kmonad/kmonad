@@ -22,6 +22,7 @@ module KMonad.Util.Keyboard.Types
 
     -- * $keyevent
   , KeyEvent
+  , HasKeyEvent(..)
   , mkKeyEvent
 
     -- * $io
@@ -123,7 +124,7 @@ data KeyEvent = KeyEvent
   { _eKeySwitch :: KeySwitch
   , _eTime      :: Time
   } deriving (Eq, Show)
-makeLenses ''KeyEvent
+makeClassy ''KeyEvent
 
 -- | TODO: make me nice
 instance Display KeyEvent where textDisplay = tshow
