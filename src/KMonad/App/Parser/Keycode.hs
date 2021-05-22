@@ -86,6 +86,7 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
   , ("kp-" , ["kpminus", "kpmin"])
   , ("kp." , ["kpdot"])
   , ("sys" , ["ssrq", "psrc", "printscreen"])
+  , ("paus", ["pause"])
   ]
 
 --------------------------------------------------------------------------------

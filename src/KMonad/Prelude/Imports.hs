@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-dodgy-imports #-}
 {- The very first module that gets imported, only does external imports -}
 module KMonad.Prelude.Imports
   ( module X )
@@ -15,6 +16,10 @@ import RIO as X hiding
   (-- Not the lens stuff, I want more support for lenses from "Control.Lens"
     view, ASetter, ASetter', Lens, Getting, Lens'
   , SimpleGetter, lens, over, set, sets, to, (^.)
+
+    -- The following line is required for newer stack releases.
+    -- This is also the reason for the OPTIONS_GHC pragma
+  , (^..), (^?), preview, (%~), (.~)
 
     -- Some stuff I'd rather default to Text
   , unlines, lines
