@@ -63,7 +63,7 @@ For information on how to configure KMonad, please refer you to:
 Want to add your own keyboard configuration to `./keymap`? Fork KMonad, create a new subdirectory using your GitHub username and submit a pull request.
 
 ### Editor Support for the Configuration Language
-- [Emacs](https://github.com/slotThe/kbd-mode)
+- [Emacs](https://github.com/kmonad/kbd-mode)
 - [Vim](https://github.com/kmonad/kmonad-vim)
 
 ### Startup
