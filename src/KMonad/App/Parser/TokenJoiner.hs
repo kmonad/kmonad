@@ -25,6 +25,8 @@ module KMonad.App.Parser.TokenJoiner
 where
 
 import qualified Prelude 
+import qualified Data.List as L 
+  
 import System.Directory (listDirectory)
 import KMonad.Prelude hiding (uncons)
 
@@ -40,7 +42,6 @@ import KMonad.Util
 
 import Control.Monad.Except
 
-import qualified RIO.Text as T
 import RIO.List (uncons, headMaybe)
 import RIO.Partial (fromJust)
 import qualified RIO.HashMap      as M
@@ -238,18 +239,20 @@ pickInput (KFindFirstWithFix fix) =
     -- now we just default to the files that match our prefix
     let candidates = filter (view $ _2 . to (findFileFix fix)) files
     case candidates ^? ix 0 of
-      Nothing           -> throwError $ NoFixCandidates errMsg
+      Nothing           -> throwError . NoFixCandidates . errMsg $ files
  
       Just (dir, first) -> pure . LinuxEvdevCfg . EvdevCfg $ dir <> "/" <> first
   where
     dirs = mappend "/dev/input" <$> ["/by-id", "/by-path"]
     filesIO = mconcat <$> mapM listPair dirs
     listPair (T.unpack -> dir) = fmap (dir, ) <$> listDirectory dir
-    errMsg = T.unwords [ "No input fix candidates found! We've looked in:"
-                       , T.intercalate ", " dirs
-                       , "for fix:"
-                       , T.pack $ show fix
-                       ]
+    errMsg found = T.unwords [ "No input fix candidates found! We've looked in:"
+                             , T.intercalate ", " dirs
+                             , "for fix:"
+                             , T.pack $ show fix
+                             , "Directory listing (both dirs):"
+                             , T.pack . show $ found
+                             ]
 pickInput (KIOKitSource _)      = pure . MacKIOKitCfg     $ KIOKitCfg
 pickInput KLowLevelHookSource = pure . WindowsLLHookCfg $ LLHookCfg
 
