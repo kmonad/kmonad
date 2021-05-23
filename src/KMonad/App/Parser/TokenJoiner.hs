@@ -117,10 +117,8 @@ runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x
 -- NOTE: We start joinConfig with the default JCfg, but joinConfig might locally
 -- override settings by things it reads from the config itself.
 joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
-joinConfigIO es = -- case runJ joinConfig $ defJCfg es of
-  -- Left  e -> throwM e
-  -- Right c -> pure c
-  liftIO $ runJ joinConfig (defJCfg es) >>= either throwM pure 
+joinConfigIO = 
+  liftIO . runJ joinConfig . defJCfg >=> either throwM pure 
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
