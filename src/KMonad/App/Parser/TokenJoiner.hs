@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 {-|
 Module      : KMonad.App.Parser.TokenJoiner
 Description : The code that turns tokens into a DaemonCfg
@@ -23,6 +24,8 @@ module KMonad.App.Parser.TokenJoiner
   )
 where
 
+import qualified Prelude 
+import System.Directory (listDirectory)
 import KMonad.Prelude hiding (uncons)
 
 import KMonad.App.Parser.Types
@@ -37,6 +40,7 @@ import KMonad.Util
 
 import Control.Monad.Except
 
+import qualified RIO.Text as T
 import RIO.List (uncons, headMaybe)
 import RIO.Partial (fromJust)
 import qualified RIO.HashMap      as M
@@ -59,6 +63,7 @@ data JoinError
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
+  | NoFixCandidates Text
 
 instance Show JoinError where
   show e = case e of
@@ -77,6 +82,8 @@ instance Show JoinError where
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
+    NoFixCandidates t -> "Looks like you specified looking for a file by suffix/prefix, but we chouldn't find any valid candidates: "
+                         <> T.unpack t
 
 
 instance Exception JoinError
@@ -93,13 +100,13 @@ defJCfg = JCfg
   (BEmit $ kc "ralt")
 
 -- | Monad in which we join, just Except over Reader
-newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
+newtype J a = J { unJ :: ReaderT JCfg (ExceptT JoinError Prelude.IO) a }
   deriving ( Functor, Applicative, Monad
-           , MonadError JoinError , MonadReader JCfg)
+           , MonadError JoinError , MonadReader JCfg, MonadIO )
 
 -- | Perform a joining computation
-runJ :: J a -> JCfg -> Either JoinError a
-runJ j = runReader (runExceptT $ unJ j)
+runJ :: J a -> JCfg -> Prelude.IO (Either JoinError a)
+runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x -- runReaderT (runExceptT $ unJ j) cfg
 
 --------------------------------------------------------------------------------
 -- $full
@@ -109,9 +116,10 @@ runJ j = runReader (runExceptT $ unJ j)
 -- NOTE: We start joinConfig with the default JCfg, but joinConfig might locally
 -- override settings by things it reads from the config itself.
 joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
-joinConfigIO es = case runJ joinConfig $ defJCfg es of
-  Left  e -> throwM e
-  Right c -> pure c
+joinConfigIO es = -- case runJ joinConfig $ defJCfg es of
+  -- Left  e -> throwM e
+  -- Right c -> pure c
+  liftIO $ runJ joinConfig (defJCfg es) >>= either throwM pure 
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
@@ -223,9 +231,21 @@ getAllow = do
 
 
 pickInput :: IToken -> J KeyInputCfg
-pickInput (KDeviceSource f)     = pure . LinuxEvdevCfg    . EvdevCfg $ f
+pickInput (KDeviceSource f)     = pure . LinuxEvdevCfg . EvdevCfg $ f
+pickInput (KFindFirstWithFix fix) =
+  do
+    files <- liftIO filesIO
+    -- now we just default to the files that match our prefix
+    let candidates = filter (view $ _2 . to (findFileFix fix)) files
+    case candidates ^? ix 0 of
+      Nothing           -> throwIO $ NoFixCandidates ""
+      Just (dir, first) -> pure . LinuxEvdevCfg . EvdevCfg $ dir <> "/" <> first
+  where
+    dirs = mappend "/dev/input" <$> ["/by-id", "/by-path"]
+    filesIO = mconcat <$> mapM listPair dirs
+    listPair (T.unpack -> dir) = fmap (dir, ) <$> listDirectory dir
 pickInput (KIOKitSource _)      = pure . MacKIOKitCfg     $ KIOKitCfg
-pickInput (KLowLevelHookSource) = pure . WindowsLLHookCfg $ LLHookCfg
+pickInput KLowLevelHookSource = pure . WindowsLLHookCfg $ LLHookCfg
 
 pickOutput :: OToken -> J KeyOutputCfg
 pickOutput (KUinputSink t init) = pure . LinuxUinputCfg
@@ -247,7 +267,7 @@ joinAliases :: LNames -> [DefAlias] -> J Aliases
 joinAliases ns als = foldM f M.empty $ concat als
   where f mp (t, b) = if t `M.member` mp
           then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> (unnest $ joinButton ns mp b)
+          else flip (M.insert t) mp <$> unnest (joinButton ns mp b)
 
 --------------------------------------------------------------------------------
 -- $but

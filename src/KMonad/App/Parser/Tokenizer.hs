@@ -305,6 +305,8 @@ itokenP = choice $ map (try . uncurry statement) itokens
 itokens :: [(Text, Parser IToken)]
 itokens =
   [ ("device-file"   , KDeviceSource <$> (T.unpack <$> textP))
+  , ("device-file-first-prefix", KFindFirstWithFix . Prefix . T.unpack <$> textP )
+  , ("device-file-first-suffix", KFindFirstWithFix . Suffix . T.unpack <$> textP )
   , ("low-level-hook", pure KLowLevelHookSource)
   , ("iokit-name"    , KIOKitSource <$> optional textP)]
 

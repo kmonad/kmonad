@@ -11,3 +11,5 @@
 .stack-work
 /bin/
 result
+/TAGS
+/cabal.project.local

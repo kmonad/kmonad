@@ -59,6 +59,8 @@ common shared-props
     , rio
     , time
     , unliftio
+    -- manipulate filepaths.
+    , directory 
   default-language: Haskell2010
 
 
