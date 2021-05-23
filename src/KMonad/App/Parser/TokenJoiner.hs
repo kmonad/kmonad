@@ -238,7 +238,7 @@ pickInput (KFindFirstWithFix fix) =
     -- now we just default to the files that match our prefix
     let candidates = filter (view $ _2 . to (findFileFix fix)) files
     case candidates ^? ix 0 of
-      Nothing           -> throwIO $ NoFixCandidates errMsg
+      Nothing           -> throwError $ NoFixCandidates errMsg
  
       Just (dir, first) -> pure . LinuxEvdevCfg . EvdevCfg $ dir <> "/" <> first
   where
