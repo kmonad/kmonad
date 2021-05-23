@@ -106,7 +106,7 @@ newtype J a = J { unJ :: ReaderT JCfg (ExceptT JoinError Prelude.IO) a }
 
 -- | Perform a joining computation
 runJ :: J a -> JCfg -> Prelude.IO (Either JoinError a)
-runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x -- runReaderT (runExceptT $ unJ j) cfg
+runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x
 
 --------------------------------------------------------------------------------
 -- $full
@@ -238,12 +238,18 @@ pickInput (KFindFirstWithFix fix) =
     -- now we just default to the files that match our prefix
     let candidates = filter (view $ _2 . to (findFileFix fix)) files
     case candidates ^? ix 0 of
-      Nothing           -> throwIO $ NoFixCandidates ""
+      Nothing           -> throwIO $ NoFixCandidates errMsg
+ 
       Just (dir, first) -> pure . LinuxEvdevCfg . EvdevCfg $ dir <> "/" <> first
   where
     dirs = mappend "/dev/input" <$> ["/by-id", "/by-path"]
     filesIO = mconcat <$> mapM listPair dirs
     listPair (T.unpack -> dir) = fmap (dir, ) <$> listDirectory dir
+    errMsg = T.unwords [ "No input fix candidates found! We've looked in:"
+                       , T.intercalate ", " dirs
+                       , "for fix:"
+                       , T.pack $ show fix
+                       ]
 pickInput (KIOKitSource _)      = pure . MacKIOKitCfg     $ KIOKitCfg
 pickInput KLowLevelHookSource = pure . WindowsLLHookCfg $ LLHookCfg
 
