@@ -31,11 +31,6 @@ import qualified RIO.HashMap as M
 -- $keycode
 
 -- | In Linux we use 'Word16', the linux-native keycode type
---
--- NOTE:
--- * Required by KMonad.App: Eq, Show, Hashable
--- * Used to keep a set in Evdev: Ord
--- * Used to specify keycodes as numbers and ranges: Num, Enum
 newtype Keycode = Keycode { unKeycode :: Word16 }
   deriving (Eq, Ord, Num, Show, Enum, Hashable)
 
