@@ -102,7 +102,7 @@ newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
 
 -- | Perform a joining computation
 runJ :: J a -> JCfg -> Either JoinError a
-runJ j = runReader (runExceptT $ unJ j)
+runJ = runReader . runExceptT . unJ 
 --------------------------------------------------------------------------------
 -- $full
 
@@ -116,7 +116,7 @@ joinConfigIO =
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
-extract p = catMaybes . map (preview p)
+extract p = mapMaybe (preview p)
 
 data SingletonError
   = None
