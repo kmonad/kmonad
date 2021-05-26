@@ -1,7 +1,8 @@
-module KMonad.App.KeyIO.Common
+module KMonad.App.KeyIO.Common where
 
-where
-
+import qualified RIO.Text as T 
+import System.Directory (listDirectory)
+import qualified Data.List as L 
 import KMonad.Prelude
 import KMonad.Util.Keyboard
 import KMonad.Util.Name
@@ -17,10 +18,29 @@ import KMonad.Util.Name
 -- The configuration records for all of the Linux KeyIO options
 
 -- | The configuration record for evdev key-input on Linux
-data EvdevCfg = EvdevCfg
-  { _evdevPath :: FilePath -- ^ The path to the input-file to open and capture
-  } deriving Show
+data EvdevCfg =
+  -- | The filepath is known beforehand
+  EvdevCfg !FilePath
+  -- | Search for a `Fix` within a set of paths (directories)
+  -- Ideally, we'd have liked to use the Fix type from Parser's Types, but that causes a cyclic import. 
+  | EvdevSearchPrefix !FilePath !(NonEmpty FilePath)
+  | EvdevSearchSuffix !FilePath !(NonEmpty FilePath)
+  deriving Show
+
 makeClassy ''EvdevCfg
+
+getFile :: MonadIO m => EvdevCfg -> m (Maybe FilePath)
+getFile = \case
+  EvdevCfg fp -> pure . Just $ fp 
+  EvdevSearchPrefix pre dirs -> findWith dirs (pre `L.isPrefixOf`) 
+  EvdevSearchSuffix suf dirs -> findWith dirs (suf `L.isSuffixOf`)
+  where
+    findWith dirs f = filesIO dirs <&> firstCandidate f  
+      where
+        firstCandidate filt files = filter (view $ _2 . to filt) files ^? ix 0 . to mkPath 
+        mkPath (dir, file) = dir <> "/" <> file 
+        filesIO dirs = liftIO $ mconcat <$> mapM listPair (toList dirs)
+        listPair dir = fmap (dir, ) <$> listDirectory dir
 
 -- | Configuration of the Uinput keyboard to instantiate
 data UinputCfg = UinputCfg

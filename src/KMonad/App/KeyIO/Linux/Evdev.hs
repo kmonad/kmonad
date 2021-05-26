@@ -37,15 +37,15 @@ makeClassyPrisms ''EvdevException
 -- | How to display EvdevExceptions
 instance Exception EvdevException where
   displayException (EvdevCouldNotAcquire c n) = concat
-    [ "Failed to acquire ioctl-grab on: '", c^.evdevPath
+    [ "Failed to acquire ioctl-grab on: '", show c
     , "' with errorcode: ", show n ]
   displayException (EvdevCouldNotRelease c n) = concat
-    [ "Failed to release ioctl-grab on: '", c^.evdevPath
+    [ "Failed to release ioctl-grab on: '", show c
     , "' with errorcode: ", show n ]
   displayException (EvdevResourceLost c) = concat
-    [ "Lost access to: '", c^.evdevPath, "' during execution."]
+    [ "Lost access to: '", show c, "' during execution."]
   displayException (EvdevCouldNotDecode c t) = concat
-    [ "Failed to parse event from: '", c^.evdevPath
+    [ "Failed to parse event from: '", show c
     , "' with error message: ", t ]
 
 -- | Hooking up lensy exception handling
@@ -127,16 +127,20 @@ withEvdev c = mkCtx $ \f -> do
         le <- view logEnv
         -- Open the posix evdev file and convert to handle
         let flgs = OpenFileFlags False False False False False
-        fd'  <- liftIO $ openFd (c^.evdevPath) ReadOnly Nothing flgs
-        hdl' <- liftIO $ fdToHandle fd'
+        mFile <- getFile c  
+        case mFile of
+          Nothing -> throwing _EvdevCouldNotAcquire (c, 1)
+          Just file -> do 
+            fd'  <- liftIO $ openFd file ReadOnly Nothing flgs
+            hdl' <- liftIO $ fdToHandle fd'
 
-        -- Execute ioctl-grab
-        logInfo "Initiating ioctl grab"
-        ioctl_keyboard fd' True `onErr` \n
-          -> throwing _EvdevCouldNotAcquire (c, n)
-
-        -- Wrap up the environment
-        pure $ EvdevEnv le c hdl' fd'
+            -- Execute ioctl-grab
+            logInfo "Initiating ioctl grab"
+            ioctl_keyboard fd' True `onErr` \n
+              -> throwing _EvdevCouldNotAcquire (c, n)
+  
+            -- Wrap up the environment
+            pure $ EvdevEnv le c hdl' fd'
 
   let cleanup env = do
         logInfo "Releasing ioctl grab"

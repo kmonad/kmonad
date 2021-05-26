@@ -24,7 +24,6 @@ module KMonad.App.Parser.TokenJoiner
   )
 where
 
-import qualified Prelude 
 import qualified Data.List as L 
   
 import System.Directory (listDirectory)
@@ -64,7 +63,6 @@ data JoinError
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
-  | NoFixCandidates Text
 
 instance Show JoinError where
   show e = case e of
@@ -83,9 +81,6 @@ instance Show JoinError where
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
-    NoFixCandidates t -> "Looks like you specified looking for a file by suffix/prefix, but we chouldn't find any valid candidates: "
-                         <> T.unpack t
-
 
 instance Exception JoinError
 
@@ -101,14 +96,13 @@ defJCfg = JCfg
   (BEmit $ kc "ralt")
 
 -- | Monad in which we join, just Except over Reader
-newtype J a = J { unJ :: ReaderT JCfg (ExceptT JoinError Prelude.IO) a }
+newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
   deriving ( Functor, Applicative, Monad
-           , MonadError JoinError , MonadReader JCfg, MonadIO )
+           , MonadError JoinError , MonadReader JCfg )
 
 -- | Perform a joining computation
-runJ :: J a -> JCfg -> Prelude.IO (Either JoinError a)
-runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x
-
+runJ :: J a -> JCfg -> Either JoinError a
+runJ j = runReader (runExceptT $ unJ j)
 --------------------------------------------------------------------------------
 -- $full
 
@@ -118,7 +112,7 @@ runJ x cfg = runExceptT . flip runReaderT cfg . unJ $ x
 -- override settings by things it reads from the config itself.
 joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
 joinConfigIO = 
-  liftIO . runJ joinConfig . defJCfg >=> either throwM pure 
+  pure . runJ joinConfig . defJCfg >=> either throwM pure 
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
@@ -231,26 +225,10 @@ getAllow = do
 
 pickInput :: IToken -> J KeyInputCfg
 pickInput (KDeviceSource f)     = pure . LinuxEvdevCfg . EvdevCfg $ f
-pickInput (KFindFirstWithFix fix) =
-  do
-    files <- liftIO filesIO
-    -- now we just default to the files that match our prefix
-    let candidates = filter (view $ _2 . to (findFileFix fix)) files
-    case candidates ^? ix 0 of
-      Nothing           -> throwError . NoFixCandidates . errMsg $ files
- 
-      Just (dir, first) -> pure . LinuxEvdevCfg . EvdevCfg $ dir <> "/" <> first
-  where
-    dirs = mappend "/dev/input" <$> ["/by-id", "/by-path"]
-    filesIO = mconcat <$> mapM listPair dirs
-    listPair (T.unpack -> dir) = fmap (dir, ) <$> listDirectory dir
-    errMsg found = T.unwords [ "No input fix candidates found! We've looked in:"
-                             , T.intercalate ", " dirs
-                             , "for fix:"
-                             , T.pack $ show fix
-                             , "Directory listing (both dirs):"
-                             , T.pack . show $ found
-                             ]
+pickInput (KFindFirstWithFix fix) = case fix of
+  Prefix pre -> pure . LinuxEvdevCfg . EvdevSearchPrefix pre $ dirs 
+  Suffix pre -> pure . LinuxEvdevCfg . EvdevSearchSuffix pre $ dirs 
+  where dirs = "/dev/input/by-id" :| ["/dev/input/by-path"]
 pickInput (KIOKitSource _)      = pure . MacKIOKitCfg     $ KIOKitCfg
 pickInput KLowLevelHookSource = pure . WindowsLLHookCfg $ LLHookCfg
 

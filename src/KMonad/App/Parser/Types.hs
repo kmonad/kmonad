@@ -29,9 +29,7 @@ module KMonad.App.Parser.Types
   , KExpr(..)
 
     -- * $defio
-  , Fix(..),
-    findFileFix
-  
+  , Fix(..)
   , IToken(..)
   , OToken(..)
 
@@ -156,11 +154,6 @@ data DefLayer = DefLayer
 data Fix fp = Prefix fp
             | Suffix fp
             deriving (Show, Eq)
-
-findFileFix :: Fix FilePath -> (FilePath -> Bool)
-findFileFix = \case
- Prefix pre -> (pre `L.isPrefixOf`)
- Suffix suf -> (suf `L.isSuffixOf`)
 
 -- | All different input-tokens KMonad can take
 data IToken
