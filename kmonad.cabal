@@ -84,9 +84,6 @@ library
       KMonad.App.Invocation.Types
       KMonad.App.KeyIO
       KMonad.App.KeyIO.Common
-      KMonad.App.KeyIO.Linux.Evdev
-      KMonad.App.KeyIO.Linux.IO
-      KMonad.App.KeyIO.Linux.Uinput
       KMonad.App.KeyIO.OS
       KMonad.App.Parser
       KMonad.App.Parser.IO
@@ -141,6 +138,9 @@ library
   if os(linux)
     exposed-modules:
       KMonad.App.KeyIO.Linux
+      KMonad.App.KeyIO.Linux.Evdev
+      KMonad.App.KeyIO.Linux.IO
+      KMonad.App.KeyIO.Linux.Uinput
       KMonad.Util.Keyboard.Linux
     c-sources:
       c_src/keyio.c
@@ -150,9 +150,11 @@ library
   -- Windows block
   if os(windows)
     exposed-modules:
-      KMonad.Keyboard.IO.Windows.LowLevelHookSource
-      KMonad.Keyboard.IO.Windows.SendEventSink
-      KMonad.Keyboard.IO.Windows.Types
+      KMonad.App.KeyIO.Windows
+      KMonad.App.KeyIO.Windows.IO
+      KMonad.App.KeyIO.Windows.LowLevelHook
+      KMonad.App.KeyIO.Windows.SendEvent
+      KMonad.Util.Keyboard.Windows
     c-sources:
       c_src/keyio_win.c
     build-depends:

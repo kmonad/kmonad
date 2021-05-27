@@ -63,8 +63,8 @@ data KextCfg = KextCfg deriving Show
 
 -- TODO: This is where the Win config records go
 
--- | Placeholder
-data LLHookCfg = LLHookCfg deriving Show
+-- | No config options for the windows LowLevelHook
+data LowLevelHookCfg = LowLevelHookCfg  deriving Show
 
 -- | Placeholder
 data SendEventCfg = SendEventCfg deriving Show
@@ -75,9 +75,9 @@ data SendEventCfg = SendEventCfg deriving Show
 -- TODO: Here is where the sum-type of input and output configs go
 
 data KeyInputCfg
-  = LinuxEvdevCfg    EvdevCfg
-  | MacKIOKitCfg     KIOKitCfg
-  | WindowsLLHookCfg LLHookCfg
+  = LinuxEvdevCfg          EvdevCfg
+  | MacKIOKitCfg           KIOKitCfg
+  | WindowsLowLevelHookCfg LowLevelHookCfg
   deriving Show
 
 
