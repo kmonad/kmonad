@@ -22,45 +22,32 @@ import Foreign.Ptr
 import Foreign.Marshal
 import Foreign.Storable
 
+import KMonad.App.KeyIO.Common
 import KMonad.Util
 import KMonad.Util.Keyboard.Windows
 
 
 --------------------------------------------------------------------------------
 
-foreign import ccall "sendKey"
-  sendKey :: Ptr RawEvent -> OnlyIO ()
+foreign import ccall "sendKey" sendKey :: Ptr RawEvent -> OnlyIO ()
 
--- | The SKSink environment
-data SKSink = SKSink
-  { _buffer :: Ptr RawEvent -- ^ The pointer we write events to
-  }
-makeClassy ''SKSink
+-- | The context of an active windows send-event output
+withSendEvent :: LUIO m e => SendEventCfg -> Ctx r m PutKey
+withSendEvent _ = mkCtx $ \f -> do
 
-withSendEvent :: LUIO m e => Ctx r m PutKey
-withSendEvent = undefined
+  let init = do
+        logInfo "Initializing Windows key sink"
+        liftIO $ mallocBytes (sizeOf (undefined :: RawEvent))
 
--- -- | Return a 'KeySink' using Window's @sendEvent@ functionality.
--- sendEventKeySink :: LIO m e => m (Acquire KeySink)
--- sendEventKeySink = mkKeySink skOpen skClose skSend
+  let cleanup ptr = do
+        logInfo "Closing Windows key sink"
+        liftIO . free $ ptr
 
--- | Create the 'SKSink' environment
-skOpen :: HasLogFunc e => RIO e SKSink
-skOpen = do
-  logInfo "Initializing Windows key sink"
-  liftIO $ SKSink <$> mallocBytes (sizeOf (undefined :: RawEvent))
-
--- | Close the 'SKSink' environment
-skClose :: HasLogFunc e => SKSink -> RIO e ()
-skClose sk = do
-  logInfo "Closing Windows key sink"
-  liftIO . free $ sk^.buffer
+  bracket init cleanup $ \ptr -> f (skSend ptr)
 
 -- | Write an event to the pointer and prompt windows to inject it
 --
 -- NOTE: This can throw an error if event-conversion fails.
-skSend :: HasLogFunc e => SKSink -> KeyEvent -> RIO e ()
-skSend sk e = either throwIO go $ toRawEvent e
-  where go e' = liftIO $ do
-          poke (sk^.buffer) e'
-          sendKey $ sk^.buffer
+skSend :: (IO m, HasKeySwitch a) => Ptr RawEvent -> a -> m ()
+skSend ptr a = throwIO $ poke ptr (mkRaw sw $ a^.code) >> sendKey ptr where
+  sw = if a^.switch == Press then WindowsPress else WindowsRelease

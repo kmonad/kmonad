@@ -42,7 +42,7 @@ t = map (T.singleton)
 
 -- | Turn a list of 'Text's into a CoreNames
 l :: [Text] -> CoreNames
-l = S.fromList . map CoreName
+l = map CoreName
 
 -- | Turn a string into a set of single-letter names
 m :: String -> CoreNames
@@ -52,12 +52,12 @@ m = l . t
 -- $collection
 
 
-type CoreNames = S.Set CoreName
+type CoreNames = [CoreName]
 
 -- | All 'CoreName's used in KMonad
 knAll :: CoreNames
-knAll = S.unions [knLetters, knNumbers, knPunct, knMods
-                 , knFKeys, knKeypad, knOther ]
+knAll = concat [ knLetters, knNumbers, knPunct, knMods
+               , knFKeys, knKeypad, knOther ]
 
 -- | All letter names
 knLetters :: CoreNames
@@ -105,10 +105,9 @@ knKeypad = l $ map f
 -- paus -> pause
 -- cmps -> compose key
 knOther :: CoreNames
-knOther = S.fromList [ "esc", "tab", "ret", "bspc", "caps", "nlck", "slck"
-                     , "spc", "102d", "sys", "pgdn", "pgup", "home", "end"
-                     , "up", "down", "left", "rght", "ins", "del", "paus"
-                     , "cmps"]
+knOther = [ "esc", "tab", "ret", "bspc", "caps", "nlck", "slck" , "spc", "102d"
+          , "sys", "pgdn", "pgup", "home", "end" , "up", "down", "left", "rght"
+          , "ins", "del", "paus" , "cmps"]
 
 --------------------------------------------------------------------------------
 -- $keyalias
