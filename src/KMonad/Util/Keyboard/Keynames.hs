@@ -16,8 +16,8 @@ where
 
 import KMonad.Prelude
 import KMonad.Util.Name
-import KMonad.Util.Keyboard.OS
-import KMonad.Util.Keyboard.Types
+-- import KMonad.Util.Keyboard.OS
+import KMonad.Util.Keyboard.Common
 
 import qualified RIO.HashMap as M
 import qualified RIO.Set     as S
