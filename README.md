@@ -1,11 +1,8 @@
-
 <h1 align="center">
-KMonad
-<br>
+ <img alt="KMonad" title="KMonad" height="32" src="kmonad.svg"/>
 </h1>
 
 <h4 align="center">The Onion of Keyboard Management Tools, available on GNU/Linux, Windows, and MacOS!</h4>
-
 
 <p align="center">
 <a href="#features">Features</a> •
