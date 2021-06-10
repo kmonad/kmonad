@@ -2,204 +2,328 @@
 Welcome to the KMonad quick reference guide. This document aims to provide a
 simple definition and a usable example for all possible configuration options in
 the KMonad program to act as a quick reference that you look into when forgetting
-a function or/and wanting to know something quickly. Notice that this document
+a function or/and wanting to know something quickly. Note that this document
 does not try to be a full guide or a detailed documentation, this is the aim of
-[tutorial.kbd](https://github.com/kmonad/kmonad/blob/master/keymap/tutorial.kbd).
+[tutorial.kbd](../keymap/tutorial.kbd).
 
-# Define Configuration
+# Defcfg
 
-+ `defcfg`: configuration rules (input and output devices, etc).
+The `defcfg` block is where you can define all of your configuration
+rules like setting up in- and output devices or certain global
+configuration options.
 
-+ `input`: define the input keyboard which the program will captures.  
-+ `output`: define the output keyboard which the system will rely on.
+A block can take the following arguments:
 
-	- For Linux:
-       ```clojure
-       input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-       output (uinput-sink "My KMonad output")
-       ```
-	- For Windows:
-       ```clojure
-       input  (low-level-hook)
-       output (send-event-sink)
-       ```
-	- For MacOS:
-		```clojure
-		input  (iokit-name "my-keyboard-product-string")
-		output (kext)
-		```
-+ `fallthrough` (boolean, defaults to `false`): allow all keys, even if not defined
-in defsrc.
+## Input and Output
 
-+ `allow-cmd` (boolean, defaults to `false`): allow arbitrary shell commands to
-  be run as keys.  
-NOTE: This is very dangerous since something like binding `rm -rf /*` to a key
-and executing it on a key press is possible.
++ `input`: define the input keyboard which the program will capture.
 
-+ `cmp-seq` (key, defaults to `RightAlt`): compose key for Unicode input (Linux X11
-specific).
++ `output`: define the output keyboard which kmonad will create, with
+  additional options to execute upon starting kmonad.
 
-	+ `cmp-seq-delay` (number): delay between each pressed key in a compose-key
-sequence
+Here is how you would define the basic input and output settings on all
+supported systems:
+
+  - GNU/Linux:
+
+    ```clojure
+    input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
+    output (uinput-sink "My KMonad output")
+    ```
+
+  - Windows:
+
+    ```clojure
+    input  (low-level-hook)
+    output (send-event-sink)
+    ```
+
+  - MacOS:
+
+    ```clojure
+    input  (iokit-name "my-keyboard-product-string")
+    output (kext)
+    ```
+
+## Other Configuration Options
+
+The following are all global config options that one can set in the
+`defcfg` block.
+
++ `fallthrough` (boolean, defaults to `false`): re-emit keys that are
+  not defined in a `defsrc` block.
+
+  This allows one to only specify certain parts of a layout, with all
+  other keys having their "default" meaning.
+
++ `allow-cmd` (boolean, defaults to `false`): allow arbitrary shell
+  commands to be run as keys.
+
+  NOTE: This can be dangerous since someone with access to your keyboard
+  file could bind `rm -rf ~/` to a key. Think about whether you really
+  want this behaviour.
+
++ `cmp-seq` (key, defaults to `RightAlt`): compose key for Unicode input
+  (X11 specific).
+
++ `cmp-seq-delay` (natural number): delay between each pressed key in a
+  compose-key sequence.
+
+## Full Example
+
+Below is an example of a full `defcfg` block for a GNU/Linux system.
+
 ```clojure
 (defcfg
-  ;; For Linux
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-  output (uinput-sink "My KMonad output" "/run/current-system/sw/bin/sleep 1 && /run/current-system/sw/bin/setxkbmap -option compose:ralt")
-
+  output (uinput-sink
+          "My KMonad output"                           ;; name of the created keyboard
+          "sleep 1 && setxkbmap -option compose:ralt") ;; additional, environment-specific, information
   cmp-seq ralt
   cmp-seq-delay 5
-
   fallthrough true
-
   allow-cmd true
 )
 ```
-## Layers, aliases and buttons
 
-+ `defsrc`: define physical keyboard input keys, although its layout is very
-  similar to a layer, it is not a one and will not be used as a one.
-```clojure
-(defsrc
-  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
-  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
-  caps a    s    d    f    g    h    j    k    l    ;    '    ret
-  lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl lmet lalt           spc            ralt rmet cmp  rctl
-)
-```
+# Buttons
 
-+ `defalias`: define a button, can be referenced later using `@` in `deflayer`
-```clojure
-(defalias
-  num  (layer-toggle numbers) ;; Bind num to a button that switches to a layer
-  kil  C-A-del                ;; Bind kil to a button that Ctrl+Alt+deletes
-)
-```
+Defining fancy buttons is why we're here, right? There are a variety of
+these things here, as well as some helpers to make entering them into
+layers (more below) much easier.
 
-+ `deflayer`: define as many layers as you please (to toggle, add or remove).
-```clojure
-(deflayer qwerty
-  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
-  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
-  caps a    s    d    f    g    h    j    k    l    ;    '    ret
-  lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl @num lalt           spc            ralt rmet @sym @kil
-)
+## Modded Buttons
 
-(deflayer numbers
-  _    _    _    _    _    _    _    _    _    _    _    _    _    _
-  _    _    _    _    _    XX   /    7    8    9    -    _    _    _
-  _    _    _    _    _    XX   *    4    5    6    +    _    _
-  _    _    \(   \)   .    XX   0    1    2    3    _    _
-  _    _    _              _              _    _    _    _
-)
-```
+To make key-entry easier, kmonad already provides some syntax for
+Emacs-like specification of key chords. They are defined like this:
 
-+ `layer-toggle`: toggles to a specific layer as long as the key is held.
-```clojure
-(defalias ket (layer-toggle toggled-layer))
-```
+  - `C-` : `(around lctl X)`
+  - `A-` : `(around lalt X)`
+  - `M-` : `(around lmet X)`
+  - `S-` : `(around lsft X)`
 
-+ `layer-delay`: change the layer temporarily
-```clojure
-(defalias ked (layer-delay 500 delayed-layer))
-```
-+ `layer-next`: next key press is handled by another layer (leader-key style)
-```clojure
-(defalias ken (layer-next next-layer))
-```
-+ `layer-switch`: change the base layer
-```clojure
-(defalias kes (layer-switch switch-layer))
-```
-+ `layer-add`: overlays a layer on top of the current layer  
-+ `layer-rem`: removes the overlayed layer from the current layer  
-NOTE: Using them is very dangerous, it is easy to make configurations which breaks the keyboard!
-```clojure
-(defalias
-  add (layer-add multi-overlay)
-  rem (layer-rem multi-overlay)
-)
-```
+Then `RC-`, `RA-`, `RM-`, and `RS-` behave exactly the same, except
+using the right-modifier.
 
-## Multi-use buttons
+The definition of a key chord then looks like this:
 
-+ `around`: combines a bunch of keys into one key 
-```clojure
-(defalias ad (around alt del)) ;; this is like pressing Alt+Del 
-```
-### Modded buttons
-`C-` : `(around lctl X)`  
-`A-` : `(around lalt X)`  
-`M-` : `(around lmet X)`  
-`S-` : `(around lsft X)`  
-Then `RC-`, `RA-`, `RM-`, and `RS-` behave exactly the same, except using the
-right-modifier.
 ```clojure
 (defalias Ca C-a) ;; this is equivalent to (defalias Ca (around Ctl a))
 ```
 
-+ `sticky keys`: will act like the key is held temporarily after just one press
-```clojure
-(defalias slc (sticky-key 500 lctl))
-```
+## General Purpose Buttons
 
-+ `tap-macro`: takes a sequence of keys and taps them with an optional delay  
-+ `pause`: pause temporarily
-```clojure
-(defalias
-  ta1 (tap-macro K M o n a d)
-  ta2 (tap-macro K M o n a d :delay 5)
-  ta3 (tap-macro K P5 M P4 o P3 n P6 a (pause 5) d) ;; P5 = (pause 5)
-)
-```
++ `defalias`: define a name for a button. This can then be referenced in
+  a layer using the `@name` syntax (see [layers][] below).
 
-### Tap buttons
+  ```clojure
+  (defalias
+    num (layer-toggle numbers) ;; Bind num to a button that switches to a layer
+    kil C-A-del                ;; Bind kil to a button that Ctrl+Alt+deletes
+  )
+  ```
 
-+ `tap-next`: combines 2 buttons, one for tapping and one for holding
-```clojure
-(defalias tan (tap-next a sft))
-```
-+ `tap-hold`: like tap-next but with a timeout for tapping, if the key is
-released before the timeout it taps after the timeout it is turns into holding
-```clojure
-(defalias tah (tap-hold 200 a sft))
-```
-+ `tap-hold-next`: like tap-next but it held after a period of time
-```clojure
-(defalias thn (tap-hold-next 1000 a sft))
-```
-+ `tap-next-release`: like tap-next but it decides whether to tap or hold based
-on the next release of a key
-```clojure
-(defalias tnr (tap-next-release a sft))
-```
-+ `tap-hold-next-release`: like tap-next-release but it held after a period of
-time like tap-hold-next
-```clojure
-(defalias thr (tap-hold-next-release 1000 a sft))
-```
++ `around`: combine two keys into one.
 
-+ `multi-tap`: combines a sequence of keys into one key with a timeout between
-each key
-```clojure
-(defalias mt  (multi-tap 300 a 300 b 300 c 300 d e))
-```
+  ```clojure
+  (defalias ad (around alt del)) ;; this is like pressing Alt+Del
+  ```
+
 + `around-next`: perform the next button-press inside some context (like
-layer-next but more generalized)
-```clojure
-(defalias ns  (around-next sft)  ;; Shift the next press
-```
-+ `cmd-button`: takes two arguments, the second one of which is optional. These
-represent the commands to be executed on pressing and releasing the button
-respectively
-```clojure
-(defalias
-  dat (cmd-button "date >> /tmp/kmonad_example.txt")   ;; Append date to tmpfile
-  pth (cmd-button "echo $PATH > /tmp/kmonad_path.txt") ;; Write out PATH
-  ;; `dat' on press and `pth' on release
-  bth (cmd-button "date >> /tmp/kmonad_example.txt"
-                  "echo $PATH > /tmp/kmonad_path.txt")
-)
-```
+  `layer-next` but more generalized)
+
+  ```clojure
+  (defalias ns  (around-next sft)  ;; Shift the next press
+  ```
+
++ `sticky keys`: act like the key is held temporarily after just one
+  press for the given amount of time (in ms).
+
+  ```clojure
+  (defalias slc (sticky-key 500 lctl))
+  ```
+
++ `pause`: pause for the given number of ms.
+
+  ```clojure
+  (defalias
+    ta3 (tap-macro K P5 M P4 o P3 n P6 a (pause 5) d) ;; P5 = (pause 5)
+  )
+  ```
+
++ `cmd-button`: take two arguments, the second one of which is
+  optional. These represent the commands to be executed on pressing and
+  releasing the button respectively
+
+  ```clojure
+  (defalias
+    dat (cmd-button "date >> /tmp/kmonad_example.txt")   ;; Append date to tmpfile
+    pth (cmd-button "echo $PATH > /tmp/kmonad_path.txt") ;; Write out PATH
+    ;; `dat' on press and `pth' on release
+    bth (cmd-button "date >> /tmp/kmonad_example.txt"
+                    "echo $PATH > /tmp/kmonad_path.txt")
+  )
+  ```
+
+## Tap buttons
+
+Tap buttons are an integral part of kmonad. Everyone has different
+preferences—that's why there are so many! Particularly when using
+home-row modifiers, you will find some of the more crazy seeming buttons
+to be the most comfortable.
+
++ `tap-macro`: take a sequence of keys and tap them
+
+  ```clojure
+  (defalias ta1 (tap-macro K M o n a d))
+  ```
+
+  A `tap-macro` can take an optional `:delay` keyword (in ms)—this will
+  wait for that amount of time after each keypress:
+
+  ```clojure
+  (defalias
+    ta1 (tap-macro K M o n a d :delay 5)
+    ;; equivalent to: (tap-macro K P5 M P5 o P5 n P5 a P5 d)
+  )
+  ```
+
++ `multi-tap`: combine a sequence of keys into one key with a timeout
+  between each key, as well as a last (default) button without a delay.
+
+  ```clojure
+  (defalias mt  (multi-tap 300 a 300 b 300 c 300 d e))
+  ```
+
++ `tap-next`: combine 2 buttons, one for when the button is tapped and
+  one for when it is held. The decision of what to execute is based upon
+  whether the next button is the buttons own release or not.
+
+  ```clojure
+  (defalias tan (tap-next a sft))
+  ```
+
++ `tap-hold`: like `tap-next` but with a timeout for tapping. If the key
+  is released before the timeout it taps, if not then it holds.
+
+  ```clojure
+  (defalias tah (tap-hold 200 a sft))
+  ```
+
++ `tap-hold-next`: a combination of `tap-next` and `tap-hold`: like
+  `tap-next`, but _also_ switch to hold after a period of time.
+
+  ```clojure
+  (defalias thn (tap-hold-next 1000 a sft))
+  ```
+
++ `tap-next-release`: like `tap-next` but decide whether to tap or hold
+  based on the next release of a key (that was not already pressed when
+  this button was pressed).
+
+  ```clojure
+  (defalias tnr (tap-next-release a sft))
+  ```
+
++ `tap-hold-next-release`: like `tap-next-release` but with an
+  additional timeout. This is just like `tap-next-release`, but with
+  `tap-next` swapped out for `tap-next-release`.
+
+  ```clojure
+  (defalias thr (tap-hold-next-release 1000 a sft))
+  ```
+
+# Layers
+
+KMonad allows you to define and operate on several _layers_; these are
+just collections of keys.
+
++ `defsrc`: define the input keys of your physical keyboard. This should
+  reflect the keys on your keyboard as closely as possible. Although a
+  `defsrc` is very similar to a layer visually, it is not a one and will
+  thus not be used as one! It only serves to define where the different
+  keys are and what kind of layout kmonad is initially dealing with.
+
+  For example, an ISO 60% keyboard may be represented as:
+
+  ```
+  (defsrc
+    grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+    tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+    caps a    s    d    f    g    h    j    k    l    ;    '    ret
+    lsft z    x    c    v    b    n    m    ,    .    /    rsft
+    lctl lmet lalt           spc            ralt rmet cmp  rctl
+  )
+  ```
+
+  See the [keyboard templates](../keymap/template) for further
+  inspiration.
+
++ `deflayer`: defines a layer to be used later.
+
+   For example, defining a qwerty layer, as well as one for special
+   symbols and numbers:
+
+  ```
+  (deflayer qwerty
+    grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+    tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+    caps a    s    d    f    g    h    j    k    l    ;    '    ret
+    lsft z    x    c    v    b    n    m    ,    .    /    rsft
+    lctl @num lalt           spc            ralt rmet @sym @kil
+  )
+
+  (deflayer numbers
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+    _    _    _    _    _    XX   /    7    8    9    -    _    _    _
+    _    _    _    _    _    XX   *    4    5    6    +    _    _
+    _    _    \(   \)   .    XX   0    1    2    3    _    _
+    _    _    _              _              _    _    _    _
+  )
+  ```
+
+## Operating on Layers
+
+There are many buttons that can operate on layers.
+
++ `layer-toggle`: toggles to a specific layer as long as the key is held.
+
+  ```clojure
+  (defalias ket (layer-toggle toggled-layer))
+  ```
+
++ `layer-delay`: change to the layer temporarily for the given amount of
+  time (in ms).
+
+  ```clojure
+  (defalias ked (layer-delay 500 delayed-layer))
+  ```
+
++ `layer-next`: the next key press is handled by another layer
+  (leader-key style).
+
+  ```clojure
+  (defalias ken (layer-next next-layer))
+  ```
+
++ `layer-switch`: change the base layer; i.e., deregister the
+  bottom-most layer and swap it out with another one.
+
+  ```clojure
+  (defalias kes (layer-switch switch-layer))
+  ```
+
++ `layer-add` and `layer-rem`: overlay a layer on top of the current
+  layer resp. remove the overlayed layer from the current layer.
+
+  NOTE: The above two commands can be particularly dangerous if used
+  alone and should really only be used together. Be careful that you
+  don't make a configuration in which you can't switch back to your base
+  layer!
+
+  ```clojure
+  (defalias
+    add (layer-add multi-overlay)
+    rem (layer-rem multi-overlay)
+  )
+  ```
