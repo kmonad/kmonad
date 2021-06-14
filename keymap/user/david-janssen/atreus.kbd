@@ -84,7 +84,7 @@
 
   ;; Special-use buttons
   nF   (around-next @fun)
-  cr   (tap-hold-next 300 ret lctl)
+  cr   (tap-hold-next-release 300 ret lctl)
   ct   (tap-hold-next 500 tab lctl)
   c-   (tap-hold-next 500 - lctl)
   a/   (tap-hold-next 500 / lalt)
@@ -95,6 +95,8 @@
   Ni   (around-next ins)
 
   ;; Every-day typing mode --------------------------------------------------
+  esp  (around-next (layer-toggle spanish))
+  pal  (around-next (layer-toggle pali))
 
   ;; Compound switching and tapping buttons
   L    (tap-hold-next 500 tab @num)
@@ -110,16 +112,11 @@
   gm   (layer-switch game)
   col  (layer-switch colemak)
 
-
-  ;; Working with virtualbox/NVDA -------------------------------------------
-
-  vb   (layer-toggle nvda)
-
-
   ;; Temporary switch
 
   tmp  (layer-delay 500 game-fun)
   tm2  (layer-next symbols)
+
 )
 
 
@@ -132,12 +129,12 @@
   q    w    f    p    g              j    l    u    y    ;
   a    r    s    t    d              h    n    e    i    o
   z    x    c    v    b              k    m    ,    .    @a/
-  tab  caps @fun sft  @cr  @L   esc  spc  rmet -    bspc @arr
+  tab  @esp @fun sft  @cr  @L   esc  spc  rmet -    bspc @arr
 )
 
 ;; Numpad, punctuation, brackets
 (deflayer numpad
-  +`   `    ~    [    ]              _    7    8    9    /
+  +`   `    ~    [    ]              @pal 7    8    9    /
   @sym "    \_   \(   \)             @crt 4    5    6    *
   +~   '    |    {    }              =    1    2    3    -
   _    _    \\   _    _    _    @fun _    0    _    .    +
@@ -154,9 +151,9 @@
 
 ;; Function keys and emacs macros
 (deflayer fn-keys
-  _    _    _    _    _              vold F7   F8   F9   F10
-  @swp @p/  @svf A-q  _              volu F4   F5   F6   F11
-  _    _    _    _    _              mute F1   F2   F3   F12
+  _    _    _    _    _              vold f7   f8   f9   f10
+  @swp @p/  @svf A-q  _              volu f4   f5   f6   f11
+  _    _    _    _    _              mute f1   f2   f3   f12
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
@@ -168,17 +165,31 @@
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
-#| --------------------------------------------------------------------------
-                                Worky additions
-   -------------------------------------------------------------------------- |#
-
-(deflayer nvda
+;; Spanish accents
+(deflayer spanish
+  _    _    _    _    _              ¿    ¡    ú    _    _
+  á    _    _    _    _              _    ñ    é    í    ó
   _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    _              _    _    _    _    _
-  _    _    _    _    rctl _    _    caps _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
 )
 
+(deflayer pali
+  _    _    _    _    _              _    _    _    _    _
+  á    _    _    _    ḍ              _    ñ    é    í    ó
+  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+
+)
+
+;; ;; Pali characters, because why not try to learn a dead language?
+;; (deflayer pali
+;;   _    _    _    _    _              _    _    ū    _    _
+;;   ā    _    _    _    _              _    ñ    ē    ī    ō
+;;   _    _    _    _    _              _    _    _    _    _
+;;   _    _    _    _    _    _    _    _    _    _    _    _
+;; )
+
+;; _    _    _    ḍ              _    ñ    ē    ī    ō
 #| --------------------------------------------------------------------------
                                Gaming setup
    -------------------------------------------------------------------------- |#
@@ -201,9 +212,9 @@
 
 ;; Function layer with access point back to normal mode
 (deflayer game-fun
-  _    _    _    F11  F12            _    _    _    _    @col
-  F1   F2   F3   F4   F5             _    _    _    _    _
-  F6   F7   F8   F9   F10            _    _    _    _    _
+  _    _    _    f11  f12            _    _    _    _    @col
+  f1   f2   f3   f4   f5             _    _    _    _    _
+  f6   f7   f8   f9   f10            _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
 )
 
