@@ -193,17 +193,20 @@ shiftedNames = map (second (shiftedOf . CoreName)) $ cps <> num <> oth where
   oth = z "<>:~\"|{}+?" -- NOTE: \" is an escaped " and lines up with '
           ",.;`'\\[]=/" -- NOTE: \\ is an escaped \ and lines up with |
 
+-- | Create a button that emits some keycode while holding shift
+shiftedB :: CoreName -> DefButton
+shiftedB = KAround (KEmit $ kc "lsft") . KEmit . kc
+
 -- | Names for various buttons
 buttonNames :: [(Text, DefButton)]
 buttonNames = shiftedNames <> escp <> util
   where
-    emitS s = KAround (KEmit $ kc "lsft") (KEmit $ kc s)
     -- Escaped versions for reserved characters
-    escp = [ ("\\(", emitS "9"), ("\\)", emitS "0")
-           , ("\\_", emitS "-"), ("\\\\", KEmit $ kc "\\")]
+    escp = [ ("\\(", shiftedB "9"), ("\\)", shiftedB "0")
+           , ("\\_", shiftedB "-"), ("\\\\", KEmit $ kc "\\")]
     -- Extra names for useful buttons
     util = [ ("_", KTrans), ("XX", KBlock)
-           , ("lprn", emitS "9"), ("rprn", emitS "0")]
+           , ("lprn", shiftedB "9"), ("rprn", shiftedB "0")]
 
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
@@ -232,7 +235,15 @@ composeSeqP = do
          Just b  -> pure $ b^._1
 
   -- If matching, parse a button-sequence from the stored text
-  case runParser (some buttonP) "" s of
+  --
+  -- NOTE: Some compose-sequences contain @_@ characters, which would be parsed
+  -- as 'Transparent' if we only used 'buttonP', that is why we are prefixing
+  -- that parser with one that check specifically and only for @_@ and matches
+  -- it to @shifted min@
+
+  let underscore = shiftedB "-" <$ lexeme (char '_')
+
+  case runParser (some $ underscore <|> buttonP) "" s of
     Left  _ -> fail "Could not parse compose sequence"
     Right b -> pure b
 
