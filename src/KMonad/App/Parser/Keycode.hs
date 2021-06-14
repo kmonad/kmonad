@@ -45,7 +45,7 @@ keycodeP = fromLexicon allNames <?> "keycode" where
 -- * No alias overlaps with a 'CoreName'
 --
 keycodeAliases :: [Alias]
-keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
+keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   [ ("ret" , ["return", "ent", "enter"])
   , ("-"   , ["min", "minus"])
   , ("="   , ["eql", "equal"])
@@ -87,7 +87,13 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as)
   , ("kp." , ["kpdot"])
   , ("sys" , ["ssrq", "psrc", "printscreen"])
   , ("paus", ["pause"])
-  ]
+  ] <> fkeyAliases
+
+fkeyAliases :: [(CoreName, [Text])]
+fkeyAliases = map go [1..12] where
+  go i = let c = tshow i in (CoreName $ "f" <> c, ["F" <> c])
+
+
 
 --------------------------------------------------------------------------------
 -- $delete
