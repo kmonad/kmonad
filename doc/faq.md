@@ -160,3 +160,16 @@ creating a numpad in the middle of the laptop keyboard. This remapping happens
 in the hardware, before any event is ever registered with the operating system,
 therefore KMonad has no way to 'get' at any of those events. This means that we
 cannot remap them in any way.
+
+### Q: When I run KMonad I get error `Not available under this OS`
+
+A: This error occurs when there are OS-specific options in the used configuration
+file. Usually this happens when you are on windows, try to run the tutorial
+file and do not comment out or delete the Linux options in `defcfg` and
+uncomment the Windows options. Nevertheless, this still can happen on other
+operating systems, the error message changes slightly based on the operating
+system (e.g. `Not available under this OS: LowLevelHookSource`, `Not available
+under this OS: DeviceSource`), but they all start with `Not available under
+this OS` and all have the same solution.
+
+TL;DR: Make sure the options in `defcfg` are for your operating system.
