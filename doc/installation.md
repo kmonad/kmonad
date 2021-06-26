@@ -334,7 +334,7 @@ sudo nixos-rebuild switch
 ```
   services.kmonad = {
     enable = true; # disable to not run kmonad at startup
-    configfile = /path/to/config.kbd;
+    configfiles = [ /path/to/config.kbd ];
 	# Modify the following line if you copied nixos-module.nix elsewhere or if you want to use the derivation described above
 	# package = import /pack/to/kmonad.nix;
   };
