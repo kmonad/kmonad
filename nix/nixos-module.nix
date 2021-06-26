@@ -86,6 +86,7 @@ with lib;
             description = "KMonad Instance for: " +conf-name;
             serviceConfig = {
               Type = "simple";
+              Restart = "always";
               ExecStart =
                 "${cfg.package}/bin/kmonad ${kbd-path}" +
                   # kmonad will error on initialization for any unplugged keyboards
