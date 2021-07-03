@@ -18,11 +18,14 @@ where
 
 import KMonad.Prelude hiding (try)
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
+import KMonad.Args.TH (gitHash)
 import KMonad.Args.Types (DefSetting(..), choice, try)
 import KMonad.Util
+import Paths_kmonad (version)
 
 import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
 
+import Data.Version (showVersion)
 import Options.Applicative
 
 
@@ -51,12 +54,20 @@ makeClassy ''Cmd
 
 -- | Parse 'Cmd' from the evocation of this program
 getCmd :: IO Cmd
-getCmd = customExecParser (prefs showHelpOnEmpty) $ info (cmdP <**> helper)
-  (  fullDesc
-  <> progDesc "Start KMonad"
-  <> header   "kmonad - an onion of buttons."
-  )
+getCmd = customExecParser (prefs showHelpOnEmpty) $
+  info (cmdP <**> versioner <**> helper)
+    (  fullDesc
+    <> progDesc "Start KMonad"
+    <> header   "kmonad - an onion of buttons."
+    )
 
+-- | Equip a parser with version information about the program
+versioner :: Parser (a -> a)
+versioner = infoOption (showVersion version <> ", commit " <> $(gitHash))
+  (  long "version"
+  <> short 'V'
+  <> help "Show version"
+  )
 
 --------------------------------------------------------------------------------
 -- $prs
@@ -165,7 +176,7 @@ startDelayP = option (fromIntegral <$> megaReadM numP)
   <> value 300
   <> showDefaultWith (show . unMS )
   <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
- 
+
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
 -- optparse-applicative parser
 tokenParser :: [(Text, M.Parser a)] -> ReadM a
