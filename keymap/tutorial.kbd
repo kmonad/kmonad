@@ -490,7 +490,7 @@
     (pause 20)
     P20
 
-  You an also pause between each key stroke by specifying the `:delay' keyword,
+  You can also pause between each key stroke by specifying the `:delay' keyword,
   as well as a time in ms, at the end of a `tap-macro':
 
     (tap-macro K M o n a d :delay 5)
