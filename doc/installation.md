@@ -4,6 +4,7 @@ Jump to
 - [Compilation](installation.md#compilation)
   - [Using nix](installation.md#using-nix)
   - [Using stack](installation.md#using-stack)
+  - [Using Docker](installation.md#using-docker)
   - [Windows environment](installation.md#windows-environment)
   - [macOS](installation.md#macos)
 - [Binaries](installation.md#binaries)
@@ -28,6 +29,32 @@ If you would like `stack` to automatically copy the binary to a folder on your
 `$PATH`, you can use:
 ```shell
 stack install # Builds *and* copies
+```
+
+### Using Docker
+If you have Docker installed, you can build `kmonad` from source without the need to install anything else on your system, since the build container will always have all the needed build tools and dependencies (currently Haskell 9 on Debian Buster).
+This is very convenient if no binaries are available and you want to try some other branch, you don't want to install build tools or they're not available for your OS, etc. You can even use the provided `Dockerfile` for development testing. As of now, the built image is not meant to *run* `kmonad`, just to build it.
+
+Just do this from the `Dockerfile` directory:
+``` shell
+# Build the Docker image which will contain the binary.
+docker build -t kmonad-builder .
+
+# Spin up an ephemeral Docker container from the built image, to just copy the
+# built binary to the host's current directory bind-mounted inside the
+# container at /host/.
+docker run --rm -it -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+
+# Clean up build image, since it is no longer needed.
+docker rmi kmonad-builder
+```
+You will find a `kmonad` binary in your current directory.
+
+As an added bonus, with recent Docker versions you can build images straight
+from public repo URLs, whithout even needing to clone the repo.
+Do this as the build step (the first one) in the previous instructions:
+``` shell
+docker build -t kmonad-builder github.com/kmonad/kmonad.git
 ```
 
 ### Using `nix`
