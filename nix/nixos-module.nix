@@ -87,6 +87,8 @@ with lib;
             serviceConfig = {
               Type = "simple";
               Restart = "always";
+              RestartSec = 3;
+              Nice = -20;
               ExecStart =
                 "${cfg.package}/bin/kmonad ${kbd-path}" +
                   # kmonad will error on initialization for any unplugged keyboards
