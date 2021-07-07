@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Added macOS 11.0 support
 - Added a `sticky-key`
 - Expanded documentation
+- Added `--version` (`-V`) flag
 
 ### [Changed]
 - Reorganized codebase

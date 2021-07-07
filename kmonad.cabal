@@ -47,6 +47,7 @@ library
     , rio
     , time
     , unliftio
+    , template-haskell
   default-extensions:
       ConstraintKinds
       DeriveFunctor
@@ -82,6 +83,7 @@ library
       KMonad.Args.Cmd
       KMonad.Args.Parser
       KMonad.Args.Joiner
+      KMonad.Args.TH
       KMonad.Args.Types
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq
@@ -93,6 +95,7 @@ library
       KMonad.Util
       KMonad.Util.LayerStack
       KMonad.Util.MultiMap
+      Paths_kmonad
 
   if os(linux)
     exposed-modules:
