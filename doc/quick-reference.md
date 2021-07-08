@@ -1,3 +1,20 @@
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Introduction](#introduction)
+- [Defcfg](#defcfg)
+    - [Input and Output](#input-and-output)
+    - [Other Configuration Options](#other-configuration-options)
+    - [Full Example](#full-example)
+- [Buttons](#buttons)
+    - [Modded Buttons](#modded-buttons)
+    - [General Purpose Buttons](#general-purpose-buttons)
+    - [Tap buttons](#tap-buttons)
+- [Layers](#layers)
+    - [Operating on Layers](#operating-on-layers)
+
+<!-- markdown-toc end -->
+
 # Introduction
 Welcome to the KMonad quick reference guide. This document aims to provide a
 simple definition and a usable example for all possible configuration options in

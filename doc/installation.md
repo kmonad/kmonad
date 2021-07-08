@@ -1,17 +1,31 @@
 # Installation
 
-Jump to
-- [Compilation](installation.md#compilation)
-  - [Using nix](installation.md#using-nix)
-  - [Using stack](installation.md#using-stack)
-  - [Using Docker](installation.md#using-docker)
-  - [Windows environment](installation.md#windows-environment)
-  - [macOS](installation.md#macos)
-- [Binaries](installation.md#binaries)
-- [Packages](installation.md#packages)
-  - [Void Linux](installation.md#void-linux)
-  - [Guix](installation.md#guix)
-  - [Arch Linux](installation.md#arch-linux)
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Installation](#installation)
+    - [Compilation](#compilation)
+        - [Using `stack`](#using-stack)
+        - [Using `nix`](#using-nix)
+        - [Static compilation](#static-compilation)
+        - [Using Docker](#using-docker)
+        - [Windows environment](#windows-environment)
+        - [macOS](#macos)
+            - [Installing the kext](#installing-the-kext)
+            - [Installing the dext](#installing-the-dext)
+            - [Installing kmonad](#installing-kmonad)
+            - [Giving kmonad additional permissions](#giving-kmonad-additional-permissions)
+    - [Binaries](#binaries)
+    - [Packages](#packages)
+        - [Arch Linux](#arch-linux)
+        - [GNU Guix](#gnu-guix)
+        - [Void Linux](#void-linux)
+        - [NixOS](#nixos)
+            - [The Derivation](#the-derivation)
+            - [Configuration.nix](#configurationnix)
+            - [The NixOS module](#the-nixos-module)
+
+<!-- markdown-toc end -->
 
 ## Compilation
 
@@ -29,32 +43,6 @@ If you would like `stack` to automatically copy the binary to a folder on your
 `$PATH`, you can use:
 ```shell
 stack install # Builds *and* copies
-```
-
-### Using Docker
-If you have Docker installed, you can build `kmonad` from source without the need to install anything else on your system, since the build container will always have all the needed build tools and dependencies (currently Haskell 9 on Debian Buster).
-This is very convenient if no binaries are available and you want to try some other branch, you don't want to install build tools or they're not available for your OS, etc. You can even use the provided `Dockerfile` for development testing. As of now, the built image is not meant to *run* `kmonad`, just to build it.
-
-Just do this from the `Dockerfile` directory:
-``` shell
-# Build the Docker image which will contain the binary.
-docker build -t kmonad-builder .
-
-# Spin up an ephemeral Docker container from the built image, to just copy the
-# built binary to the host's current directory bind-mounted inside the
-# container at /host/.
-docker run --rm -it -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
-
-# Clean up build image, since it is no longer needed.
-docker rmi kmonad-builder
-```
-You will find a `kmonad` binary in your current directory.
-
-As an added bonus, with recent Docker versions you can build images straight
-from public repo URLs, whithout even needing to clone the repo.
-Do this as the build step (the first one) in the previous instructions:
-``` shell
-docker build -t kmonad-builder github.com/kmonad/kmonad.git
 ```
 
 ### Using `nix`
@@ -80,13 +68,48 @@ installed as well.
 
 ### Static compilation
 Every now and then we compile and release a static binary for Linux that should
-run on any Linux regardless of the installed libraries (i.e. `ldd` returns `not a
-dynamic executable`). If, for some reason, you want to compile a static binary for the state of HEAD yourself, please copy the contents of `./nix/static` into the `kmonad` project root, and then call:
+run on any Linux regardless of the installed libraries (i.e. `ldd` returns `not
+a dynamic executable`). If, for some reason, you want to compile a static
+binary for the state of HEAD yourself, please copy the contents of
+`./nix/static` into the `kmonad` project root, and then call:
 
 ```shell
 $(nix-build --no-link -A fullBuildScript)
 ```
 
+### Using Docker
+If you have Docker installed, you can build `kmonad` from source without the
+need to install anything else on your system, since the build container will
+always have all the needed build tools and dependencies (currently Haskell 9 on
+Debian Buster).
+
+This is very convenient if no binaries are available and you want to try some
+other branch, you don't want to install build tools or they're not available
+for your OS, etc. You can even use the provided `Dockerfile` for development
+testing. As of now, the built image is not meant to *run* `kmonad`, just to
+build it.
+
+Just do this from the `Dockerfile` directory:
+``` shell
+# Build the Docker image which will contain the binary.
+docker build -t kmonad-builder .
+
+# Spin up an ephemeral Docker container from the built image, to just copy the
+# built binary to the host's current directory bind-mounted inside the
+# container at /host/.
+docker run --rm -it -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+
+# Clean up build image, since it is no longer needed.
+docker rmi kmonad-builder
+```
+You will find a `kmonad` binary in your current directory.
+
+As an added bonus, with recent Docker versions you can build images straight
+from public repo URLs, whithout even needing to clone the repo.
+Do this as the build step (the first one) in the previous instructions:
+``` shell
+docker build -t kmonad-builder github.com/kmonad/kmonad.git
+```
 
 ### Windows environment
 
@@ -247,14 +270,13 @@ that, please feel free.
 
 NOTE: These packages might be out of date.
 
-#### Void Linux
-You can install `kmonad` via `xbps-install`:
+### Arch Linux
 
-``` console
-  # xbps-install -S kmonad
-```
+Kmonad is available in the Arch User Repository (AUR) as
+[kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
 
-#### guix
+### GNU Guix
+
 You can install `kmonad` via the `guix` package manager. you will need to copy
 the udev rules into place manually.
 
@@ -279,9 +301,12 @@ to install udev rules using something like this in your `config.scm`
                       (udev-configuration-rules config))))))))
 ```
 
-#### Arch Linux
-Kmonad is available in the Arch User Repository (AUR) as
-[kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
+### Void Linux
+You can install `kmonad` via `xbps-install`:
+
+``` console
+  # xbps-install -S kmonad
+```
 
 ### NixOS
 
