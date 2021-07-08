@@ -100,21 +100,21 @@ You also can install MSYS2, Haskell and stack via [scoop](https://scoop.sh/).
 Simply run these commands in Windows PowerShell:
 
 ```posh
-# install scoop (no admin rights required)
-iwr -useb get.scoop.sh | iex
+   # install scoop (no admin rights required)
+   iwr -useb get.scoop.sh | iex
 
-# install stack
-scoop install stack
+   # install stack
+   scoop install stack
 
-# clone the KMonad repository (assuming you have `git` installed)
-cd $HOME\Downloads
-git clone https://github.com/kmonad/kmonad.git
-cd kmonad
+   # clone the KMonad repository (assuming you have `git` installed)
+   cd $HOME\Downloads
+   git clone https://github.com/kmonad/kmonad.git
+   cd kmonad
 
-# compile KMonad (this will first download GHC and msys2, it takes a while)
-stack build
+   # compile KMonad (this will first download GHC and msys2, it takes a while)
+   stack build
 
-# the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
+   # the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
 ```
 
 ### macOS
@@ -158,10 +158,10 @@ If you want to attempt building and signing the kext yourself, look to
 documentation](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
 for instructions. Otherwise, to install the kext as a signed binary, run:
 
-```shell
-git clone --recursive https://github.com/kmonad/kmonad.git
-cd c_src/mac/Karabiner-VirtualHIDDevice
-make install
+``` console
+  $ git clone --recursive https://github.com/kmonad/kmonad.git
+  $ cd c_src/mac/Karabiner-VirtualHIDDevice
+  $ make install
 ```
 
 #### Installing the dext
@@ -191,8 +191,8 @@ https://github.com/kmonad/kmonad.git`, e.g.), then open
 `c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
 and install via the installer. Finally, execute:
 
-```shell
-/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
+``` console
+  $ /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
 
 #### Installing kmonad
@@ -202,20 +202,20 @@ Mac via `nix` is not tested or planned. Installation under Mac via
 Hackage is not tested, but may work for the adveturous. To compile on
 Mac, download the kmonad source:
 
-```shell
-git clone --recursive https://github.com/kmonad/kmonad.git
+``` console
+  $ git clone --recursive https://github.com/kmonad/kmonad.git
 ```
 
 Then build kmonad with `stack`. If you are building against the kext, run:
 
-```shell
-stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+``` console
+  $ stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
 
 If you are building against the dext, run
 
-```shell
-stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+``` console
+  $ stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
 ```
 
 #### Giving kmonad additional permissions
@@ -233,158 +233,184 @@ Privacy` > `Privacy` > `Input Monitoring`.
 
 ## Binaries
 
-You can download binaries for Windows and Linux (64bit) from the [releases page](https://github.com/kmonad/kmonad/releases). Many thanks to [these lovely people](https://github.com/nh2/static-haskell-nix) for making this possible.
+You can download binaries for Windows and Linux (64bit) from the
+[releases page](https://github.com/kmonad/kmonad/releases). Many thanks
+to [these lovely people](https://github.com/nh2/static-haskell-nix) for
+making this possible.
 
 ## Packages
 
-Some people have gone out of their way to add `kmonad` into the package-managers of various distros. If you want to add `kmonad` to your distro and add a pull-request to update the documentation to reflect that, please feel free. 
+Some people have gone out of their way to add `kmonad` into the
+package-managers of various distros. If you want to add `kmonad` to your
+distro and add a pull-request to update the documentation to reflect
+that, please feel free.
 
 NOTE: These packages might be out of date.
 
-#### Void Linux 
-You can install `kmonad` via `xbps-install`: 
-``` shell 
-xbps-install -s kmonad 
-``` 
+#### Void Linux
+You can install `kmonad` via `xbps-install`:
 
-#### guix 
-You can install `kmonad` via the `guix` package manager. you will need to copy 
-the udev rules into place manually. 
+``` console
+  # xbps-install -S kmonad
+```
 
-``` shell 
-guix install kmonad 
-sudo cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/ 
-``` 
+#### guix
+You can install `kmonad` via the `guix` package manager. you will need to copy
+the udev rules into place manually.
 
-If you use the guix system to manage your entire machine, you will instead want 
-to install udev rules using something like this in your `config.scm` 
+``` console
+  $ guix install kmonad
+  # cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/
+```
 
-``` scheme 
-(use-modules (gnu packages haskell-apps)) 
+If you use the guix system to manage your entire machine, you will instead want
+to install udev rules using something like this in your `config.scm`
 
-(operating-system 
- ;; ... 
- (services 
-  (modify-services %desktop-services 
-    (udev-service-type config => 
-      (udev-configuration (inherit config) 
-       (rules (cons kmonad 
-                    (udev-configuration-rules config)))))))) 
-``` 
+``` scheme
+  (use-modules (gnu packages haskell-apps))
+
+  (operating-system
+   ;; ...
+   (services
+    (modify-services %desktop-services
+      (udev-service-type config =>
+        (udev-configuration (inherit config)
+         (rules (cons kmonad
+                      (udev-configuration-rules config))))))))
+```
 
 #### Arch Linux
-Kmonad is available in the Arch User Repository (AUR) as [kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
+Kmonad is available in the Arch User Repository (AUR) as
+[kmonad-bin](https://aur.archlinux.org/packages/kmonad-bin).
 
 ### NixOS
 
-There is not currently a `kmonad` package in `nixpkgs`, however the following instructions show
-how to create your own adhoc derivation, and how to configure udev rules in nixos. There is also a NixOS module included in this repository that can be used instead of a manual configuration.
+There is not currently a `kmonad` package in `nixpkgs`, however the
+following instructions show how to create your own adhoc derivation, and
+how to configure udev rules in nixos. There is also a NixOS module
+included in this repository that can be used instead of a manual
+configuration.
 
 #### The Derivation
-Create a `kmonad.nix` derivation such as this one which fetches a static binary release of kmonad and packages it in the nix-store:
-```
-let
-  pkgs = import <nixpkgs> { };
+Create a `kmonad.nix` derivation such as this one which fetches a static
+binary release of kmonad and packages it in the nix-store:
 
-  kmonad-bin = pkgs.fetchurl {
-    url = "https://github.com/kmonad/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
-    sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
-  };
-in
-pkgs.runCommand "kmonad" {}
-    ''
-      #!${pkgs.stdenv.shell}
-      mkdir -p $out/bin
-      cp ${kmonad-bin} $out/bin/kmonad
-      chmod +x $out/bin/*
-    ''
+``` nix
+  let
+    pkgs = import <nixpkgs> { };
+
+    kmonad-bin = pkgs.fetchurl {
+      url = "https://github.com/kmonad/kmonad/releases/download/0.3.0/kmonad-0.3.0-linux";
+      sha256 = "4545b0823dfcffe0c4f0613916a6f38a0ccead0fb828c837de54971708bafc0b";
+    };
+  in
+  pkgs.runCommand "kmonad" {}
+      ''
+        #!${pkgs.stdenv.shell}
+        mkdir -p $out/bin
+        cp ${kmonad-bin} $out/bin/kmonad
+        chmod +x $out/bin/*
+      ''
 ```
 
 #### Configuration.nix
 
-1. Import `kmonad.nix` into your `configuration.nix` file using a `let` expression:
-```
-let
-  kmonad =  import /path/to/kmonad.nix;
-in {
-  <your_config>
-}
-```
+1. Import `kmonad.nix` into your `configuration.nix` file using a `let`
+   expression:
+
+   ``` nix
+     let
+       kmonad =  import /path/to/kmonad.nix;
+     in {
+       <your_config>
+     }
+   ```
 
 2. Add `kmonad` to `environment.systemPackages`:
-```
-  environment.systemPackages = with pkgs; [
-    ...
-    kmonad
-    ...
-  ];
-```
+
+   ``` nix
+     environment.systemPackages = with pkgs; [
+       ...
+       kmonad
+       ...
+     ];
+   ```
 
 3. Create the `uinput` group and add your user to `uinput` and `input`:
-```
-  users.groups = { uinput = {}; };
 
-  users.extraUsers.userName = {
-    ...
-    extraGroups = [ ... "input" "uinput" ];
-  };
-```
+   ``` nix
+     users.groups = { uinput = {}; };
+
+     users.extraUsers.userName = {
+       ...
+       extraGroups = [ ... "input" "uinput" ];
+     };
+   ```
 
 4. Add `udev` rules:
-```
-  services.udev.extraRules =
-    ''
-      # KMonad user access to /dev/uinput
-      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
-    '';
-```
+
+   ``` nix
+     services.udev.extraRules =
+       ''
+         # KMonad user access to /dev/uinput
+         KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+       '';
+   ```
 
 5. Rebuild system:
-```
-sudo nixos-rebuild switch
-```
+
+   ``` console
+     # nixos-rebuild switch
+   ```
 
 #### The NixOS module
 
-1. Clone this repository or copy the file `nix/nixos-module.nix` somewhere to your system.
+1. Clone this repository or copy the file `nix/nixos-module.nix`
+   somewhere to your system.
 
 2. Add `nixos-module.nix` into your `configuration.nix` as an import:
-```
-  imports =
-    [
-      /path/to/nixos-module.nix;
-    ];
-```
+
+   ``` nix
+     imports =
+       [
+         /path/to/nixos-module.nix;
+       ];
+   ```
 
 3. Configure the module:
 
-```
-  services.kmonad = {
-    enable = true; # disable to not run kmonad at startup
-    configfiles = [ /path/to/config.kbd ];
-	# Modify the following line if you copied nixos-module.nix elsewhere or if you want to use the derivation described above
-	# package = import /pack/to/kmonad.nix;
-  };
-```
+   ``` nix
+     services.kmonad = {
+       enable = true; # disable to not run kmonad at startup
+       configfiles = [ /path/to/config.kbd ];
+   	# Modify the following line if you copied nixos-module.nix elsewhere or if you want to use the derivation described above
+   	# package = import /pack/to/kmonad.nix;
+     };
+   ```
 
-4. If you've set `enable = true;` at the previous step, do not put a `setxkbmap` line in your `config.kbd`. Instead, set the options like this:
+4. If you've set `enable = true;` at the previous step, do not put a
+   `setxkbmap` line in your `config.kbd`. Instead, set the options like
+   this:
 
-```
-  services.xserver = {
-    xkbOptions = "compose:ralt";
-    layout = "us";
-  };
-```
+   ``` nix
+     services.xserver = {
+       xkbOptions = "compose:ralt";
+       layout = "us";
+     };
+   ```
 
-5. If you want your main user to use kmonad, add it to the `uinput` and `input` groups:
-```
-  users.extraUsers.userName = {
-    ...
-    extraGroups = [ ... "input" "uinput" ];
-  };
-```
+5. If you want your main user to use kmonad, add it to the `uinput` and
+   `input` groups:
+
+   ``` nix
+     users.extraUsers.userName = {
+       ...
+       extraGroups = [ ... "input" "uinput" ];
+     };
+   ```
 
 6. Rebuild system:
-```
-sudo nixos-rebuild switch
-```
+
+   ``` console
+     # nixos-rebuild switch
+   ```
