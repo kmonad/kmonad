@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### [Changed]
 - Reorganized codebase
+- The `multi-tap` key now immediately taps the current key when another
+  key is pressed during tapping.
 
 ### [Fixed]
 - Fixed compilation error under Mac, having to do with typo in Keycodes

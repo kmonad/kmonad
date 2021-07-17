@@ -336,21 +336,32 @@ multiTap l bs = onPress $ go bs
     go []            = press l
     go ((ms, b):bs') = do
       -- This is a bit complicated. What we do is:
-      -- 1.  We wait for the release of the key that triggered this action
-      -- 2A. If it doesn't occur in the interval we press the button from the list
-      --     and we are done.
-      -- 2B. If we do detect the release, we must now keep waiting to detect another press.
-      -- 3A. If we do not detect a press before the interval is up, we know a tap occured,
-      --     so we tap the current button and we are done.
-      -- 3B. If we detect another press, then the user is descending into the buttons tied
-      --     to this multi-tap, so we recurse on the remaining buttons.
-      let onMatch t = do
-            within (ms - t^.elapsed) (matchMy Press)
-                   (tap b)
-                   (const $ go bs' *> pure Catch)
-            pure Catch
-      within ms (matchMy Release) (press b) onMatch
-
+      -- 1.  We wait for an event
+      -- 2A. If it doesn't occur in the interval we press the button from the
+      --     list and we are done.
+      -- 2B. If we do detect the release of the key that triggered this action,
+      --     we must now keep waiting to detect another press.
+      -- 2C. If we detect another (unrelated) press event we cancel the
+      --     remaining of the multi-tap sequence and trigger a tap on the
+      --     current button of the sequence.
+      -- 3A. After 2B, if we do not detect a press before the interval is up,
+      --     we know a tap occurred, so we tap the current button and we are
+      --     done.
+      -- 3B. If we detect another press of the same key, then the user is
+      --     descending into the buttons tied to this multi-tap, so we recurse
+      --     on the remaining buttons.
+      -- 3C. If we detect any other (unrelated) press event, then the multi-tap
+      --     sequence is cancelled like in 2C. We trigger a tap of the current
+      --     button of the sequence.
+      let doNext pred onTimeout next ms = tHookF InputHook ms onTimeout $ \t -> do
+            pr <- pred
+            if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
+               | isPress (t^.event) -> tap b                  $> NoCatch
+               | otherwise          -> pure NoCatch
+      doNext (matchMy Release)
+             (press b)
+             (doNext (matchMy Press) (tap b) (\_ -> go bs'))
+             ms
 
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.
