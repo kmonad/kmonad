@@ -40,7 +40,7 @@
   tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
   caps    a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft      z    x    c    v    b    n    m    ,    .    /    rsft                      up
-  lctl    lmet lalt           spc            ralt rmet cmp  rctl                left    down    right
+  lctl    lmet lalt           spc            ralt rmet @nm2 rctl                left    down    right
 )
 
 (deflayer numpad
@@ -49,7 +49,7 @@
   _       _    _    _    _    XX   kp*  kp4  kp5  kp6  kp+  XX   XX   _         _    _    _
   _       _    _    _    _    XX  XX    kp1  kp2  kp3  XX   _    _
   _         _    _    _    _    _    XX   kp0  _    _    _    _                      _
-  _       _    _                 _              _    _    _    _                _    _    _
+  _       _    _                 _              _    _    @nm2 _                _    _    _
 )
 
 (deflayer numbers
