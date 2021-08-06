@@ -1,6 +1,10 @@
 #!/bin/sh
 #
-# How to use this runit service:
+# NOTE: This is a service for the runit init system!  If you are using
+#       something else (openrc, sysvinit, systemd, ...) then you do not
+#       need to use this file.
+#
+# How to use this service:
 #
 # 1. Place this file in the `/etv/sv/kmonad' directory.  You will need
 #    to create this directory; this is most easily done with `xmksv'
