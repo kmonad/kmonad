@@ -1,11 +1,8 @@
-
 <h1 align="center">
-KMonad
-<br>
+ <img alt="KMonad" title="KMonad" height="32" src="kmonad.svg"/>
 </h1>
 
 <h4 align="center">The Onion of Keyboard Management Tools, available on GNU/Linux, Windows, and MacOS!</h4>
-
 
 <p align="center">
 <a href="#features">Features</a> •
@@ -19,6 +16,8 @@ KMonad
 KMonad is an advanced tool that lets you infinitely customize and extend the functionalities of almost any keyboard. For a detailed list of features, see [here](#features).
 
 If you want to get started with the latest, stable binary release, please check out the master branch, if you are interested in the latest additions and tweaks, switch on over to develop and compile your own binary.
+
+Additionally, if you need any help or just want to say hi, you can join our [Discord server](https://discord.gg/3tFfWmnahN) or jump into our [IRC channel](https://web.libera.chat/#kmonad) (`#kmonad@irc.libera.chat`), which is also bridged with matrix (`#kmonad:libera.chat`).
 
 ## Features
 

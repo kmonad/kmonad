@@ -29,7 +29,7 @@ import Foreign.C.String
 import Foreign.C.Types
 import System.Posix
 import UnliftIO.Async   (async)
-import UnliftIO.Process (callCommand)
+import UnliftIO.Process (spawnCommand)
 
 import KMonad.Keyboard.IO.Linux.Types
 import KMonad.Util
@@ -147,7 +147,7 @@ usOpen c = do
   acquire_uinput_keysink fd c `onErr` UinputRegistrationError (c ^. keyboardName)
   flip (maybe $ pure ()) (c^.postInit) $ \cmd -> do
     logInfo $ "Running UinputSink command: " <> displayShow cmd
-    void . async . callCommand $ cmd
+    void . async . spawnCommand $ cmd
   UinputSink c <$> newMVar fd
 
 -- | Close a 'UinputSink'

@@ -1,3 +1,24 @@
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Linux](#linux)
+    - [Q: How do I get Uinput permissions?](#q-how-do-i-get-uinput-permissions)
+    - [Q: How do I know which event-file corresponds to my keyboard?](#q-how-do-i-know-which-event-file-corresponds-to-my-keyboard)
+    - [Q: How do I emit Hyper_L?](#q-how-do-i-emit-hyper_l)
+    - [Q: How does Unicode entry work?](#q-how-does-unicode-entry-work)
+- [Windows](#windows)
+    - [How do I start KMonad?](#how-do-i-start-kmonad)
+        - [Using the command-line](#using-the-command-line)
+        - [Making a launcher](#making-a-launcher)
+- [Mac](#mac)
+    - [Q: How to use the special features printed on Apple function keys?](#q-how-to-use-the-special-features-printed-on-apple-function-keys)
+- [General](#general)
+    - [Q: Why doesn't the 'Print' keycode work for my print screen button?](#q-why-doesnt-the-print-keycode-work-for-my-print-screen-button)
+    - [Q: Why can't I remap the Fn key on my laptop?](#q-why-cant-i-remap-the-fn-key-on-my-laptop)
+    - [Q: When I run KMonad I get error `Not available under this OS`](#q-when-i-run-kmonad-i-get-error-not-available-under-this-os)
+
+<!-- markdown-toc end -->
+
 ## Linux
 
 ### Q: How do I get Uinput permissions?
@@ -37,8 +58,9 @@ sudo modprobe uinput
 
 ### Q: How do I know which event-file corresponds to my keyboard?
 
-A: By far the best solution is to use the keyboard devices listed under `/dev/input/by-id`. If you can't figure out which file just by the filenames, the `evtest` program is very helpful.
-
+A: By far the best solution is to use the keyboard devices listed under
+`/dev/input/by-id`. If you can't figure out which file just by the filenames,
+the `evtest` program is very helpful.
 
 ### Q: How do I emit Hyper_L?
 
@@ -160,3 +182,16 @@ creating a numpad in the middle of the laptop keyboard. This remapping happens
 in the hardware, before any event is ever registered with the operating system,
 therefore KMonad has no way to 'get' at any of those events. This means that we
 cannot remap them in any way.
+
+### Q: When I run KMonad I get error `Not available under this OS`
+
+A: This error occurs when there are OS-specific options in the used configuration
+file. Usually this happens when you are on windows, try to run the tutorial
+file and do not comment out or delete the Linux options in `defcfg` and
+uncomment the Windows options. Nevertheless, this still can happen on other
+operating systems, the error message changes slightly based on the operating
+system (e.g. `Not available under this OS: LowLevelHookSource`, `Not available
+under this OS: DeviceSource`), but they all start with `Not available under
+this OS` and all have the same solution.
+
+TL;DR: Make sure the options in `defcfg` are for your operating system.

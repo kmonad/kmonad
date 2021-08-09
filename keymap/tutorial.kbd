@@ -490,7 +490,7 @@
     (pause 20)
     P20
 
-  You an also pause between each key stroke by specifying the `:delay' keyword,
+  You can also pause between each key stroke by specifying the `:delay' keyword,
   as well as a time in ms, at the end of a `tap-macro':
 
     (tap-macro K M o n a d :delay 5)
@@ -789,7 +789,8 @@
   without delay. As long as you tap the `multi-tap` within the delay specified,
   it will jump to the next button. Once the delay is exceeded the selected
   button is pressed. If the last button in the list is reached, it is
-  immediately pressed.
+  immediately pressed. When another key is pressed down while we're tapping,
+  `multi-tap' also immediately exits and taps the current button.
 
   Note that you can actually hold the button, so in the below example, going:
   tap-tap-hold (wait 300ms) will get you a pressed c, until you release again.
