@@ -9,6 +9,7 @@
 <a href="#installation">Installation</a> •
 <a href="#configuration">Configuration</a> •
 <a href="#troubleshooting">Troubleshooting</a> •
+<a href="#disclaimer">Disclaimer</a> •
 </p>
 
 ## Introduction
@@ -72,3 +73,9 @@ There are startup scripts available for different init systems in
 ## Troubleshooting
 For several commonly asked questions regarding various configuration issues, please see:
 - [the FAQ](doc/faq.md)
+
+## Disclaimer
+The original maintainer is chronically ill and currently unable to work on
+KMonad. Luckily we have a very helpful and pleasant community that is happy to
+be of assistance. When energy and circumstance permits, the core developer will
+labour to make progress, but for now this will be sporadically and unpredictably.
