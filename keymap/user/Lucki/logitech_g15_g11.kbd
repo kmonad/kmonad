@@ -1,0 +1,171 @@
+#|================= Logitech G15 / G11 running g15daemon =====================|#
+
+#|  This is the layout g15deamon / libg15 maps the G-Keys to on the original
+    Logitech G15 and Logitech G11 with 18 G-Keys. This config restores
+    the original behavior by allowing to switch through the 3 (+MR) macro sets
+    and assigning different stuff depending on the currently used set.
+
+    Depending on the used set this layout emits the different media keys
+    assigned by g15daemon together with a modifier because some DE already
+    have some default actions for some of keys if used without a modifier.
+
+    You can now use the keys as shortcuts in your programs or some
+    shortcut / hotkey manager you're already using or rewrite the keys
+    through kmonad to your liking.
+
+    I wrote me a little script which looks for the currently
+    active application and runs macros based on that - almost restoring
+    the original behavior of the Logitech profile software or gnome15.
+|#
+
+(defcfg
+  ;; For Linux
+  input  (device-file "/dev/input/event9")
+  output (uinput-sink "G11 Extra Keys")
+
+  ;; Set this to false to disable any command-execution in KMonad
+  allow-cmd true
+)
+
+
+(defsrc
+  KeyF15          KeyF16           KeyF17         KeyF18
+  KeyRecord       KeyRewind        KeyPhone
+  KeyIso          KeyConfig        KeyHomepage
+  KeyRefresh      KeyExit          KeyMove
+  KeyEdit         KeyScrollUp      KeyScrollDown
+  KeyKpLeftParen  KeyKpRightParen  KeyNew
+  KeyRedo         KeyF13           KeyF14
+)
+
+
+(defalias
+  m1   (layer-switch set1)
+  m2   (layer-switch set2)
+  m3   (layer-switch set3)
+  mr   (layer-switch setr)
+)
+
+
+(defalias
+  m1_g1   S-KeyRecord
+  m1_g2   S-KeyRewind
+  m1_g3   S-KeyPhone
+  m1_g4   S-KeyIso
+  m1_g5   S-KeyConfig
+  m1_g6   S-KeyHomepage
+  m1_g7   S-KeyRefresh
+  m1_g8   S-KeyExit
+  m1_g9   S-KeyMove
+  m1_g10  S-KeyEdit
+  m1_g11  S-KeyScrollUp
+  m1_g12  S-KeyScrollDown
+  m1_g13  S-KeyKpLeftParen
+  m1_g14  S-KeyKpRightParen
+  m1_g15  S-KeyNew
+  m1_g16  S-KeyRedo
+  m1_g17  S-KeyF13
+  m1_g18  S-KeyF14
+)
+(deflayer set1
+  @m1      @m2      @m3      @mr
+  @m1_g1   @m1_g2   @m1_g3
+  @m1_g4   @m1_g5   @m1_g6
+  @m1_g7   @m1_g8   @m1_g9
+  @m1_g10  @m1_g11  @m1_g12
+  @m1_g13  @m1_g14  @m1_g15
+  @m1_g16  @m1_g17  @m1_g18
+)
+
+
+(defalias
+  m2_g1   C-KeyRecord
+  m2_g2   C-KeyRewind
+  m2_g3   C-KeyPhone
+  m2_g4   C-KeyIso
+  m2_g5   C-KeyConfig
+  m2_g6   C-KeyHomepage
+  m2_g7   C-KeyRefresh
+  m2_g8   C-KeyExit
+  m2_g9   C-KeyMove
+  m2_g10  C-KeyEdit
+  m2_g11  C-KeyScrollUp
+  m2_g12  C-KeyScrollDown
+  m2_g13  C-KeyKpLeftParen
+  m2_g14  C-KeyKpRightParen
+  m2_g15  C-KeyNew
+  m2_g16  C-KeyRedo
+  m2_g17  C-KeyF13
+  m2_g18  C-KeyF14
+)
+(deflayer set2
+  @m1      @m2      @m3     @mr
+  @m2_g1   @m2_g2   @m2_g3
+  @m2_g4   @m2_g5   @m2_g6
+  @m2_g7   @m2_g8   @m2_g9
+  @m2_g10  @m2_g11  @m2_g12
+  @m2_g13  @m2_g14  @m2_g15
+  @m2_g16  @m2_g17  @m2_g18
+)
+
+
+(defalias
+  m3_g1   A-KeyRecord
+  m3_g2   A-KeyRewind
+  m3_g3   A-KeyPhone
+  m3_g4   A-KeyIso
+  m3_g5   A-KeyConfig
+  m3_g6   A-KeyHomepage
+  m3_g7   A-KeyRefresh
+  m3_g8   A-KeyExit
+  m3_g9   A-KeyMove
+  m3_g10  A-KeyEdit
+  m3_g11  A-KeyScrollUp
+  m3_g12  A-KeyScrollDown
+  m3_g13  A-KeyKpLeftParen
+  m3_g14  A-KeyKpRightParen
+  m3_g15  A-KeyNew
+  m3_g16  A-KeyRedo
+  m3_g17  A-KeyF13
+  m3_g18  A-KeyF14
+)
+(deflayer set3
+  @m1      @m2      @m3      @mr
+  @m3_g1   @m3_g2   @m3_g3
+  @m3_g4   @m3_g5   @m3_g6
+  @m3_g7   @m3_g8   @m3_g9
+  @m3_g10  @m3_g11  @m3_g12
+  @m3_g13  @m3_g14  @m3_g15
+  @m3_g16  @m3_g17  @m3_g18
+)
+
+
+(defalias
+  mr_g1   S-A-KeyRecord
+  mr_g2   S-A-KeyRewind
+  mr_g3   S-A-KeyPhone
+  mr_g4   S-A-KeyIso
+  mr_g5   S-A-KeyConfig
+  mr_g6   S-A-KeyHomepage
+  mr_g7   S-A-KeyRefresh
+  mr_g8   S-A-KeyExit
+  mr_g9   S-A-KeyMove
+  mr_g10  S-A-KeyEdit
+  mr_g11  S-A-KeyScrollUp
+  mr_g12  S-A-KeyScrollDown
+  mr_g13  S-A-KeyKpLeftParen
+  mr_g14  S-A-KeyKpRightParen
+  mr_g15  S-A-KeyNew
+  mr_g16  S-A-KeyRedo
+  mr_g17  S-A-KeyF13
+  mr_g18  S-A-KeyF14
+)
+(deflayer setr
+  @m1      @m2      @m3      @mr
+  @mr_g1   @mr_g2   @mr_g3
+  @mr_g4   @mr_g5   @mr_g6
+  @mr_g7   @mr_g8   @mr_g9
+  @mr_g10  @mr_g11  @mr_g12
+  @mr_g13  @mr_g14  @mr_g15
+  @mr_g16  @mr_g17  @mr_g18
+)
