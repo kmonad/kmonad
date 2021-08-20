@@ -1,14 +1,14 @@
-FROM haskell:9-buster
+FROM lierdakil/alpine-haskell:8.10.4
 
 WORKDIR /usr/src/kmonad/
+RUN apk --no-cache add git
+RUN stack update
 
-COPY ./stack.yaml /usr/src/kmonad/
-COPY ./kmonad.cabal /usr/src/kmonad/
-RUN stack setup
-
-COPY ./ /usr/src/kmonad/
-RUN stack build
-
-RUN \
-  stack install && \
-  chmod --verbose +x /root/.local/bin/kmonad
+COPY ./kmonad.cabal ./
+COPY ./static/stack.yaml ./static/
+COPY ./stack.yaml ./
+RUN cat ./static/stack.yaml >> stack.yaml && \
+  stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies
+COPY ./ ./
+RUN cat ./static/stack.yaml >> stack.yaml && \
+  stack --no-install-ghc --system-ghc --skip-ghc-check install
