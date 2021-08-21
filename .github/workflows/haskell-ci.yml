@@ -20,10 +20,18 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v2
 
+      - name: Get ghc version for ${{ matrix.resolver }}
+        shell: bash
+        run: |
+          GHCVER=$(curl -L https://www.stackage.org/${{ matrix.resolver }}/ghc-major-version)
+          echo "Got $GHCVER"
+          echo "::set-output name=ghc::$GHCVER"
+        id: ghc-version
+
       - uses: haskell/actions/setup@v1
         id: hs-setup
         with:
-          ghc-version: ${{ fromJSON('{"lts-16":"8.8.4","lts-18":"8.10.4","nightly-2021-08-21":"9.0.1"}')[matrix.resolver] }}
+          ghc-version: ${{ steps.ghc-version.outputs.ghc }}
           enable-stack: true
 
       - name: Refresh caches once a month
