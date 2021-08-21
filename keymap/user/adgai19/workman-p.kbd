@@ -1,0 +1,49 @@
+
+(defcfg
+	input (device-file "/dev/input/by-id/usb-0c45_USB_Keyboard-event-kbd")
+	output (uinput-sink "KMonad kbd")
+	fallthrough true
+  cmp-seq ralt    ;; Set the compose key to `RightAlt'
+
+)
+
+
+(defsrc
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc 
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \   
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret     
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft        
+  lctl lmet lalt           spc            ralt rmet cmp  rctl       
+)
+
+(defalias num (layer-toggle numbers))
+(defalias shft (layer-toggle shiftedWorkman))
+(deflayer workman
+  caps  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        
+  ~  !    @    #    $    %    ^    &    *    \(    \)    -    =    bspc  
+  tab  q    d    r    w    b    j    f    u    p    ;    {    }    \    
+  esc  a    s    h    t    g    y    n    e    o    i    '    ret      
+  @shft z    x    m    c    v    k    l    ,    .    /    rsft         
+  lctl lmet lalt           spc            ralt rmet cmp  rctl            
+)
+
+(deflayer shiftedWorkman
+  caps  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12      
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  Q    D    R    W    B    J    F    U    P    ;    [    ]    \  
+  esc  A    S    H    T    G    Y    N    E    O    I    '    ret    
+  lsft Z    X    M    C    V    K    L    ,    .    /    rsft       
+  lctl lmet lalt           spc            ralt rmet cmp  rctl      
+)
+(deflayer numbers
+  _    _    _    _    _    _    _    _    _    _    _    _    _          
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _    
+  _    _    _    _    _    _    _    _    7    8    9    _    _    _   
+  _    _    _    _    _    _    _    _    4    5    6    _    _       
+  _    _    _    _    _    _    _    0    1    2    3    _           
+  _    _    _              _              _    _    _    _               
+)
+
+
+
