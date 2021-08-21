@@ -15,6 +15,7 @@ description:
   mapping is highly configurable, and provides options like (transparent) layer
   overlays, tap-mod buttons, multi-tap buttons, leader-key style buttons, and
   keyboard macros. Functionality heavily inspired by the QMK-firmware.
+tested-with:        ghc ==8.6.5 || ==8.8.4 || ==8.10.4
 
 extra-source-files:
     changelog.md
@@ -37,7 +38,7 @@ library
     -Wno-name-shadowing
     -Wno-unused-imports
   build-depends:
-      base
+      base                  >= 4.9 && < 5
     , cereal
     , lens
     , megaparsec
@@ -95,7 +96,8 @@ library
       KMonad.Util
       KMonad.Util.LayerStack
       KMonad.Util.MultiMap
-      Paths_kmonad
+    autogen-modules:    Paths_kmonad
+    other-modules:      Paths_kmonad
 
   if os(linux)
     exposed-modules:
@@ -139,6 +141,8 @@ library
     frameworks:
       CoreFoundation
       IOKit
+
+other-modules: Paths_kmonad
 
 executable kmonad
   ghc-options:
