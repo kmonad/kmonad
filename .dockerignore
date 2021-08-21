@@ -1,0 +1,13 @@
+.ghc*
+dist*
+.stack*
+configs*
+source_maps*
+stack.yaml.lock
+src_solid
+log.log
+tmp
+template/testing.kbd
+bin/
+result
+kmonad
