@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        resolver: [lts-16, lts-18, nightly-2021-08-21]
+        resolver: [lts-16.31, lts-18.6, nightly-2021-08-21]
 
     steps:
       - name: Clone project
