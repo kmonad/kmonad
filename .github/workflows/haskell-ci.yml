@@ -1,0 +1,84 @@
+name: Haskell CI - Stack based
+# note: for the most part, shamelessly stolen from xmonad
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Stack CI - ${{ matrix.os }} - ${{ matrix.resolver }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ startsWith( matrix.resolver, 'nightly-' ) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        resolver: [lts-16, lts-18, nightly-2021-08-21]
+
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v2
+
+      - uses: haskell/actions/setup@v1
+        id: hs-setup
+        with:
+          ghc-version: ${{ fromJSON('{"lts-16":"8.8.4","lts-18":"8.10.4","nightly-2021-08-21":"9.0.1"}')[matrix.resolver] }}
+          enable-stack: true
+
+      - name: Refresh caches once a month
+        id: cache-date
+        # GHA writes caches on the first miss and then never updates them again;
+        # force updating the cache at least once a month
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m)"
+
+      - name: Ensure STACK_ROOT exists on Windows
+        if: runner.os == 'Windows'
+        run: New-Item -ItemType directory -Path ${{ steps.hs-setup.outputs.stack-root }}
+
+      - name: Cache Haskell package metadata
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.hs-setup.outputs.stack-root }}/pantry
+          key: stack-pantry-${{ runner.os }}-${{ steps.cache-date.outputs.date }}
+          restore-keys: |
+            stack-pantry-${{ runner.os }}-
+
+      - name: Cache Haskell dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.hs-setup.outputs.stack-root }}/*
+            !${{ steps.hs-setup.outputs.stack-root }}/pantry
+          key: stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('*.cabal') }}
+          restore-keys: |
+            stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles('stack.yaml') }}-
+            stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-
+            stack-${{ runner.os }}-${{ matrix.resolver }}-
+
+      - name: Update hackage index
+        # always update index to prevent the shared ~/.stack/pantry cache from being empty
+        run: stack update
+
+      - name: Pull in macOS dependencies
+        if: runner.os == 'macOS'
+        run: git submodule update --init
+
+      - name: Build and test
+        shell: bash
+        if: runner.os != 'macOS'
+        run: |
+          stack test \
+            --fast --no-terminal --skip-msys \
+            --resolver=${{ matrix.resolver }} --system-ghc
+
+      - name: Build and test (macOS)
+        shell: bash
+        if: runner.os == 'macOS'
+        run: |
+          stack test \
+            --fast --no-terminal \
+            --resolver=${{ matrix.resolver }} --system-ghc \
+            --flag kmonad:dext \
+            --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
