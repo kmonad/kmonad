@@ -11,4 +11,4 @@ RUN cat ./static/stack.yaml >> stack.yaml && \
   stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies
 COPY ./ ./
 RUN cat ./static/stack.yaml >> stack.yaml && \
-  stack --no-install-ghc --system-ghc --skip-ghc-check install
+  stack --no-install-ghc --system-ghc --skip-ghc-check install --ghc-options -j
