@@ -1,0 +1,102 @@
+name: Haskell CI - Stack based
+# note: for the most part, shamelessly stolen from xmonad
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Stack CI - ${{ matrix.os }} - ${{ matrix.resolver }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ startsWith( matrix.resolver, 'nightly-' ) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        resolver: [lts-14.27, lts-16.31, lts-18.6, nightly-2021-08-21]
+
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v2
+
+      - name: Get ghc version for ${{ matrix.resolver }}
+        shell: bash
+        run: |
+          GHCVER=$(curl -L https://www.stackage.org/${{ matrix.resolver }}/ghc-major-version)
+          echo "Got $GHCVER"
+          echo "::set-output name=ghc::$GHCVER"
+        id: ghc-version
+
+      - uses: haskell/actions/setup@v1
+        name: Setup GHC ${{ steps.ghc-version.outputs.ghc }}
+        id: hs-setup
+        with:
+          ghc-version: ${{ steps.ghc-version.outputs.ghc }}
+          enable-stack: true
+
+      - name: Refresh caches once a month
+        id: cache-date
+        # GHA writes caches on the first miss and then never updates them again;
+        # force updating the cache at least once a month
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m)"
+
+      - name: Ensure STACK_ROOT exists on Windows
+        if: runner.os == 'Windows'
+        run: New-Item -ItemType directory -Path ${{ steps.hs-setup.outputs.stack-root }}
+
+      - name: Cache Haskell package metadata
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.hs-setup.outputs.stack-root }}/pantry
+          key: stack-pantry-${{ runner.os }}-${{ steps.cache-date.outputs.date }}
+          restore-keys: |
+            stack-pantry-${{ runner.os }}-
+
+      - name: Cache Haskell dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.hs-setup.outputs.stack-root }}/*
+            !${{ steps.hs-setup.outputs.stack-root }}/pantry
+          key: stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('*.cabal') }}
+          restore-keys: |
+            stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles('stack.yaml') }}-
+            stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-
+            stack-${{ runner.os }}-${{ matrix.resolver }}-
+
+      - name: Update hackage index
+        # always update index to prevent the shared ~/.stack/pantry cache from being empty
+        run: stack update
+
+      - name: Pull in macOS dependencies
+        if: runner.os == 'macOS'
+        run: git submodule update --init
+
+      - name: Build and test
+        shell: bash
+        if: runner.os != 'macOS'
+        run: |
+          stack test \
+            --fast --no-terminal --skip-msys \
+            --resolver=${{ matrix.resolver }} --system-ghc
+
+      - name: Build and test (macOS, dext)
+        shell: bash
+        if: runner.os == 'macOS'
+        run: |
+          stack test \
+            --fast --no-terminal \
+            --resolver=${{ matrix.resolver }} --system-ghc \
+            --flag kmonad:dext \
+            --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+
+      - name: Build and test (macOS, kext)
+        shell: bash
+        if: runner.os == 'macOS'
+        run: |
+          stack test \
+            --fast --no-terminal \
+            --resolver=${{ matrix.resolver }} --system-ghc \
+            --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
