@@ -147,7 +147,9 @@ pressKey c =
         runRIO (KEnv app b) $ do
           runAction a
           awaitMy Release $ do
-            runBEnv b Release >>= maybe (pure ()) runAction
+            runBEnv b Release >>= \case
+              Nothing -> pure ()
+              Just a  -> runAction a
             pure Catch
 
 --------------------------------------------------------------------------------

@@ -199,9 +199,8 @@ getOverride = do
   foldM go env cfg
 
 -- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
-runLF :: (forall e. HasLogFunc e => RIO e a) -> LogFunc -> IO a
+runLF :: HasLogFunc lf => RIO lf a -> lf -> IO a
 runLF = flip runRIO
-
 
 -- | Extract the KeySource-loader from the 'KExpr's
 getI :: J (LogFunc -> IO (Acquire KeySource))
