@@ -1,0 +1,32 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: image.tar
+          key: ${{ runner.os }}-primes
+
+      - run: |
+          [ -r image.tar ] && docker load -i image.tar || true
+          rm image.tar || true
+
+      - run: docker build . -t kmonad-builder --cache-from=kmonad-builder:latest
+
+      - run: docker run --rm -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kmonad-binary
+          path: kmonad
+
+      - run: docker save kmonad-builder -o image.tar

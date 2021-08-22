@@ -150,7 +150,7 @@ The definition of a key chord then looks like this:
   `layer-next` but more generalized)
 
   ```clojure
-  (defalias ns  (around-next sft)  ;; Shift the next press
+  (defalias ns  (around-next sft))  ;; Shift the next press
   ```
 
 + `sticky keys`: act like the key is held temporarily after just one

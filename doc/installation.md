@@ -80,8 +80,7 @@ $(nix-build --no-link -A fullBuildScript)
 ### Using Docker
 If you have Docker installed, you can build `kmonad` from source without the
 need to install anything else on your system, since the build container will
-always have all the needed build tools and dependencies (currently Haskell 9 on
-Debian Buster).
+always have all the needed build tools and dependencies.
 
 This is very convenient if no binaries are available and you want to try some
 other branch, you don't want to install build tools or they're not available
