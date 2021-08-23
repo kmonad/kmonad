@@ -158,7 +158,7 @@ data IToken
 data OToken
   = KUinputSink Text (Maybe Text)
   | KSendEventSink
-  | KKextSink
+  | KExtSink
   deriving Show
 
 -- | All possible single settings

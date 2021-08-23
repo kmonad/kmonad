@@ -50,13 +50,18 @@ instance Default UinputCfg where
 --------------------------------------------------------------------------------
 -- $cfgs-mac
 
--- TODO: This is where the Mac config records go
+-- | Holds the product string of keyboard if given. Else, Nothing.
+newtype IOKitCfg = IOKitCfg
+  { _productStr :: Maybe Text
+  } deriving Show
+makeClassy ''IOKitCfg
 
--- | Placeholder
-data KIOKitCfg = KIOKitCfg deriving Show
+-- | By default, no product string (will grab all keyboards).
+instance Default IOKitCfg where
+  def = IOKitCfg Nothing
 
--- | Placeholder
-data KextCfg = KextCfg deriving Show
+-- | No config options for Kext/Dext
+data ExtCfg = ExtCfg deriving Show
 
 --------------------------------------------------------------------------------
 -- $cfgs-win
@@ -76,14 +81,14 @@ data SendEventCfg = SendEventCfg deriving Show
 
 data KeyInputCfg
   = LinuxEvdevCfg          EvdevCfg
-  | MacKIOKitCfg           KIOKitCfg
+  | MacIOKitCfg            IOKitCfg
   | WindowsLowLevelHookCfg LowLevelHookCfg
   deriving Show
 
 
 data KeyOutputCfg
   = LinuxUinputCfg      UinputCfg
-  | MacKextCfg          KextCfg
+  | MacExtCfg           ExtCfg
   | WindowsSendEventCfg SendEventCfg
   deriving Show
 

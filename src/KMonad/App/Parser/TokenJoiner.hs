@@ -224,14 +224,14 @@ getAllow = do
 
 pickInput :: IToken -> J KeyInputCfg
 pickInput (KDeviceSource f)     = pure $ LinuxEvdevCfg          $ EvdevCfg $ f
-pickInput (KIOKitSource _)      = pure $ MacKIOKitCfg           $ KIOKitCfg
+pickInput (KIOKitSource n)      = pure $ MacIOKitCfg            $ IOKitCfg $ n
 pickInput (KLowLevelHookSource) = pure $ WindowsLowLevelHookCfg $ LowLevelHookCfg
 
 pickOutput :: OToken -> J KeyOutputCfg
 pickOutput (KUinputSink t init) = pure $ LinuxUinputCfg
   $ def { _keyboardName = t
         , _postInit     = unpack <$> init }
-pickOutput KKextSink      = pure $ MacKextCfg          $ KextCfg
+pickOutput KExtSink       = pure $ MacExtCfg           $ ExtCfg
 pickOutput KSendEventSink = pure $ WindowsSendEventCfg $ SendEventCfg
 
 --------------------------------------------------------------------------------

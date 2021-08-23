@@ -163,9 +163,11 @@ library
   -- Mac block
   if os(darwin)
     exposed-modules:
-      KMonad.Keyboard.IO.Mac.IOKitSource
-      KMonad.Keyboard.IO.Mac.KextSink
-      KMonad.Keyboard.IO.Mac.Types
+      KMonad.App.KeyIO.Mac
+      KMonad.App.KeyIO.Mac.IO
+      KMonad.App.KeyIO.Mac.IOKitSource
+      KMonad.App.KeyIO.Mac.Ext
+      KMonad.Util.Keyboard.Mac
     if flag(kext)
       cxx-sources:
         c_src/mac/kext.cpp
