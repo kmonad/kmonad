@@ -197,3 +197,7 @@ under this OS: DeviceSource`), but they all start with `Not available under
 this OS` and all have the same solution.
 
 TL;DR: Make sure the options in `defcfg` are for your operating system.
+
+### Q: Where can I find a list of keycodes which can be used in KMonad?
+
+A: List of keycodes can be found [here.](https://github.com/kmonad/kmonad/blob/master/src/KMonad/Keyboard/Keycode.hs)
