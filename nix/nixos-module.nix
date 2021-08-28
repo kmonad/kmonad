@@ -104,7 +104,7 @@ with lib;
 
         required-units = map (mk-kmonad-service { is-optional=false; }) cfg.configfiles;
 
-        optional-units = map (mk-kmonad-service { is-optional=true;  }) cfg.configfiles;
+        optional-units = map (mk-kmonad-service { is-optional=true;  }) cfg.optionalconfigs;
 
       in
         mkIf cfg.enable ({
