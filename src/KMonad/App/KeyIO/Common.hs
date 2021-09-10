@@ -17,7 +17,7 @@ import KMonad.Util.Name
 -- The configuration records for all of the Linux KeyIO options
 
 -- | The configuration record for evdev key-input on Linux
-data EvdevCfg = EvdevCfg
+newtype EvdevCfg = EvdevCfg
   { _evdevPath :: FilePath -- ^ The path to the input-file to open and capture
   } deriving Show
 makeClassy ''EvdevCfg
