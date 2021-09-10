@@ -46,7 +46,7 @@ keycodeP = fromLexicon allNames <?> "keycode" where
 --
 keycodeAliases :: [Alias]
 keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
-  [ ("ret" , ["return", "ent", "enter"])
+  [ ("ret" , ["return", "ent", "entr", "enter"])
   , ("-"   , ["min", "minus"])
   , ("="   , ["eql", "equal"])
   , ("spc" , ["space", "spacebar"])
@@ -90,7 +90,7 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   ] <> fkeyAliases
 
 fkeyAliases :: [(CoreName, [Text])]
-fkeyAliases = map go [1..12] where
+fkeyAliases = map go [1..12 :: Int] where
   go i = let c = tshow i in (CoreName $ "f" <> c, ["F" <> c])
 
 
