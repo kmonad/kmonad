@@ -1,0 +1,66 @@
+#|
+
+(deflayer template
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _              _              _    _
+)
+Always make sure the number of underscores is the same as the number of keys in every layer and in defsrc. 
+No need to create layers for function/multimedia keys as they're mapped by firmware.
+|#
+
+(defcfg ;; For linux & by-path lists unpluggable devices
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad output")
+  fallthrough true ;; If set to false you won't be able to access keys that you haven't made a binding for
+  allow-cmd true ;; If you wish to run system commands on a key/combo press then enable this
+)
+
+(defsrc ;; This is not the layer that gets activated when kmonad is launched
+  esc   f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  prnt  ins  del
+  `     1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab   q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps  a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft  z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl  lmet lalt           spc            ralt rctl
+)
+
+(defalias
+num  (tap-hold 200 spc (layer-toggle nums)) ;; Tap on space for space and hold for nums/syms layer
+ec  (tap-hold 200 esc ctl)                  ;; Tap on escape for escape and hold for left ctrl
+vi  (layer-toggle vim)                      ;; enables the number layer 
+fll (around f lalt)
+prv C-S-tab
+nxt C-tab
+tog f11
+)
+
+(deflayer qwerty                            ;; The default layer that'd be read when you launch kmonad
+  caps f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  prnt  ins  del
+  `    @tog @prv @nxt @vi  5    6    7    8    9    0    bspc =    end
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  @ec  a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lalt lmet           @num            rmet rctl
+)
+
+(deflayer nums
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    !    @    #    $    \_   =    %    ^    &    *    _    _    _
+  _    1    2    3    4    9    0    5    6    7    8    _    _     
+  _    _    _    -    \(   _    \)   +    _    _    _    _
+  _    _    _              _              _    _
+)
+
+(deflayer vim
+  _    _    _    _    _    _    _    _    _    _     _    _    _   _     _    _
+  _    _    _    _    _    _    _    _    _    _     _    _    _   _
+  _    _    _    _    _    _    _    _    _    _     _    _    _   _
+  _    _    _    _    _    _    left down up   right _    _    _
+  _    _    _    _    _    _    _    _    _    _     _    _
+  _    _    _              _              _    _
+)
