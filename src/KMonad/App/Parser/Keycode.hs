@@ -54,7 +54,6 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   , ("pgdn", ["pagedown"])
   , ("ins" , ["insert"])
   , ("del" , ["delete"])
-  -- , ("cmps", ["compose", "cmp"])
   , ("lsft", ["sft", "shft", "lshft", "lshift", "leftshift"])
   , ("rsft", ["rshft", "rshift", "rightshift"])
   , ("lalt", ["alt", "leftalt"])
@@ -65,7 +64,6 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   , ("rmet", ["rmeta", "rightmeta"])
   , ("bspc", ["backspace", "bckspc", "bspace", "bks"])
   , ("caps", ["cplk", "capslock", "CAPS"])
-  , ("102d", ["102nd", "102", "lsgt", "nubs"])
   , ("slck", ["scrl", "scrolllock", "slock", "scroll"])
   , ("left", ["lft", "<-"])
   , ("rght", ["right", "->"])
@@ -87,6 +85,9 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   , ("kp." , ["kpdot"])
   , ("sys" , ["ssrq", "psrc", "printscreen"])
   , ("paus", ["pause"])
+  -- TODO: Add these back in when we know how to refer to them in MacOS
+  -- , ("cmps", ["compose", "cmp"])
+  -- , ("102d", ["102nd", "102", "lsgt", "nubs"])
   ] <> fkeyAliases
 
 fkeyAliases :: [(CoreName, [Text])]
