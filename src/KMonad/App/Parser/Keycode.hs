@@ -54,7 +54,7 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   , ("pgdn", ["pagedown"])
   , ("ins" , ["insert"])
   , ("del" , ["delete"])
-  , ("cmps", ["compose", "cmp"])
+  -- , ("cmps", ["compose", "cmp"])
   , ("lsft", ["sft", "shft", "lshft", "lshift", "leftshift"])
   , ("rsft", ["rshft", "rshift", "rightshift"])
   , ("lalt", ["alt", "leftalt"])
