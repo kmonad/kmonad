@@ -328,7 +328,8 @@ otokens :: [(Text, Parser OToken)]
 otokens =
   [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
   , ("send-event-sink", pure KSendEventSink)
-  , ("kext/dext"      , pure KExtSink)]
+  , ("dext"           , pure KExtSink)
+  , ("kext"           , pure KExtSink)]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
