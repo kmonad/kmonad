@@ -100,7 +100,7 @@ post modified key events to the OS. For macOS Catalina and prior, we
 use a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
 (kext), which is bundled with kmonad as a submodule in
-`c_src/mac/Karabiner-VirtualHIDDevice`. For macOS Catalina and later,
+`c_src/mac/Karabiner-VirtualHIDDevice`. For macOS Catalina (10.15.6) and later,
 we use a [driverkit-based
 extension](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
 (dext), bundled as
@@ -148,9 +148,10 @@ The dext used by kmonad is maintained as part of
 [Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements).
 Therefore, if you use Karabiner-Elements, you may already have the
 dext installed (though maybe a different version number). Run
-`defaults read
-/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
-CFBundleVersion` to check the version: if `1.15.0` is shown, then the
+```shell
+defaults read /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist CFBundleVersion
+```
+to check the version: if `1.15.0` is shown, then the
 installed dext is compatibile with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
 this may work too (but has not been tested).
@@ -159,9 +160,9 @@ If you want to attempt building and signing the dext yourself, look to
 [the
 documentation](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
 for instructions. Otherwise, to install the dext as a signed binary,
-make sure to initialize the dext submodule (`git clone --recursive
-https://github.com/kmonad/kmonad.git`, e.g.), then open
-`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
+make sure to initialize the dext submodule (e.g. `git clone --recursive
+https://github.com/kmonad/kmonad.git`), then open
+`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.pkg`
 and install via the installer. Finally, execute:
 
 ```shell
@@ -182,13 +183,13 @@ git clone --recursive https://github.com/kmonad/kmonad.git
 Then build kmonad with `stack`. If you are building against the kext, run:
 
 ```shell
-stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+stack build --flag kmonad:kext
 ```
 
 If you are building against the dext, run
 
 ```shell
-stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+stack build --flag kmonad:dext
 ```
 
 #### Giving kmonad additional permissions

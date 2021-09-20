@@ -169,11 +169,16 @@ library
       KMonad.App.KeyIO.Mac.Ext
       KMonad.Util.Keyboard.Mac
     if flag(kext)
+      include-dirs:
+        c_src/mac/Karabiner-VirtualHIDDevice/dist/include
       cxx-sources:
         c_src/mac/kext.cpp
       cxx-options:
         -std=c++14
     if flag(dext)
+      include-dirs:
+        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit
+        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
       cxx-sources:
         c_src/mac/dext.cpp
       cxx-options:
