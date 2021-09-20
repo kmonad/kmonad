@@ -7,7 +7,7 @@ where
 import KMonad.Prelude
 
 import Foreign.Ptr
-import Foreign.Marshal
+import Foreign.Marshal hiding (void)
 import Foreign.Storable
 
 import KMonad.App.KeyIO.Common
@@ -19,7 +19,10 @@ import KMonad.Util.Keyboard.Mac
 -- $ffi
 
 foreign import ccall "send_key"
-  send_key :: Ptr RawEvent -> OnlyIO ()
+  send_key :: Ptr RawEvent -> OnlyIO Word8
+
+sendKey :: Ptr RawEvent -> OnlyIO ()
+sendKey = void . send_key
 
 -------------------------------------------------------------------------------
 
@@ -37,7 +40,7 @@ withExt _ = mkCtx $ \f -> do
         liftIO $ free ptr
 
   let sendEvent :: IO m => Ptr RawEvent -> KeySwitch -> m ()
-      sendEvent ptr e = liftIO $ poke ptr (mkRaw sw $ e^.code) >> send_key ptr
+      sendEvent ptr e = liftIO $ poke ptr (mkRaw sw $ e^.code) >> sendKey ptr
         where
           sw = if e^.switch == Press then MacPress else MacRelease
 

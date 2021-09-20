@@ -52,14 +52,14 @@ toHex i = "0x" ++ (map toUpper $ showHex i "")
 -- | Mac has two types types of events: Press and Release.
 --
 -- The type is ordered in a way to line up with the integers our Mac API uses to
--- encode for these events. I.e. 0=Press, 1=Release
-data EvType = MacPress | MacRelease
+-- encode for these events. i.e. 0=Release, 1=Press
+data EvType = MacRelease | MacPress
   deriving (Eq, Show, Enum)
 
 -- | Prism between Mac and Haskell representation of event types
 _EvType :: Prism' Word64 EvType
 _EvType = prism' (fi . fromEnum) $ \i ->
-  ([MacPress, MacRelease] ^? ix (fi i))
+  ([MacRelease, MacPress] ^? ix (fi i))
 
 
 --------------------------------------------------------------------------------
@@ -67,8 +67,8 @@ _EvType = prism' (fi . fromEnum) $ \i ->
 
 -- | The RawEvent datatype
 --
--- It contains a 'Word64' signifying whether the event was a
--- Press (0) or Release (1), and two 'Word32's (uint32_t)
+-- It contains a 'Word64' signifying whether the event is a
+-- Release (0) or Press (1), and two 'Word32's (uint32_t)
 -- signifying the Mac keycode:
 --   first: represents the IOKit usage page.
 --   second: represent the IOKit usage.
@@ -94,9 +94,9 @@ instance Storable RawEvent where
 
 -- | Make a new raw event
 mkRaw :: EvType -> Keycode -> RawEvent
-mkRaw p c = RawEvent
+mkRaw sw c = RawEvent
   { _reCode = unKeycode c
-  , _reVal  = p ^. re _EvType }
+  , _reVal  = sw ^. re _EvType }
 
 
 --------------------------------------------------------------------------------

@@ -45,11 +45,12 @@ foreign import ccall "wait_key"
 waitKey :: Ptr RawEvent -> OnlyIO RawEvent
 waitKey ptr = do
        re <- wait_key ptr >> peek ptr
-       -- Filter `Keyboard_Reserved` keycode sent (only?) by
-       -- Apple keyboards on each key event.
-       -- E.g. tap a -> P(0x7,0xFFFF) Pa Ra R(0x7,0xFFFF)
-       if (0x7, 0xFFFF) == (re^.reCode) then waitKey ptr
-                                        else return re
+       -- Filter `Keyboard_Reserved` keycode sent on each key event.
+       -- E.g. tap a -> P(0x7,0xFFFFFFFF) Pa Ra R(0x7,0xFFFFFFFF)
+       case (re^.reCode) of
+         (0x7, 0xFFFFFFFF) -> waitKey ptr
+         -- (0x7, 0x1)        -> waitKey ptr
+         _                 -> return re
 
 -------------------------------------------------------------------------------
 
@@ -82,7 +83,7 @@ withIOKitSource cfg = mkCtx $ \f -> do
   let nextEvent :: IO m => Ptr RawEvent -> m KeySwitch
       nextEvent ptr = do
         re <- liftIO $ waitKey ptr
-        pure $ mkKeySwitch (if re^.reVal == 0 then Press else Release)
+        pure $ mkKeySwitch (if re^.reVal == 0 then Release else Press)
                            (Keycode $ re^.reCode)
 
   bracket init cleanup $ \ptr -> f (nextEvent ptr)
