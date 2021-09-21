@@ -135,9 +135,9 @@ keycodeNames = M.fromList . flatten $
                        , "pgdn", "rght", "left", "down"
                        , "up", "nlck" ]
   , z 0x7 [0x54..0x63] keypadKeys
-  -- nUS\\ -> NonUSBackslash => Non-US \ or |
-  -- appl -> Application => button for context-menu
-  , z 0x7 [0x64..0x67] [ "nUS\\", "appl", "pwr", "kp=" ]
+  -- 102d -> NonUSBackslash => Non-US \ or |
+  -- cmps -> Application => button for context-menu
+  , z 0x7 [0x64..0x67] [ "102d", "cmps", "pwr", "kp=" ]
   , z 0x7 [0x68..0x73] fn_13To24
   , z 0x7 [0x74..0x7E] [ "exec", "help", "menu", "sel"
                        , "stop", "agn", "undo"

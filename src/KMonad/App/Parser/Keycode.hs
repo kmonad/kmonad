@@ -85,9 +85,8 @@ keycodeAliases = foldMap (\(c, as) -> map (,unCore c) as) $
   , ("kp." , ["kpdot"])
   , ("sys" , ["ssrq", "psrc", "printscreen"])
   , ("paus", ["pause"])
-  -- TODO: Add these back in when we know how to refer to them in MacOS
-  -- , ("cmps", ["compose", "cmp"])
-  -- , ("102d", ["102nd", "102", "lsgt", "nubs"])
+  , ("cmps", ["compose", "cmp", "nUS\\"])
+  , ("102d", ["102nd", "102", "lsgt", "nubs", "app"])
   ] <> fkeyAliases
 
 fkeyAliases :: [(CoreName, [Text])]
