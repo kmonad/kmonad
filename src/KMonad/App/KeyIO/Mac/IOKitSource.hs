@@ -45,11 +45,10 @@ foreign import ccall "wait_key"
 waitKey :: Ptr RawEvent -> OnlyIO RawEvent
 waitKey ptr = do
        re <- wait_key ptr >> peek ptr
-       -- Filter `Keyboard_Reserved` keycode sent on each key event.
-       -- E.g. tap a -> P(0x7,0xFFFFFFFF) Pa Ra R(0x7,0xFFFFFFFF)
+       -- Filter unwanted keycodes sent on each key event.
        case (re^.reCode) of
          (0x7, 0xFFFFFFFF) -> waitKey ptr
-         -- (0x7, 0x1)        -> waitKey ptr
+         (0x7, 0x1)        -> waitKey ptr
          _                 -> return re
 
 -------------------------------------------------------------------------------
