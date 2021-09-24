@@ -90,12 +90,11 @@ _WinSwitch = iso to' from'
 
 -- | Lookup the corresponding 'Keycode' for this 'WinKeycode'
 fromWinKeycode :: WinKeycode -> Maybe Keycode
-fromWinKeycode = flip M.lookup kcMap
+fromWinKeycode = flip M.lookup winCodeToKeyCode
 
 -- | Lookup the correspondig 'WinKeycode' for this 'Keycode'
 toWinKeycode :: Keycode -> Maybe WinKeycode
-toWinKeycode = flip M.lookup revMap
-  where revMap = M.fromList $ (M.toList kcMap) ^.. folded . swapped
+toWinKeycode = flip M.lookup keyCodeToWinCode
 
 -- | Convert a 'KeyEvent' to a 'WinKeyEvent'
 --
@@ -120,16 +119,22 @@ fromWinKeyEvent (WinKeyEvent (s, c)) = case fromWinKeycode c of
 --------------------------------------------------------------------------------
 -- $kc
 
--- | Windows does not use the same keycodes as Linux, so we need to translate.
+-- | Translate a virtual-key code from Windows into a suitable KMonad KeyCode
 --
 -- FIXME: There are loads of missing correspondences, mostly for rare-keys. How
 -- do these line up? Ideally this mapping would be total.
-kcMap :: M.HashMap WinKeycode Keycode
-kcMap = M.fromList $
+winCodeToKeyCode :: M.HashMap WinKeycode Keycode
+winCodeToKeyCode = M.fromList $
   [ (0x00, Missing254)     -- Not documented, but happens often. Why??
+  -- , (0x01, ???)         -- Defined as VK_LBUTTON
+  -- , (0x02, ???)         -- Defined as VK_RBUTTON
+  , (0x03, KeyCancel)
+  -- , (0x04, ???)         -- Defined as VK_MBUTTON
+  -- , (0x05, ???)         -- Defined as VK_XBUTTON1
+  -- , (0x06, ???)         -- Defined as VK_XBUTTON2
   , (0x08, KeyBackspace)
   , (0x09, KeyTab)
-  , (0x0C, KeyKp5) -- VK_CLEAR: NumPad 5 when numlock is not engaged
+  , (0x0C, KeyDelete)      -- Defined as VK_CLEAR
   , (0x0D, KeyEnter)
   , (0x10, KeyLeftShift)   -- No 'sidedness'??
   , (0x11, KeyLeftCtrl)    -- No 'sidedness'??
@@ -137,12 +142,14 @@ kcMap = M.fromList $
   , (0x13, KeyPause)
   , (0x14, KeyCapsLock)
   , (0x15, KeyKatakana)    -- Also: KeyHangul
+  -- , (0x16, ???)            -- Defined as VK_IME_ON
   -- , (0x17, ???)            -- Defined as VK_JUNJA
-  -- , (0x18, ???)            -- Defined as VK_HANJA
-  -- , (0x19, ???)            -- Defined as VK_KANJI
+  -- , (0x18, ???)            -- Defined as VK_FINAL
+  , (0x19, KeyHanja)
+  -- , (0x1A, ???)            -- Defined as VK_IME_OFF
   , (0x1B, KeyEsc)
-  -- , (0x1C, ???)            -- Defined as VK_CONVERT
-  -- , (0x1D, ???)            -- Defined as VK_NONCONVERT
+  , (0x1C, KeyHenkan)         -- Defined as VK_CONVERT
+  , (0x1D, KeyMuhenkan)       -- Defined as VK_NONCONVERT
   -- , (0x1E, ???)            -- Defined as VK_ACCEPT
   -- , (0x1F, ???)            -- Defined as VK_MODECHANGE
   , (0x20, KeySpace)
@@ -249,13 +256,13 @@ kcMap = M.fromList $
   , (0xA3, KeyRightCtrl)
   , (0xA4, KeyLeftAlt)
   , (0xA5, KeyRightAlt)
-  -- , (0xA6, ???)             -- Defined as VK_BROWSER_BACK
-  -- , (0xA7, ???)             -- Defined as VK_BROWSER_FORWARD
-  -- , (0xA8, ???)             -- Defined as VK_BROWSER_REFRESH
-  -- , (0xA9, ???)             -- Defined as VK_BROWSER_STOP
-  -- , (0xAA, ???)             -- Defined as VK_BROWSER_SEARCH
+  , (0xA6, KeyBack)
+  , (0xA7, KeyForward)
+  , (0xA8, KeyRefresh)
+  , (0xA9, KeyStop)
+  , (0xAA, KeySearch)
   -- , (0xAB, ???)             -- Defined as VK_BROWSER_FAVORITES
-  -- , (0xAC, ???)             -- Defined as VK_BROWSER_HOME
+  , (0xAC, KeyHomepage)
   , (0xAD, KeyMute)
   , (0xAE, KeyVolumeDown)
   , (0xAF, KeyVolumeUp)
@@ -265,8 +272,8 @@ kcMap = M.fromList $
   , (0xB3, KeyPlayPause)
   , (0xB4, KeyMail)
   , (0xB5, KeyMedia)
-  -- , (0xB6, ???)             -- Defined as VK_LAUNCH_APP1
-  -- , (0xB7, ???)             -- Defined as VK_LAUNCH_APP2
+  , (0xB6, KeyProg1)           -- Defined as VK_LAUNCH_APP1
+  , (0xB7, KeyProg2)           -- Defined as VK_LAUNCH_APP2
   , (0xBA, KeySemicolon)    -- Defined as VK_OEM_1
   , (0xBB, KeyEqual)        -- Defined as VK_OEM_PLUS
   , (0xBC, KeyComma)        -- Defined as VK_OEM_COMMA
@@ -283,7 +290,7 @@ kcMap = M.fromList $
   , (0xE2, Key102nd)
   -- , (0xE3, ???)             -- Defined as `OEM specific`
   -- , (0xE4, ???)             -- Defined as `OEM specific`
-  -- , (0xE5, ???)             -- Defined as OEM PROCESS key
+  -- , (0xE5, ???)             -- Defined as VK_PROCESSKEY
   -- , (0xE6, ???)             -- Defined as `OEM specific`
   -- , (0xE7, ???)             -- Defined as VK_PACKET
   -- , (0xE9, ???)             -- Defined as `OEM specific`
@@ -307,6 +314,271 @@ kcMap = M.fromList $
   -- , (0xFB, ???)             -- Defined as VK_ZOOM
   -- , (0xFC, ???)             -- Defined as VK_NONAME
   -- , (0xFD, ???)             -- Defined as VK_PA1
-  -- , (0xFE, ???)             -- Defined as VK_CLEAR
+  -- , (0xFE, KeyDelete)       -- Defined as VK_OEM_CLEAR
   ]
 
+-- | Translate a KMonad KeyCode to the corresponding Windows virtual-key code
+-- 
+-- We cannot simply reverse the above map for the opposite direction, because
+-- there will be duplicates where more than one virtual-key code produces the
+-- same KMonad KeyCode. See https://github.com/kmonad/kmonad/issues/326
+keyCodeToWinCode :: M.HashMap Keycode WinKeycode
+keyCodeToWinCode = M.fromList $
+  [ -- (KeyReserved, ???)
+    (KeyEsc, 0x1B)
+  , (Key1, 0x31)
+  , (Key2, 0x32)
+  , (Key3, 0x33)
+  , (Key4, 0x34)
+  , (Key5, 0x35)
+  , (Key6, 0x36)
+  , (Key7, 0x37)
+  , (Key8, 0x38)
+  , (Key9, 0x39)
+  , (Key0, 0x30)
+  , (KeyMinus, 0xBD)
+  , (KeyEqual, 0xBB)
+  , (KeyBackspace, 0x08)
+  , (KeyTab, 0x09)
+  , (KeyQ, 0x51)
+  , (KeyW, 0x57)
+  , (KeyE, 0x45)
+  , (KeyR, 0x52)
+  , (KeyT, 0x54)
+  , (KeyY, 0x59)
+  , (KeyU, 0x55)
+  , (KeyI, 0x49)
+  , (KeyO, 0x4F)
+  , (KeyP, 0x50)
+  , (KeyLeftBrace, 0xDB)
+  , (KeyRightBrace, 0xDD)
+  , (KeyEnter, 0x0D)
+  , (KeyLeftCtrl, 0xA2)
+  , (KeyA, 0x41)
+  , (KeyS, 0x53)
+  , (KeyD, 0x44)
+  , (KeyF, 0x46)
+  , (KeyG, 0x47)
+  , (KeyH, 0x48)
+  , (KeyJ, 0x4A)
+  , (KeyK, 0x4B)
+  , (KeyL, 0x4C)
+  , (KeySemicolon, 0xBA)
+  , (KeyApostrophe, 0xDE)
+  , (KeyGrave, 0xC0)
+  , (KeyLeftShift, 0xA0)
+  , (KeyBackslash, 0xDC)
+  , (KeyZ, 0x5A)
+  , (KeyX, 0x58)
+  , (KeyC, 0x43)
+  , (KeyV, 0x56)
+  , (KeyB, 0x42)
+  , (KeyN, 0x4E)
+  , (KeyM, 0x4D)
+  , (KeyComma, 0xBC)
+  , (KeyDot, 0xBE)
+  , (KeySlash, 0xBF)
+  , (KeyRightShift, 0xA1)
+  , (KeyKpAsterisk, 0x6A)
+  , (KeyLeftAlt, 0xA4)
+  , (KeySpace, 0x20)
+  , (KeyCapsLock, 0x14)
+  , (KeyF1, 0x70)
+  , (KeyF2, 0x71)
+  , (KeyF3, 0x72)
+  , (KeyF4, 0x73)
+  , (KeyF5, 0x74)
+  , (KeyF6, 0x75)
+  , (KeyF7, 0x76)
+  , (KeyF8, 0x77)
+  , (KeyF9, 0x78)
+  , (KeyF10, 0x79)
+  , (KeyNumLock, 0x90)
+  , (KeyScrollLock, 0x91)
+  , (KeyKp7, 0x67)
+  , (KeyKp8, 0x68)
+  , (KeyKp9, 0x69)
+  , (KeyKpMinus, 0x6D)
+  , (KeyKp4, 0x64)
+  , (KeyKp5, 0x65)
+  , (KeyKp6, 0x66)
+  , (KeyKpPlus, 0x6B)
+  , (KeyKp1, 0x61)
+  , (KeyKp2, 0x62)
+  , (KeyKp3, 0x63)
+  , (KeyKp0, 0x60)
+  , (KeyKpDot, 0x6E)
+  -- , (Missing84, ???)
+  -- , (KeyZenkakuHankaku, ???)
+  , (Key102nd, 0xE2)
+  , (KeyF11, 0x7A)
+  , (KeyF12, 0x7B)
+  -- , (KeyRo, ???)
+  , (KeyKatakana, 0x15)
+  -- , (KeyHiragana, ???)
+  , (KeyHenkan, 0x1C)
+  , (KeyKatakanaHiragana, 0x15)
+  , (KeyMuhenkan, 0x1D)
+  -- , (KeyKpjpcomma, ???)
+  , (KeyKpEnter, 0x0D)
+  , (KeyRightCtrl, 0xA3)
+  , (KeyKpSlash, 0x6F)
+  -- , (KeySysRq, ???)
+  , (KeyRightAlt, 0xA5)
+  -- , (KeyLinefeed, ???)
+  , (KeyHome, 0x24)
+  , (KeyUp, 0x26)
+  , (KeyPageUp, 0x21)
+  , (KeyLeft, 0x25)
+  , (KeyRight, 0x27)
+  , (KeyEnd, 0x23)
+  , (KeyDown, 0x28)
+  , (KeyPageDown, 0x22)
+  , (KeyInsert, 0x2D)
+  , (KeyDelete, 0x2E)
+  -- , (KeyMacro, ???)
+  , (KeyMute, 0xAD)
+  , (KeyVolumeDown, 0xAE)
+  , (KeyVolumeUp, 0xAF)
+  -- , (KeyPower, ???)
+  -- , (KeyKpEqual, ???)
+  -- , (KeyKpPlusMinus, ???)
+  , (KeyPause, 0x13)
+  -- , (KeyScale, ???)
+  -- , (KeyKpComma, ???)
+  , (KeyHangeul, 0x15)
+  , (KeyHanja, 0x19)
+  -- , (KeyYen, ???)
+  , (KeyLeftMeta, 0x5B)
+  , (KeyRightMeta, 0x5C)
+  , (KeyCompose, 0x5D)
+  , (KeyStop, 0xA9)
+  -- , (KeyAgain, ???)
+  -- , (KeyProps, ???)
+  -- , (KeyUndo, ???)
+  -- , (KeyFront, ???)
+  -- , (KeyCopy, ???)
+  -- , (KeyOpen, ???)
+  -- , (KeyPaste, ???)
+  -- , (KeyFind, ???)
+  -- , (KeyCut, ???)
+  , (KeyHelp, 0x2F)
+  , (KeyMenu, 0x5D)
+  -- , (KeyCalc, ???)
+  -- , (KeySetup, ???)
+  , (KeySleep, 0x5F)
+  -- , (KeyWakeUp, ???)
+  -- , (KeyFile, ???)
+  -- , (KeySendFile, ???)
+  -- , (KeyDeleteFile, ???)
+  -- , (KeyXfer, ???)
+  -- , (KeyProg1, ???)
+  -- , (KeyProg2, ???)
+  -- , (KeyWww, ???)
+  -- , (KeyMsDos, ???)
+  -- , (KeyCoffee, ???)
+  -- , (KeyDirection, ???)
+  -- , (KeyCycleWindows, ???)
+  , (KeyMail, 0xB4)
+  -- , (KeyBookmarks, ???)
+  -- , (KeyComputer, ???)
+  , (KeyBack, 0xA6)
+  , (KeyForward, 0xA7)
+  -- , (KeyCloseCd, ???)
+  -- , (KeyEjectCd, ???)
+  -- , (KeyEjectCloseCd, ???)
+  , (KeyNextSong, 0xB0)
+  , (KeyPlayPause, 0xB3)
+  , (KeyPreviousSong, 0xB1)
+  , (KeyStopCd, 0xB2)
+  -- , (KeyRecord, ???)
+  -- , (KeyRewind, ???)
+  -- , (KeyPhone, ???)
+  -- , (KeyIso, ???)
+  -- , (KeyConfig, ???)
+  , (KeyHomepage, 0xAC)
+  , (KeyRefresh, 0xA8)
+  -- , (KeyExit, ???)
+  -- , (KeyMove, ???)
+  -- , (KeyEdit, ???)
+  -- , (KeyScrollUp, ???)
+  -- , (KeyScrollDown, ???)
+  -- , (KeyKpLeftParen, ???)
+  -- , (KeyKpRightParen, ???)
+  -- , (KeyNew, ???)
+  -- , (KeyRedo, ???)
+  , (KeyF13, 0x7C)
+  , (KeyF14, 0x7D)
+  , (KeyF15, 0x7E)
+  , (KeyF16, 0x7F)
+  , (KeyF17, 0x80)
+  , (KeyF18, 0x81)
+  , (KeyF19, 0x82)
+  , (KeyF20, 0x83)
+  , (KeyF21, 0x84)
+  , (KeyF22, 0x85)
+  , (KeyF23, 0x86)
+  , (KeyF24, 0x87)
+  -- , (Missing195, ???)
+  -- , (Missing196, ???)
+  -- , (Missing197, ???)
+  -- , (Missing198, ???)
+  -- , (Missing199, ???)
+  -- , (KeyPlayCd, ???)
+  -- , (KeyPauseCd, ???)
+  -- , (KeyProg3, ???)
+  -- , (KeyProg4, ???)
+  -- , (KeyDashboard, ???)
+  -- , (KeySuspend, ???)
+  -- , (KeyClose, ???)
+  , (KeyPlay, 0xFA)
+  --, (KeyFastForward, ???)
+  --, (KeyBassBoost, ???)
+  , (KeyPrint, 0x2A)
+  -- , (KeyHp, ???)
+  -- , (KeyCamera, ???)
+  -- , (KeySound, ???)
+  -- , (KeyQuestion, ???)
+  , (KeyEmail, 0xB4)
+  -- , (KeyChat, ???)
+  , (KeySearch, 0xAA)
+  -- , (KeyConnect, ???)
+  -- , (KeyFinance, ???)
+  -- , (KeySport, ???)
+  -- , (KeyShop, ???)
+  -- , (KeyAlterase, ???)
+  , (KeyCancel, 0x03)
+  -- , (KeyBrightnessDown, ???)
+  -- , (KeyBrightnessUp, ???)
+  , (KeyMedia, 0xB5)
+  -- , (KeySwitchVideoMode, ???)
+  -- , (KeyKbdIllumToggle, ???)
+  -- , (KeyKbdIllumDown, ???)
+  -- , (KeyKbdIllumUp, ???)
+  -- , (KeySend, ???)
+  -- , (KeyReply, ???)
+  -- , (KeyForwardMail, ???)
+  -- , (KeySave, ???)
+  -- , (KeyDocuments, ???)
+  -- , (KeyBattery, ???)
+  -- , (KeyBluetooth, ???)
+  -- , (KeyWlan, ???)
+  -- , (KeyUwb, ???)
+  -- , (KeyUnknown, ???)
+  , (KeyVideoNext, 0xB0)
+  , (KeyVideoPrev, 0xB1)
+  -- , (KeyBrightnessCycle, ???)
+  -- , (KeyBrightnessZero, ???)
+  -- , (KeyDisplayOff, ???)
+  -- , (KeyWimax, ???)
+  -- , (Missing247, ???)
+  -- , (Missing248, ???)
+  -- , (Missing249, ???)
+  -- , (Missing250, ???)
+  -- , (Missing251, ???)
+  -- , (Missing252, ???)
+  -- , (Missing253, ???)
+  -- , (Missing254, ???)
+  -- , (Missing255, ???)
+  ]
+  
