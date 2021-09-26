@@ -7,23 +7,22 @@ let
   deps = [
     pkgs.git # Necessary to compile KMonad, but not to run it.
   ];
+in
+pkgs.haskellPackages.developPackage {
 
-  pkg = pkgs.haskellPackages.developPackage {
+  root = ./..;
+  name = "kmonad";
 
-    root = ./..;
+  modifier = (t.flip t.pipe) [
+    (drv: hl.addBuildDepends drv deps) # Insert our buildDepends
+    hl.justStaticExecutables # Only build the executable
 
-    modifier = (t.flip t.pipe) [
-      (drv: hl.addBuildDepends drv deps) # Insert our buildDepends
-      hl.justStaticExecutables # Only build the executable
-
-      # TODO: investigate these here: https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/haskell-modules/lib.nix
-      # hl.dontHaddock
-      # hl.enableStaticLibraries
-      # hl.disableLibraryProfiling
-      # hl.disableExecutableProfiling
-      #
-      # Maybe I make multiple targets, 1 for the executable, 1 for the hackage docs?
-    ];
-  };
-
-in { inherit pkg; }
+    # TODO: investigate these here: https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/haskell-modules/lib.nix
+    # hl.dontHaddock
+    # hl.enableStaticLibraries
+    # hl.disableLibraryProfiling
+    # hl.disableExecutableProfiling
+    #
+    # Maybe I make multiple targets, 1 for the executable, 1 for the hackage docs?
+  ];
+}
