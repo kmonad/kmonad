@@ -10,7 +10,7 @@ import KMonad.Model.Types
 import UnliftIO.STM
 
 withModel :: LUIO m e => ModelCfg -> Ctx r m ModelAPI
-withModel cfg = mkCtx $ \f -> undefined
+withModel _ = mkCtx $ \_ -> undefined
 
 -- | Transmit 'KeyEvent's across the API
 sendToModel, sendToShell :: (EnvIO m env, HasModelAPI env, HasKeyEvent e) => e -> m ()

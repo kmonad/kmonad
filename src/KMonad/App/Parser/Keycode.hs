@@ -104,24 +104,24 @@ fkeyAliases = map go [1..12 :: Int] where
 
 -- | This is a list of aliases for keycodes that we haven't given a CoreName
 -- yet, since they don't exist on a standard 100% keyboard.
-nonExistent :: [Alias]
-nonExistent = foldMap (\(c, as) -> map (,unCore c) as)
-  [ -- FIXME: Hookup these aliases to rare Linux names
-    ("slp" , ["sleep", "zzz"])
-  , ("volu", ["volumeup", "loud", "louder"])
-  , ("vold", ["volumedown", "soft", "softer"])
-  , ("brgu", ["brightnessup", "brigtup", "light", "bright", "lght"])
-  , ("brgd", ["brightnessdown", "brigtdn", "dim", "dark"])
-  , ("fwd" , ["forward"])
-  , ("prnt", ["print"])
-  , ("wku" , ["wakeup", "wake", "wkup"])
-  , ("illd", ["illumdown", "kbillumdown", "kbdim"])
-  , ("illu", ["illumup", "kbillumup", "kbbr"])
-  , ("next", ["nextsong"])
-  , ("pp"  , ["playpause", "songpause"])
-  , ("prev", ["prevsong", "previoussong"])
+-- nonExistent :: [Alias]
+-- nonExistent = foldMap (\(c, as) -> map (,unCore c) as)
+--   [ -- FIXME: Hookup these aliases to rare Linux names
+--     ("slp" , ["sleep", "zzz"])
+--   , ("volu", ["volumeup", "loud", "louder"])
+--   , ("vold", ["volumedown", "soft", "softer"])
+--   , ("brgu", ["brightnessup", "brigtup", "light", "bright", "lght"])
+--   , ("brgd", ["brightnessdown", "brigtdn", "dim", "dark"])
+--   , ("fwd" , ["forward"])
+--   , ("prnt", ["print"])
+--   , ("wku" , ["wakeup", "wake", "wkup"])
+--   , ("illd", ["illumdown", "kbillumdown", "kbdim"])
+--   , ("illu", ["illumup", "kbillumup", "kbbr"])
+--   , ("next", ["nextsong"])
+--   , ("pp"  , ["playpause", "songpause"])
+--   , ("prev", ["prevsong", "previoussong"])
 
-  -- FIXME: Hookup these aliases for mac-names
-  , ("pad" , ["launchpad", "launch"])
-  , ("mctl", ["missioncttrl", "mctrl"])
-  ]
+--   -- FIXME: Hookup these aliases for mac-names
+--   , ("pad" , ["launchpad", "launch"])
+--   , ("mctl", ["missioncttrl", "mctrl"])
+--   ]
