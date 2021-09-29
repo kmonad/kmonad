@@ -19,6 +19,7 @@ module KMonad.Model.Button
     Button
   , HasButton(..)
   , onPress
+  , onRelease
   , mkButton
   , around
   , tapOn
@@ -37,6 +38,7 @@ module KMonad.Model.Button
   -- * Button combinators
   -- $combinators
   , aroundNext
+  , aroundNextTimeout
   , aroundNextSingle
   , layerDelay
   , layerNext
@@ -88,7 +90,7 @@ onPress :: AnyK () -> Button
 onPress p = mkButton p $ pure ()
 
 onRelease :: AnyK () -> Button
-onRelease p = mkButton (pure ()) p
+onRelease = mkButton (pure ())
 
 --------------------------------------------------------------------------------
 -- $running
@@ -186,6 +188,21 @@ aroundNext ::
 aroundNext b = onPress $ await isPress $ \e -> do
   runAction $ b^.pressAction
   await (isReleaseOf $ e^.keycode) $ \_ -> do
+    runAction $ b^.releaseAction
+    pure NoCatch
+  pure NoCatch
+
+-- | A 'Button' that, once pressed, will surround the next button within some timeout with another.
+--
+-- If some other key is not pressed within an interval another button will be triggered as a tap.
+aroundNextTimeout ::
+     Milliseconds -- ^ How long before we tap
+  -> Button       -- ^ The 'Button' to use to surround next
+  -> Button       -- ^ The 'Button' to tap on timeout
+  -> Button       -- ^ The resulting button
+aroundNextTimeout d b t = onPress $ within d (pure isPress) (tap t) $ \trig -> do
+  runAction $ b^.pressAction
+  await (isReleaseOf $ trig^.event.keycode) $ \_ -> do
     runAction $ b^.releaseAction
     pure NoCatch
   pure NoCatch

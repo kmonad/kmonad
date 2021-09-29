@@ -280,6 +280,7 @@ keywordButtons =
   , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
+  , ("around-next-timeout", KAroundNextTimeout <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-macro"
     , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("tap-macro-release"

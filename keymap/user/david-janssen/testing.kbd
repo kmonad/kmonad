@@ -6,16 +6,11 @@
   fallthrough true
   )
 
-(defsrc
- a
- b
- lsft
- enter
-)
+(defsrc a s d f)
 
 (deflayer layer1
-  a
-  (tap-hold-next-release 2000 b lctl)
-  (around-next lsft)
-  enter
+  (around-next-timeout 500 lsft q)
+  x
+  y
+  z
 )
