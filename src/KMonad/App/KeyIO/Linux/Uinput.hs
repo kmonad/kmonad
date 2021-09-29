@@ -17,7 +17,7 @@ import KMonad.App.KeyIO.Common
 import Foreign.C.String
 import Foreign.C.Types
 import System.Posix
-import UnliftIO.Process (callCommand)
+import UnliftIO.Process (spawnCommand)
 
 import Data.Typeable
 import UnliftIO.Exception hiding (throwIO)
@@ -111,7 +111,7 @@ withUinput :: (LUIO m env)
   => UinputCfg -> Ctx r m PutKey
 withUinput c = mkCtx $ \f -> do
   -- Run our maybe-command if specified
-  traverse_ callCommand $ c^.preInit
+  traverse_ spawnCommand $ c^.preInit
 
   let init = do
         le <- view logEnv
@@ -127,7 +127,7 @@ withUinput c = mkCtx $ \f -> do
         -- Optionally, fork of a command to be run
         for_ (c^.postInit) $ \cmd -> do
           logInfo $ "Running post-uinput-init command: " <> (pack cmd)
-          async . callCommand $ cmd
+          async . spawnCommand $ cmd
 
         UinputEnv c le fd <$> newMVar S.empty
 
