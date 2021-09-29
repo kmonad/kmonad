@@ -36,7 +36,7 @@ foreign import ccall "release_kb"
 -- | Pass a pointer to a buffer to wait_key, when it returns the buffer can be
 -- read for the next key event.
 foreign import ccall "wait_key"
-  wait_key :: Ptr WinKeyEvent -> IO ()
+  wait_key :: Ptr WinKeyEvent -> OnlyIO ()
 
 
 --------------------------------------------------------------------------------

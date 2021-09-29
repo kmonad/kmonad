@@ -30,7 +30,7 @@ import KMonad.Keyboard.IO.Windows.Types
 --------------------------------------------------------------------------------
 
 foreign import ccall "sendKey"
-  sendKey :: Ptr WinKeyEvent -> IO ()
+  sendKey :: Ptr WinKeyEvent -> OnlyIO ()
 
 -- | The SKSink environment
 data SKSink = SKSink

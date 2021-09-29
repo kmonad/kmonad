@@ -18,12 +18,15 @@ where
 
 import KMonad.Prelude
 
+-- import KMonad.App.Invocation
 import KMonad.Args
 import KMonad.App.Types
+import KMonad.App.Logging
 import KMonad.Keyboard
 import KMonad.Util
 import KMonad.Model
 
+-- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
 
 import qualified KMonad.Model.Dispatch as Dp
@@ -45,7 +48,7 @@ import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
 -- | The first command in KMonad
 --
 -- Get the invocation from the command-line, then do something with it.
-main :: IO ()
+main :: OnlyIO ()
 main = getCmd >>= runCmd
 
 -- | Execute the provided 'Cmd'
@@ -53,12 +56,14 @@ main = getCmd >>= runCmd
 -- 1. Construct the log-func
 -- 2. Parse the config-file
 -- 3. Maybe start KMonad
-runCmd :: Cmd -> IO ()
+runCmd :: Cmd -> OnlyIO ()
 runCmd c = do
-  o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logLvl)
-  withLogFunc o $ \f -> runRIO f $ do
+  let logcfg = LogCfg (c ^. logLev ) stdout Nothing
+  runLog logcfg $ do
     cfg <- loadConfig c
     unless (c^.dryRun) $ startApp cfg
+
+
 
 --------------------------------------------------------------------------------
 -- $init
@@ -71,10 +76,10 @@ runCmd c = do
 -- to simplify a bunch of nesting of calls. At no point do we make use of
 -- 'callCC' or other 'ContT' functionality.
 --
-initAppEnv :: HasLogFunc e => AppCfg -> ContT r (RIO e) AppEnv
+initAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
 initAppEnv cfg = do
   -- Get a reference to the logging function
-  lgf <- view logFuncL
+  lgf <- lift $ view logEnv
 
   -- Wait a bit for the user to release the 'Return' key with which they started KMonad
   threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
@@ -96,13 +101,15 @@ initAppEnv cfg = do
   ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
 
   -- Setup thread to read from outHooks and emit to keysink
-  launch_ "emitter_proc" $ do
+  lift $ say_ LevelInfo "Launching emitter-process thread"
+  launch_ $ do
     e <- atomically . takeTMVar $ otv
-    emitKey snk e
+    say $ "Emitting: " <> textDisplay e
+    liftIO $ emitKey snk e
   -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
     { _keAppCfg  = cfg
-    , _keLogFunc = lgf
+    , _keLogFunc = lgf^.logFuncL
     , _keySink   = snk
     , _keySource = src
 
@@ -168,10 +175,10 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
-startApp :: HasLogFunc e => AppCfg -> RIO e ()
+startApp :: AppCfg -> OnlyLIO ()
 startApp c = do
 #ifdef linux_HOST_OS
   -- Ignore SIGCHLD to avoid zombie processes.
   liftIO . void $ installHandler sigCHLD Ignore Nothing
 #endif
-  runContT (initAppEnv c) (flip runRIO loop)
+  runCtx (initAppEnv c) (flip runRIO loop)

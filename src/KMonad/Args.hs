@@ -15,6 +15,7 @@ where
 
 import KMonad.Prelude
 import KMonad.App.Types
+import KMonad.App.Logging
 import KMonad.Args.Cmd
 import KMonad.Args.Joiner
 import KMonad.Args.Parser
@@ -24,7 +25,7 @@ import KMonad.Args.Types
 --
 
 -- | Parse a configuration file into a 'AppCfg' record
-loadConfig :: HasLogFunc e => Cmd -> RIO e AppCfg
+loadConfig :: Cmd -> OnlyLIO AppCfg
 loadConfig cmd = do
 
   tks <- loadTokens (cmd^.cfgFile)      -- This can throw a PErrors

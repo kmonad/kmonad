@@ -18,7 +18,7 @@ import KMonad.Keyboard.IO.Mac.Types
 
 -- | Use the mac c-api to `grab` a keyboard
 foreign import ccall "grab_kb"
-  grab_kb :: CString -> IO Word8
+  grab_kb :: CString -> OnlyIO Word8
 
 -- | Release the keyboard hook
 foreign import ccall "release_kb"
@@ -27,7 +27,7 @@ foreign import ccall "release_kb"
 -- | Pass a pointer to a buffer to wait_key, when it returns the buffer can be
 -- read for the next key event.
 foreign import ccall "wait_key"
-  wait_key :: Ptr MacKeyEvent -> IO Word8
+  wait_key :: Ptr MacKeyEvent -> OnlyIO Word8
 
 
 data EvBuf = EvBuf

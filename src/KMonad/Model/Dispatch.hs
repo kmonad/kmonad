@@ -42,7 +42,9 @@ module KMonad.Model.Dispatch
 where
 
 import KMonad.Prelude
+import KMonad.Util
 import KMonad.Keyboard
+import KMonad.App.Logging
 
 import RIO.Seq (Seq(..), (><))
 import qualified RIO.Seq  as Seq
@@ -56,7 +58,7 @@ import qualified RIO.Text as T
 
 -- | The 'Dispatch' environment
 data Dispatch = Dispatch
-  { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
+  { _eventSrc :: OnlyIO KeyEvent            -- ^ How to read 1 event
   , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
   , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
   }
@@ -69,8 +71,8 @@ mkDispatch' s = withRunInIO $ \u -> do
   rrb <- atomically $ newTVar Seq.empty
   pure $ Dispatch (u s) rpc rrb
 
--- | Create a new 'Dispatch' environment in a 'ContT' environment
-mkDispatch :: MonadUnliftIO m => m KeyEvent -> ContT r m Dispatch
+-- | Create a new 'Dispatch' environment in a 'Ctx' environment
+mkDispatch :: MonadUnliftIO m => m KeyEvent -> Ctx r m Dispatch
 mkDispatch = lift . mkDispatch'
 
 --------------------------------------------------------------------------------
@@ -82,8 +84,8 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
-pull d = do
+pull' :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
+pull' d = do
   -- Check for an unfinished read attempt started previously. If it exists,
   -- fetch it, otherwise, start a new read attempt.
   a <- atomically (tryTakeTMVar $ d^.readProc) >>= \case
@@ -108,6 +110,9 @@ pull d = do
       (e :<| b) -> do
         writeTVar (d^.rerunBuf) b
         pure e
+
+pull :: LIO m e => Dispatch -> m KeyEvent
+pull d = view logEnv >>= \env -> runRIO env (pull' d)
 
 -- | Add a list of elements to be rerun.
 rerun :: (HasLogFunc e) => Dispatch -> [KeyEvent] -> RIO e ()

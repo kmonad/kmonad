@@ -22,6 +22,7 @@ module KMonad.Model.Sluice
 where
 
 import KMonad.Prelude
+import KMonad.Util
 
 import KMonad.Keyboard
 
@@ -34,7 +35,7 @@ import KMonad.Keyboard
 -- never be interrupted, therefore we can simply use 'IORef' and sidestep all
 -- the STM complications.
 data Sluice = Sluice
-  { _eventSrc :: IO KeyEvent      -- ^ Where we get our 'KeyEvent's from
+  { _eventSrc :: OnlyIO KeyEvent  -- ^ Where we get our 'KeyEvent's from
   , _blocked  :: IORef Int        -- ^ How many locks have been applied to the sluice
   , _blockBuf :: IORef [KeyEvent] -- ^ Internal buffer to store events while closed
   }
@@ -47,8 +48,8 @@ mkSluice' s = withRunInIO $ \u -> do
   buf <- newIORef []
   pure $ Sluice (u s) bld buf
 
--- | Create a new 'Sluice' environment, but do so in a ContT context
-mkSluice :: MonadUnliftIO m => m KeyEvent -> ContT r m Sluice
+-- | Create a new 'Sluice' environment, but do so in a Ctx context
+mkSluice :: MonadUnliftIO m => m KeyEvent -> Ctx r m Sluice
 mkSluice = lift . mkSluice'
 
 

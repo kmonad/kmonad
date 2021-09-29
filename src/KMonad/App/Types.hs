@@ -50,7 +50,7 @@ data AppCfg = AppCfg
   , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
-  , _startDelay   :: Milliseconds      -- ^ How long to wait before acquiring the input keyboard
+  , _startDelay   :: Ms      -- ^ How long to wait before acquiring the input keyboard
   }
 makeClassy ''AppCfg
 

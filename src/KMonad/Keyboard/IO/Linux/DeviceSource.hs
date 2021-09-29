@@ -47,7 +47,7 @@ makeClassyPrisms ''DeviceSourceError
 --------------------------------------------------------------------------------
 -- $ffi
 foreign import ccall "ioctl_keyboard"
-  c_ioctl_keyboard :: CInt -> CInt -> IO CInt
+  c_ioctl_keyboard :: CInt -> CInt -> OnlyIO CInt
 
 -- | Perform an IOCTL operation on an open keyboard handle
 ioctl_keyboard :: MonadIO m

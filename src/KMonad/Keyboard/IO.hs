@@ -25,7 +25,7 @@ module KMonad.Keyboard.IO
 where
 
 import KMonad.Prelude
-
+import KMonad.App.Logging
 import KMonad.Keyboard.Types
 import KMonad.Util
 
@@ -35,7 +35,7 @@ import qualified RIO.Text as T
 -- $snk
 
 -- | A 'KeySink' sends key actions to the OS
-newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> IO () }
+newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> OnlyIO () }
 
 -- | Create a new 'KeySink'
 mkKeySink :: HasLogFunc e
@@ -52,9 +52,8 @@ mkKeySink o c w = do
   pure $ KeySink . write <$> mkAcquire open close
 
 -- | Emit a key to the OS
-emitKey :: (HasLogFunc e) => KeySink -> KeyEvent -> RIO e ()
+emitKey :: IO m => KeySink -> KeyEvent -> m ()
 emitKey snk e = do
-  logDebug $ "Emitting: " <> display e
   liftIO $ emitKeyWith snk e
 
 
@@ -62,7 +61,7 @@ emitKey snk e = do
 -- $src
 
 -- | A 'KeySource' is an action that awaits 'KeyEvent's from the OS
-newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent}
+newtype KeySource = KeySource { awaitKeyWith :: OnlyIO KeyEvent}
 
 -- | Create a new KeySource
 mkKeySource :: HasLogFunc e
@@ -79,9 +78,12 @@ mkKeySource o c r = do
   pure $ KeySource . read <$> mkAcquire open close
 
 -- | Wait for the next key from the OS
-awaitKey :: (HasLogFunc e) => KeySource -> RIO e KeyEvent
-awaitKey src = do
+awaitKey' :: (HasLogFunc e) => KeySource -> RIO e KeyEvent
+awaitKey' src = do
   e <- liftIO . awaitKeyWith $ src
   logDebug $ "\n" <> display (T.replicate 80 "-")
           <> "\nReceived event: " <> display e
   pure e
+
+awaitKey :: LIO m e => KeySource -> m KeyEvent
+awaitKey src = view logEnv >>= \env -> runRIO env (awaitKey' src)

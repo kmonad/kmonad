@@ -238,7 +238,7 @@ tapOn Release b = mkButton (pure ()) (tap b)
 -- | Create a 'Button' that performs a tap of one button if it is released
 -- within an interval. If the interval is exceeded, press the other button (and
 -- release it when a release is detected).
-tapHold :: Milliseconds -> Button -> Button -> Button
+tapHold :: Ms -> Button -> Button -> Button
 tapHold ms t h = onPress $ withinHeld ms (matchMy Release)
   (press h)                     -- If we catch timeout before release
   (const $ tap t *> pure Catch) -- If we catch release before timeout
@@ -254,7 +254,7 @@ tapNext t h = onPress $ hookF InputHook $ \e -> do
     else press h *> pure NoCatch
 
 -- | Like 'tapNext', except that after some interval it switches anyways
-tapHoldNext :: Milliseconds -> Button -> Button -> Button
+tapHoldNext :: Ms -> Button -> Button -> Button
 tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> do
   p <- matchMy Release
   if p $ tr^.event
@@ -311,13 +311,13 @@ tapNextRelease t h = onPress $ do
 --
 -- It does all of this while holding processing of other buttons, so time will
 -- get rolled back like a TapHold button.
-tapHoldNextRelease :: Milliseconds -> Button -> Button -> Button
+tapHoldNextRelease :: Ms -> Button -> Button -> Button
 tapHoldNextRelease ms t h = onPress $ do
   hold True
   go ms []
   where
 
-    go :: MonadK m => Milliseconds -> [Keycode] ->  m ()
+    go :: MonadK m => Ms -> [Keycode] ->  m ()
     go ms' ks = tHookF InputHook ms' onTimeout $ \r -> do
       p <- matchMy Release
       let e = r^.event
@@ -346,10 +346,10 @@ tapHoldNextRelease ms t h = onPress $ do
 -- as the next press is registered before the timeout, the multiTap descends
 -- into its list. The moment a delay is exceeded or immediately upon reaching
 -- the last button, that button is pressed.
-multiTap :: Button -> [(Milliseconds, Button)] -> Button
+multiTap :: Button -> [(Ms, Button)] -> Button
 multiTap l bs = onPress $ go bs
   where
-    go :: [(Milliseconds, Button)] -> AnyK ()
+    go :: [(Ms, Button)] -> AnyK ()
     go []            = press l
     go ((ms, b):bs') = do
       -- This is a bit complicated. What we do is:
@@ -399,7 +399,7 @@ tapMacroRelease bs = onPress $ go bs
     go (b:rst) = tap b >> go rst
 
 -- | Switch to a layer for a period of time, then automatically switch back
-layerDelay :: Milliseconds -> LayerTag -> Button
+layerDelay :: Ms -> LayerTag -> Button
 layerDelay d t = onPress $ do
   layerOp (PushLayer t)
   after d (layerOp $ PopLayer t)
@@ -416,7 +416,7 @@ layerNext t = onPress $ do
 -- | Make a button into a sticky-key, i.e. a key that acts like it is
 -- pressed for the button after it if that button was pressed in the
 -- given timeframe.
-stickyKey :: Milliseconds -> Button -> Button
+stickyKey :: Ms -> Button -> Button
 stickyKey ms b = onPress $ go
  where
   go :: MonadK m => m ()

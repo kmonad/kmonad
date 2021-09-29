@@ -80,6 +80,7 @@ well-organized module organizations. In general, ask yourself:
 3. Really really?
 If you answer yes to all 3 questions, go ahead.
 
+<!-- Disregard for now, probably going to be different
 
 ## OS-specific code
 Dealing with Linux/OSX/Windows has been a bit of a headache, and looks like it
@@ -112,4 +113,4 @@ This also means that when we run across something that should be slightly
 different on different OSes, we might have to write a bit of plumbing code to
 define these things in `KMonad.App.OS`, but that does mean that all the
 OS-specific stuff is gathered in one place.
-
+-->

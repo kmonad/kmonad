@@ -14,7 +14,7 @@ import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Mac.Types
 
 foreign import ccall "send_key"
-  send_key :: Ptr MacKeyEvent -> IO ()
+  send_key :: Ptr MacKeyEvent -> OnlyIO ()
 
 data EvBuf = EvBuf
   { _buffer :: Ptr MacKeyEvent -- ^ The pointer we write events to

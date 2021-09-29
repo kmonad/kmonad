@@ -16,6 +16,7 @@ module KMonad.Args.Cmd
   )
 where
 
+import KMonad.App.Logging hiding (logLvl)
 import KMonad.Prelude hiding (try)
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
 import KMonad.Args.TH (gitHash)
@@ -38,8 +39,8 @@ import Options.Applicative
 data Cmd = Cmd
   { _cfgFile   :: FilePath     -- ^ Which file to read the config from
   , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
-  , _logLvl    :: LogLevel     -- ^ Level of logging to use
-  , _strtDel   :: Milliseconds -- ^ How long to wait before acquiring the input keyboard
+  , _logLev    :: LogLevel     -- ^ Level of logging to use
+  , _strtDel   :: Ms -- ^ How long to wait before acquiring the input keyboard
 
     -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
@@ -53,7 +54,7 @@ data Cmd = Cmd
 makeClassy ''Cmd
 
 -- | Parse 'Cmd' from the evocation of this program
-getCmd :: IO Cmd
+getCmd :: OnlyIO Cmd
 getCmd = customExecParser (prefs showHelpOnEmpty) $
   info (cmdP <**> versioner <**> helper)
     (  fullDesc
@@ -109,11 +110,10 @@ levelP = option f
   (  long    "log-level"
   <> short   'l'
   <> metavar "Log level"
-  <> value   LevelWarn
-  <> help    "How much info to print out (debug, info, warn, error)" )
+  <> value   LevelError
+  <> help    "How much info to print out (debug, info, error)" )
   where
-    f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("warn", LevelWarn)
-                                  , ("info",  LevelInfo),  ("error", LevelError) ]
+    f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("info",  LevelInfo),  ("error", LevelError) ]
 
 -- | Allow the execution of arbitrary shell-commands
 cmdAllowP :: Parser DefSetting
@@ -169,12 +169,12 @@ iTokenP = optional $ SIToken <$> option (tokenParser itokens)
   )
 
 -- | Parse a flag that disables auto-releasing the release of enter
-startDelayP :: Parser Milliseconds
+startDelayP :: Parser Ms
 startDelayP = option (fromIntegral <$> megaReadM numP)
   (  long  "start-delay"
   <> short 'w'
   <> value 300
-  <> showDefaultWith (show . unMS )
+  <> showDefaultWith (\a -> show $ (fromIntegral a :: Int))
   <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
 
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an

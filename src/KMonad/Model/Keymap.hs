@@ -23,6 +23,7 @@ where
 
 
 import KMonad.Prelude
+import KMonad.Util
 
 import KMonad.Model.Action hiding (layerOp)
 import KMonad.Model.Button
@@ -56,8 +57,8 @@ mkKeymap' n m = do
   envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> initBEnv b c
   Keymap <$> newIORef envs <*> newIORef n
 
--- | Create a 'Keymap' but do so in the context of a 'ContT' monad to ease nesting.
-mkKeymap :: MonadUnliftIO m => LayerTag -> LMap Button -> ContT r m Keymap
+-- | Create a 'Keymap' but do so in the context of a 'Ctx' monad to ease nesting.
+mkKeymap :: MonadUnliftIO m => LayerTag -> LMap Button -> Ctx r m Keymap
 mkKeymap n = lift . mkKeymap' n
 
 

@@ -24,17 +24,19 @@ module KMonad.Model.Hooks
 where
 
 import KMonad.Prelude
+import KMonad.App.Logging
 
 import Data.Time.Clock.System
 import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
-import KMonad.Util
+import KMonad.Util hiding (time)
 
 import RIO.Partial (fromJust)
 
 import qualified RIO.HashMap as M
+import qualified RIO         as R
 
 --------------------------------------------------------------------------------
 -- $hooks
@@ -54,18 +56,18 @@ import qualified RIO.HashMap as M
 
 data Entry = Entry
   { _time  :: SystemTime
-  , _eHook :: Hook IO
+  , _eHook :: Hook R.IO
   }
 makeLenses ''Entry
 
-instance HasHook Entry IO where hook = eHook
+instance HasHook Entry R.IO where hook = eHook
 
 type Store = M.HashMap Unique Entry
 
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  { _eventSrc   :: OnlyIO KeyEvent   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
@@ -79,11 +81,11 @@ mkHooks' s = withRunInIO $ \u -> do
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
+mkHooks :: MonadUnliftIO m => m KeyEvent -> Ctx r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
-ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
+ioHook :: MonadUnliftIO m => Hook m -> m (Hook R.IO)
 ioHook h = withRunInIO $ \u -> do
 
   t <- case _hTimeout h of
@@ -193,7 +195,17 @@ step h = do
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
-pull :: HasLogFunc e
+pull' :: HasLogFunc e
   => Hooks
   -> RIO e KeyEvent
-pull h = step h >>= maybe (pull h) pure
+pull' h = step h >>= maybe (pull' h) pure
+
+-- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
+--
+-- NOTE: This is just a temp fix to get things to compile while we're
+-- reorganizing the code. This should all be replaced by a new model at some
+-- point.
+pull :: LIO m e
+  => Hooks
+  -> m KeyEvent
+pull h = view logEnv >>= \env -> runRIO env (pull' h)
