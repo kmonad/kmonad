@@ -19,7 +19,6 @@ import KMonad.Keyboard.Types
 import KMonad.Keyboard.Keycode
 
 
-
 -- | Create a 'KeyEvent' that represents pressing a key
 mkPress :: Keycode -> KeyEvent
 mkPress = mkKeyEvent Press

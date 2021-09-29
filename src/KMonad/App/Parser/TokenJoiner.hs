@@ -27,26 +27,12 @@ where
 import KMonad.Prelude hiding (uncons)
 
 import KMonad.App.Parser.Types
+import KMonad.App.KeyIO
 
 import KMonad.Model.Action
 import KMonad.Model.Button
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
-
-#ifdef linux_HOST_OS
-import KMonad.Keyboard.IO.Linux.DeviceSource
-import KMonad.Keyboard.IO.Linux.UinputSink
-#endif
-
-#ifdef mingw32_HOST_OS
-import KMonad.Keyboard.IO.Windows.LowLevelHookSource
-import KMonad.Keyboard.IO.Windows.SendEventSink
-#endif
-
-#ifdef darwin_HOST_OS
-import KMonad.Keyboard.IO.Mac.IOKitSource
-import KMonad.Keyboard.IO.Mac.KextSink
-#endif
+import KMonad.Model.Types
+import KMonad.Util.Keyboard
 
 import Control.Monad.Except
 
@@ -104,7 +90,7 @@ makeLenses ''JCfg
 
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
-  (emitB KeyRightAlt)
+  (emitB $ kc "ralt")
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
@@ -204,7 +190,7 @@ runLF = flip runRIO
 
 
 -- | Extract the KeySource-loader from the 'KExpr's
-getI :: J (LogFunc -> OnlyIO (Acquire KeySource))
+getI :: J KeyInputCfg
 getI = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SIToken $ cfg of
@@ -213,7 +199,7 @@ getI = do
     Left  Duplicate  -> throwError $ DuplicateSetting "input"
 
 -- | Extract the KeySource-loader from a 'KExpr's
-getO :: J (LogFunc -> OnlyIO (Acquire KeySink))
+getO :: J KeyOutputCfg
 getO = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SOToken $ cfg of
@@ -239,58 +225,15 @@ getAllow = do
     Left None      -> pure False
     Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
 
-#ifdef linux_HOST_OS
 
--- | The Linux correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
-pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
-pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
+pickInput :: IToken -> J KeyInputCfg
+pickInput (KDeviceSource f) = pure . LinuxEvdevCfg . EvdevCfg $ f
+pickInput _ = undefined
 
--- | The Linux correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
-  where cfg = defUinputCfg { _keyboardName = T.unpack t
-                           , _postInit     = T.unpack <$> init }
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
-pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
-
-#endif
-
-#ifdef mingw32_HOST_OS
-
--- | The Windows correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput KLowLevelHookSource = pure $ runLF llHook
-pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
-pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
-
--- | The Windows correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
-pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
-pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
-
-#endif
-
-#ifdef darwin_HOST_OS
-
--- | The Mac correspondence between IToken and actual code
-pickInput :: IToken -> J (LogFunc -> OnlyIO (Acquire KeySource))
-pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
-pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
-pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
-
--- | The Mac correspondence between OToken and actual code
-pickOutput :: OToken -> J (LogFunc -> OnlyIO (Acquire KeySink))
-pickOutput KKextSink            = pure $ runLF kextSink
-pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
-
-#endif
-
---------------------------------------------------------------------------------
--- $als
+pickOutput :: OToken -> J KeyOutputCfg
+pickOutput (KUinputSink t init) = pure . LinuxUinputCfg
+  $ def { _keyboardName = t
+        , _postInit     = unpack <$> init }
 
 type Aliases = M.HashMap Text Button
 type LNames  = [Text]
@@ -321,6 +264,7 @@ joinButton ns als =
       go     = unnest . joinButton ns als
       jst    = fmap Just
       fi     = fromIntegral
+      isps l = traverse go . maybe l ((`intersperse` l) . KPause . fi)
   in \case
     -- Variable dereference
     KRef t -> case M.lookup t als of
@@ -350,10 +294,12 @@ joinButton ns als =
       else throwError $ MissingLayer t
 
     -- Various compound buttons
-    KComposeSeq bs     -> view cmpKey >>= \c -> jst $ tapMacro . (c:) <$> mapM go bs
-    KTapMacro bs       -> jst $ tapMacro           <$> mapM go bs
-    KTapMacroRelease bs ->
-      jst $ tapMacroRelease            <$> mapM go bs
+    KComposeSeq bs     -> do csd <- getCmpSeqDelay
+                             c   <- view cmpKey
+                             jst $ tapMacro . (c:) <$> isps bs csd
+    KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
+    KTapMacroRelease bs mbD ->
+      jst $ tapMacroRelease           <$> isps bs mbD
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
@@ -363,6 +309,7 @@ joinButton ns als =
       -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h
     KAroundNext b      -> jst $ aroundNext         <$> go b
     KAroundNextSingle b -> jst $ aroundNextSingle <$> go b
+    KAroundNextTimeout ms b t -> jst $ aroundNextTimeout (fi ms) <$> go b <*> go t
     KPause ms          -> jst . pure $ onPress (pause ms)
     KMultiTap bs d     -> jst $ multiTap <$> go d <*> mapM f bs
       where f (ms, b) = (fi ms,) <$> go b
@@ -406,13 +353,3 @@ joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
         Nothing -> pure acc
         Just b' -> pure $ (kc, b') : acc
   (n,) <$> foldM f [] (zip src bs)
-
-
---------------------------------------------------------------------------------
--- $test
-
--- fname :: String
--- fname = "/home/david/prj/hask/kmonad/doc/example.kbd"
-
--- test :: IO (J DefCfg)
--- test = runRIO () . fmap joinConfig $ loadTokens fname

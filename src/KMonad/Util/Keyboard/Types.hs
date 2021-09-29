@@ -1,4 +1,4 @@
-module KMonad.Util.Keyboard.Common
+module KMonad.Util.Keyboard.Types
   ( -- * $switch
     Switch(..)
   , HasSwitch(..)
@@ -9,8 +9,7 @@ module KMonad.Util.Keyboard.Common
 
     -- * $name
   , Keyname
-  , keycodeNames
-  , kc
+  , NoSuchKeynameException(..)
 
     -- * $keyswitch
   , KeySwitch
@@ -20,17 +19,13 @@ module KMonad.Util.Keyboard.Common
     -- * $keyevent
   , KeyEvent
   , mkKeyEvent
-  , keySwitchNow
   )
 where
 
 import KMonad.Prelude
 import KMonad.Util.Name
 import KMonad.Util.Time
-import KMonad.Util.Keyboard.OS (Keycode, keycodeNames)
-
-import RIO.Partial (fromJust)
-import qualified RIO.HashMap as M
+import KMonad.Util.Keyboard.OS (Keycode)
 
 --------------------------------------------------------------------------------
 -- $switch
@@ -66,20 +61,6 @@ instance Exception NoSuchKeynameException where
   displayException (NoSuchKeynameException n) =
     "Encountered unknown keyname in code: " <> unpack n
 
--- | A function used to lookup 'Keycode's by name
---
--- NOTE: Only intented to be used with static arguments in the Haskell code to
--- /get/ at things like the keycode for <Tab> across platforms. Do not expose
--- this to user-input.
---
--- One of the few functions that will just throw an exception.
---
-kc :: Keyname -> Keycode
-kc n = case M.lookup n keycodeNames of
-  Just c  -> c
-  Nothing -> throw $ NoSuchKeynameException n
-
-
 --------------------------------------------------------------------------------
 -- $keyswitch
 
@@ -89,6 +70,9 @@ data KeySwitch = KeySwitch
   , _kCode   :: Keycode
   } deriving (Eq, Show)
 makeLenses ''KeySwitch
+
+-- | TODO: make me nice
+instance Display KeySwitch where textDisplay = tshow
 
 class HasKeySwitch a where keySwitch :: Lens' a KeySwitch
 
@@ -110,6 +94,9 @@ data KeyEvent = KeyEvent
   } deriving (Eq, Show)
 makeLenses ''KeyEvent
 
+-- | TODO: make me nice
+instance Display KeyEvent where textDisplay = tshow
+
 instance HasKeySwitch KeyEvent where keySwitch = eKeySwitch
 instance HasSwitch    KeyEvent where switch    = keySwitch.switch
 instance HasCode      KeyEvent where code      = keySwitch.code
@@ -118,7 +105,3 @@ instance HasTime      KeyEvent where time      = eTime
 -- | A constructor for new 'KeyEvent's
 mkKeyEvent :: Switch -> Keycode -> Time -> KeyEvent
 mkKeyEvent s c = KeyEvent (KeySwitch s c)
-
--- | Create a 'KeyEvent' matching a 'KeySwitch' at the current time
-keySwitchNow :: IO m => KeySwitch -> m KeyEvent
-keySwitchNow = now . KeyEvent

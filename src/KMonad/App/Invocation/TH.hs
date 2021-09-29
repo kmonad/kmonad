@@ -10,7 +10,7 @@ Stability   : experimental
 Portability : non-portable (TH)
 
 -}
-module KMonad.Args.TH (gitHash) where
+module KMonad.App.Invocation.TH (gitHash) where
 
 import KMonad.Prelude
 

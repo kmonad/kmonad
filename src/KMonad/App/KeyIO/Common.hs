@@ -45,6 +45,18 @@ data UinputCfg = UinputCfg
   } deriving (Eq, Show)
 makeClassy ''UinputCfg
 
+-- | The default uinput configuration
+instance Default UinputCfg where
+  def = UinputCfg
+    { _vendorCode     = 0xFFFF
+    , _productCode    = 0xFFFF
+    , _productVersion = 0x0000
+    , _keyboardName   = "KMonad simulated keyboard"
+    , _preInit        = Nothing
+    , _postInit       = Nothing
+    }
+
+
 --------------------------------------------------------------------------------
 -- $cfgs-mac
 
@@ -55,6 +67,19 @@ makeClassy ''UinputCfg
 
 -- TODO: This is where the Win config records go
 
+--------------------------------------------------------------------------------
+-- $cfgs-sum
+--
+-- TODO: Here is where the sum-type of input and output configs go
+
+data KeyInputCfg
+  = LinuxEvdevCfg EvdevCfg
+  deriving Show
+
+
+data KeyOutputCfg
+  = LinuxUinputCfg UinputCfg
+  deriving Show
 
 
 --------------------------------------------------------------------------------

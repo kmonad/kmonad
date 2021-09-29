@@ -1,6 +1,7 @@
 {- Additionaly types that should always be available -}
 module KMonad.Prelude.Types
   ( Default(..)
+  , Pred
 
   -- * Shorthand
   , OnlyIO, IO, UIO, EnvIO, EnvUIO
@@ -10,8 +11,13 @@ where
 import KMonad.Prelude.Imports
 import qualified RIO as R
 
+--------------------------------------------------------------------------------
+
 -- | A class for things that have default values
 class Default a where def :: a
+
+-- | A type for predicates
+type Pred a = a -> Bool
 
 --------------------------------------------------------------------------------
 -- $shorthand

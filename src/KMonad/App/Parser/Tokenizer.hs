@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.Parser.Tokenizer
+Module      : KMonad.Args.Parser
 Description : How to turn a text-file into config-tokens
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -15,13 +15,14 @@ We perform configuration parsing in 2 steps:
 This module covers step 1.
 
 -}
-module KMonad.App.Parser.Tokenizer
+module KMonad.Args.Parser
   ( -- * Parsing 'KExpr's
     parseTokens
   , loadTokens
 
   -- * Building Parsers
   , symbol
+  , numP
 
   -- * Parsers for Tokens and Buttons
   , otokens
@@ -33,8 +34,8 @@ where
 
 import KMonad.Prelude hiding (try, bool)
 
-import KMonad.App.Parser.Types
-import KMonad.Keyboard
+import KMonad.Args.Types
+import KMonad.Util.Keyboard
 import KMonad.Keyboard.ComposeSeq
 
 import Data.Char
@@ -44,9 +45,6 @@ import RIO.List (sortBy, find)
 import qualified KMonad.Util.MultiMap as Q
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
-
-import Text.Megaparsec
-import Text.Megaparsec.Char
 
 
 --------------------------------------------------------------------------------
@@ -129,6 +127,11 @@ statement s = paren . (symbol s *>)
 bool :: Parser Bool
 bool = symbol "true" *> pure True
    <|> symbol "false" *> pure False
+
+-- | Parse a LISP-like keyword of the form @:keyword value@
+keywordP :: Text -> Parser p -> Parser p
+keywordP kw p = lexeme (string (":" <> kw)) *> lexeme p
+  <?> "Keyword " <> ":" <> T.unpack kw
 
 --------------------------------------------------------------------------------
 -- $elem
@@ -224,7 +227,9 @@ pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
 
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
-rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
+rmTapMacroP =
+  char '#' *> paren (KTapMacro <$> some buttonP
+                               <*> optional (keywordP "delay" numP))
 
 -- | Compose-key sequence
 composeSeqP :: Parser [DefButton]
@@ -275,8 +280,11 @@ keywordButtons =
   , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
-  , ("tap-macro"      , KTapMacro    <$> some buttonP)
-  , ("tap-macro-release"      , KTapMacroRelease    <$> some buttonP)
+  , ("around-next-timeout", KAroundNextTimeout <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-macro"
+    , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+  , ("tap-macro-release"
+    , KTapMacroRelease <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
@@ -331,12 +339,13 @@ defcfgP = some (lexeme settingP)
 settingP :: Parser DefSetting
 settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ SIToken      <$> f "input"       itokenP
-    , SOToken      <$> f "output"      otokenP
-    , SCmpSeq      <$> f "cmp-seq"     buttonP
-    , SInitStr     <$> f "init"        textP
-    , SFallThrough <$> f "fallthrough" bool
-    , SAllowCmd    <$> f "allow-cmd"   bool
+    [ SIToken      <$> f "input"         itokenP
+    , SOToken      <$> f "output"        otokenP
+    , SCmpSeq      <$> f "cmp-seq"       buttonP
+    , SInitStr     <$> f "init"          textP
+    , SFallThrough <$> f "fallthrough"   bool
+    , SAllowCmd    <$> f "allow-cmd"     bool
+    , SCmpSeqDelay <$> f "cmp-seq-delay" numP
     ])
 
 --------------------------------------------------------------------------------

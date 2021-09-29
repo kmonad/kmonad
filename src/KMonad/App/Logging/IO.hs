@@ -15,7 +15,7 @@ withLog :: UIO m => LogCfg -> Ctx r m LogEnv
 withLog c = mkCtx $ \f -> do
   -- Default to non-verbose logging
   raw <- logOptionsHandle (c^.logTgt) False
-  let ops = raw & setLogMinLevel (c^.logLvl.asRIO)
+  let ops = raw & setLogMinLevel (c^.logLvl)
   withLogFunc ops $ f . LogEnv c
 
 -- | Run an Only-LogEnv RIO action in a UIO

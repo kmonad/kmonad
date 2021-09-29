@@ -30,8 +30,9 @@ import Data.Time.Clock.System
 import Data.Unique
 
 import KMonad.Model.Action hiding (register)
-import KMonad.Keyboard
+-- import KMonad.Keyboard
 import KMonad.Util hiding (time)
+import KMonad.Util.Keyboard
 
 import RIO.Partial (fromJust)
 
@@ -67,21 +68,21 @@ type Store = M.HashMap Unique Entry
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: OnlyIO KeyEvent   -- ^ Where we get our events from
+  { _eventSrc   :: OnlyIO KeySwitch   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
 makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
-mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
+mkHooks' :: MonadUnliftIO m => m KeySwitch -> m Hooks
 mkHooks' s = withRunInIO $ \u -> do
   itr <- atomically $ newEmptyTMVar
   hks <- atomically $ newTVar M.empty
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> Ctx r m Hooks
+mkHooks :: MonadUnliftIO m => m KeySwitch -> Ctx r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
@@ -146,15 +147,15 @@ cancelHook hs tag = do
 -- how this updates the 'Hooks' environment.
 
 -- | Run the function stored in a Hook on the event and the elapsed time
-runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
+runEntry :: MonadIO m => SystemTime -> KeySwitch -> Entry -> m Catch
 runEntry t e v = liftIO $ do
   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)
   => Hooks
-  -> KeyEvent
-  -> RIO e (Maybe KeyEvent)
+  -> KeySwitch
+  -> RIO e (Maybe KeySwitch)
 runHooks hs e = do
   logDebug "Running hooks"
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
@@ -178,7 +179,7 @@ runHooks hs e = do
 -- comes up.
 step :: (HasLogFunc e)
   => Hooks                  -- ^ The 'Hooks' environment
-  -> RIO e (Maybe KeyEvent) -- ^ An action that returns perhaps the next event
+  -> RIO e (Maybe KeySwitch) -- ^ An action that returns perhaps the next event
 step h = do
 
   -- Asynchronously start reading the next event
@@ -194,18 +195,18 @@ step h = do
         Right e -> runHooks h e           -- We caught a real event
   read
 
--- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
+-- | Keep stepping until we succesfully get an unhandled 'KeySwitch'
 pull' :: HasLogFunc e
   => Hooks
-  -> RIO e KeyEvent
+  -> RIO e KeySwitch
 pull' h = step h >>= maybe (pull' h) pure
 
--- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
+-- | Keep stepping until we succesfully get an unhandled 'KeySwitch'
 --
 -- NOTE: This is just a temp fix to get things to compile while we're
 -- reorganizing the code. This should all be replaced by a new model at some
 -- point.
 pull :: LIO m e
   => Hooks
-  -> m KeyEvent
+  -> m KeySwitch
 pull h = view logEnv >>= \env -> runRIO env (pull' h)

@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.Parser.Types
+Module      : KMonad.Args.Types
 Description : The basic types of configuration parsing.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.App.Parser.Types
+module KMonad.Args.Types
   ( -- * $bsc
     Parser
   , PErrors(..)
@@ -35,14 +35,20 @@ module KMonad.App.Parser.Types
     -- * $lenses
   , AsKExpr(..)
   , AsDefSetting(..)
+
+    -- * Reexports
+  , module Text.Megaparsec
+  , module Text.Megaparsec.Char
 ) where
 
 
 import KMonad.Prelude
+import KMonad.App.KeyIO
 
 import KMonad.Model.Button
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
+import KMonad.Model.Types
+import KMonad.Util.Keyboard
+-- import KMonad.Keyboard.IO
 import KMonad.Util
 
 import Text.Megaparsec
@@ -69,6 +75,9 @@ instance Exception PErrors
 --
 -- Tokens representing different types of buttons
 
+-- FIXME: This is really broken: why are there 2 lists of 'DefButton's? There is
+-- one here, and one in Parser/Types.hs
+
 -- | Button ADT
 data DefButton
   = KRef Text                              -- ^ Reference a named button
@@ -84,13 +93,14 @@ data DefButton
   | KTapHoldNextRelease Int DefButton DefButton
     -- ^ Like KTapNextRelease but with a timeout
   | KAroundNext DefButton                  -- ^ Surround a future button
-  | KAroundNextTimeout Int DefButton DefButton
-    -- ^ Surround a future button, with some timeout
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
-  | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
-  | KTapMacroRelease [DefButton]           -- ^ Sequence of buttons to tap, tap the last when released
+  | KAroundNextTimeout Int DefButton DefButton
+  | KTapMacro [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, possible delay between each press
+  | KTapMacroRelease [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Ms                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
@@ -105,16 +115,20 @@ data DefButton
 
 --------------------------------------------------------------------------------
 -- $cfg
+--
+-- The Cfg token that can be extracted from a config-text without ever enterring
+-- IO. This will then directly be translated to a DaemonCfg
+--
 
 -- | The 'CfgToken' contains all the data needed to construct an
 -- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src   :: LogFunc -> OnlyIO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> OnlyIO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag                          -- ^ Name of initial layer
-  , _flt   :: Bool                              -- ^ How to deal with unhandled events
-  , _allow :: Bool                              -- ^ Whether to allow shell commands
+  { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
+  , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
+  , _km    :: LMap Button  -- ^ An 'LMap' of 'Button' actions
+  , _fstL  :: LayerTag     -- ^ Name of initial layer
+  , _flt   :: Bool         -- ^ How to deal with unhandled events
+  , _allow :: Bool         -- ^ Whether to allow shell commands
   }
 makeClassy ''CfgToken
 
@@ -166,6 +180,7 @@ data DefSetting
   | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
+  | SCmpSeqDelay Int
   deriving Show
 makeClassyPrisms ''DefSetting
 
@@ -195,3 +210,7 @@ data KExpr
   | KDefAlias DefAlias
   deriving Show
 makeClassyPrisms ''KExpr
+
+
+--------------------------------------------------------------------------------
+-- $act

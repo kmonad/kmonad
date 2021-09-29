@@ -1,35 +1,20 @@
 module KMonad.App.Logging.Types
+  ( LogCfg(..)
+  , LogEnv(..)
+  , LogLevel(..)
 
+  , HasLogCfg(..)
+  , HasLogEnv(..)
+ 
+  , LIO, LUIO, OnlyLIO
+  )
 where
 
 
 import KMonad.Prelude
-
-import qualified RIO as R (LogLevel(..))
+import RIO (LogLevel(..))
 import qualified RIO.Text as T
 
-
-{-
-RIO-logging is a bit too configurable, so we specify a simpler subset of
-possible logging behaviors.
--}
-
-
---------------------------------------------------------------------------------
--- $levels
-
--- | The log-levels we support
-data LogLevel
-  = LevelError  -- ^ Write only errors
-  | LevelInfo   -- ^ Also write status updates
-  | LevelDebug  -- ^ Also write full reports
-  deriving Show
-
-asRIO :: Getter LogLevel R.LogLevel
-asRIO = to $ \case
-  LevelError -> R.LevelError
-  LevelInfo  -> R.LevelInfo
-  LevelDebug -> R.LevelDebug
 
 --------------------------------------------------------------------------------
 -- $cfg

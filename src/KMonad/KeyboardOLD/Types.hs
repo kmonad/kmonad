@@ -6,6 +6,7 @@ module KMonad.Keyboard.Types
   , mkKeyEvent
   , HasKeyEvent(..)
   , KeyPred
+
   , LayerTag
   , LMap
   )
