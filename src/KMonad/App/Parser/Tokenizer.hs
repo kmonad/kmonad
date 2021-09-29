@@ -181,6 +181,12 @@ exprP = paren . choice $
 --
 -- All the various ways to refer to buttons
 
+-- | Turn 2 strings into a list of singleton-Text tuples by zipping the lists.
+--
+-- z "abc" "123" -> [("a", "1"), ("b", 2) ...]
+z :: String -> String -> [(Text, Text)]
+z a b = uncurry zip $ over (both.traversed) T.singleton (a, b)
+
 -- | Different ways to refer to shifted versions of keycodes
 shiftedNames :: [(Text, DefButton)]
 shiftedNames = map (second (shiftedOf . CoreName)) $ cps <> num <> oth where
@@ -207,10 +213,10 @@ buttonNames = shiftedNames <> escp <> util
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
 moddedP = KAround <$> prfx <*> buttonP
-  where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
-               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)
-               , ("RS-", KeyRightShift), ("RC-", KeyRightCtrl)
-               , ("RA-", KeyRightAlt),   ("RM-", KeyRightMeta)]
+  where mods = [ ("S-",  kc "lsft"), ("C-",  kc "lctl")
+               , ("A-",  kc "lalt"), ("M-",  kc "lmet")
+               , ("RS-", kc "rsft"), ("RC-", kc "rctl")
+               , ("RA-", kc "ralt"), ("RM-", kc "rmet")]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
 -- | Parse Pxxx as pauses (useful in macros)

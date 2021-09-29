@@ -48,6 +48,7 @@ b (BTapHoldNextRelease ms t h) = tapHoldNextRelease ms (b t) (b h)
 b (BAround p q) = around (b p) (b q)
 b (BAroundNext p) = aroundNext (b p)
 b (BAroundNextSingle p) = aroundNextSingle (b p)
+b (BAroundNextTimeout d a t) = aroundNextTimeout d (b a) (b t)
 
 -- Macros
 b (BTapMacro ps) = tapMacro $ map b ps

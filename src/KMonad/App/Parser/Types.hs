@@ -167,13 +167,8 @@ data IToken
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
-<<<<<<< HEAD
   | KSendEventSink (Maybe Int) (Maybe Int)
-  | KKextSink
-=======
-  | KSendEventSink
   | KExtSink
->>>>>>> 147661f (Mac keycode refactor)
   deriving Show
 
 -- | All possible single settings

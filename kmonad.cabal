@@ -57,6 +57,7 @@ common shared-props
     , optparse-applicative
     , resourcet
     , rio
+    , template-haskell
     , time
     , unliftio
   default-language: Haskell2010
@@ -82,6 +83,7 @@ library
       KMonad.App.Invocation.Operations
       KMonad.App.Invocation.Parser
       KMonad.App.Invocation.Types
+      KMonad.App.Invocation.TH
       KMonad.App.KeyIO
       KMonad.App.KeyIO.Common
       KMonad.App.KeyIO.OS

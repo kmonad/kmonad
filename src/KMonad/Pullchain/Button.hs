@@ -367,7 +367,7 @@ multiTap l bs = onPress $ go bs
       -- 3C. If we detect any other (unrelated) press event, then the multi-tap
       --     sequence is cancelled like in 2C. We trigger a tap of the current
       --     button of the sequence.
-      let doNext pred onTimeout next ms = tHookF InputHook ms onTimeout $ \t -> do
+      let doNext pred onTimeout next ms = tHookF ms onTimeout $ \t -> do
             pr <- pred
             if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
                | isPress (t^.event) -> tap b                  $> NoCatch

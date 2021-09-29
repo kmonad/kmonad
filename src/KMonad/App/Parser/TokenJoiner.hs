@@ -37,7 +37,7 @@ import KMonad.Util
 
 import Control.Monad.Except
 
-import RIO.List (uncons, headMaybe)
+import RIO.List (uncons, headMaybe, intersperse)
 import RIO.Partial (fromJust)
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
@@ -321,8 +321,8 @@ joinButton ns als =
     KComposeSeq bs     -> view cmpKey >>= \c -> jst $ BTapMacro . (c:) <$> mapM go bs
 
     -- Various compound buttons
-    KTapMacro bs       -> jst $ BTapMacro <$> mapM go bs
-    KTapMacroRelease bs -> jst $ BTapMacroRelease <$> mapM go bs
+    KTapMacro bs mbD    -> jst $ BTapMacro <$> isps bs mbD
+    KTapMacroRelease bs mbD -> jst $ BTapMacroRelease <$> isps bs mbD
     KAround o i        -> jst $ BAround <$> go o <*> go i
     KTapNext t h       -> jst $ BTapNext <$> go t <*> go h
     KTapHold s t h     -> jst $ BTapHold (fi s)     <$> go t <*> go h
@@ -333,11 +333,9 @@ joinButton ns als =
     KAroundNext b      -> jst $ BAroundNext <$> go b
     KAroundNextSingle b -> jst $ BAroundNextSingle <$> go b
     KAroundNextTimeout ms b t -> jst $ BAroundNextTimeout (fi ms) <$> go b <*> go t
-    KPause ms          -> jst $ BPause (fi ms)
     KMultiTap bs d     -> jst $ BMultiTap <$> mapM f bs <*> go d
       where f (ms, b) = (fi ms,) <$> go b
     KStickyKey s d     -> jst $ BStickyKey (fi s) <$> go d
-
     KBlock -> ret BBlock
     KPause ms          -> ret $ BPause ms
 
