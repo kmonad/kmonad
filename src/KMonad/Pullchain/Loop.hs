@@ -36,7 +36,9 @@ handlePress c = view keymap >>= flip Km.lookupKey (c^.code) >>= \case
       runRIO (KEnv env b) $ do
         runAction a
         awaitMy Release $ do
-          runBEnv b Release >>= maybe (pure ()) runAction
+          runBEnv b Release >>= \case
+            Nothing -> pure ()
+            Just a  -> runAction a
           pure Catch
 
 -- | Simply trigger the emission of a Keycode without making a button. Line up
