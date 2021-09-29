@@ -11,4 +11,8 @@
 .stack-work
 /bin/
 result
+/Setup.hs
+/cabal.project.local
+/cabal.project.local~
+/kmonad.cabal.save0
 /notes_to_self.note

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-{-# LANGUAGE CPP #-}
 {-|
 Module      : KMonad.App
 Description : The central app-loop of KMonad

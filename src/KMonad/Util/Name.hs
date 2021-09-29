@@ -7,42 +7,64 @@ import KMonad.Prelude
 
 import qualified RIO.HashMap as M
 
-
+--------------------------------------------------------------------------------
+-- $name
+--
+-- The base-type of how we deal with names
 
 -- | When we talk about names, we use text
 type Name = Text
 
--- | Aliases are rereferences from names to other names
-type Alias = (Name, [Name])
-
 -- | Maps of names to things
-type NameMap a = M.HashMap Name a
-type Aliases = M.HashMap Name [Name]
-
 class HasName a where name :: Lens' a Name
-
 instance HasName Name where name = id
-instance HasName Alias where name = _1
 
-fromNamed :: (Foldable t, HasName a) => t a -> NameMap a
-fromNamed = M.fromList . map (\a -> (a^.name, a)) . toList
-
-
--- | Add references for all objects in a by their aliases
+--------------------------------------------------------------------------------
+-- $lexicon
 --
--- In case an alias refers to a key that doesn't occur in the map, it gets
--- skipped. In case an alias tries to overwrite a name in the original map, that
--- single alias gets skipped.
-insertAliases :: [Alias] -> NameMap a -> NameMap a
-insertAliases als nms = foldr go nms als where
-  go (k, ls) m = case M.lookup k m of
-    Just a  -> m `M.union` M.fromList (map (,a) ls)
-    Nothing -> m
+-- A lexicon is a collection of things that we have given names
 
--- | Reverse a map
+-- | Model a 'Lexicon' using a HashMap
+type Lexicon a = M.HashMap Name a
+
+--------------------------------------------------------------------------------
+-- $alias
 --
--- NOTE: This might overwrite duplicates.
-reverseMap :: (Eq a, Eq b, Hashable a, Hashable b)
-  => M.HashMap a b -> M.HashMap b a
-reverseMap = M.fromList . toListOf (folded . swapped) . M.toList
+-- How we provide alternative names for things
+--
+-- NOTE: We could consider generalizing the 'Alias' type to anything Hashable,
+-- and then specializing our type to 'Alias Name'. But that is busywork for
+-- another day.
+
+-- | An alias binds a new name (_1) to an existing name (_2)
+type Alias = (Name, Name)
+
+--------------------------------------------------------------------------------
+-- $err
+
+-- | What can go wrong trying to insert aliases
+data AliasError
+  = NonExistentTarget Alias -- ^ Trying to alias to a non-existent name
+  | NameAlreadyTaken  Alias -- ^ Trying to assign a name that is already taken
+  deriving Show
+makeClassyPrisms ''AliasError
+
+instance Exception AliasError where
+  displayException (NonExistentTarget (s, t)) = foldMap unpack $
+    ["Failed to alias '",  s, "' to '", t, "': '", t, "' does not exist in lexicon"]
+  displayException (NameAlreadyTaken (s, t)) = foldMap unpack $
+    ["Failed to alias '",  s, "' to '", t, "': '", s, "' already exists in lexicon"]
+
+instance AsAliasError SomeException where _AliasError = exception
+
+--------------------------------------------------------------------------------
+-- $util
+
+-- | Insert an alias into a lexicon
+insertAlias :: Alias -> Lexicon a -> Either AliasError (Lexicon a)
+insertAlias (s, t) l
+  | s `M.member` l = Left $ NameAlreadyTaken  (s, t)
+  | otherwise = case M.lookup t l of
+      Nothing -> Left  $ NonExistentTarget (s, t)
+      Just v  -> Right $ M.insert s v l
 

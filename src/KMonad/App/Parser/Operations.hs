@@ -15,24 +15,18 @@ import qualified RIO.Text as T
 import Text.Megaparsec (choice, try)
 import Text.Megaparsec.Char (string)
 
-
-
--- | Turn a hashmap of names to values into a Parser
---
--- Turn a Name-Map into a parser that can parse elements by name. This is a bit
--- tricky, because you need to retry partially-succesful matches, furthermore,
--- you need to sort the names to match longest first.
-byName :: NameMap a -> Parser a
-byName = choice . map go . sortBy f . M.toList where
+-- | Turn a Lexicon of names items into a parser
+fromLexicon :: Lexicon a -> Parser a
+fromLexicon = choice . map go . sortBy f . M.toList where
   f  (k, _) (l, _) = compare l k    -- ^ Reverse sort by name
   go (k, v) = v <$ (try $ string k) -- ^ Match the name and insert the value
 
 -- | Make a button that emits a particular keycode
-emitOf :: Name -> DefButton
+emitOf :: CoreName -> DefButton
 emitOf = KEmit . kc
 
 -- | Make a button that emits a particular shifted keycode
-shiftedOf :: Name -> DefButton
+shiftedOf :: CoreName -> DefButton
 shiftedOf = KAround (emitOf "lsft") . emitOf
 
 -- thing :: [(Text, Text)]

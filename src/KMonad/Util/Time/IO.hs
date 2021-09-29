@@ -25,6 +25,8 @@ wait :: IO m => Ms -> m ()
 wait = threadDelay . (1000*) . fromIntegral
 
 -- | Create a tick every n deciseconds
+--
+-- FIXME: We shouldn't refer to deciseconds using the 'Ms' type.
 metronome :: IO m => Ms -> m (m Time)
 metronome d = pure $ wait (d * 100) >> getCurrentTime
 

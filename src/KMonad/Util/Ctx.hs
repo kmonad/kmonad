@@ -2,8 +2,10 @@ module KMonad.Util.Ctx
   ( Ctx
   , mkCtx
   , runCtx
+  , runCtx_
   , nest
   , launch_
+  , around
   )
 where
 
@@ -56,6 +58,10 @@ mkCtx = Ctx . ContT
 runCtx :: Ctx r m a -> (a -> m r) -> m r
 runCtx = runContT . unCtx
 
+-- | Run a computation that in a 'Ctx', but without any arguments being passed.
+runCtx_ :: Ctx r m a -> m r -> m r
+runCtx_ ctx = runContT (unCtx ctx) . const
+
 -- | Turn a list of contexts into a context that nests all the contexts
 nest :: [Ctx r m a] -> Ctx r m [a]
 nest = traverse id
@@ -64,6 +70,10 @@ nest = traverse id
 -- forever, untill that action terminates.
 launch_ :: UIO m => m a -> Ctx r m ()
 launch_ go = mkCtx $ \f -> withAsync (forever go) (const $ f ())
+
+-- | Do something before and after some action, even on exception.
+around :: UIO m => m b -> m c -> Ctx r m ()
+around before after = mkCtx $ \f -> bracket_ before after (f ())
 
 -- -- | Like `launch`
 -- launch_ :: HasLogFunc e

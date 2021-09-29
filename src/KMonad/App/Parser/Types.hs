@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Args.Types
+Module      : KMonad.App.Parser.Types
 Description : The basic types of configuration parsing.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Args.Types
+module KMonad.App.Parser.Types
   ( -- * $bsc
     Parser
   , PErrors(..)
@@ -36,23 +36,22 @@ module KMonad.Args.Types
   , AsKExpr(..)
   , AsDefSetting(..)
 
-    -- * Reexports
-  , module Text.Megaparsec
-  , module Text.Megaparsec.Char
+    -- * $reexport
+  , module X
 ) where
 
 
 import KMonad.Prelude
 import KMonad.App.KeyIO
-
-import KMonad.Model.Button
 import KMonad.Model.Types
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Types
 import KMonad.Util.Keyboard
 -- import KMonad.Keyboard.IO
 import KMonad.Util
 
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import Text.Megaparsec      as X
+import Text.Megaparsec.Char as X
 
 --------------------------------------------------------------------------------
 -- $bsc
@@ -103,8 +102,8 @@ data DefButton
     -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
   | KPause Ms                    -- ^ Pause for a period of time
-  | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
-  | KLayerNext LayerTag                    -- ^ Perform next button in different layer
+  | KLayerDelay Int Name               -- ^ Switch to a layer for a period of time
+  | KLayerNext Name                    -- ^ Perform next button in different layer
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
                                            --   as possibly on release
   | KStickyKey Int DefButton               -- ^ Act as if a button is pressed for a period of time
@@ -125,8 +124,8 @@ data DefButton
 data CfgToken = CfgToken
   { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
   , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
-  , _km    :: LMap Button  -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag     -- ^ Name of initial layer
+  , _km    :: Keymap BCfg  -- ^ A collection of layers of button configurations
+  , _fstL  :: Name         -- ^ Name of initial layer
   , _flt   :: Bool         -- ^ How to deal with unhandled events
   , _allow :: Bool         -- ^ Whether to allow shell commands
   }
@@ -168,8 +167,13 @@ data IToken
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
-  | KSendEventSink
+<<<<<<< HEAD
+  | KSendEventSink (Maybe Int) (Maybe Int)
   | KKextSink
+=======
+  | KSendEventSink
+  | KExtSink
+>>>>>>> 147661f (Mac keycode refactor)
   deriving Show
 
 -- | All possible single settings

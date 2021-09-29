@@ -8,8 +8,6 @@ import KMonad.Prelude
 import KMonad.Util
 import KMonad.Util.OS
 
-import KMonad.App.Logging
-
 import KMonad.App.KeyIO.Common
 import KMonad.App.KeyIO.Linux.Evdev  (withEvdev)
 import KMonad.App.KeyIO.Linux.Uinput (withUinput)

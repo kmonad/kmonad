@@ -3,7 +3,8 @@ module KMonad.Prelude.Util
   ( fi
   , inEnv
   , overMVar
-
+  , reverseMap
+  , duplicates
 
   , untilJust
   )
@@ -11,6 +12,9 @@ where
 
 import KMonad.Prelude.Imports
 import KMonad.Prelude.Types
+
+import qualified RIO.HashMap as M
+import qualified RIO.Set     as S
 
 --------------------------------------------------------------------------------
 -- $uncategorized
@@ -26,6 +30,19 @@ inEnv = flip runRIO
 -- | Slightly different modifyMVar to make 1-liners cleaner
 overMVar :: UIO m =>  m (MVar a) -> (a -> m (a, b))  -> m b
 overMVar a f = a >>= \mv -> modifyMVar mv f
+
+-- | Reverse a map
+--
+-- NOTE: This might overwrite duplicates.
+reverseMap :: (Eq a, Eq b, Hashable a, Hashable b)
+  => M.HashMap a b -> M.HashMap b a
+reverseMap = M.fromList . toListOf (folded . swapped) . M.toList
+
+-- | Return a set of entries that occur at least more than once
+duplicates :: (Foldable t, Ord a) => t a -> S.Set a
+duplicates as = snd $ foldl' go (S.empty, S.empty) as where
+  go (seen, res) a | a `S.member` seen = (seen, S.insert a res)
+                   | otherwise         = (S.insert a seen, res)
 
 --------------------------------------------------------------------------------
 -- $maybe-flow
