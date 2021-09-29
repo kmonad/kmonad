@@ -73,6 +73,9 @@ instance Exception PErrors
 --
 -- Tokens representing different types of buttons
 
+-- FIXME: This is really broken: why are there 2 lists of 'DefButton's? There is
+-- one here, and one in Parser/Types.hs
+
 -- | Button ADT
 data DefButton
   = KRef Text                              -- ^ Reference a named button
@@ -91,6 +94,7 @@ data DefButton
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
+  | KAroundNextTimeout Int DefButton DefButton
   | KTapMacro [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
   | KTapMacroRelease [DefButton] (Maybe Int)

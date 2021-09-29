@@ -809,6 +809,12 @@
   Shift pressed' or 'being inside some layer' or, less usefully, 'having d
   pressed'. It is a more general and powerful version of `layer-next`.
 
+  There is also an `around-next-timeout` button that does the same thing as
+  `around-next`, except that if some other button press is not detected within
+  some timeout, some other button is tapped. This can be used to create a
+  leader-key that simply times out (by passing a non-button), or a key that can
+  still function as a normal key, but also as a leader key when used slowly.
+
   I think expansion of this button-style is probably the future of leader-key,
   hydra-style functionality support in KMonad.
 
@@ -817,16 +823,17 @@
 (defalias
   ns  (around-next sft)  ;; Shift the next press
   nnm (around-next @num) ;; Perform next press in numbers layer
-  nd  (around-next d)    ;; Silly, but possible
+  ntm (around-next-timeout 500 sft XX)
+
 
 )
 
 (deflayer around-next-test
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
-  @nd  _    _    _    _    _    _    _    _    _    _    _    _
+  @ns  _    _    _    _    _    _    _    _    _    _    _    _
   @nnm _    _    _    _    _    _    _    _    _    _    _
-  @ns  _    _              _              _    _    _    _
+  @ntm _    _              _              _    _    _    _
 )
 
 #| --------------------------------------------------------------------------
