@@ -147,7 +147,8 @@ wnKPSymb =
       ("kp-", 0x6D),
       ("kp.", 0x6E),
       ("kp/", 0x6F),
-      ("kprt", 0x0D) -- Sadly can't distinguish from normal ret on Windows
+      ("kprt", 0x6C) -- 0x6C corresponds to 'VK_SEPARATOR', but numpad-ret
+                     -- actually just returns normal ret on Windows.
     ]
 wnOther =
   M.fromList
