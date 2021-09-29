@@ -4,8 +4,10 @@ where
 
 import KMonad.Prelude hiding (try)
 
+import KMonad.Util.Time
+
 import KMonad.App.Logging
-import KMonad.App.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, DefSetting(..))
+import KMonad.App.Parser hiding (Parser)
 import qualified Text.Megaparsec as M
 import qualified KMonad.App.Parser as M (Parser)
 -- import qualified KMonad.App.Parser as M

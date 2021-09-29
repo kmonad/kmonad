@@ -108,12 +108,12 @@ select e
 -- Note that this filters out any event that is not a Press or Release. The
 -- stream is not yet guaranteed to be alternating series of P->R->P etc..
 --
-nextEvent :: RIO EvdevEnv (Switch, Keycode)
+nextEvent :: RIO EvdevEnv KeySwitch
 nextEvent = untilJust $ decode <$> readChunk >>= \case
   Left err  -> throwing _EvdevCouldNotDecode . (, err) =<< view cfg
   Right raw -> case select raw of
     Nothing -> pure Nothing
-    Just (s, c) -> pure $ Just (s, c)
+    Just (s, c) -> pure $ Just $ mkKeySwitch s c
 
 -- | Create a context of 'running with a captured input' for the provided
 -- configuration.

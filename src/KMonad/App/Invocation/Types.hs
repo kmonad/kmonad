@@ -5,6 +5,7 @@ module KMonad.App.Invocation.Types
 where
 
 import KMonad.Prelude hiding (try)
+import KMonad.Util.Time
 import KMonad.App.Logging hiding (logLvl)
 
 import KMonad.App.Parser --(itokens, keywordButtons, noKeywordButtons, otokens, symbol)

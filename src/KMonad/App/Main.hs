@@ -19,9 +19,11 @@ where
 import KMonad.Prelude
 
 import KMonad.App.Invocation
+import KMonad.App.KeyIO
 import KMonad.App.Types
-import KMonad.App.Logging
+import KMonad.App.Logging hiding (logLvl)
 import KMonad.App.Parser
+import KMonad.App.Parser.IO -- FIXME: Remove separate import when fixed
 import KMonad.Util
 import KMonad.Util.Keyboard
 import KMonad.Model
@@ -63,8 +65,7 @@ run :: Invoc -> OnlyIO ()
 run c = do
   let logcfg = LogCfg (c^.logLvl) stdout Nothing
   runLog logcfg $ do
-    cfg <- loadConfig c                   -- Load cfg-file as tokens
-    cgt <- joinConfigIO (joinCLI cmd tks) -- Join tokens and invocation into config
+    cfg <- loadConfig (c^.cfgFile) c -- Load cfg-file and overwrite Invoc settings
     unless (c^.dryRun) $ startApp cfg
 
 
@@ -89,11 +90,13 @@ initAppEnv cfg = do
   threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
 
   -- Acquire the keysource and keysink
-  snk <- using $ cfg^.keySinkDev
-  src <- using $ cfg^.keySourceDev
+  -- snk <- using $ cfg^.keySinkDev
+  -- src <- using $ cfg^.keySourceDev
+  src <- withKeyInput  $ cfg^.keyInputCfg
+  snk <- withKeyOutput $ cfg^.keyOutputCfg
 
   -- Initialize the pull-chain components
-  dsp <- Dp.mkDispatch $ awaitKey src
+  dsp <- Dp.mkDispatch $ liftIO src
   ihk <- Hs.mkHooks    $ Dp.pull  dsp
   slc <- Sl.mkSluice   $ Hs.pull  ihk
 
@@ -109,7 +112,7 @@ initAppEnv cfg = do
   launch_ $ do
     e <- atomically . takeTMVar $ otv
     say $ "Emitting: " <> textDisplay e
-    liftIO $ emitKey snk e
+    liftIO $ snk e
   -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
     { _keAppCfg  = cfg

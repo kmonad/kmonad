@@ -5,6 +5,7 @@ where
 import KMonad.Prelude
 
 import KMonad.App.Invocation.Types
+import KMonad.App.Invocation.Operations (joinCLI)
 
 import KMonad.App.Types
 import KMonad.App.Parser.Types
@@ -15,7 +16,7 @@ import KMonad.App.Parser.TokenJoiner (joinConfigIO)
 
 
 -- | Parse a configuration file into a 'AppCfg' record
-loadConfig :: HasLogFunc e => FilePath -> Cmd -> RIO e CfgToken
+loadConfig :: HasLogFunc e => FilePath -> Invoc -> RIO e AppCfg
 loadConfig pth cmd = do
 
   -- FIXME: We need to separate out the Cmd entirely from this.
@@ -39,10 +40,11 @@ loadConfig pth cmd = do
 
   -- Assemble the AppCfg record
   pure $ AppCfg
-    { _keyInputCfg  = _src cgt
-    , _keyOutputCfg = _snk cgt
+    { _keyInputCfg  = _src   cgt
+    , _keyOutputCfg = _snk   cgt
     , _keymapCfg    = _km    cgt
     , _firstLayer   = _fstL  cgt
     , _fallThrough  = _flt   cgt
     , _allowCmd     = _allow cgt
+    , _startDelay   = _strtDel cmd
     }
