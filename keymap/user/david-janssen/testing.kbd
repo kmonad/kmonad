@@ -10,7 +10,7 @@
 
 (deflayer layer1
   (around-next-timeout 500 lsft q)
-  x
+  (tap-hold 500 lsft q)
   y
   z
 )

@@ -98,7 +98,7 @@ pull' d = do
     -- If we take from the rerunBuf, put the running read-process back in place
     Left e' -> do
       sepDebug
-      logDebug $ "\nRerunning event: " <> tshow e'
+      logDebug $ "\nRerunning event: " <> textDisplay e'
       atomically $ putTMVar (d^.readProc) a
       pure e'
     Right e' -> pure e'

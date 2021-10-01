@@ -89,8 +89,8 @@ kn :: Keycode -> Maybe CoreName
 kn = flip M.lookup nameKeycodes
 
 instance Display Keycode where
-  textDisplay c = fromMaybe (tshow c) (textDisplay <$> kn c)
- 
+  textDisplay c = maybe (tshow c) textDisplay (kn c)
+
 --------------------------------------------------------------------------------
 -- $keyswitch
 

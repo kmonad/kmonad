@@ -39,18 +39,16 @@ foreign import ccall "sendKey" c_sendKey :: Ptr RawEvent -> OnlyIO ()
 
 --------------------------------------------------------------------------------
 
--- | A Hashmap of keys currently pressed
-type ThreadMap = M.HashMap Keycode (Async ())
-
 -- | The environment used to handle output operations
 data SendEventEnv = SendEventEnv
-  { _seCfg :: SendEventCfg   -- ^ The sink configuration
-  , _prcs  :: MVar ThreadMap -- ^ Collection of currently running keys
-  , _ptr   :: Ptr RawEvent   -- ^ Pointer used to communicate with Windows
+  { _seCfg  :: SendEventCfg   -- ^ The sink configuration
+  , _repEnv :: RepeatEnv      -- ^ Context to manage key-repeat
+  , _ptr    :: Ptr RawEvent   -- ^ Pointer used to communicate with Windows
   }
 makeClassy ''SendEventEnv
 
 instance HasSendEventCfg SendEventEnv where sendEventCfg = seCfg
+instance HasRepeatEnv    SendEventEnv where repeatEnv    = repEnv
 
 type SIO a = RIO SendEventEnv a
 
@@ -64,45 +62,10 @@ sendKey t c = do
 
 --------------------------------------------------------------------------------
 
--- | The stuff that happens after a key gets pressed
---
--- 1. Wait for the delay once, if reached, emit a keypress again
--- 2. Wait for the interval and, if reached, emit a keypress, forever
---
--- NOTE: we leave emitting the first press and the final release to the callers.
--- NOTE: this blocks, and so should only ever be forked
-holdKey :: Keycode -> SIO ()
-holdKey c = do
-  let p = sendKey WindowsPress c
-  delay <- view repDelay
-  itvl  <- view repInterval
-  wait delay >> p
-  forever $ wait itvl >> p
-
--- | Helper function to run a function on the @prcs@ map
---
--- TODO: Maybe generalize this? I think this is a common pattern we use a lot
-onPs :: (ThreadMap -> SIO ThreadMap) -> SIO ()
-onPs f = view prcs >>= \pv -> modifyMVar pv (\ps -> (,()) <$> f ps)
-
--- | If the key is not pressed yet, press it and start the key-repeat thread
-handlePress :: Keycode -> RIO SendEventEnv ()
-handlePress c = onPs $ \ps -> if c `M.member` ps then pure ps else do
-  sendKey WindowsPress c -- Send a press
-  p <- async $ holdKey c -- Start the holding thread
-  pure $ M.insert c p ps -- Store it in the mvar
-
--- | If the key is currently pressed, release it and stop the key-repeat thread
-handleRelease :: Keycode -> SIO ()
-handleRelease c = onPs $ \ps -> flip (maybe (pure ps)) (M.lookup c ps) $ \p -> do
-  sendKey WindowsRelease c       -- Send a release
-  cancel p                       -- Stop the holding thread
-  pure $ M.delete c ps           -- Remove it from the mvar
-
 -- | Handle any key event we are trying to send to the OS
 handleEvent :: KeySwitch -> SIO ()
-handleEvent e | isPress e = handlePress   $ e^.code
-              | otherwise = handleRelease $ e^.code
+handleEvent (KeySwitch Press c)   = sendKey WindowsPress c   >> startRepeat c
+handleEvent (KeySwitch Release c) = sendKey WindowsRelease c >> stopRepeat c
 
 --------------------------------------------------------------------------------
 
@@ -114,7 +77,7 @@ withSendEvent c = mkCtx $ \f -> do
         logInfo "Initializing Windows key sink"
         SendEventEnv c
           <$> newMVar M.empty
-          <*> (liftIO $ mallocBytes (sizeOf (undefined :: RawEvent)))
+          <*> liftIO (mallocBytes (sizeOf (undefined :: RawEvent)))
 
   let cleanup e = do
         logInfo "Closing Windows key sink"
