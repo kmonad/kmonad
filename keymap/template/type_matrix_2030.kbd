@@ -1,0 +1,57 @@
+# The following template was taken directly from
+# https://github.com/kmonad/kmonad/issues/368
+#
+# Template author: Artefact2
+# Copied over by: David Janssen
+
+
+#| --------------------------------------------------------------------------
+
+                     KMonad: TypeMatrix 2030 template (in 106 key mode)
+
+  This file contains the `defsrc` configuration for the TypeMatrix
+  2030 keyboard. You need to enable 106 key mode by pressing
+  Fn+F3. Three keys cannot be remapped: the Fn key, the Num key and
+  the Play/Pause key. Copy out the 'defsrc' layer to start your own
+  keyboard configuration. Copy out the `deflayer` template to easily
+  start a new layer with matching `transparent` buttons.
+
+(deflayer default
+	_    _    _    _    _    _    _    _    _    _    _    _    _    _
+	_    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+	_    _    _    _    _    _         _    _    _    _    _    _    _    _
+	_    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+	     _    _    _    _    _         _    _    _    _    _    _         _
+	_         _    _              _              _    _    _    _    _    _
+	     _         _                             _    _    _    _         _)
+
+  -------------------------------------------------------------------------- |#
+
+(defsrc
+	esc  f1   f2   f3   f4   f5   del  f6   f7   f8   f9   f10  f11  f12
+	grv  1    2    3    4    5    bspc 6    7    8    9    0    -    =    yen
+	tab  q    w    e    r    t         y    u    i    o    p    [    ]    bksl
+	lsft a    s    d    f    g    ret  h    j    k    l    scln apos rsft caps
+	     z    x    c    v    b         n    m    ,    .    /    ro        katakanahiragana
+	lctl      compose muhenkan    spc          henkan home up   end  rctl pgup
+	     lmet      lalt                          ralt lft  down rght      pgdn)
+
+
+
+
+
+#| --------------------------------------------------------------------------
+
+  NOTE: Remapping the play/pause key (and other media keys, which are Fn
+  combinations) is possible, but running a second instance is required:
+
+(defcfg
+        input (device-file "/dev/input/by-id/usb-TypeMatrix.com_USB_Keyboard-event-if01")
+        output (uinput-sink "kmonad (typematrix 2030, media keys)")
+        fallthrough true
+        allow-cmd false)
+
+(defsrc pp)
+(deflayer default _)
+
+  -------------------------------------------------------------------------- |#
