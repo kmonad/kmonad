@@ -42,65 +42,60 @@ foreign import ccall "sendKey" c_sendKey :: Ptr RawEvent -> OnlyIO ()
 -- | The environment used to handle output operations
 data SendEventEnv = SendEventEnv
   { _seCfg  :: SendEventCfg   -- ^ The sink configuration
-  , _repEnv :: RepeatEnv      -- ^ Context to manage key-repeat
+  , _le     :: LogEnv         -- ^ Reference to the logging environment
   , _ptr    :: Ptr RawEvent   -- ^ Pointer used to communicate with Windows
+  , _repEnv :: RepeatEnv      -- ^ Context to manage key-repeat
   }
 makeClassy ''SendEventEnv
 
 instance HasSendEventCfg SendEventEnv where sendEventCfg = seCfg
 instance HasRepeatEnv    SendEventEnv where repeatEnv    = repEnv
+instance HasLogEnv       SendEventEnv where logEnv       = le
+instance HasLogCfg       SendEventEnv where logCfg       = logEnv.logCfg
 
-type SIO a = RIO SendEventEnv a
+
+type S a = RIO SendEventEnv a
+
+--------------------------------------------------------------------------------
+
 
 -- | Send a key-event to Windows
-sendKey :: EvType -> Keycode -> SIO ()
+sendKey :: EvType -> Keycode -> S ()
 sendKey t c = do
   p <- view ptr
   liftIO $ do
     poke p (mkRaw t c)
     c_sendKey p
 
---------------------------------------------------------------------------------
-
 -- | Handle any key event we are trying to send to the OS
-handleEvent :: HasKeySwitch s => s -> SIO ()
-handleEvent s
-  | isPress c = sendKey WindowsPress   (s^.code)  >> startRepeat (s^.code)
-  | otherwise = sendKey WindowsRelease (s^.code)  >> stopRepeat  (s^.code)
+handleEvent :: HasKeySwitch e => e -> S ()
+handleEvent e = let s = e^.keySwitch in if isPress s
+  then sendKey WindowsPress   (s^.code)  >> handleRepeat s
+  else sendKey WindowsRelease (s^.code)  >> handleRepeat s
 
 --------------------------------------------------------------------------------
 
 -- | The context of an active windows send-event output
 withSendEvent :: LUIO m e => SendEventCfg -> Ctx r m PutKey
-withSendEvent c = mkCtx $ \f -> do
+withSendEvent cfg = mkCtx $ \f -> do
 
-  let repCfg = RepeatCfg (c^.repDelay) (c^.repInterval)
-
-  rep <- withRepeat
-  
   let init = do
+
         logInfo "Initializing Windows key sink"
-        SendEventEnv c
-          <$> newMVar M.empty
-          <*> liftIO (mallocBytes (sizeOf (undefined :: RawEvent)))
+        le <- view logEnv
+        p  <- liftIO $ mallocBytes $ sizeOf (undefined :: RawEvent)
+
+        -- Create key-repeat with a partially undefined SendEventEnv
+        let env = SendEventEnv cfg le p undefined
+        u   <- askRunInIO
+        rep <- mkRepeatEnv (cfg^.keyRepeatCfg)
+          $ u . runRIO env . sendKey WindowsPress
+
+        pure $ env { _repEnv = rep }
 
   let cleanup e = do
         logInfo "Closing Windows key sink"
-        pressed <- M.keys <$> (readMVar $ e^.prcs)
-        runRIO e $ do
-          mapM_ handleRelease pressed
-          mapM_ (sendKey WindowsRelease) pressed
         liftIO . free $ e^.ptr
 
-  bracket init cleanup $ \env -> f (\e -> runRIO env $ handleEvent e)
+  bracket init cleanup $ \env -> f $ runRIO env . handleEvent
 
--- -- | Write an event to the pointer and prompt windows to inject it
--- --
--- -- NOTE: This can throw an error if event-conversion fails.
--- skSend :: (IO m, HasKeySwitch a) => Ptr RawEvent -> a -> m ()
--- skSend ptr a = do
---   let c = a^.keySwitch.code
---   let s = if a^.keySwitch.switch == Press then WindowsPress else WindowsRelease
---   liftIO $ do
---     poke ptr (mkRaw s c)
---     sendKey ptr

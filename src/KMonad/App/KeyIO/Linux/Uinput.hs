@@ -23,10 +23,6 @@ import Data.Typeable
 import UnliftIO.Exception hiding (throwIO)
 import System.IO.Error.Lens
 
-
-
-import qualified RIO.Set as S
-
 --------------------------------------------------------------------------------
 -- $cfg
 

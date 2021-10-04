@@ -97,6 +97,8 @@ data SendEventCfg = SendEventCfg
   } deriving Show
 makeClassy ''SendEventCfg
 
+instance HasKeyRepeatCfg SendEventCfg where keyRepeatCfg = seRepCfg
+
 
 --------------------------------------------------------------------------------
 -- $cfgs-sum
