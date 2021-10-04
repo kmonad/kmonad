@@ -87,7 +87,6 @@ handlePress :: Keycode -> R ()
 handlePress c = overProc $ \x -> do
   maybe (pure ()) (cancel . snd) x
   a <- async $ repKey c
-  link a
   pure $ Just (c, a)
 
 -- | Handle a request to release a key
