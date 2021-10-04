@@ -33,7 +33,12 @@ data UinputException
   deriving Show
 makeClassyPrisms ''UinputException
 
-instance Exception UinputException
+instance Exception UinputException where
+  displayException (UinputCouldNotCreate _ i) =
+    "Failed to create uinput device, got error code: " <> show i
+  displayException (UinputCouldNotDestroy _ i) =
+    "Failed to cleanup uinput device, got error code: " <> show i
+
 instance AsUinputException SomeException where _UinputException = exception
 
 -- | The environment used to handle uinput operations
@@ -52,8 +57,6 @@ instance HasLogCfg    UinputEnv where logCfg = le.logCfg
 
 -- | Type shorthand
 type U a = RIO UinputEnv a
-
-
 
 --------------------------------------------------------------------------------
 -- FFI calls and type-friendly wrappers
