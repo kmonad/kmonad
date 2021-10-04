@@ -32,21 +32,17 @@ and starting the app-loop.
 --------------------------------------------------------------------------------
 -- $init
 
+-- | The outermost error handler, pretty-print the exception and exit.
+withHandler :: LUIO m e => Ctx r m ()
+withHandler = mkCtx $ handle h . ($ ())
+  where h e = do
+          logError . pack . displayException $ (e :: SomeException)
+          liftIO exitFailure
+
 -- | Initialize all the components of the KMonad app-loop
-initAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
-initAppEnv cfg = do
-  lift . logDebug $ "Preparing to start running KMonad with this cfg: \n"
-    <> T.toStrict (pShowNoColor cfg)
-  -- Do any OS-related tweaks
-  withOS
+withAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
+withAppEnv cfg = do
 
-  -- Get a reference to the logging function
-  lgf <- lift $ view logEnv
-
-  -- Wait a bit for the user to release the 'Return' key with which they started
-  -- KMonad. If we don't do this, we run the risk of capturing the keyboard used
-  -- to start KMonad, resulting in a 'stuck' button.
-  wait $ cfg^.startDelay
 
   -- Acquire the keysource and keysink
   src <- withKeyInput  $ cfg^.keyInputCfg
@@ -55,16 +51,29 @@ initAppEnv cfg = do
   -- Initialize the model with the model config
   api <- withModel $ cfg^.modelCfg
 
-  -- Gather it all up in out AppEnv
-  pure $ AppEnv
-    { _keAppCfg   = cfg
-    , _keLogEnv   = lgf
-    , _keySink    = snk
-    , _keySource  = src
-    , _aeModelAPI = api
-    }
+  let init = do
+        logDebug $ "Starting KMonad with following Cfg:\n" <> ppRecord cfg
 
-   
+        lge <- view logEnv
+
+        -- Wait a bit for the user to release the 'Return' key with which they started
+        -- KMonad. If we don't do this, we run the risk of capturing the keyboard used
+        -- to start KMonad, resulting in a 'stuck' button.
+        wait $ cfg^.startDelay
+
+        pure $ AppEnv
+          { _keAppCfg   = cfg
+          , _keLogEnv   = lge
+          , _keySink    = snk
+          , _keySource  = src
+          , _aeModelAPI = api
+          }
+
+  let cleanup _ = logInfo "Exiting KMonad"
+
+  mkCtx $ bracket init cleanup
+
+
 --------------------------------------------------------------------------------
 -- $loop
 --
@@ -84,8 +93,7 @@ main = getInvoc >>= run
 
 -- | Run KMonad using the provided configuration
 startApp :: AppCfg -> OnlyLIO ()
-startApp c = do
-  runCtx (initAppEnv c) (flip runRIO loop)
+startApp cfg = runCtx (withHandler >> withOS >> withAppEnv cfg) $ inEnv loop
 
 -- | Execute the provided 'Cmd'
 --
