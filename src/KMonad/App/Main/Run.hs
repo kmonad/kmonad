@@ -4,6 +4,8 @@ where
 
 import KMonad.Prelude
 
+import Text.Pretty.Simple
+
 import KMonad.App.Invocation
 import KMonad.App.KeyIO
 import KMonad.App.Types
@@ -13,6 +15,8 @@ import KMonad.App.Main.OS
 import KMonad.Model hiding (withModel) -- FIXME: change when pullchain is factored out
 import KMonad.Util hiding (logLvl)
 import KMonad.Pullchain.IO
+
+import qualified RIO.Text.Lazy as T
 
 -- TODO: Fix bad naming of loglevel clashing between Cmd and Logging
 
@@ -31,7 +35,8 @@ and starting the app-loop.
 -- | Initialize all the components of the KMonad app-loop
 initAppEnv :: LUIO m e => AppCfg -> Ctx r m AppEnv
 initAppEnv cfg = do
-
+  lift . logDebug $ "Preparing to start running KMonad with this cfg: \n"
+    <> T.toStrict (pShowNoColor cfg)
   -- Do any OS-related tweaks
   withOS
 
@@ -41,7 +46,7 @@ initAppEnv cfg = do
   -- Wait a bit for the user to release the 'Return' key with which they started
   -- KMonad. If we don't do this, we run the risk of capturing the keyboard used
   -- to start KMonad, resulting in a 'stuck' button.
-  threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
+  wait $ cfg^.startDelay
 
   -- Acquire the keysource and keysink
   src <- withKeyInput  $ cfg^.keyInputCfg

@@ -37,6 +37,7 @@ import KMonad.Prelude hiding (try, bool)
 import KMonad.App.Parser.Keycode
 import KMonad.App.Parser.Operations
 import KMonad.App.Parser.Types
+import KMonad.App.KeyIO
 import KMonad.Util.Keyboard
 
 import Data.Char
@@ -175,6 +176,14 @@ exprP = paren . choice $
   , try (symbol "deflayer") *> (KDefLayer <$> deflayerP)
   , try (symbol "defalias") *> (KDefAlias <$> defaliasP)
   ]
+
+-- | Parse a (123, 456) tuple as a KeyRepeatCfg
+repCfgP :: Parser KeyRepeatCfg
+repCfgP = lexeme $ paren $ do
+  a <- numP
+  _ <- char ','
+  b <- numP
+  pure $ KeyRepeatCfg (fi a) (fi b)
 
 --------------------------------------------------------------------------------
 -- $but
@@ -333,7 +342,7 @@ otokenP = choice $ map (try . uncurry statement) otokens
 -- | Output tokens to parse; the format is @(keyword, how to parse the token)@
 otokens :: [(Text, Parser OToken)]
 otokens =
-  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
+  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> lexeme (optional textP) <*> lexeme (optional repCfgP))
   , ("send-event-sink", KSendEventSink <$> optional (lexeme numP) <*> optional (lexeme numP))
   , ("dext"           , pure KExtSink)
   , ("kext"           , pure KExtSink)]

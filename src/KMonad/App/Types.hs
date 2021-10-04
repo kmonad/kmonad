@@ -37,7 +37,7 @@ data AppCfg = AppCfg
   , _acModelCfg   :: ModelCfg     -- ^ The keymap/model configuration
   , _allowCmd     :: Bool         -- ^ Whether shell-commands are allowed
   , _startDelay   :: Ms           -- ^ How long to wait before acquiring the input keyboard
-  }
+  } deriving Show
 makeClassy ''AppCfg
 
 instance HasModelCfg AppCfg where modelCfg = acModelCfg

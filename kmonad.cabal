@@ -55,6 +55,7 @@ common shared-props
     , megaparsec
     , mtl
     , optparse-applicative
+    , pretty-simple
     , resourcet
     , rio
     , template-haskell
@@ -86,6 +87,8 @@ library
       KMonad.App.Invocation.TH
       KMonad.App.KeyIO
       KMonad.App.KeyIO.Common
+      KMonad.App.KeyIO.Common.KeyRepeat
+      KMonad.App.KeyIO.Common.Types
       KMonad.App.KeyIO.OS
       KMonad.App.Parser
       KMonad.App.Parser.IO

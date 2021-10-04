@@ -47,9 +47,6 @@ TODO: Put me somewhere better
 newtype Ctx r m a = Ctx { unCtx :: ContT r m a }
   deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
 
--- instance (MonadIO m) => MonadIO (Ctx r m a) where
---   lift m =
-
 -- | Create a new 'Ctx' from a function that calls a continuation somehow.
 mkCtx :: ((a -> m r) -> m r) -> Ctx r m a
 mkCtx = Ctx . ContT
@@ -64,7 +61,7 @@ runCtx_ ctx = runContT (unCtx ctx) . const
 
 -- | Turn a list of contexts into a context that nests all the contexts
 nest :: [Ctx r m a] -> Ctx r m [a]
-nest = traverse id
+nest = sequenceA
 
 -- | Modify some action so that some command is running in the background,
 -- forever, untill that action terminates.

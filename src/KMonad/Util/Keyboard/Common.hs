@@ -1,5 +1,8 @@
 module KMonad.Util.Keyboard.Common
-  ( CoreName(..) )
+  ( Switch (..),
+    HasSwitch (..),
+    CoreName (..),
+  )
 where
 
 {- NOTE:
@@ -17,7 +20,21 @@ module.
 import KMonad.Prelude
 
 --------------------------------------------------------------------------------
--- $core
+-- switch
+
+-- | Differentiates between 'Press' and 'Release' events
+data Switch
+  = Press
+  | Release
+  deriving (Eq, Show)
+
+-- | A class describing how to get at somethign containing a 'Switch'
+class HasSwitch a where switch :: Lens' a Switch
+
+instance HasSwitch Switch where switch = id
+
+--------------------------------------------------------------------------------
+-- core
 
 -- | The CoreName type, used to denote the primary name for a keycode.
 --
@@ -31,8 +48,9 @@ import KMonad.Prelude
 -- Every 'CoreName' in 'knAll' must have a 'Keycode', and every 'Keycode' may
 -- have only 1 'CoreName'. If you ever refer to a 'Keycode' in the source-code
 -- using 'kc', it must be through its 'CoreName'.
-newtype CoreName = CoreName { unCore :: Text }
+newtype CoreName = CoreName {unCore :: Text}
   deriving (Eq, Ord, IsString, Hashable)
 
-instance Show    CoreName where show        = show        . unCore
+instance Show CoreName where show = show . unCore
+
 instance Display CoreName where textDisplay = textDisplay . unCore

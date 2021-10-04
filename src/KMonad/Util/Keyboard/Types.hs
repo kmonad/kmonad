@@ -43,18 +43,6 @@ import KMonad.Util.Keyboard.OS (Keycode, keycodeNames)
 import KMonad.Util.Keyboard.Common as X
 import qualified RIO.HashMap       as M
 
---------------------------------------------------------------------------------
--- $switch
-
--- | Differentiates between 'Press' and 'Release' events
-data Switch
-  = Press
-  | Release
-  deriving (Eq, Show)
-
--- | A class describing how to get at somethign containing a 'Switch'
-class HasSwitch a where switch :: Lens' a Switch
-instance HasSwitch Switch where switch = id
 
 --------------------------------------------------------------------------------
 -- $code

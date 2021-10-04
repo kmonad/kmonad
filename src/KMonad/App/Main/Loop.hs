@@ -20,13 +20,12 @@ loop = runCtx_ writer reader where
 -- | Get the next 'KeyEvent' from the OS
 getKey :: App KeyEvent
 getKey = do
-  nxt <- join $ fmap liftIO $ view keySource
+  nxt <- liftIO =<< view keySource
   sepDebug >> logDebug ("Got: " <> dsp nxt)
   keyEventNow nxt
 
 -- | Send a 'KeySwitch' to the OS
 putKey :: HasKeySwitch a => a -> App ()
 putKey a = do
-  logDebug $ "Put: " <> dsp (a^.keySwitch)
   snk <- view keySink
   liftIO $ snk $ a^.keySwitch

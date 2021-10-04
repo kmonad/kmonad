@@ -9,6 +9,24 @@ import KMonad.Util.Time
 
 {- For KeyIO code shared across platforms. Put configuration-records here -}
 
+--------------------------------------------------------------------------------
+-- $cfgs-common
+--
+-- Configuration options for settings shared by at least 2 OSes
+
+-- | Configuration record for key-repeat tool
+data KeyRepeatCfg = KeyRepeatCfg
+  { _delay    :: !Ms -- ^ How long to wait before starting to repeat
+  , _interval :: !Ms -- ^ How long to wait between repeats
+  } deriving (Eq, Show)
+makeClassy ''KeyRepeatCfg
+
+-- | Default settings for key-repeat
+instance Default KeyRepeatCfg where
+  def = KeyRepeatCfg
+    { _delay    = 300
+    , _interval = 100
+    }
 
 
 --------------------------------------------------------------------------------
@@ -32,6 +50,7 @@ data UinputCfg = UinputCfg
     -- ^ Optionally, a command to run before trying to open a uinput keyboard
   , _postInit       :: !(Maybe String)
     -- ^ Optionally, a command to execute after keyboard has been generated
+  , _mayRepeatCfg   :: !(Maybe KeyRepeatCfg)
   } deriving (Eq, Show)
 makeClassy ''UinputCfg
 
@@ -44,6 +63,7 @@ instance Default UinputCfg where
     , _keyboardName   = "KMonad simulated keyboard"
     , _preInit        = Nothing
     , _postInit       = Nothing
+    , _mayRepeatCfg   = Nothing
     }
 
 
@@ -73,17 +93,10 @@ data LowLevelHookCfg = LowLevelHookCfg  deriving Show
 
 -- | Placeholder
 data SendEventCfg = SendEventCfg
-  { _repDelay    :: Ms
-  , _repInterval :: Ms
-  }
-  deriving Show
+  { _seRepCfg :: !KeyRepeatCfg
+  } deriving Show
 makeClassy ''SendEventCfg
 
-instance Default SendEventCfg where
-  def = SendEventCfg
-    { _repDelay    = 300
-    , _repInterval = 100
-    }
 
 --------------------------------------------------------------------------------
 -- $cfgs-sum
@@ -103,20 +116,3 @@ data KeyOutputCfg
   | WindowsSendEventCfg SendEventCfg
   deriving Show
 
-
---------------------------------------------------------------------------------
--- $util
-
-  -- Snippet for inspiration: filter streams so only alternating press-release occurs
-  --
-  -- untilJust go where
-  -- go = do
-  --   decode <$> readChunk >>= \case
-  --     Left  err -> throwIO err
-  --     Right raw -> case select raw of
-  --       Nothing -> pure Nothing
-  --       Just (s, c) -> if s == Press
-  --         then overMVar (view active) $ \cs -> pure $ if c `S.member` cs
-  --           then (cs, Nothing) else (S.insert c cs, Just (s, c))
-  --         else overMVar (view active) $ \cs -> pure $ if c `S.member` cs
-  --           then (S.delete c cs, Just c) else (cs, Nothing)

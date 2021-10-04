@@ -4,7 +4,8 @@ module KMonad.Util.Keyboard.Linux
 
     -- * Event types
   , EvType(..)
-  , _EvType
+  , _SwitchEv
+  , _EvVal
 
     -- * Raw events as defined in Linux
   , RawEvent(..)
@@ -26,13 +27,17 @@ import KMonad.Util.Name
 import KMonad.Util.Keyboard.Common
 
 import qualified RIO.HashMap as M
+import qualified RIO.Text as T
 
 --------------------------------------------------------------------------------
 -- $keycode
 
 -- | In Linux we use 'Word16', the linux-native keycode type
 newtype Keycode = Keycode { unKeycode :: Word16 }
-  deriving (Eq, Ord, Num, Show, Enum, Hashable)
+  deriving (Eq, Ord, Num, Enum, Hashable)
+
+instance Show Keycode where show (Keycode n) = "&" <> show n
+
 
 --------------------------------------------------------------------------------
 -- $evtype
@@ -44,10 +49,21 @@ newtype Keycode = Keycode { unKeycode :: Word16 }
 data EvType = LinuxRelease | LinuxPress | LinuxRepeat
   deriving (Eq, Show, Enum)
 
--- | Prism between Linux and Haskell representation of event-types
-_EvType :: Prism' Int32 EvType
-_EvType = prism' (fi . fromEnum) $ \i ->
-  ([LinuxRelease, LinuxPress, LinuxRepeat] ^? ix (fi i))
+instance Display EvType where textDisplay = T.drop 5 . tshow
+
+-- | Prism between KMonad Switch and Linux EvType
+_SwitchEv :: Prism' EvType Switch
+_SwitchEv = prism' fromSwitch fromEvType where
+  fromSwitch Press        = LinuxPress
+  fromSwitch Release      = LinuxRelease
+  fromEvType LinuxPress   = Just Press
+  fromEvType LinuxRelease = Just Release
+  fromEvType _            = Nothing
+
+-- | Prism between Haskell EvType and corresponding Linux Int32
+_EvVal :: Prism' Int32 EvType
+_EvVal = prism' (fi . fromEnum) $ \i ->
+  [LinuxRelease, LinuxPress, LinuxRepeat] ^? ix (fi i)
 
 --------------------------------------------------------------------------------
 -- $raw
@@ -78,7 +94,7 @@ mkRaw p c = do
     , _leNS   = fi $ t^._ns
     , _leType = 1
     , _leCode = unKeycode c
-    , _leVal  = p ^. re _EvType
+    , _leVal  = p ^. re _EvVal
     }
 
 -- | Generate a new sync event

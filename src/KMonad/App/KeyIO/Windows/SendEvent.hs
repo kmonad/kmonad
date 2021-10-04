@@ -63,9 +63,10 @@ sendKey t c = do
 --------------------------------------------------------------------------------
 
 -- | Handle any key event we are trying to send to the OS
-handleEvent :: KeySwitch -> SIO ()
-handleEvent (KeySwitch Press c)   = sendKey WindowsPress c   >> startRepeat c
-handleEvent (KeySwitch Release c) = sendKey WindowsRelease c >> stopRepeat c
+handleEvent :: HasKeySwitch s => s -> SIO ()
+handleEvent s
+  | isPress c = sendKey WindowsPress   (s^.code)  >> startRepeat (s^.code)
+  | otherwise = sendKey WindowsRelease (s^.code)  >> stopRepeat  (s^.code)
 
 --------------------------------------------------------------------------------
 
@@ -73,6 +74,10 @@ handleEvent (KeySwitch Release c) = sendKey WindowsRelease c >> stopRepeat c
 withSendEvent :: LUIO m e => SendEventCfg -> Ctx r m PutKey
 withSendEvent c = mkCtx $ \f -> do
 
+  let repCfg = RepeatCfg (c^.repDelay) (c^.repInterval)
+
+  rep <- withRepeat
+  
   let init = do
         logInfo "Initializing Windows key sink"
         SendEventEnv c

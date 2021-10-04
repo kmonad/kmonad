@@ -105,5 +105,5 @@ data ModelCfg = ModelCfg
   , _firstLayer  :: LayerName   -- ^ What layer to start in
   , _fallThrough :: Bool        -- ^ Whether to let unmapped buttons fall through
   , _mAllowCmd   :: Bool        -- ^ Whether to allow shell-commands
-  }
+  } deriving Show
 makeClassy ''ModelCfg

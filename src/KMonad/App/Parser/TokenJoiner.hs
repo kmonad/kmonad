@@ -32,7 +32,7 @@ import KMonad.Model.Types
 
 import KMonad.Pullchain.Action
 import KMonad.Pullchain.Button
-import KMonad.Pullchain.Types
+import KMonad.Pullchain.Types hiding (_delay)
 import KMonad.Util
 
 import Control.Monad.Except
@@ -228,14 +228,16 @@ pickInput (KIOKitSource n)      = pure $ MacIOKitCfg            $ IOKitCfg $ n
 pickInput (KLowLevelHookSource) = pure $ WindowsLowLevelHookCfg $ LowLevelHookCfg
 
 pickOutput :: OToken -> J KeyOutputCfg
-pickOutput (KUinputSink t init) = pure $ LinuxUinputCfg
+pickOutput (KUinputSink t init repcfg) = pure $ LinuxUinputCfg
   $ def { _keyboardName = t
-        , _postInit     = unpack <$> init }
+        , _postInit     = unpack <$> init
+        , _mayRepeatCfg = repcfg
+        }
 -- FIXME: The following is ugly syntax
 pickOutput (KSendEventSink delay interval) = let
-  d'  = maybe def (\dl -> def { _repDelay    = fi dl }) delay
-  d'' = maybe d'  (\iv -> d'  { _repInterval = fi iv }) interval
-  in pure $ WindowsSendEventCfg d''
+  d'  = maybe def (\dl -> def { _delay    = fi dl }) delay
+  d'' = maybe d'  (\iv -> d'  { _interval = fi iv }) interval
+  in pure $ WindowsSendEventCfg  $ SendEventCfg d''
 pickOutput KExtSink       = pure $ MacExtCfg           $ ExtCfg
 
 --------------------------------------------------------------------------------
