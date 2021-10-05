@@ -152,7 +152,13 @@ The definition of a key chord then looks like this:
   ```clojure
   (defalias ns  (around-next sft))  ;; Shift the next press
   ```
++ `around-next-timeout`: like `around-next` except that if other button press is not detected within
+  some timeout, some other button is tapped.
 
+  ```clojure
+  ntm (around-next-timeout 500 sft XX)
+  ```
+  
 + `sticky keys`: act like the key is held temporarily after just one
   press for the given amount of time (in ms).
 
