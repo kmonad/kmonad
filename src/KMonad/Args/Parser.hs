@@ -249,7 +249,7 @@ composeSeqP = do
 deadkeySeqP :: Parser [DefButton]
 deadkeySeqP = do
   _ <- prefix (char '+')
-  c <- satisfy (`elem` ("~'^`\"" :: String))
+  c <- satisfy (`elem` ("~'^`\"," :: String))
   case runParser buttonP "" (T.singleton c) of
     Left  _ -> fail "Could not parse deadkey sequence"
     Right b -> pure [b]
