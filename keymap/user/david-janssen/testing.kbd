@@ -2,7 +2,7 @@
 ;; Basic system config
 (defcfg
   input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
-  output (uinput-sink "KMonad Keyboard")
+  output (uinput-sink "KMonad Keyboard" "echo echo" (500,1))
   fallthrough true
   )
 
@@ -10,7 +10,7 @@
 
 (deflayer layer1
   (around-next-timeout 500 lsft q)
-  x
+  (tap-hold 500 lsft q)
   y
   z
 )

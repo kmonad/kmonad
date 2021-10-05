@@ -126,8 +126,19 @@
   SendEvent API to emit key events directly to Windows. Since these are
   'artificial' events we won't end up catching them again by the
   `low-level-hook`. It is very likely that KMonad does not play well with other
-  programs that capture keyboard input like AHK. You specify windows output using:
-    (send-event-sink)
+  programs that capture keyboard input like AHK.
+
+  Note: due to the nature in which we have to intercept keyboard events we
+  cannot respect Window's inbuilt key-repeat rate. Therefore, we mimic this
+  behavior ourselves internally, and this can be customized by optionally
+  passing 2 numeric values to `send-event-sink`. The first value is the time, in
+  milliseconds, before we start repeating keys. The second value is the time, in
+  milliseconds, between repeats. So, for example `(send-event-sink 200 50)`
+  specifies an output that will wait for 200 ms before starting key-repeat, and
+  then repeat keys every 50 ms.
+
+  You specify windows output using:
+    (send-event-sink 300 50)
 
 
   -- Mac OS -----

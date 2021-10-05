@@ -5,11 +5,13 @@ module KMonad.App.Invocation.Types
 where
 
 import KMonad.Prelude hiding (try)
+import KMonad.Util.Time
+import KMonad.Util.Logging hiding (logLvl)
 
-import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol)
-import KMonad.Args.Types (DefSetting(..), choice, try)
+import KMonad.App.Parser --(itokens, keywordButtons, noKeywordButtons, otokens, symbol)
+-- import KMonad.Parser.Types (DefSetting(..), choice, try)
 
-import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
+-- import qualified KMonad.Args.Types as M  -- [M]egaparsec functionality
 
 import Options.Applicative
 
@@ -21,11 +23,12 @@ import Options.Applicative
 
 -- | Record describing the instruction to KMonad
 data Invoc = Invoc
-  { _cfgFile   :: FilePath -- ^ Which file to read the config from
-  , _dryRun    :: Bool     -- ^ Flag to indicate we are only test-parsing
-  , _logLvl    :: LogLevel -- ^ Level of logging to use
+  { _cfgFile   :: FilePath         -- ^ Which file to read the config from
+  , _dryRun    :: Bool             -- ^ Flag to indicate we are only test-parsing
+  , _logLvl    :: LogLevel         -- ^ Level of logging to use
+  , _strtDel   :: Ms               -- ^ How long to wait before acquiring the input keyboard
 
-    -- All 'KDefCfg' options of a 'KExpr'
+  -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
   , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
   , _initStr   :: Maybe DefSetting -- ^ TODO: What does this do?

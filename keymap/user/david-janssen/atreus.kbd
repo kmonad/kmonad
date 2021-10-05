@@ -174,11 +174,10 @@
 )
 
 (deflayer pali
-  _    _    _    _    _              _    _    _    _    _
-  á    _    _    _    ḍ              _    ñ    é    í    ó
-  _    _    _    _    _              _    _    _    _    _
+  _    _    _    _    _              _    ḷ    ū    _    _
+  ā    _    _    ṭ    ḍ              ñ    ṇ    ē    ī    ō
+  _    _    _    _    _              _    ṁ    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
-
 )
 
 ;; ;; Pali characters, because why not try to learn a dead language?

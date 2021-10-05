@@ -35,18 +35,23 @@ module KMonad.App.Parser.Types
     -- * $lenses
   , AsKExpr(..)
   , AsDefSetting(..)
+
+    -- * $reexport
+  , module X
 ) where
 
 
 import KMonad.Prelude
-
-import KMonad.Model.Button
-import KMonad.Keyboard
-import KMonad.Keyboard.IO
+import KMonad.App.KeyIO
+import KMonad.Model.Types
+import KMonad.Pullchain.Button
+import KMonad.Pullchain.Types
+import KMonad.Util.Keyboard
+-- import KMonad.Keyboard.IO
 import KMonad.Util
 
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import Text.Megaparsec      as X
+import Text.Megaparsec.Char as X
 
 --------------------------------------------------------------------------------
 -- $bsc
@@ -69,6 +74,9 @@ instance Exception PErrors
 --
 -- Tokens representing different types of buttons
 
+-- FIXME: This is really broken: why are there 2 lists of 'DefButton's? There is
+-- one here, and one in Parser/Types.hs
+
 -- | Button ADT
 data DefButton
   = KRef Text                              -- ^ Reference a named button
@@ -84,17 +92,18 @@ data DefButton
   | KTapHoldNextRelease Int DefButton DefButton
     -- ^ Like KTapNextRelease but with a timeout
   | KAroundNext DefButton                  -- ^ Surround a future button
-  | KAroundNextTimeout Int DefButton DefButton
-    -- ^ Surround a future button, with some timeout
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
-  | KTapMacro [DefButton]                  -- ^ Sequence of buttons to tap
-  | KTapMacroRelease [DefButton]           -- ^ Sequence of buttons to tap, tap the last when released
+  | KAroundNextTimeout Int DefButton DefButton
+  | KTapMacro [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, possible delay between each press
+  | KTapMacroRelease [DefButton] (Maybe Int)
+    -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
   | KComposeSeq [DefButton]                -- ^ Compose-key sequence
-  | KPause Milliseconds                    -- ^ Pause for a period of time
-  | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
-  | KLayerNext LayerTag                    -- ^ Perform next button in different layer
+  | KPause Ms                    -- ^ Pause for a period of time
+  | KLayerDelay Int Name               -- ^ Switch to a layer for a period of time
+  | KLayerNext Name                    -- ^ Perform next button in different layer
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
                                            --   as possibly on release
   | KStickyKey Int DefButton               -- ^ Act as if a button is pressed for a period of time
@@ -105,16 +114,20 @@ data DefButton
 
 --------------------------------------------------------------------------------
 -- $cfg
+--
+-- The Cfg token that can be extracted from a config-text without ever enterring
+-- IO. This will then directly be translated to a DaemonCfg
+--
 
 -- | The 'CfgToken' contains all the data needed to construct an
 -- 'KMonad.App.AppCfg'.
 data CfgToken = CfgToken
-  { _src   :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag                          -- ^ Name of initial layer
-  , _flt   :: Bool                              -- ^ How to deal with unhandled events
-  , _allow :: Bool                              -- ^ Whether to allow shell commands
+  { _src   :: KeyInputCfg  -- ^ How to grab the source keyboard
+  , _snk   :: KeyOutputCfg -- ^ How to construct the out keybboard
+  , _km    :: Keymap BCfg  -- ^ A collection of layers of button configurations
+  , _fstL  :: Name         -- ^ Name of initial layer
+  , _flt   :: Bool         -- ^ How to deal with unhandled events
+  , _allow :: Bool         -- ^ Whether to allow shell commands
   }
 makeClassy ''CfgToken
 
@@ -153,9 +166,9 @@ data IToken
 
 -- | All different output-tokens KMonad can take
 data OToken
-  = KUinputSink Text (Maybe Text)
-  | KSendEventSink
-  | KKextSink
+  = KUinputSink Text (Maybe Text) (Maybe KeyRepeatCfg)
+  | KSendEventSink (Maybe Int) (Maybe Int)
+  | KExtSink
   deriving Show
 
 -- | All possible single settings
@@ -166,6 +179,7 @@ data DefSetting
   | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
+  | SCmpSeqDelay Int
   deriving Show
 makeClassyPrisms ''DefSetting
 
@@ -195,3 +209,7 @@ data KExpr
   | KDefAlias DefAlias
   deriving Show
 makeClassyPrisms ''KExpr
+
+
+--------------------------------------------------------------------------------
+-- $act

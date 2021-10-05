@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.App.Parser.Tokenizer
+Module      : KMonad.Args.Parser
 Description : How to turn a text-file into config-tokens
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -22,6 +22,7 @@ module KMonad.App.Parser.Tokenizer
 
   -- * Building Parsers
   , symbol
+  , numP
 
   -- * Parsers for Tokens and Buttons
   , otokens
@@ -33,20 +34,19 @@ where
 
 import KMonad.Prelude hiding (try, bool)
 
+import KMonad.App.Parser.Keycode
+import KMonad.App.Parser.Operations
 import KMonad.App.Parser.Types
-import KMonad.Keyboard
-import KMonad.Keyboard.ComposeSeq
+import KMonad.App.KeyIO
+import KMonad.Util.Keyboard
 
 import Data.Char
 import RIO.List (sortBy, find)
 
 
-import qualified KMonad.Util.MultiMap as Q
+import qualified RIO.HashMap as M
 import qualified RIO.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
-
-import Text.Megaparsec
-import Text.Megaparsec.Char
 
 
 --------------------------------------------------------------------------------
@@ -130,14 +130,15 @@ bool :: Parser Bool
 bool = symbol "true" *> pure True
    <|> symbol "false" *> pure False
 
+-- | Parse a LISP-like keyword of the form @:keyword value@
+keywordP :: Text -> Parser p -> Parser p
+keywordP kw p = lexeme (string (":" <> kw)) *> lexeme p
+  <?> "Keyword " <> ":" <> T.unpack kw
+
 --------------------------------------------------------------------------------
 -- $elem
 --
 -- Parsers for elements that are not stand-alone KExpr's
-
--- | Parse a keycode
-keycodeP :: Parser Keycode
-keycodeP = fromNamed (Q.reverse keyNames ^.. Q.itemed) <?> "keycode"
 
 -- | Parse an integer
 numP :: Parser Int
@@ -176,46 +177,55 @@ exprP = paren . choice $
   , try (symbol "defalias") *> (KDefAlias <$> defaliasP)
   ]
 
+-- | Parse a (123, 456) tuple as a KeyRepeatCfg
+repCfgP :: Parser KeyRepeatCfg
+repCfgP = lexeme $ paren $ do
+  a <- numP
+  _ <- char ','
+  b <- numP
+  pure $ KeyRepeatCfg (fi a) (fi b)
+
 --------------------------------------------------------------------------------
 -- $but
 --
 -- All the various ways to refer to buttons
 
+-- | Turn 2 strings into a list of singleton-Text tuples by zipping the lists.
+--
+-- z "abc" "123" -> [("a", "1"), ("b", 2) ...]
+z :: String -> String -> [(Text, Text)]
+z a b = uncurry zip $ over (both.traversed) T.singleton (a, b)
+
 -- | Different ways to refer to shifted versions of keycodes
 shiftedNames :: [(Text, DefButton)]
-shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) in
-                 map f $ cps <> num <> oth
-  where
-    cps = zip (map T.singleton ['A'..'Z'])
-          [ KeyA, KeyB, KeyC, KeyD, KeyE, KeyF, KeyG, KeyH, KeyI, KeyJ, KeyK, KeyL, KeyM,
-            KeyN, KeyO, KeyP, KeyQ, KeyR, KeyS, KeyT, KeyU, KeyV, KeyW, KeyX, KeyY, KeyZ ]
-    num = zip (map T.singleton "!@#$%^&*")
-          [ Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8 ]
-    oth = zip (map T.singleton "<>:~\"|{}+?")
-          [ KeyComma, KeyDot, KeySemicolon, KeyGrave, KeyApostrophe, KeyBackslash
-          , KeyLeftBrace, KeyRightBrace, KeyEqual, KeySlash]
+shiftedNames = map (second (shiftedOf . CoreName)) $ cps <> num <> oth where
+  cps = z ['A'..'Z'] ['a'..'z']
+  num = z "!@#$%^&*" "12345678"
+  oth = z "<>:~\"|{}+?" -- NOTE: \" is an escaped " and lines up with '
+          ",.;`'\\[]=/" -- NOTE: \\ is an escaped \ and lines up with |
+
+-- | Create a button that emits some keycode while holding shift
+shiftedB :: CoreName -> DefButton
+shiftedB = KAround (KEmit $ kc "lsft") . KEmit . kc
 
 -- | Names for various buttons
 buttonNames :: [(Text, DefButton)]
 buttonNames = shiftedNames <> escp <> util
   where
-    emitS c = KAround (KEmit KeyLeftShift) (KEmit c)
     -- Escaped versions for reserved characters
-    escp = [ ("\\(", emitS Key9), ("\\)", emitS Key0)
-           , ("\\_", emitS KeyMinus), ("\\\\", KEmit KeyBackslash)]
+    escp = [ ("\\(", shiftedB "9"), ("\\)", shiftedB "0")
+           , ("\\_", shiftedB "-"), ("\\\\", KEmit $ kc "\\")]
     -- Extra names for useful buttons
     util = [ ("_", KTrans), ("XX", KBlock)
-           , ("lprn", emitS Key9), ("rprn", emitS Key0)]
-
-
+           , ("lprn", shiftedB "9"), ("rprn", shiftedB "0")]
 
 -- | Parse "X-b" style modded-sequences
 moddedP :: Parser DefButton
 moddedP = KAround <$> prfx <*> buttonP
-  where mods = [ ("S-", KeyLeftShift), ("C-", KeyLeftCtrl)
-               , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)
-               , ("RS-", KeyRightShift), ("RC-", KeyRightCtrl)
-               , ("RA-", KeyRightAlt),   ("RM-", KeyRightMeta)]
+  where mods = [ ("S-",  kc "lsft"), ("C-",  kc "lctl")
+               , ("A-",  kc "lalt"), ("M-",  kc "lmet")
+               , ("RS-", kc "rsft"), ("RC-", kc "rctl")
+               , ("RA-", kc "ralt"), ("RM-", kc "rmet")]
         prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
 
 -- | Parse Pxxx as pauses (useful in macros)
@@ -224,7 +234,9 @@ pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
 
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
-rmTapMacroP = KTapMacro <$> (char '#' *> paren (some buttonP))
+rmTapMacroP =
+  char '#' *> paren (KTapMacro <$> some buttonP
+                               <*> optional (keywordP "delay" numP))
 
 -- | Compose-key sequence
 composeSeqP :: Parser [DefButton]
@@ -236,7 +248,15 @@ composeSeqP = do
          Just b  -> pure $ b^._1
 
   -- If matching, parse a button-sequence from the stored text
-  case runParser (some buttonP) "" s of
+  --
+  -- NOTE: Some compose-sequences contain @_@ characters, which would be parsed
+  -- as 'Transparent' if we only used 'buttonP', that is why we are prefixing
+  -- that parser with one that check specifically and only for @_@ and matches
+  -- it to @shifted min@
+
+  let underscore = shiftedB "-" <$ lexeme (char '_')
+
+  case runParser (some $ underscore <|> buttonP) "" s of
     Left  _ -> fail "Could not parse compose sequence"
     Right b -> pure b
 
@@ -275,8 +295,11 @@ keywordButtons =
   , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
-  , ("tap-macro"      , KTapMacro    <$> some buttonP)
-  , ("tap-macro-release"      , KTapMacroRelease    <$> some buttonP)
+  , ("around-next-timeout", KAroundNextTimeout <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-macro"
+    , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+  , ("tap-macro-release"
+    , KTapMacroRelease <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
@@ -319,9 +342,10 @@ otokenP = choice $ map (try . uncurry statement) otokens
 -- | Output tokens to parse; the format is @(keyword, how to parse the token)@
 otokens :: [(Text, Parser OToken)]
 otokens =
-  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
-  , ("send-event-sink", pure KSendEventSink)
-  , ("kext"           , pure KKextSink)]
+  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> lexeme (optional textP) <*> lexeme (optional repCfgP))
+  , ("send-event-sink", KSendEventSink <$> optional (lexeme numP) <*> optional (lexeme numP))
+  , ("dext"           , pure KExtSink)
+  , ("kext"           , pure KExtSink)]
 
 -- | Parse the DefCfg token
 defcfgP :: Parser DefSettings
@@ -331,12 +355,13 @@ defcfgP = some (lexeme settingP)
 settingP :: Parser DefSetting
 settingP = let f s p = symbol s *> p in
   (lexeme . choice . map try $
-    [ SIToken      <$> f "input"       itokenP
-    , SOToken      <$> f "output"      otokenP
-    , SCmpSeq      <$> f "cmp-seq"     buttonP
-    , SInitStr     <$> f "init"        textP
-    , SFallThrough <$> f "fallthrough" bool
-    , SAllowCmd    <$> f "allow-cmd"   bool
+    [ SIToken      <$> f "input"         itokenP
+    , SOToken      <$> f "output"        otokenP
+    , SCmpSeq      <$> f "cmp-seq"       buttonP
+    , SInitStr     <$> f "init"          textP
+    , SFallThrough <$> f "fallthrough"   bool
+    , SAllowCmd    <$> f "allow-cmd"     bool
+    , SCmpSeqDelay <$> f "cmp-seq-delay" numP
     ])
 
 --------------------------------------------------------------------------------
@@ -351,7 +376,6 @@ defaliasP = many $ (,) <$> lexeme word <*> buttonP
 
 defsrcP :: Parser DefSrc
 defsrcP = many $ lexeme keycodeP
-
 
 --------------------------------------------------------------------------------
 -- $deflayer

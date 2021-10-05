@@ -4,41 +4,47 @@ where
 
 import KMonad.Prelude
 
+import KMonad.App.Invocation.Types
+import KMonad.App.Invocation.Operations (joinCLI)
+
 import KMonad.App.Types
 import KMonad.App.Parser.Types
 import KMonad.App.Parser.Tokenizer (loadTokens)
 import KMonad.App.Parser.TokenJoiner (joinConfigIO)
 
--- | Parse a configuration file into a 'AppCfg' record
-loadConfig :: HasLogFunc e => FilePath -> RIO e CfgToken
-loadConfig pth = do
+import KMonad.Model.Types
 
-  -- FIXME: Continue here:
+
+
+
+-- | Parse a configuration file into a 'AppCfg' record
+loadConfig :: HasLogFunc e => FilePath -> Invoc -> RIO e AppCfg
+loadConfig pth cmd = do
+
+  -- FIXME: We need to separate out the Cmd entirely from this.
   --
-  -- Next steps: You need to separate the concerns of config parsing and
-  -- invocation. The parsing need only deliver a record of tokens and should be
-  -- independent of the invocation. The invocation can depend on the types from
-  -- the parser, and should allow for changing a config-record.
+  -- What needs to happen:
+  -- 1. We parse an invocation
+  -- 2. If we need to load a config, we load it
+  -- 3. We overwrite the loaded config with options from the invocation
+  -- 4. We use the result to start KMonad
   --
-  -- That config-record should then be handed of to the app-loop, which uses it
-  -- to initialize KeyIO and such.
-  --
-  -- After that is sane, it makes sense to start tinkering with KeyIO
- 
+  -- What is happening:
+  -- Everything at the same time
+
   tks <- loadTokens pth                 -- This can throw a PErrors
   cgt <- joinConfigIO (joinCLI cmd tks) -- This can throw a JoinError
 
-  -- Try loading the sink and src
-  lf  <- view logFuncL
-  snk <- liftIO . _snk cgt $ lf
-  src <- liftIO . _src cgt $ lf
-
   -- Assemble the AppCfg record
   pure $ AppCfg
-    { _keySinkDev   = snk
-    , _keySourceDev = src
-    , _keymapCfg    = _km    cgt
-    , _firstLayer   = _fstL  cgt
-    , _fallThrough  = _flt   cgt
+    { _keyInputCfg  = _src   cgt
+    , _keyOutputCfg = _snk   cgt
+    , _acModelCfg   = ModelCfg
+        { _keymapCfg  = _km    cgt
+        , _firstLayer = _fstL  cgt
+        , _fallThrough  = _flt cgt
+        , _mAllowCmd     = _allow cgt
+        }
     , _allowCmd     = _allow cgt
+    , _startDelay   = _strtDel cmd
     }

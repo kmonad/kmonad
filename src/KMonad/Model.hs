@@ -2,6 +2,5 @@ module KMonad.Model
   ( module X )
 where
 
-import KMonad.Model.Action as X
-import KMonad.Model.Button as X
-import KMonad.Model.BEnv   as X
+import KMonad.Model.IO    as X
+import KMonad.Model.Types as X
