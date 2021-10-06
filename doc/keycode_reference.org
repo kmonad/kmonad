@@ -1,0 +1,59 @@
+* An overview of the representation, naming, and aliases for keycodes across platforms
+
+
+** Keycode representation
+
+*** Linux
+Linux keycodes are represented by an unsigned 16-bit integer, at least in 64 bit
+Linux. I've only ever considered 64bit Linux, and I've gotten no complaints.
+Assuming this works.
+
+*** Windows
+Windows keycodes are represented by an unsigned 32-bit integer, I think this is
+true for all Windowses, another one of these situations that I haven't really
+tested very deeply, but haven't heard any complaints yet.
+
+** Table of keys
+
+Let's try to make this table complete, so that for any keycode in any OS occurs
+in this table, this keycode occurs in this table. If a keycode is not defined
+for an OS, mark the cell with a ~.
+
+*** Letters
+
+| core name | linux | mac | windows | description |
+|-----------+-------+-----+---------+-------------|
+| q         |    16 |     | 0x51    |             |
+| w         |    17 |     | 0x57    |             |
+| e         |    18 |     |         |             |
+| r         |    19 |     |         |             |
+| t         |    20 |     |         |             |
+| y         |    21 |     |         |             |
+| u         |    22 |     |         |             |
+| i         |    23 |     |         |             |
+| o         |    24 |     |         |             |
+| p         |    25 |     |         |             |
+| a         |    30 |     |         |             |
+| s         |    31 |     |         |             |
+| d         |    32 |     |         |             |
+| f         |    33 |     |         |             |
+| g         |    34 |     |         |             |
+| h         |    35 |     |         |             |
+| j         |    36 |     |         |             |
+| k         |    37 |     |         |             |
+| l         |    38 |     |         |             |
+| z         |    44 |     |         |             |
+| x         |    45 |     |         |             |
+| c         |    46 |     |         |             |
+| v         |    47 |     |         |             |
+| b         |    48 |     |         |             |
+| n         |    49 |     |         |             |
+| m         |    50 |     |         |             |
+
+
+** Table of aliases
+
+** Desired behavior
+
+** References
+[[https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h][Linux input-event-codes.h]]
