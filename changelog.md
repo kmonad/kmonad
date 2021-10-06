@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Added a `sticky-key`
 - Expanded documentation
 - Added `--version` (`-V`) flag
+- Added `+,` for  "add a cedilla"
 
 ### [Changed]
 - Reorganized codebase
