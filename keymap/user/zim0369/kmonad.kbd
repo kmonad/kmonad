@@ -88,7 +88,7 @@ bp C-bspc
 (deflayer smart
   _     _     _    _    _    _     _    _     _    _    _     _    _    _     _    _
   _     _     _    _    _    _     _    _     _    _    _     _    _    _
-  _     _     _    _    _    _     _    _     _    @prv @nxt  bspc _    _
+  _     _     _    _    _    _     _    _     _    @prv @nxt  _    _    _
   _     _     _    _    _    _     _    left  down up   right _    _
   _     _     _    _    _    _     _    _     _    _    _     _
   _     _     _              @bp                _    _
