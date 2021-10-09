@@ -300,19 +300,20 @@ tapNextRelease t h = onPress $ do
     doHold e = press h *> hold False *> inject e *> pure Catch
 
 
+
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
 -- 1. It is the release of this button: We are tapping
 -- 2. It is of some other button that was pressed *before* this one, ignore.
 -- 3. It is of some other button that was pressed *after* this one, we hold.
 --
--- If we encounter the timeout before any other release, we switch to holding
--- mode.
+-- If we encounter the timeout before any other release, we switch to the
+-- specified timeout button, or to the hold button if none is specified.
 --
 -- It does all of this while holding processing of other buttons, so time will
 -- get rolled back like a TapHold button.
-tapHoldNextRelease :: Milliseconds -> Button -> Button -> Button
-tapHoldNextRelease ms t h = onPress $ do
+tapHoldNextRelease :: Milliseconds -> Button -> Button -> Maybe Button -> Button
+tapHoldNextRelease ms t h mtb = onPress $ do
   hold True
   go ms []
   where
@@ -333,7 +334,7 @@ tapHoldNextRelease ms t h = onPress $ do
         | otherwise -> go (ms' - r^.elapsed) ks *> pure NoCatch
 
     onTimeout :: MonadK m =>  m ()
-    onTimeout = press h *> hold False
+    onTimeout = press (fromMaybe h mtb) *> hold False
 
     onRelSelf :: MonadK m => m Catch
     onRelSelf = tap t *> hold False *> pure Catch
