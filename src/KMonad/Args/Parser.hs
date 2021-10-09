@@ -267,7 +267,9 @@ keywordButtons =
   [ ("around"         , KAround      <$> buttonP     <*> buttonP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
   , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
-  , ("tap-hold-next"  , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP)
+  , ("tap-hold-next"
+    , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
+                   <*> optional (keywordP "timeout-button" buttonP))
   , ("tap-next-release"
     , KTapNextRelease <$> buttonP <*> buttonP)
   , ("tap-hold-next-release"
