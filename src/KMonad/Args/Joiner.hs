@@ -368,7 +368,8 @@ joinButton ns als =
     KAround o i        -> jst $ around             <$> go o <*> go i
     KTapNext t h       -> jst $ tapNext            <$> go t <*> go h
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
-    KTapHoldNext s t h -> jst $ tapHoldNext (fi s) <$> go t <*> go h
+    KTapHoldNext s t h mtb
+      -> jst $ tapHoldNext (fi s) <$> go t <*> go h <*> traverse go mtb
     KTapNextRelease t h -> jst $ tapNextRelease    <$> go t <*> go h
     KTapHoldNextRelease ms t h mtb
       -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h <*> traverse go mtb

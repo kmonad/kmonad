@@ -254,12 +254,15 @@ tapNext t h = onPress $ hookF InputHook $ \e -> do
     else press h *> pure NoCatch
 
 -- | Like 'tapNext', except that after some interval it switches anyways
-tapHoldNext :: Milliseconds -> Button -> Button -> Button
-tapHoldNext ms t h = onPress $ within ms (pure $ const True) (press h) $ \tr -> do
+tapHoldNext :: Milliseconds -> Button -> Button -> Maybe Button -> Button
+tapHoldNext ms t h mtb = onPress $ within ms (pure $ const True) onTimeout $ \tr -> do
   p <- matchMy Release
   if p $ tr^.event
     then tap t   *> pure Catch
     else press h *> pure NoCatch
+  where
+    onTimeout :: MonadK m =>  m ()
+    onTimeout = press $ fromMaybe h mtb
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
