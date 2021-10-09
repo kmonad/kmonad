@@ -130,7 +130,7 @@ bool = symbol "true" *> pure True
 
 -- | Parse a LISP-like keyword of the form @:keyword value@
 keywordP :: Text -> Parser p -> Parser p
-keywordP kw p = lexeme (string (":" <> kw)) *> lexeme p
+keywordP kw p = symbol (":" <> kw) *> lexeme p
   <?> "Keyword " <> ":" <> T.unpack kw
 
 --------------------------------------------------------------------------------
