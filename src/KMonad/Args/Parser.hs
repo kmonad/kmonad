@@ -271,7 +271,8 @@ keywordButtons =
   , ("tap-next-release"
     , KTapNextRelease <$> buttonP <*> buttonP)
   , ("tap-hold-next-release"
-    , KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP)
+    , KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP
+                          <*> optional (keywordP "timeout-button" buttonP))
   , ("tap-next"       , KTapNext     <$> buttonP     <*> buttonP)
   , ("layer-toggle"   , KLayerToggle <$> lexeme word)
   , ("layer-switch"   , KLayerSwitch <$> lexeme word)
