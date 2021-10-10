@@ -1,5 +1,4 @@
 #|
-
 (deflayer template
   _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
@@ -16,6 +15,33 @@
   @ec  a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
   lctl lalt lmet           spc            rmet rctl
+)
+ 
+(deflayer dvorak
+  end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
+  0     1     2    3    4    5     6    7     8     9    0     -    =    bspc
+  tab   /     ,    .    p    y     _    f     g     c    r     l    '    \
+  @es   a     o    e    i    u     _    d     h     t    n     s    @bsf
+  @smt  ;     q    j    k    x     b    m     w     v    z     @sa
+  caps  lalt  lmet           spc              @num  rctl
+)
+
+(deflayer lshift
+  end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
+  \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
+  S-tab _     ,    .    P    Y     _    F     G     C    R    P     "    |
+  @es   A     O    E    I    U     _    D     H     T    N    S     @bp
+  @smt  Z     Q    J    K    X     B    M     W     V    Z    @sa
+  caps  lalt  lmet           ret              @nsf  rctl
+)
+ 
+(deflayer rshift
+  end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
+  \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
+  S-tab _     ,    .    P    Y     _    F     G     C    R     P    "    |
+  @es   A     O    E    I    U     _    D     H     T    N     S    @bp
+  @smt  Z     Q    J    K    X     B    M     W     V    Z     @sa
+  caps  lalt  lmet           ret              @nsf  rctl
 )
  
 Always make sure the number of underscores is the same as the number of keys in every layer and in defsrc. 
@@ -41,41 +67,44 @@ No need to create layers for function/multimedia keys as they're mapped by firmw
 (defalias
 num  (layer-toggle nums)
 nsf  (layer-toggle numsft)
-bsf  (tap-hold 160 bspc (layer-toggle rshift))
 es   (tap-hold 170 esc (layer-toggle lshift))
-sa   (tap-hold 160 / alt)
-ra   (tap-hold 160 ret alt)
+rsf  (layer-toggle rshift)
+sa   (tap-hold 150 / alt)
+qa   (tap-hold 150 ? alt)
+ra   (tap-hold 150 ret alt)
+tc   (tap-hold 150 tab ctl)
 smt  (layer-toggle smart)
+scs  (layer-toggle smartcs)
 prv C-S-tab
 nxt C-tab
 bp  C-bspc
 )
 
-(deflayer zimqwert                            ;; The default layer that'd be read when you launch kmonad
+(deflayer qwerty                            ;; The default layer that'd be read when you launch kmonad
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   0     1     2    3    4    5     6    7     8     9    0     -    =    bspc
-  tab   q     w    e    r    t     _    y     u     i    o     p    '    \
-  @es   a     s    d    f    g     _    h     j     k    l     @bsf  ret
-  @smt  z     x    c    v    b     b    n     m     ,    .     @sa
+  @tc   q     w    e    r    t     _    y     u     i    o     p    '    \
+  @es   a     s    d    f    g     _    h     j     k    l     @rsf bspc
+  @smt  z     x    c    v    b     b    n     m     ,    .     ralt
   caps  lalt  lmet           spc              @num  rctl
 )
-
+ 
 (deflayer lshift
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
   S-tab Q     W    E    R    T     _    Y     U     I    O     P    "    |
-  @es   A     S    D    F    G     _    H     J     K    L     @bp ret
-  @smt  Z     X    C    V    B     B    N     M     <    >     @sa
-  caps  lalt  lmet           spc              @nsf  rctl
+  @es   A     S    D    F    G     _    H     J     K    L     @rsf C-bspc
+  @smt  Z     X    C    V    B     B    N     M     <    >     S-ralt
+  caps  lalt  lmet           ret              @nsf  rctl
 )
  
 (deflayer rshift
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
   S-tab Q     W    E    R    T     _    Y     U     I    O     P    "    |
-  @es   A     S    D    F    G     _    H     J     K    L     @bsf ret
-  @smt  Z     X    C    V    B     B    N     M     <    >     @sa
-  caps  lalt  lmet           spc              @nsf  rctl
+  @es   A     S    D    F    G     _    H     J     K    L     @rsf C-bspc
+  @smt  Z     X    C    V    B     B    N     M     <    >     S-ralt
+  caps  lalt  lmet           ret              @nsf  rctl
 )
 
 (deflayer nums
@@ -83,7 +112,7 @@ bp  C-bspc
   _     _     _    _    _    _     _    _     _    _    _     _    _    _
   _     3     4    7    8    _     _    _     ^    \(   \)    $    _    _
   @nsf  1     2    5    6    9     _    0     ;    -    \_    @nsf _
-  _     _     /    [    ]    _     _    _     `    _    _     _
+  _     ?     /    [    ]    _     _    _     `    _    _     _
   _     _     _              _                _    _
 )
 
@@ -92,7 +121,7 @@ bp  C-bspc
   _     _     _    _    _    _     _    _     _    _    _     _    _    _
   _     *     #    %    &    _     _    _     ^    {    }     $    _    _
   _     !     ?    _    @    _     _    _     :    +    =     _    _
-  _     _     /    _    _    _     _    _     _    _    _     _
+  _     ?     /    _    _    _     _    _     _    _    _     _
   _     _     _              spc              _    _
 )
 
@@ -100,7 +129,16 @@ bp  C-bspc
   _     _     _    _    _    _     _    _     _       _    _     _      _    _     _    _
   _     _     _    _    _    _     _    _     _       _    _     _      _    _
   _     C-q   C-w  C-e  C-r  C-t   _    C-y   C-u     @prv @nxt  C-p    _    _
-  _     C-a   C-s  C-d  C-f  C-g   _    left  down    up   right @bp    _
+  _     C-a   C-s  C-d  C-f  C-g   _    left  down    up   right @scs   _
   _     C-z   C-x  C-c  C-v  C-b   C-b  C-n   C-m     _    _     _
-  _     _     _              spc              _       _
+  _     _     _              C-spc            _       _
+)
+ 
+(deflayer smartcs
+  _     _     _    _    _    _     _    _     _       _    _     _      _    _     _    _
+  _     _     _    _    _    _     _    _     _       _    _     _      _    _
+  _     C-S-q   C-S-w  C-S-e  C-S-r  C-S-t   _    C-S-y   C-S-u     @prv @nxt  C-S-p    _    _
+  _     C-S-a   C-S-s  C-S-d  C-S-f  C-S-g   _    left  down    up   right _   _
+  _     C-S-z   C-S-x  C-S-c  C-S-v  C-S-b   C-S-b  C-S-n   C-S-m     _    _     _
+  _     _     _              C-S-spc            _       _
 )
