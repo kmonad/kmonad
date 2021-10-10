@@ -82,8 +82,6 @@ tc   (tap-hold 150 tab ctl)
 ;;ra   (tap-next ret alt)
 ;;tc   (tap-next tab ctl)
  
-mt  (multi-tap 150 ; 10 : :)
- 
 smt  (layer-toggle smart)
 scs  (layer-toggle smartcs)
 prv  C-S-tab
@@ -122,7 +120,7 @@ bp   C-bspc
   _     _     _    _    _    _     _    _     _    _    _     _    _    _     _    _
   _     _     _    _    _    _     _    _     _    _    _     _    _    _
   _     3     4    7    8    _     _    _     ^    \(   \)    $    _    _
-  @nsf  1     2    5    6    9     _    0     @mt  -    \_    @nsf _
+  @nsf  1     2    5    6    9     _    0     ;    -    \_    @nsf _
   _     ?     /    [    ]    _     _    _     `    ~    _     _
   _     _     _              _                _    _
 )
