@@ -67,24 +67,35 @@ No need to create layers for function/multimedia keys as they're mapped by firmw
 (defalias
 num  (layer-toggle nums)
 nsf  (layer-toggle numsft)
-es   (tap-hold 170 esc (layer-toggle lshift))
-rsf  (layer-toggle rshift)
+ 
+es   (tap-hold 150 esc (layer-toggle lshift))
+rsf  (tap-hold 150 bspc (layer-toggle rshift))
+bsf  (tap-hold 150 C-bspc (layer-toggle rshift))
 sa   (tap-hold 150 / alt)
 qa   (tap-hold 150 ? alt)
 ra   (tap-hold 150 ret alt)
 tc   (tap-hold 150 tab ctl)
+ 
+;;es   (tap-next esc (layer-toggle lshift))
+;;sa   (tap-next / alt)
+;;qa   (tap-next ? alt)
+;;ra   (tap-next ret alt)
+;;tc   (tap-next tab ctl)
+ 
+mt  (multi-tap 150 ; 10 : :)
+ 
 smt  (layer-toggle smart)
 scs  (layer-toggle smartcs)
-prv C-S-tab
-nxt C-tab
-bp  C-bspc
+prv  C-S-tab
+nxt  C-tab
+bp   C-bspc
 )
 
 (deflayer qwerty                            ;; The default layer that'd be read when you launch kmonad
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   0     1     2    3    4    5     6    7     8     9    0     -    =    bspc
   @tc   q     w    e    r    t     _    y     u     i    o     p    '    \
-  @es   a     s    d    f    g     _    h     j     k    l     @rsf bspc
+  @es   a     s    d    f    g     _    h     j     k    l     @rsf ret
   @smt  z     x    c    v    b     b    n     m     ,    .     ralt
   caps  lalt  lmet           spc              @num  rctl
 )
@@ -93,25 +104,25 @@ bp  C-bspc
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
   S-tab Q     W    E    R    T     _    Y     U     I    O     P    "    |
-  @es   A     S    D    F    G     _    H     J     K    L     @rsf C-bspc
+  @es   A     S    D    F    G     _    H     J     K    L     @bsf S-ret
   @smt  Z     X    C    V    B     B    N     M     <    >     S-ralt
-  caps  lalt  lmet           ret              @nsf  rctl
+  caps  lalt  lmet           S-spc            @nsf  rctl
 )
  
 (deflayer rshift
   end   f1    f2   f3   f4   f5    f6   f7    f8    f9   f10   f11  f12  prnt  ins  del
   \)    !     ?    #    $    %     ^    &     *     \(   \)    _    +    caps
   S-tab Q     W    E    R    T     _    Y     U     I    O     P    "    |
-  @es   A     S    D    F    G     _    H     J     K    L     @rsf C-bspc
+  @es   A     S    D    F    G     _    H     J     K    L     @bsf S-ret
   @smt  Z     X    C    V    B     B    N     M     <    >     S-ralt
-  caps  lalt  lmet           ret              @nsf  rctl
+  caps  lalt  lmet           S-spc            @nsf  rctl
 )
 
 (deflayer nums
   _     _     _    _    _    _     _    _     _    _    _     _    _    _     _    _
   _     _     _    _    _    _     _    _     _    _    _     _    _    _
   _     3     4    7    8    _     _    _     ^    \(   \)    $    _    _
-  @nsf  1     2    5    6    9     _    0     ;    -    \_    @nsf _
+  @nsf  1     2    5    6    9     _    0     @mt  -    \_    @nsf _
   _     ?     /    [    ]    _     _    _     `    _    _     _
   _     _     _              _                _    _
 )
