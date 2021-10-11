@@ -746,7 +746,7 @@
 
   The `tap-next-release` is like `tap-next`, except it decides whether to tap or
   hold based on the next release of a key that was *not* pressed before us. This
-  also performs rollback like `tap-hold`.So, using the minilanguage and foo as:
+  also performs rollback like `tap-hold`. So, using the minilanguage and foo as:
     (tap-next-release x lsft)
   Then:
     Tesc Ta         -> xa
