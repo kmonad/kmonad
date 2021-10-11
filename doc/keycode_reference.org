@@ -309,6 +309,6 @@ tested very deeply, but haven't heard any complaints yet.
 ** Desired behavior
 
 * References
-[[https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h][Linux input-event-codes.h]]
-[[https://github.com/pqrs-org/Karabiner-Elements/blob/fdc9d542a6f17258655f595e4d51d1e26aa25d41/src/share/types/momentary_switch_event_details/key_code.hpp][Karabiner headers]]
-[[https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes][Windows virtual key codes]]
+- [[https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h][Linux input-event-codes.h]]
+- [[https://github.com/pqrs-org/Karabiner-Elements/blob/fdc9d542a6f17258655f595e4d51d1e26aa25d41/src/share/types/momentary_switch_event_details/key_code.hpp][Karabiner headers]]
+- [[https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes][Windows virtual key codes]]
