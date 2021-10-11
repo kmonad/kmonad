@@ -729,6 +729,21 @@
   outwait the delay, and you're good. I see no benefit of `tap-next` over
   `tap-hold-next` with a decent timeout value.
 
+  You can use the `:timeout-button` keyword to specify a button other than the
+  hold button which should be held when the timeout expires. For example, we
+  can construct a button which types one x when tapped, multiple x's when held,
+  and yet still acts as shift when another button is pressed before the timeout
+  expires. So, using the minilanguage and foo as:
+    (tap-hold-next 200 x lsft :timeout-button x)
+  Then:
+    Tesc           -> Tx
+    Pesc 100 a     -> A (the moment you press a)
+    Pesc 5000 Resc -> xxxxxxx (some number of auto-repeated x's)
+
+  Note that KMonad does not itself auto-repeat the key. In this last example,
+  KMonad emits 200 Px 4800 Rx, and the operating system's auto-repeat feature,
+  if any, emits multiple x's because it sees that the x key is held for 4800 ms.
+
   The `tap-next-release` is like `tap-next`, except it decides whether to tap or
   hold based on the next release of a key that was *not* pressed before us. This
   also performs rollback like `tap-hold`.So, using the minilanguage and foo as:
