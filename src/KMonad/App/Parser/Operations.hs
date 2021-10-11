@@ -15,6 +15,12 @@ import qualified RIO.Text as T
 import Text.Megaparsec (choice, try)
 import Text.Megaparsec.Char (string)
 
+-- | Like 'fromLexicon' but case-insensitive
+fromLexicon' :: Lexicon a -> Parser a
+fromLexicon' = choice . map go . sortBy f . M.toList where
+  f  (k, _) (l, _) = compare l k     -- ^ Reverse sort by name
+  go (k, v) = v <$ (try $ string' k) -- ^ Match the name and insert the value
+
 -- | Turn a Lexicon of names items into a parser
 fromLexicon :: Lexicon a -> Parser a
 fromLexicon = choice . map go . sortBy f . M.toList where

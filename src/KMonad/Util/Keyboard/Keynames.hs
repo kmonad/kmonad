@@ -12,6 +12,8 @@ module KMonad.Util.Keyboard.Keynames
   , knKeypad
   , knKPNums
   , knKPSymb
+  , knAC
+  , knLang
   , knOther
   )
 where
@@ -50,6 +52,7 @@ l = map CoreName
 m :: String -> CoreNames
 m = l . t
 
+
 --------------------------------------------------------------------------------
 -- $collection
 
@@ -59,7 +62,7 @@ type CoreNames = [CoreName]
 -- | All 'CoreName's used in KMonad
 knAll :: CoreNames
 knAll = concat [ knLetters, knNumbers, knPunct, knMods
-               , knFKeys, knKeypad, knOther ]
+               , knFKeys, knKeypad, knOther, knAC, knLang ]
 
 -- | All letter names
 knLetters :: CoreNames
@@ -88,6 +91,7 @@ knKPNums = l $ map ("kp" <>) $ t ['0'..'9']
 knKPSymb = l $ map ("kp" <>) $ ["-", "+", "*", "/", ".", "rt"]
 knKeypad = knKPNums <> knKPSymb
 
+
 -- | Other
 --
 -- vague names explained:
@@ -103,11 +107,19 @@ knKeypad = knKPNums <> knKPSymb
 -- del  -> delete
 -- paus -> pause
 -- cmps -> compose key
+-- docs -> I don't know, asking @joshskidmore
 knOther :: CoreNames
 knOther = [ "esc", "tab", "ret", "bspc", "caps", "nlck", "slck" , "spc", "102d"
           , "sys", "pgdn", "pgup", "home", "end" , "up", "down", "left", "rght"
-          , "ins", "del", "paus" , "cmps"]
+          , "ins", "del", "paus" , "cmps", "docs"]
 
---------------------------------------------------------------------------------
--- $keyalias
+
+-- | Application control buttons
+--
+knAC :: CoreNames
+knAC = [ "back", "fwd" ]
+
+-- | Language input buttons
+knLang :: CoreNames
+knLang = [ "zenk", "hang" ]
 

@@ -86,9 +86,9 @@ for an OS, mark the cell with a ~.
 | ralt      |   100 | (0x7, 0xE6) |    0xA5 | Right Alt/Option           |
 | nlck      |    69 | (0x7, 0x53) |    0x90 | Num Lock                   |
 | slck      |    70 | (0x7, 0x47) |    0x91 | Scroll Lock                |
-| Lcps      |     ~ | (0x7, 0x82) |       ~ | Locking Caps Lock          |
-| Lnlk      |     ~ | (0x7, 0x83) |       ~ | Locking Num Lock           |
-| Lslk      |     ~ | (0x7, 0x84) |       ~ | Locking Scroll Lock        |
+| lcps      |     ~ | (0x7, 0x82) |       ~ | Locking Caps Lock          |
+| lnlk      |     ~ | (0x7, 0x83) |       ~ | Locking Num Lock           |
+| lslk      |     ~ | (0x7, 0x84) |       ~ | Locking Scroll Lock        |
 
 *** Keypad Keys
 
@@ -120,9 +120,11 @@ for an OS, mark the cell with a ~.
 
 *** Function keys
 
+fn set to `143` for linux, because that is what my thinkpad throws
+
 | core name | linux | mac         | windows | description |
 |-----------+-------+-------------+---------+-------------|
-| Fn        |     ~ | (0x7, 0x03) |       ~ | Fn          |
+| fn        |   143 | (0x7, 0x03) |       ~ | Fn          |
 | f1        |    59 | (0x7, 0x3A) |    0x70 | F1          |
 | f2        |    60 | (0x7, 0x3B) |    0x71 | F2          |
 | f3        |    61 | (0x7, 0x3C) |    0x72 | F3          |
@@ -150,44 +152,53 @@ for an OS, mark the cell with a ~.
 
 *** Others-1
 
-| core name | linux | mac         | windows | description         |
-|-----------+-------+-------------+---------+---------------------|
-| esc       |     1 | (0x7, 0x29) |    0x1B | Escape              |
-| `         |    41 | (0x7, 0x35) |    0xC0 | ` or ~              |
-| -         |    12 | (0x7, 0x2D) |    0xBD | - or _              |
-| =         |    13 | (0x7, 0x2E) |    0xBB | = or +              |
-| bspc      |    14 | (0x7, 0x2A) |    0x08 | Backspace           |
-| tab       |    15 | (0x7, 0x2B) |    0x09 | Tab                 |
-| [         |    26 | (0x7, 0x2F) |    0xDB | [ or {              |
-| ]         |    27 | (0x7, 0x30) |    0xDD | ] or }              |
-| ret       |    28 | (0x7, 0x28) |    0x0D | Return/Enter        |
-| \         |    43 | (0x7, 0x31) |    0xDC | \ or                |
-| ;         |    39 | (0x7, 0x33) |    0xBA | ; or :              |
-| '         |    40 | (0x7, 0x34) |    0xDE | ' or "              |
-| ,         |    51 | (0x7, 0x36) |    0xBC | , or <              |
-| .         |    52 | (0x7, 0x37) |    0xBE | . or >              |
-| /         |    53 | (0x7, 0x38) |    0xBF | / or ?              |
-| spc       |    57 | (0x7, 0x2C) |    0x20 | Spacebar            |
-| 102d      |    86 | (0x7, 0x64) |    0xE2 | 102ND/Non-US \      |
-| cmps      |   127 | (0x7, 0x65) |    0x5D | Compose/Application |
-| sys       |    99 | (0x7, 0x46) |    0x2C | SysRq/Print Screen  |
-| paus      |   119 | (0x7, 0x48) |    0x13 | Pause/Break         |
-| ins       |   110 | (0x7, 0x49) |    0x2D | Insert              |
-| del       |   111 | (0x7, 0x4C) |    0x2E | Delete              |
-| home      |   102 | (0x7, 0x4A) |    0x24 | Home                |
-| end       |   107 | (0x7, 0x4D) |    0x23 | End                 |
-| pgup      |   104 | (0x7, 0x4B) |    0x21 | Page Up             |
-| pgdn      |   109 | (0x7, 0x4E) |    0x22 | Page Down           |
-| up        |   103 | (0x7, 0x52) |    0x26 | Up                  |
-| left      |   105 | (0x7, 0x50) |    0x25 | Left                |
-| down      |   108 | (0x7, 0x51) |    0x28 | Down                |
-| rght      |   106 | (0x7, 0x4F) |    0x27 | Right               |
+| core name | linux | mac         | windows | description                   |
+|-----------+-------+-------------+---------+-------------------------------|
+| esc       |     1 | (0x7, 0x29) |    0x1B | Escape                        |
+| `         |    41 | (0x7, 0x35) |    0xC0 | ` or ~                        |
+| -         |    12 | (0x7, 0x2D) |    0xBD | - or _                        |
+| =         |    13 | (0x7, 0x2E) |    0xBB | = or +                        |
+| bspc      |    14 | (0x7, 0x2A) |    0x08 | Backspace                     |
+| tab       |    15 | (0x7, 0x2B) |    0x09 | Tab                           |
+| [         |    26 | (0x7, 0x2F) |    0xDB | [ or {                        |
+| ]         |    27 | (0x7, 0x30) |    0xDD | ] or }                        |
+| ret       |    28 | (0x7, 0x28) |    0x0D | Return/Enter                  |
+| \         |    43 | (0x7, 0x31) |    0xDC | \ or                          |
+| ;         |    39 | (0x7, 0x33) |    0xBA | ; or :                        |
+| '         |    40 | (0x7, 0x34) |    0xDE | ' or "                        |
+| ,         |    51 | (0x7, 0x36) |    0xBC | , or <                        |
+| .         |    52 | (0x7, 0x37) |    0xBE | . or >                        |
+| /         |    53 | (0x7, 0x38) |    0xBF | / or ?                        |
+| spc       |    57 | (0x7, 0x2C) |    0x20 | Spacebar                      |
+| 102d      |    86 | (0x7, 0x64) |    0xE2 | 102ND/Non-US \                |
+| cmps      |   127 | (0x7, 0x65) |    0x5D | Compose/Application           |
+| sys       |    99 | (0x7, 0x46) |    0x2C | SysRq/Print Screen            |
+| paus      |   119 | (0x7, 0x48) |    0x13 | Pause/Break                   |
+| ins       |   110 | (0x7, 0x49) |    0x2D | Insert                        |
+| del       |   111 | (0x7, 0x4C) |    0x2E | Delete                        |
+| home      |   102 | (0x7, 0x4A) |    0x24 | Home                          |
+| end       |   107 | (0x7, 0x4D) |    0x23 | End                           |
+| pgup      |   104 | (0x7, 0x4B) |    0x21 | Page Up                       |
+| pgdn      |   109 | (0x7, 0x4E) |    0x22 | Page Down                     |
+| up        |   103 | (0x7, 0x52) |    0x26 | Up                            |
+| left      |   105 | (0x7, 0x50) |    0x25 | Left                          |
+| down      |   108 | (0x7, 0x51) |    0x28 | Down                          |
+| rght      |   106 | (0x7, 0x4F) |    0x27 | Right                         |
+| dcs       |   235 | ~           |       ~ | Unknown, asking @joshskidmore |
 
-*** Others-2
+*** Multimedia controls
+All of these: I'm guessing
+| core name | linux | mac | windows | description                     |
+|-----------+-------+-----+---------+---------------------------------|
+| back      |   158 | ~   | ~       | back key for various devices    |
+| fwd       |   159 | ~   | ~       | forward key for various devices |
+
+*** Asian language keys
 
 | core name | linux | mac | windows | description     |
 |-----------+-------+-----+---------+-----------------|
 | zenk      |    85 | ~   | ~       | Zenkaku/Hankaku |
+| hang      |   122 | ~   | ~       | Hangeul         |
 
 ** Table of aliases
 

@@ -5,7 +5,9 @@ where
 
 import KMonad.Prelude
 
+import Data.Char (toUpper)
 import qualified RIO.HashMap as M
+import qualified RIO.Text as T
 
 --------------------------------------------------------------------------------
 -- $name
@@ -68,3 +70,8 @@ insertAlias (s, t) l
       Nothing -> Left  $ NonExistentTarget (s, t)
       Just v  -> Right $ M.insert s v l
 
+-- | If text has at least 1 character, transform it with toUpper
+capitalize :: Text -> Text
+capitalize t = case T.uncons t of
+  Nothing      -> t
+  Just (a, as) -> T.cons (toUpper a) as

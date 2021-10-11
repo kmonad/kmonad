@@ -4,7 +4,7 @@ import KMonad.Prelude
 import KMonad.Util.Keyboard
 import KMonad.App.Parser hiding (try)
 import KMonad.App.Parser.IO
-import KMonad.App.Parser.TokenJoiner
+-- import KMonad.App.Parser.TokenJoiner
 import KMonad.App.Parser.Keycode
 
 import Test.Hspec
@@ -44,7 +44,7 @@ spec = do
     it "correctly parses all configurations into KExprs" $ do
       pErrs `shouldBe` []
 
-    it "correctly joins all configurations into full config tokens" $ do
+    it "correctly joins all parsed configurations into full config tokens" $ do
       jErrs `shouldBe` []
 
 
