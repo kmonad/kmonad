@@ -173,6 +173,12 @@ in this table, this keycode occurs in this table.
 | kild | 229 | ?           | ?    | Key-illum down                  |
 | kilu | 230 | ?           | ?    | Key-illum up                    |
 
+*** Support for other languages
+|------+-----+---+---+---------------------------------|
+| zenk |  85 | ? | ? | Zenkaku/Hankaku                 |
+| hang | 122 | ? | ? | Hangeul                         |
+| hanj | 123 | ? | ? | Hanja                           |
+| yen  | 124 | ? | ? | Yen-symbol?                     |
 *** Unsure
 |------+-----+---+---+---------------------------------|
 | dcs  | 235 | ? | ? | Unknown, asking @joshskidmore   |
@@ -252,11 +258,6 @@ in this table, this keycode occurs in this table.
 | cfg  | 171 | ? | ? | launch: consumer control config |
 | dash | 204 | ? | ? | launch: dashboard               |
 | finc | 219 | ? | ? | launch: checkbook               |
-|------+-----+---+---+---------------------------------|
-| zenk |  85 | ? | ? | Zenkaku/Hankaku                 |
-| hang | 122 | ? | ? | Hangeul                         |
-| hanj | 123 | ? | ? | Hanja                           |
-| yen  | 124 | ? | ? | Yen-symbol?                     |
 |------+-----+---+---+---------------------------------|
 | blth | 237 | ? | ? | toggle bluetooth?               |
 | wlan | 238 | ? | ? | toggle wlan?                    |
