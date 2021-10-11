@@ -1,6 +1,12 @@
 * An overview of the representation, naming, and aliases for keycodes across platforms
 
 
+** Questions:
+*** Should we provide these corenames:
+- ~kp=2~: AS/400 is an ancient server. First of all: how many are still used.
+  Second of all, who gets to install `kmonad` on an AS/400?
+
+
 ** Keycode representation
 
 *** Linux
@@ -189,3 +195,5 @@ for an OS, mark the cell with a ~.
 
 ** References
 [[https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h][Linux input-event-codes.h]]
+[[https://github.com/pqrs-org/Karabiner-Elements/blob/fdc9d542a6f17258655f595e4d51d1e26aa25d41/src/share/types/momentary_switch_event_details/key_code.hpp][Karabiner headers]]
+[[https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes][Windows virtual key codes]]

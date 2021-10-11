@@ -2,14 +2,22 @@ module KMonad.App.ParserSpec ( spec ) where
 
 import KMonad.Prelude
 import KMonad.Util.Keyboard
+import KMonad.App.Parser hiding (try)
+import KMonad.App.Parser.IO
+import KMonad.App.Parser.TokenJoiner
 import KMonad.App.Parser.Keycode
 
 import Test.Hspec
+import RIO.Directory
+import RIO.FilePath
 import qualified RIO.Set     as S
 import qualified RIO.HashMap as M
 
+import System.Directory.PathWalk
+
 spec :: Spec
 spec = do
+
   describe "aliases" $ do
 
     -- Set of all alias-names we use
@@ -28,3 +36,47 @@ spec = do
 
     it "none of the aliases overlap CoreNames" $ do
       als `S.intersection` crs `shouldBe` S.empty
+
+  describe "usermaps" $ do
+
+    (pErrs, jErrs) <- runIO testUsermaps
+
+    it "correctly parses all configurations into KExprs" $ do
+      pErrs `shouldBe` []
+
+    it "correctly joins all configurations into full config tokens" $ do
+      jErrs `shouldBe` []
+
+
+    -- List of all the user submitted keymaps
+    -- mps <- runIO findKeymaps
+    -- cfg <- runIO (try $ mapM parseConfig mps :: OnlyIO (Either SomeException [CfgToken]))
+
+    -- it "correctly parses all user-submitted keymaps" $ do
+    --   undefined
+      -- isRight cfg `shouldBe` True
+
+
+
+testUsermaps :: OnlyIO ([(FilePath, PErrors)], [(FilePath, JoinError)])
+testUsermaps = do
+  -- Find all '.kbd' files in the 'keymap' directory
+  dir <- (</> "keymap") <$> getCurrentDirectory
+  let go p _ = pure . map (p </>) . filter (".kbd" `isExtensionOf`)
+  fs <- pathWalkAccumulate dir go
+
+  -- Parse all files, collecting different errors
+  let g fname = parseFile fname >>= \res -> pure $ case res of
+        Success _ -> []
+        PError  p -> [Left  (fname, p)]
+        JError  j -> [Right (fname, j)]
+  es <- foldMapM g fs
+  pure $ partitionEithers es
+  -- undefined
+
+-- findBrokenKeymap :: IO m => m (Maybe FilePath)
+
+  -- cwd <- getCurrentDirectory
+  -- pathWalkAccumulate (cwd </> "keymap") go
+
+    -- go :: IO m => FilePath -> [FilePath] -> [FilePath] -> m [FilePath]

@@ -20,6 +20,8 @@ NOTE: This is where we make a distinction between operating systems.
 module KMonad.App.Parser.TokenJoiner
   ( joinConfigIO
   , joinConfig
+  , JoinError(..)
+  , joinKExprs
   )
 where
 
@@ -59,6 +61,7 @@ data JoinError
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
+  deriving Eq
 
 instance Show JoinError where
   show e = case e of
@@ -104,11 +107,14 @@ runJ j = runReader (runExceptT $ unJ j)
 --------------------------------------------------------------------------------
 -- $full
 
+joinKExprs :: [KExpr] -> Either JoinError CfgToken
+joinKExprs = runJ joinConfig . defJCfg
+
 -- | Turn a list of KExpr into a CfgToken, throwing errors when encountered.
 --
 -- NOTE: We start joinConfig with the default JCfg, but joinConfig might locally
 -- override settings by things it reads from the config itself.
-joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
+joinConfigIO :: (MonadIO m, MonadThrow m) => [KExpr] -> m CfgToken
 joinConfigIO es = case runJ joinConfig $ defJCfg es of
   Left  e -> throwM e
   Right c -> pure c

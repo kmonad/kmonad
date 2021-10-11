@@ -9,13 +9,28 @@ import KMonad.App.Invocation.Operations (joinCLI)
 
 import KMonad.App.Types
 import KMonad.App.Parser.Types
-import KMonad.App.Parser.Tokenizer (loadTokens)
-import KMonad.App.Parser.TokenJoiner (joinConfigIO)
+import KMonad.App.Parser.Tokenizer
+import KMonad.App.Parser.TokenJoiner
 
 import KMonad.Model.Types
 
+data ParseResult
+  = Success CfgToken
+  | PError PErrors
+  | JError JoinError
+  deriving Show
+makePrisms ''ParseResult
 
+-- | Parse a config without throwing exceptions
+parseConfig :: Text -> ParseResult
+parseConfig f = case parseTokens f of
+  Left per -> PError per
+  Right es -> case joinKExprs es of
+    Left jer -> JError jer
+    Right ct -> Success ct
 
+parseFile :: IO m => FilePath -> m ParseResult
+parseFile = fmap parseConfig . readFileUtf8
 
 -- | Parse a configuration file into a 'AppCfg' record
 loadConfig :: HasLogFunc e => FilePath -> Invoc -> RIO e AppCfg

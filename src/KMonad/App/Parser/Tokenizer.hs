@@ -59,7 +59,7 @@ parseTokens t = case runParser configP "" t  of
   Right x -> Right x
 
 -- | Load a set of tokens from file, throw an error on parse-fail
-loadTokens :: FilePath -> RIO e [KExpr]
+loadTokens :: (MonadIO m, MonadThrow m) => FilePath -> m [KExpr]
 loadTokens pth = parseTokens <$> readFileUtf8 pth >>= \case
   Left e   -> throwM e
   Right xs -> pure xs

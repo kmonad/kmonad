@@ -55,6 +55,8 @@ common shared-props
     , megaparsec
     , mtl
     , optparse-applicative
+    , pathwalk
+    -- ^^ TODO: delete when done debugging 'load all keymaps' function
     , pretty-simple
     , resourcet
     , rio
@@ -225,6 +227,7 @@ test-suite spec
   build-depends:
       base
     , kmonad
+    , pathwalk
   other-modules:
       KMonad.Util.KeyboardSpec
   default-language:
