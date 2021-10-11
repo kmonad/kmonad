@@ -1,14 +1,285 @@
+* Table of keys
+Let's try to make this table complete, so that for any keycode in any OS occurs
+in this table, this keycode occurs in this table.
+
+| element | explanation                                                    |
+|---------+----------------------------------------------------------------|
+| ~       | undefined for this os                                          |
+| ?       | not figured out yet                                            |
+| AC:     | application control: buttons that send signals to applications |
+|---------+----------------------------------------------------------------|
+
+| core name | linux | mac         | windows | description                     |
+|-----------+-------+-------------+---------+---------------------------------|
+| q         |    16 | (0x7, 0x14) | 0x51    | Q                               |
+| w         |    17 | (0x7, 0x1A) | 0x57    | W                               |
+| e         |    18 | (0x7, 0x08) | 0x45    | E                               |
+| r         |    19 | (0x7, 0x15) | 0x52    | R                               |
+| t         |    20 | (0x7, 0x17) | 0x54    | T                               |
+| y         |    21 | (0x7, 0x1C) | 0x59    | Y                               |
+| u         |    22 | (0x7, 0x18) | 0x55    | U                               |
+| i         |    23 | (0x7, 0x0C) | 0x49    | I                               |
+| o         |    24 | (0x7, 0x12) | 0x4F    | O                               |
+| p         |    25 | (0x7, 0x13) | 0x50    | P                               |
+| a         |    30 | (0x7, 0x04) | 0x41    | A                               |
+| s         |    31 | (0x7, 0x16) | 0x53    | S                               |
+| d         |    32 | (0x7, 0x07) | 0x44    | D                               |
+| f         |    33 | (0x7, 0x09) | 0x46    | F                               |
+| g         |    34 | (0x7, 0x0A) | 0x47    | G                               |
+| h         |    35 | (0x7, 0x0B) | 0x48    | H                               |
+| j         |    36 | (0x7, 0x0D) | 0x4A    | J                               |
+| k         |    37 | (0x7, 0x0E) | 0x4B    | K                               |
+| l         |    38 | (0x7, 0x0F) | 0x4C    | L                               |
+| z         |    44 | (0x7, 0x1D) | 0x5A    | Z                               |
+| x         |    45 | (0x7, 0x1B) | 0x58    | X                               |
+| c         |    46 | (0x7, 0x06) | 0x43    | C                               |
+| v         |    47 | (0x7, 0x19) | 0x56    | V                               |
+| b         |    48 | (0x7, 0x05) | 0x42    | B                               |
+| n         |    49 | (0x7, 0x11) | 0x4E    | N                               |
+| m         |    50 | (0x7, 0x10) | 0x4D    | M                               |
+|-----------+-------+-------------+---------+---------------------------------|
+| 1         |     2 | (0x7, 0x1E) | 0x31    | 1                               |
+| 2         |     3 | (0x7, 0x1F) | 0x32    | 2                               |
+| 3         |     4 | (0x7, 0x20) | 0x33    | 3                               |
+| 4         |     5 | (0x7, 0x21) | 0x34    | 4                               |
+| 5         |     6 | (0x7, 0x22) | 0x35    | 5                               |
+| 6         |     7 | (0x7, 0x23) | 0x36    | 6                               |
+| 7         |     8 | (0x7, 0x24) | 0x37    | 7                               |
+| 8         |     9 | (0x7, 0x25) | 0x38    | 8                               |
+| 9         |    10 | (0x7, 0x26) | 0x39    | 9                               |
+| 0         |    11 | (0x7, 0x27) | 0x30    | 0                               |
+|-----------+-------+-------------+---------+---------------------------------|
+| esc       |     1 | (0x7, 0x29) | 0x1B    | Escape                          |
+| `         |    41 | (0x7, 0x35) | 0xC0    | ` or ~                          |
+| -         |    12 | (0x7, 0x2D) | 0xBD    | - or _                          |
+| =         |    13 | (0x7, 0x2E) | 0xBB    | = or +                          |
+| bspc      |    14 | (0x7, 0x2A) | 0x08    | Backspace                       |
+| tab       |    15 | (0x7, 0x2B) | 0x09    | Tab                             |
+| [         |    26 | (0x7, 0x2F) | 0xDB    | [ or {                          |
+| ]         |    27 | (0x7, 0x30) | 0xDD    | ] or }                          |
+| ret       |    28 | (0x7, 0x28) | 0x0D    | Return/Enter                    |
+| \         |    43 | (0x7, 0x31) | 0xDC    | \ or                            |
+| ;         |    39 | (0x7, 0x33) | 0xBA    | ; or :                          |
+| '         |    40 | (0x7, 0x34) | 0xDE    | ' or "                          |
+| ,         |    51 | (0x7, 0x36) | 0xBC    | , or <                          |
+| .         |    52 | (0x7, 0x37) | 0xBE    | . or >                          |
+| /         |    53 | (0x7, 0x38) | 0xBF    | / or ?                          |
+| spc       |    57 | (0x7, 0x2C) | 0x20    | Spacebar                        |
+|-----------+-------+-------------+---------+---------------------------------|
+| caps      |    58 | (0x7, 0x39) | 0x14    | Caps Lock                       |
+| lsft      |    42 | (0x7, 0xE1) | 0xA0    | Left Shift                      |
+| lctl      |    29 | (0x7, 0xE0) | 0xA2    | Left Control                    |
+| lmet      |   125 | (0x7, 0xE3) | 0x5B    | Left Windows/Command/Meta       |
+| lalt      |    56 | (0x7, 0xE2) | 0xA4    | Left Alt/Option                 |
+| rsft      |    54 | (0x7, 0xE5) | 0xA1    | Right Shift                     |
+| rctl      |    97 | (0x7, 0xE4) | 0xA3    | Right Control                   |
+| rmet      |   126 | (0x7, 0xE7) | 0x5C    | Right Windows/Command/Meta      |
+| ralt      |   100 | (0x7, 0xE6) | 0xA5    | Right Alt/Option                |
+| nlck      |    69 | (0x7, 0x53) | 0x90    | Num Lock                        |
+| slck      |    70 | (0x7, 0x47) | 0x91    | Scroll Lock                     |
+| lcps      |     ? | (0x7, 0x82) | ?       | Locking Caps Lock               |
+| lnlk      |     ? | (0x7, 0x83) | ?       | Locking Num Lock                |
+| lslk      |     ? | (0x7, 0x84) | ?       | Locking Scroll Lock             |
+|-----------+-------+-------------+---------+---------------------------------|
+| kp1       |    79 | (0x7, 0x59) | 0x61    | Keypad 1                        |
+| kp2       |    80 | (0x7, 0x5A) | 0x62    | Keypad 2                        |
+| kp3       |    81 | (0x7, 0x5B) | 0x63    | Keypad 3                        |
+| kp4       |    75 | (0x7, 0x5C) | 0x64    | Keypad 4                        |
+| kp5       |    76 | (0x7, 0x5D) | 0x65    | Keypad 5                        |
+| kp6       |    77 | (0x7, 0x5E) | 0x66    | Keypad 6                        |
+| kp7       |    71 | (0x7, 0x5F) | 0x67    | Keypad 7                        |
+| kp8       |    72 | (0x7, 0x60) | 0x68    | Keypad 8                        |
+| kp9       |    73 | (0x7, 0x61) | 0x69    | Keypad 9                        |
+| kp0       |    82 | (0x7, 0x62) | 0x60    | Keypad 0                        |
+| kp/       |    98 | (0x7, 0x54) | 0x6F    | Keypad /                        |
+| kp*       |    55 | (0x7, 0x55) | 0x6A    | Keypad *                        |
+| kp-       |    74 | (0x7, 0x56) | 0x6D    | Keypad -                        |
+| kp+       |    78 | (0x7, 0x57) | 0x6B    | Keypad +                        |
+| kp.       |    83 | (0x7, 0x63) | 0x6E    | Keypad .                        |
+| kp=       |   117 | (0x7, 0x67) | ?       | Keypad =                        |
+| kprt      |    96 | (0x7, 0x58) | ?       | Keypad Return/Enter             |
+| kpj       |    95 | ~           | ?       | Keypad Japanese Comma           |
+| kp+-      |   118 | ~           | ?       | Keypad +/-                      |
+| kp,       |   121 | (0x7, 0x85) | ?       | Keypad ,                        |
+| kp=2      |     ~ | (0x7, 0x86) | ?       | Keypad = for AS/400             |
+| kp(       |   179 | ~           | ?       | Keypad (                        |
+| kp)       |   180 | ~           | ?       | Keypad )                        |
+|-----------+-------+-------------+---------+---------------------------------|
+| fn        |   143 | (0x7, 0x03) | ~       | Function key                    |
+| f1        |    59 | (0x7, 0x3A) | 0x70    | F1                              |
+| f2        |    60 | (0x7, 0x3B) | 0x71    | F2                              |
+| f3        |    61 | (0x7, 0x3C) | 0x72    | F3                              |
+| f4        |    62 | (0x7, 0x3D) | 0x73    | F4                              |
+| f5        |    63 | (0x7, 0x3E) | 0x74    | F5                              |
+| f6        |    64 | (0x7, 0x3F) | 0x75    | F6                              |
+| f7        |    65 | (0x7, 0x40) | 0x76    | F7                              |
+| f8        |    66 | (0x7, 0x41) | 0x77    | F8                              |
+| f9        |    67 | (0x7, 0x42) | 0x78    | F9                              |
+| f10       |    68 | (0x7, 0x43) | 0x79    | F10                             |
+| f11       |    87 | (0x7, 0x44) | 0x7A    | F11                             |
+| f12       |    88 | (0x7, 0x45) | 0x7B    | F12                             |
+| f13       |   183 | (0x7, 0x68) | 0x7C    | F13                             |
+| f14       |   184 | (0x7, 0x69) | 0x7D    | F14                             |
+| f15       |   185 | (0x7, 0x6A) | 0x7E    | F15                             |
+| f16       |   186 | (0x7, 0x6B) | 0x7F    | F16                             |
+| f17       |   187 | (0x7, 0x6C) | 0x80    | F17                             |
+| f18       |   188 | (0x7, 0x6D) | 0x81    | F18                             |
+| f19       |   189 | (0x7, 0x6E) | 0x82    | F19                             |
+| f20       |   190 | (0x7, 0x6F) | 0x83    | F20                             |
+| f21       |   191 | (0x7, 0x70) | 0x84    | F21                             |
+| f22       |   192 | (0x7, 0x71) | 0x85    | F22                             |
+| f23       |   193 | (0x7, 0x72) | 0x86    | F23                             |
+| f24       |   194 | (0x7, 0x73) | 0x87    | F24                             |
+|-----------+-------+-------------+---------+---------------------------------|
+| 102d      |    86 | (0x7, 0x64) | 0xE2    | Key between lsft and z on ISO   |
+| cmps      |   127 | (0x7, 0x65) | 0x5D    | Key left of rctl                |
+| sys       |    99 | (0x7, 0x46) | 0x2C    | SysRq/Print Screen              |
+| paus      |   119 | (0x7, 0x48) | 0x13    | Pause/Break                     |
+| ins       |   110 | (0x7, 0x49) | 0x2D    | Insert                          |
+| del       |   111 | (0x7, 0x4C) | 0x2E    | Delete                          |
+| home      |   102 | (0x7, 0x4A) | 0x24    | Home                            |
+| end       |   107 | (0x7, 0x4D) | 0x23    | End                             |
+| pgup      |   104 | (0x7, 0x4B) | 0x21    | Page Up                         |
+| pgdn      |   109 | (0x7, 0x4E) | 0x22    | Page Down                       |
+| up        |   103 | (0x7, 0x52) | 0x26    | Up arrow                        |
+| left      |   105 | (0x7, 0x50) | 0x25    | Left arrow                      |
+| down      |   108 | (0x7, 0x51) | 0x28    | Down arrow                      |
+| rght      |   106 | (0x7, 0x4F) | 0x27    | Right arrow                     |
+|-----------+-------+-------------+---------+---------------------------------|
+| mute      |   113 | ?           | ?       | Mute audio                      |
+| mmut      |   248 | ?           | ?       | Mute mic                        |
+| vold      |   114 | ?           | ?       | Audio volume down               |
+| volu      |   115 | ?           | ?       | Audio volume up                 |
+| brd       |   224 | ?           | ?       | Brightness down                 |
+| bru       |   225 | ?           | ?       | Brightness up                   |
+| brc       |   243 | ?           | ?       | Brightness cycle                |
+| brau      |   244 | ?           | ?       | Brightness auto                 |
+| kilt      |   228 | ?           | ?       | Key-illum toggle                |
+| kild      |   229 | ?           | ?       | Key-illum down                  |
+| kilu      |   230 | ?           | ?       | Key-illum up                    |
+|-----------+-------+-------------+---------+---------------------------------|
+| dcs       |   235 | ?           | ?       | Unknown, asking @joshskidmore   |
+| mcro      |   112 | ?           | ?       | Unknown                         |
+| scl       |   120 | ?           | ?       | AL compiz scale                 |
+| pwr       |   116 | ?           | ?       | System power down               |
+| susp      |   205 | ?           | ?       | System suspend                  |
+| doff      |   245 | ?           | ?       | Display device off              |
+|-----------+-------+-------------+---------+---------------------------------|
+| stop      |   128 | ?           | ?       | AC: stop                        |
+| agan      |   129 | ?           | ?       | AC: again                       |
+| prps      |   130 | ?           | ?       | AC: properties                  |
+| undo      |   131 | ?           | ?       | AC: undo                        |
+| frnt      |   132 | ?           | ?       | AC: front                       |
+| copy      |   133 | ?           | ?       | AC: copy                        |
+| open      |   134 | ?           | ?       | AC: open                        |
+| pste      |   135 | ?           | ?       | AC: paste                       |
+| find      |   136 | ?           | ?       | AC: search                      |
+| cut       |   137 | ?           | ?       | AC: cut                         |
+| back      |   158 | ?           | ?       | AC: back                        |
+| fwd       |   159 | ?           | ?       | AC: forward                     |
+|-----------+-------+-------------+---------+---------------------------------|
+| clcd      |   160 | ?           | ?       | AC: close CD tray               |
+| opcd      |   161 | ?           | ?       | AC: eject CD tray               |
+| tgcd      |   162 | ?           | ?       | AC: toggle CD tray              |
+| next      |   163 | ?           | ?       | AC: next song                   |
+| pp        |   164 | ?           | ?       | AC: play/pause button           |
+| prev      |   165 | ?           | ?       | AC: previous song               |
+| stcd      |   166 | ?           | ?       | AC: stop cd                     |
+| plcd      |   200 | ?           | ?       | AC: play cd                     |
+| pscd      |   201 | ?           | ?       | AC: pause cd                    |
+|-----------+-------+-------------+---------+---------------------------------|
+| rec       |   167 | ?           | ?       | AC: record                      |
+| rew       |   168 | ?           | ?       | AC: rewind                      |
+| play      |   207 | ?           | ?       | AC: play                        |
+| ff        |   208 | ?           | ?       | AC: fast-forward                |
+| bass      |   209 | ?           | ?       | AC: bass-boost                  |
+|-----------+-------+-------------+---------+---------------------------------|
+| prnt      |   210 | ?           | ?       | AC: print                       |
+| hmpg      |   172 | ?           | ?       | AC: homepage                    |
+| rfr       |   173 | ?           | ?       | AC: refresh                     |
+| exit      |   174 | ?           | ?       | AC: exit                        |
+| cls       |   206 | ?           | ?       | AC: close                       |
+| new       |   181 | ?           | ?       | AC: new                         |
+| redo      |   182 | ?           | ?       | AC: redo                        |
+| canc      |   223 | ?           | ?       | AC: cancel                      |
+|-----------+-------+-------------+---------+---------------------------------|
+| send      |   231 | ?           | ?       | AC: send mail                   |
+| repl      |   232 | ?           | ?       | AC: reply                       |
+| mfwd      |   233 | ?           | ?       | AC: forward email               |
+| save      |   234 | ?           | ?       | AC: save                        |
+|-----------+-------+-------------+---------+---------------------------------|
+| vnex      |   241 | ?           | ?       | AC: next video source           |
+| vprv      |   242 | ?           | ?       | AC: prev video source           |
+|-----------+-------+-------------+---------+---------------------------------|
+| help      |   138 | ?           | ?       | launch: Integrated help center  |
+| menu      |   139 | ?           | ?       | show menu                       |
+| calc      |   140 | ?           | ?       | launch: Calculator              |
+| setp      |   141 | ?           | ?       | setup ?                         |
+| slp       |   142 | ?           | ?       | send sleep signal               |
+| wake      |   143 | ?           | ?       | send wakeup signal              |
+| file      |   144 | ?           | ?       | launch: file browser            |
+| sndf      |   145 | ?           | ?       | send file ?                     |
+| delf      |   146 | ?           | ?       | delete file ?                   |
+| xfer      |   147 | ?           | ?       | transfers something?            |
+| prg1      |   148 | ?           | ?       | launch a program?               |
+| prg2      |   149 | ?           | ?       | launch another program?         |
+| prg3      |   202 | ?           | ?       | launch program 3?               |
+| prg4      |   203 | ?           | ?       | launch program 4?               |
+| www       |   150 | ?           | ?       | launch a browser?               |
+| msds      |   151 | ?           | ?       | msdos??                         |
+| cffe      |   152 | ?           | ?       | launch terminal locker (coffee) |
+| rotd      |   153 | ?           | ?       | rotate display                  |
+| cycw      |   154 | ?           | ?       | cycle windows                   |
+| mail      |   155 | ?           | ?       | launch mail program?            |
+| bkmk      |   156 | ?           | ?       | open browser bookmarks?         |
+| cfg       |   171 | ?           | ?       | launch: consumer control config |
+| dash      |   204 | ?           | ?       | launch: dashboard               |
+| finc      |   219 | ?           | ?       | launch: checkbook               |
+|-----------+-------+-------------+---------+---------------------------------|
+| zenk      |    85 | ?           | ?       | Zenkaku/Hankaku                 |
+| hang      |   122 | ?           | ?       | Hangeul                         |
+| hanj      |   123 | ?           | ?       | Hanja                           |
+| yen       |   124 | ?           | ?       | Yen-symbol?                     |
+|-----------+-------+-------------+---------+---------------------------------|
+| blth      |   237 | ?           | ?       | toggle bluetooth?               |
+| wlan      |   238 | ?           | ?       | toggle wlan?                    |
+| uwb       |   239 | ?           | ?       | toggle ultrawide-band?          |
+| wwan      |   246 | ?           | ?       | toggle wireless wan?            |
+| rfkl      |   247 | ?           | ?       | controll all radios?            |
+|-----------+-------+-------------+---------+---------------------------------|
+| comp      |   157 | ?           | ?       | ??                              |
+| iso       |   170 | ?           | ?       | ??                              |
+| phn       |   169 | ?           | ?       | ??                              |
+| move      |   175 | ?           | ?       | ??                              |
+| edit      |   176 | ?           | ?       | ??                              |
+| scup      |   177 | ?           | ?       | scroll up?                      |
+| scdn      |   178 | ?           | ?       | scroll down?                    |
+| cam       |   212 | ?           | ?       | camera?                         |
+| soun      |   213 | ?           | ?       | sound?                          |
+| ques      |   214 | ?           | ?       | question?                       |
+| emal      |   215 | ?           | ?       | email?                          |
+| chat      |   216 | ?           | ?       | chat?                           |
+| srch      |   217 | ?           | ?       | search?                         |
+| cnct      |   218 | ?           | ?       | connect?                        |
+| sprt      |   220 | ?           | ?       | sport?                          |
+| shop      |   221 | ?           | ?       | shop?                           |
+| altr      |   222 | ?           | ?       | alterase??                      |
+| med       |   226 | ?           | ?       | media?                          |
+| swv       |   227 | ?           | ?       | switch video mode?              |
+| bat       |   235 | ?           | ?       | battery?                        |
+| unkn      |   240 | ?           | ?       | literally: unknown?             |
+|           |       |             |         |                                 |
+|           |       |             |         |                                 |
+|-----------+-------+-------------+---------+---------------------------------|
+
+
 * An overview of the representation, naming, and aliases for keycodes across platforms
-
-
-** Questions:
-*** Should we provide these corenames:
-- ~kp=2~: AS/400 is an ancient server. First of all: how many are still used.
-  Second of all, who gets to install `kmonad` on an AS/400?
-
-
+** What the old keycode parser supported:
+- Any keycode by its literal, CamelCase name. i.e. KeyPageDown
+- Any keycode by its previous name with the word Key dropped. i.e. PageDown
+- Any alias defined in Keycode.hs:aliases
+- Seems to also read full-names when lowered
 ** Keycode representation
-
 *** Linux
 Linux keycodes are represented by an unsigned 16-bit integer, at least in 64 bit
 Linux. I've only ever considered 64bit Linux, and I've gotten no complaints.
@@ -19,192 +290,11 @@ Windows keycodes are represented by an unsigned 32-bit integer, I think this is
 true for all Windowses, another one of these situations that I haven't really
 tested very deeply, but haven't heard any complaints yet.
 
-** Table of keys
-
-Let's try to make this table complete, so that for any keycode in any OS occurs
-in this table, this keycode occurs in this table. If a keycode is not defined
-for an OS, mark the cell with a ~.
-
-*** Letters
-
-| core name | linux | mac         | windows | description |
-|-----------+-------+-------------+---------+-------------|
-| q         |    16 | (0x7, 0x14) |    0x51 | Q           |
-| w         |    17 | (0x7, 0x1A) |    0x57 | W           |
-| e         |    18 | (0x7, 0x08) |    0x45 | E           |
-| r         |    19 | (0x7, 0x15) |    0x52 | R           |
-| t         |    20 | (0x7, 0x17) |    0x54 | T           |
-| y         |    21 | (0x7, 0x1C) |    0x59 | Y           |
-| u         |    22 | (0x7, 0x18) |    0x55 | U           |
-| i         |    23 | (0x7, 0x0C) |    0x49 | I           |
-| o         |    24 | (0x7, 0x12) |    0x4F | O           |
-| p         |    25 | (0x7, 0x13) |    0x50 | P           |
-| a         |    30 | (0x7, 0x04) |    0x41 | A           |
-| s         |    31 | (0x7, 0x16) |    0x53 | S           |
-| d         |    32 | (0x7, 0x07) |    0x44 | D           |
-| f         |    33 | (0x7, 0x09) |    0x46 | F           |
-| g         |    34 | (0x7, 0x0A) |    0x47 | G           |
-| h         |    35 | (0x7, 0x0B) |    0x48 | H           |
-| j         |    36 | (0x7, 0x0D) |    0x4A | J           |
-| k         |    37 | (0x7, 0x0E) |    0x4B | K           |
-| l         |    38 | (0x7, 0x0F) |    0x4C | L           |
-| z         |    44 | (0x7, 0x1D) |    0x5A | Z           |
-| x         |    45 | (0x7, 0x1B) |    0x58 | X           |
-| c         |    46 | (0x7, 0x06) |    0x43 | C           |
-| v         |    47 | (0x7, 0x19) |    0x56 | V           |
-| b         |    48 | (0x7, 0x05) |    0x42 | B           |
-| n         |    49 | (0x7, 0x11) |    0x4E | N           |
-| m         |    50 | (0x7, 0x10) |    0x4D | M           |
-
-*** Numbers
-
-| core name | linux | mac         | windows | description |
-|-----------+-------+-------------+---------+-------------|
-|         1 |     2 | (0x7, 0x1E) |    0x31 |           1 |
-|         2 |     3 | (0x7, 0x1F) |    0x32 |           2 |
-|         3 |     4 | (0x7, 0x20) |    0x33 |           3 |
-|         4 |     5 | (0x7, 0x21) |    0x34 |           4 |
-|         5 |     6 | (0x7, 0x22) |    0x35 |           5 |
-|         6 |     7 | (0x7, 0x23) |    0x36 |           6 |
-|         7 |     8 | (0x7, 0x24) |    0x37 |           7 |
-|         8 |     9 | (0x7, 0x25) |    0x38 |           8 |
-|         9 |    10 | (0x7, 0x26) |    0x39 |           9 |
-|         0 |    11 | (0x7, 0x27) |    0x30 |           0 |
-
-*** Modifier keys
-
-| core name | linux | mac         | windows | description                |
-|-----------+-------+-------------+---------+----------------------------|
-| caps      |    58 | (0x7, 0x39) |    0x14 | Caps Lock                  |
-| lsft      |    42 | (0x7, 0xE1) |    0xA0 | Left Shift                 |
-| lctl      |    29 | (0x7, 0xE0) |    0xA2 | Left Control               |
-| lmet      |   125 | (0x7, 0xE3) |    0x5B | Left Windows/Command/Meta  |
-| lalt      |    56 | (0x7, 0xE2) |    0xA4 | Left Alt/Option            |
-| rsft      |    54 | (0x7, 0xE5) |    0xA1 | Right Shift                |
-| rctl      |    97 | (0x7, 0xE4) |    0xA3 | Right Control              |
-| rmet      |   126 | (0x7, 0xE7) |    0x5C | Right Windows/Command/Meta |
-| ralt      |   100 | (0x7, 0xE6) |    0xA5 | Right Alt/Option           |
-| nlck      |    69 | (0x7, 0x53) |    0x90 | Num Lock                   |
-| slck      |    70 | (0x7, 0x47) |    0x91 | Scroll Lock                |
-| lcps      |     ~ | (0x7, 0x82) |       ~ | Locking Caps Lock          |
-| lnlk      |     ~ | (0x7, 0x83) |       ~ | Locking Num Lock           |
-| lslk      |     ~ | (0x7, 0x84) |       ~ | Locking Scroll Lock        |
-
-*** Keypad Keys
-
-| core name | linux | mac         | windows | description           |
-|-----------+-------+-------------+---------+-----------------------|
-| kp1       |    79 | (0x7, 0x59) |    0x61 | Keypad 1              |
-| kp2       |    80 | (0x7, 0x5A) |    0x62 | Keypad 2              |
-| kp3       |    81 | (0x7, 0x5B) |    0x63 | Keypad 3              |
-| kp4       |    75 | (0x7, 0x5C) |    0x64 | Keypad 4              |
-| kp5       |    76 | (0x7, 0x5D) |    0x65 | Keypad 5              |
-| kp6       |    77 | (0x7, 0x5E) |    0x66 | Keypad 6              |
-| kp7       |    71 | (0x7, 0x5F) |    0x67 | Keypad 7              |
-| kp8       |    72 | (0x7, 0x60) |    0x68 | Keypad 8              |
-| kp9       |    73 | (0x7, 0x61) |    0x69 | Keypad 9              |
-| kp0       |    82 | (0x7, 0x62) |    0x60 | Keypad 0              |
-| kp/       |    98 | (0x7, 0x54) |    0x6F | Keypad /              |
-| kp*       |    55 | (0x7, 0x55) |    0x6A | Keypad *              |
-| kp-       |    74 | (0x7, 0x56) |    0x6D | Keypad -              |
-| kp+       |    78 | (0x7, 0x57) |    0x6B | Keypad +              |
-| kp.       |    83 | (0x7, 0x63) |    0x6E | Keypad .              |
-| kp=       |   117 | (0x7, 0x67) |       ~ | Keypad =              |
-| kprt      |    96 | (0x7, 0x58) |       ~ | Keypad Return/Enter   |
-| kpj       |    95 | ~           |       ~ | Keypad Japanese Comma |
-| kp+-      |   118 | ~           |       ~ | Keypad +/-            |
-| kp,       |   121 | (0x7, 0x85) |       ~ | Keypad ,              |
-| kp=2      |     ~ | (0x7, 0x86) |       ~ | Keypad = for AS/400   |
-| kp(       |   179 | ~           |       ~ | Keypad (              |
-| kp)       |   180 | ~           |       ~ | Keypad )              |
-
-*** Function keys
-
-fn set to `143` for linux, because that is what my thinkpad throws
-
-| core name | linux | mac         | windows | description |
-|-----------+-------+-------------+---------+-------------|
-| fn        |   143 | (0x7, 0x03) |       ~ | Fn          |
-| f1        |    59 | (0x7, 0x3A) |    0x70 | F1          |
-| f2        |    60 | (0x7, 0x3B) |    0x71 | F2          |
-| f3        |    61 | (0x7, 0x3C) |    0x72 | F3          |
-| f4        |    62 | (0x7, 0x3D) |    0x73 | F4          |
-| f5        |    63 | (0x7, 0x3E) |    0x74 | F5          |
-| f6        |    64 | (0x7, 0x3F) |    0x75 | F6          |
-| f7        |    65 | (0x7, 0x40) |    0x76 | F7          |
-| f8        |    66 | (0x7, 0x41) |    0x77 | F8          |
-| f9        |    67 | (0x7, 0x42) |    0x78 | F9          |
-| f10       |    68 | (0x7, 0x43) |    0x79 | F10         |
-| f11       |    87 | (0x7, 0x44) |    0x7A | F11         |
-| f12       |    88 | (0x7, 0x45) |    0x7B | F12         |
-| f13       |   183 | (0x7, 0x68) |    0x7C | F13         |
-| f14       |   184 | (0x7, 0x69) |    0x7D | F14         |
-| f15       |   185 | (0x7, 0x6A) |    0x7E | F15         |
-| f16       |   186 | (0x7, 0x6B) |    0x7F | F16         |
-| f17       |   187 | (0x7, 0x6C) |    0x80 | F17         |
-| f18       |   188 | (0x7, 0x6D) |    0x81 | F18         |
-| f19       |   189 | (0x7, 0x6E) |    0x82 | F19         |
-| f20       |   190 | (0x7, 0x6F) |    0x83 | F20         |
-| f21       |   191 | (0x7, 0x70) |    0x84 | F21         |
-| f22       |   192 | (0x7, 0x71) |    0x85 | F22         |
-| f23       |   193 | (0x7, 0x72) |    0x86 | F23         |
-| f24       |   194 | (0x7, 0x73) |    0x87 | F24         |
-
-*** Others-1
-
-| core name | linux | mac         | windows | description                   |
-|-----------+-------+-------------+---------+-------------------------------|
-| esc       |     1 | (0x7, 0x29) |    0x1B | Escape                        |
-| `         |    41 | (0x7, 0x35) |    0xC0 | ` or ~                        |
-| -         |    12 | (0x7, 0x2D) |    0xBD | - or _                        |
-| =         |    13 | (0x7, 0x2E) |    0xBB | = or +                        |
-| bspc      |    14 | (0x7, 0x2A) |    0x08 | Backspace                     |
-| tab       |    15 | (0x7, 0x2B) |    0x09 | Tab                           |
-| [         |    26 | (0x7, 0x2F) |    0xDB | [ or {                        |
-| ]         |    27 | (0x7, 0x30) |    0xDD | ] or }                        |
-| ret       |    28 | (0x7, 0x28) |    0x0D | Return/Enter                  |
-| \         |    43 | (0x7, 0x31) |    0xDC | \ or                          |
-| ;         |    39 | (0x7, 0x33) |    0xBA | ; or :                        |
-| '         |    40 | (0x7, 0x34) |    0xDE | ' or "                        |
-| ,         |    51 | (0x7, 0x36) |    0xBC | , or <                        |
-| .         |    52 | (0x7, 0x37) |    0xBE | . or >                        |
-| /         |    53 | (0x7, 0x38) |    0xBF | / or ?                        |
-| spc       |    57 | (0x7, 0x2C) |    0x20 | Spacebar                      |
-| 102d      |    86 | (0x7, 0x64) |    0xE2 | 102ND/Non-US \                |
-| cmps      |   127 | (0x7, 0x65) |    0x5D | Compose/Application           |
-| sys       |    99 | (0x7, 0x46) |    0x2C | SysRq/Print Screen            |
-| paus      |   119 | (0x7, 0x48) |    0x13 | Pause/Break                   |
-| ins       |   110 | (0x7, 0x49) |    0x2D | Insert                        |
-| del       |   111 | (0x7, 0x4C) |    0x2E | Delete                        |
-| home      |   102 | (0x7, 0x4A) |    0x24 | Home                          |
-| end       |   107 | (0x7, 0x4D) |    0x23 | End                           |
-| pgup      |   104 | (0x7, 0x4B) |    0x21 | Page Up                       |
-| pgdn      |   109 | (0x7, 0x4E) |    0x22 | Page Down                     |
-| up        |   103 | (0x7, 0x52) |    0x26 | Up                            |
-| left      |   105 | (0x7, 0x50) |    0x25 | Left                          |
-| down      |   108 | (0x7, 0x51) |    0x28 | Down                          |
-| rght      |   106 | (0x7, 0x4F) |    0x27 | Right                         |
-| dcs       |   235 | ~           |       ~ | Unknown, asking @joshskidmore |
-
-*** Multimedia controls
-All of these: I'm guessing
-| core name | linux | mac | windows | description                     |
-|-----------+-------+-----+---------+---------------------------------|
-| back      |   158 | ~   | ~       | back key for various devices    |
-| fwd       |   159 | ~   | ~       | forward key for various devices |
-
-*** Asian language keys
-
-| core name | linux | mac | windows | description     |
-|-----------+-------+-----+---------+-----------------|
-| zenk      |    85 | ~   | ~       | Zenkaku/Hankaku |
-| hang      |   122 | ~   | ~       | Hangeul         |
-
 ** Table of aliases
 
 ** Desired behavior
 
-** References
+* References
 [[https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h][Linux input-event-codes.h]]
 [[https://github.com/pqrs-org/Karabiner-Elements/blob/fdc9d542a6f17258655f595e4d51d1e26aa25d41/src/share/types/momentary_switch_event_details/key_code.hpp][Karabiner headers]]
 [[https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes][Windows virtual key codes]]
