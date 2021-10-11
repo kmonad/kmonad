@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Expanded documentation
 - Added `--version` (`-V`) flag
 - Added `+,` for  "add a cedilla"
+- Added `:timeout-button` keyword to `tap-hold-next` and
+  `tap-hold-next-release`, so that they can switch to a button other than the
+  hold button when the timeout expires.
 
 ### [Changed]
 - Reorganized codebase
