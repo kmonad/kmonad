@@ -2,6 +2,8 @@
 Let's try to make this table complete, so that for any keycode in any OS occurs
 in this table, this keycode occurs in this table.
 
+** Notation
+
 | element | explanation                                                    |
 |---------+----------------------------------------------------------------|
 | ~       | undefined for this os                                          |
@@ -9,6 +11,7 @@ in this table, this keycode occurs in this table.
 | AC:     | application control: buttons that send signals to applications |
 |---------+----------------------------------------------------------------|
 
+** Table
 | core name | linux | mac         | windows | description                     |
 |-----------+-------+-------------+---------+---------------------------------|
 | q         |    16 | (0x7, 0x14) | 0x51    | Q                               |
