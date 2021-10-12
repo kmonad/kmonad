@@ -255,6 +255,17 @@ to be the most comfortable.
   ```clojure
   (defalias thr (tap-hold-next-release 1000 a sft))
   ```
+  
++ `tap-hold-next` and `tap-hold-next-release` can take an optional 
+  `:timeout-button` keyword to specify a button other than the
+  hold button which should be held when the timeout expires.
+
+  ```clojure
+  (defalias
+    thn (tap-hold-next 200 a lsft :timeout-button x)
+    thr (tap-hold-next-release 200 a lsft :timeout-button x)
+  )
+  ```
 
 # Layers
 
