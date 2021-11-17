@@ -568,7 +568,7 @@
   beginnings of 'leader-key' style behavior. I think this whole button will get
   deleted soon, because the more general `around-next` now exists (see below)
   and this is nothing more than:
-    (around-next (layer-toggle layer-name) some-button)
+    (around-next (layer-toggle layer-name))
   Until then though, use `layer-next` like this:
     (layer-next layer-name)
 
