@@ -204,16 +204,28 @@ installed dext is compatibile with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
 this may work too (but has not been tested).
 
+##### Build and sign the dext yourself
+
 If you want to attempt building and signing the dext yourself, look to
 [the
 documentation](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
-for instructions. Otherwise, to install the dext as a signed binary,
-make sure to initialize the dext submodule (`git clone --recursive
-https://github.com/kmonad/kmonad.git`, e.g.), then open
-`c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.dmg`
-and install via the installer. Finally, execute:
+for instructions.
 
-``` console
+##### Install the already build and signed dext package
+
+To install the dext as a signed binary, initialize the dext git submodule,
+install the extension, and activate the extension.
+
+```console
+  $ git clone --recursive https://github.com/kmonad/kmonad.git
+```
+
+```console
+  $ cd kmonad/
+  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.pkg
+```
+
+```console
   $ /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
 
