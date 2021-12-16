@@ -6,7 +6,7 @@
 #
 # How to use this service:
 #
-# 1. Place this file in the `/etv/sv/kmonad' directory.  You will need
+# 1. Place this file in the `/etc/sv/kmonad' directory.  You will need
 #    to create this directory; this is most easily done with `xmksv'
 #    from the `xtools' package:
 #
