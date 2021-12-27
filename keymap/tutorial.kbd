@@ -34,7 +34,7 @@
   - block comments between: #| and its reverse
   - line comments following: ;;
 
-  Unlike standard lisp, a single ; does not denote a command, but instead the
+  Unlike standard lisp, a single ; does not denote a comment, but instead the
   keycode for semicolon.
 
   Also, as you might have noticed, whitespace is possible anywhere.
