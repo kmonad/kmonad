@@ -65,6 +65,7 @@ Want to add your own keyboard configuration to `./keymap`? Fork KMonad, create a
 ### Editor Support for the Configuration Language
 - [Emacs](https://github.com/kmonad/kbd-mode)
 - [Vim](https://github.com/kmonad/kmonad-vim)
+- [VSCode](https://github.com/canadaduane/vscode-kmonad)
 
 ### Startup
 There are startup scripts available for different init systems in
