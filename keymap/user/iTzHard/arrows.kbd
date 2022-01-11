@@ -1,0 +1,52 @@
+
+(defcfg
+  ;; Linux
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad output")
+
+  ;; Windows
+  ;; input  (low-level-hook)
+  ;; output (send-event-sink)
+
+  ;; MacOS
+  ;; input  (iokit-name "my-keyboard-product-string")
+  ;; output (kext)
+
+  fallthrough true
+)
+
+
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt          spc           ralt 
+)
+
+
+
+(defalias
+  nav  (tap-hold 180 f (layer-toggle navigation))
+)
+
+
+(deflayer qwerty
+  grv  1    2    3     4      5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e     r      t    y    u    i    o    p    [    ]    \
+  caps a    s    d    @nav    g    h    j    k    l    ;    '    ret
+  lsft z    x    c     v      b    n    m    ,    .    /    rsft
+  lctl lmet lalt             spc           ralt
+)
+
+
+(deflayer navigation
+  _    _    _    _    _    _    _    _     _    _     _    _    _    _
+  _    _    _    _    _    _    _    _     up   _     _    _    _    _
+  _    _    _    _    _    _    _    left down right  _    _    _    
+  _    _    _    _    _    _    _    _     _    _     _    _
+  _    _    _              _              _    
+)
+
+
