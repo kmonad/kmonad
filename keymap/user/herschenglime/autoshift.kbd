@@ -1,0 +1,89 @@
+(defcfg
+  ;; For Linux
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "My KMonad output")
+
+
+  ;; Comment this is you want unhandled events not to be emitted
+  fallthrough true
+
+  ;; Set this to false to disable any command-execution in KMonad
+  allow-cmd false
+)
+
+
+
+(defsrc
+  esc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rmet cmp  rctl
+)
+
+(defalias
+  a (tap-hold 145 a #(A XX))
+  b (tap-hold 145 b #(B XX))
+  c (tap-hold 145 c #(C XX))
+  d (tap-hold 145 d #(D XX))
+  e (tap-hold 145 e #(E XX))
+  f (tap-hold 145 f #(F XX))
+  g (tap-hold 145 g #(G XX))
+  h (tap-hold 145 h #(H XX))
+  i (tap-hold 145 i #(I XX))
+  j (tap-hold 145 j #(J XX))
+  k (tap-hold 145 k #(K XX))
+  l (tap-hold 145 l #(L XX))
+  m (tap-hold 145 m #(M XX))
+  n (tap-hold 145 n #(N XX))
+  o (tap-hold 145 o #(O XX))
+  p (tap-hold 145 p #(P XX))
+  q (tap-hold 145 q #(Q XX))
+  r (tap-hold 145 r #(R XX))
+  s (tap-hold 145 s #(S XX))
+  t (tap-hold 145 t #(T XX))
+  u (tap-hold 145 u #(U XX))
+  v (tap-hold 145 v #(V XX))
+  w (tap-hold 145 w #(W XX))
+  x (tap-hold 145 x #(X XX))
+  y (tap-hold 145 y #(Y XX))
+  z (tap-hold 145 z #(Z XX))
+  1 (tap-hold 145 1 #(! XX))
+  2 (tap-hold 145 2 #(@ XX))
+  3 (tap-hold 145 3 #(# XX))
+  4 (tap-hold 145 4 #($ XX))
+  5 (tap-hold 145 5 #(% XX))
+  6 (tap-hold 145 6 #(^ XX))
+  7 (tap-hold 145 7 #(& XX))
+  8 (tap-hold 145 8 #(* XX))
+  9 (tap-hold 145 9 #(\( XX))
+  0 (tap-hold 145 0 #(\) XX))
+  [ (tap-hold 145 [ #({ XX))
+  ] (tap-hold 145 ] #(} XX))
+
+  - (tap-hold 145 - #(\_ XX))
+  = (tap-hold 145 = #(+ XX))
+
+  \ (tap-hold 145 \ #(| XX))
+
+  ; (tap-hold 145 ; #(: XX))
+  ' (tap-hold 145 ' #(" XX))
+  , (tap-hold 145 , #(< XX))
+  . (tap-hold 145 . #(> XX))
+  / (tap-hold 145 / #(? XX))
+  grv (tap-hold 145 grv #(~ XX))
+
+)
+
+(deflayer autoshift
+  esc
+  @grv  @1    @2    @3    @4    @5    @6    @7    @8    @9    @0    @-    @=   bspc
+  tab   @q    @w    @e    @r    @t    @y    @u    @i    @o    @p    @[    @]    @\
+  bspc  @a    @s    @d    @f    @g    @h    @j    @k    @l    @;    @'    ret
+  lsft  @z    @x    @c    @v    @b    @n    @m    @,    @.    @/    rsft
+  lctl  lmet lalt           spc            ralt rmet cmp  rctl
+)
+
+
+
