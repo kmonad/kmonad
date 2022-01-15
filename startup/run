@@ -20,11 +20,16 @@
 # appropriate place (e.g. `~/.xinitrc'), as the service will execute
 # _before_ the X server is started.
 #
+# Note 2: xmksv can create by default a `down` file that disable
+# kmonad to startup with system, if that happens just delete this file;
+# see [2] for further details.
+#
 # The paths below should be absolute paths.  You can put environment
 # variables in a `conf' file that's in the same directory as this file
 # and refer to them here if you want; see [1] for further details.
 #
 # [1] https://docs.voidlinux.org/config/services/index.html#service-directories
+# [2] https://docs.voidlinux.org/config/services/index.html#enabling-services
 
 exec 1>&2
 exec /path/to/kmonad /path/to/config.kbd || exit 1
