@@ -288,15 +288,40 @@ Kmonad is available in the Arch User Repository (AUR) as
 
 ### GNU Guix
 
-You can install `kmonad` via the `guix` package manager. you will need to copy
+You can install `kmonad` via the `guix` package manager. You will need to copy
 the udev rules into place manually.
 
 ``` console
   $ guix install kmonad
-  # cp $(guix build kmonad)/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/
+  # cp <kmonad-path>/lib/udev/rules.d/70-kmonad.rules /lib/udev/rules.d/
 ```
 
-If you use the guix system to manage your entire machine, you will instead want
+According to Guix's package store mechanism, `<kmonad-path>` will include a hash
+that captures the exact KMonad version. By default, the path will follow the
+pattern `/gnu/store/<hash>-kmonad-<version>/`.
+
+Use the `guix build kmonad` command to identify the correct path. In case the
+command returns multiple paths, go for the shortest one.
+
+So, for instance, if `build` returns
+
+``` console
+  $ guix build kmonad
+  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1
+  /gnu/store/al0bmdxvl3a8s11vxn13y2nkq4hbg4c8-kmonad-0.4.1-static
+```
+
+`<kmonad-path>` will be
+`/gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1` and the copy
+operation will then be as follows
+
+``` console
+  # cp \
+  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1/lib/udev/rules.d/70-kmonad.rules \
+  /lib/udev/rules.d/
+```
+
+If you use the Guix System to manage your entire machine, you will instead want
 to install udev rules using something like this in your `config.scm`
 
 ``` scheme
@@ -313,6 +338,7 @@ to install udev rules using something like this in your `config.scm`
 ```
 
 ### Void Linux
+
 You can install `kmonad` via `xbps-install`:
 
 ``` console
