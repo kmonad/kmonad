@@ -1,5 +1,169 @@
-#|
+;; INTRO to kmonad lisp and config
+;; WARNING: Don't use anyone's config without any understanding of kmonad or 
+;; it's configuration. Don't even use mine but use it to understand how it
+;;works.
+;; Add kmonad as a service to use it conveniently(much later)
+;; All functions are enclosed between parenthesis in lisp(this config).
+;; You can easily get used to this syntax
+;; one liner comments ';;'
+#| Multiline
+    comments |#
 
+(defcfg                            ;; For linux & by-id lists pluggable devices
+;; If a key is not bound/left_empty(_) then it will fall back  to the previous
+;; layer's binding if not then default.
+fallthrough true  
+;; To run system commands. You MIGHT face issues with tiling window managers due to command helpers.
+allow-cmd true    
+;; use 'ls /dev/input/by-id/' for detachable keyboards and
+;; 'ls /dev/input/by-path/' for builtin keyboards location'
+input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+;; Not sure what this does. Please check the docs.
+output (uinput-sink "My KMonad output")
+)
+
+;; This is the real representation of your actual keyboard. We haven't started
+;; customizing layouts yet.
+(defsrc
+  esc   f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  prnt  ins  del
+  `     1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab   q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps  a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft  z    x    c    v    b    n    m    ,    .    /    rsft up
+  lctl  lmet lalt           spc            ralt rctl left down right
+)
+
+;; This section defines all your aliases
+;; An alias is a custom function that you can map to a key
+;; The fucntions/actions will get triggered if the key with alias is hit
+(defalias
+;; I don't use all of the aliases I made
+;; This toggles a custom layer called altsft(Alt+shift pressed together)
+asf  (layer-toggle altsft)
+;; spm mapped to a key acts as spc when tapped and lmet when held but with a
+;; timeout
+spm  (tap-hold-next-release 153 spc (tap-next spc lmet))
+;; you can make stick keys like this(700ms timeout)
+mod  (sticky-key 700 lmet)
+;; layer full of symbols
+sym  (layer-toggle syms)
+;; layer with 'hjkl' as arrow keys
+vi   (layer-toggle vim)
+;; This might seem dumb to you but I use it to for Shift+backspace act as
+;; ctrl+backspace
+lsf  (layer-toggle lshift)
+;; f when pressed and lsft when held
+fs   (tap-hold-next-release 145 f (tap-next f lsft))
+qm   (tap-hold-next-release 153 q (layer-toggle modkey))
+num  (tap-hold-next-release 153 , (tap-next , (layer-toggle nums)))
+cp   (tap-hold-next-release 153 . (layer-toggle control))
+lct   (layer-toggle control)
+
+;; button to launch brave browser
+veeb  (cmd-button "brave")
+;; ssf  (sticky-key 500 (layer-toggle rshift))
+rsf (layer-toggle rshift)
+)
+
+;; The first custom layer is the one that gets activated when kmonad is started
+(deflayer qwerty                             ;; The default layer that'd be read when you launch kmonad
+  lmet      f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    prnt    ins    del
+  `         1        2       \(      \)      lmet   6       7        8        bspc    lmet   M-S-o    =      prnt
+  @vi       q        w       e       r       t      brup    y        u        i       o      p        '      \
+  @lsf      a        s       d       f       g      brdn    h        j        k       l      @rsf     S-ret
+  @lct      z        x       c       v       b      b       n        m        @num    @cp    ralt     up
+  C-sft     lalt     lmet                    spc            @sym     C-sft    left    down   right
+)
+
+;; The reason for this layer is that Shift+backspace not acts like
+;; Ctrl+backspace
+(deflayer lshift
+  esc       f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    S-prnt  ins    del
+  ~         !        ?       {       }       %      ^       &        *        C-bspc  \)     \_       +      S-prnt
+  S-tab     Q        W       E       R       T      _       Y        U        I       O      P        "      |
+  @lsf      A        S       D       F       G      _       H        J        K       L      rsft     S-ret
+  @lct      Z        X       C       V       B      B       N        M        <       >      ralt     _
+  C-sft     M-sft    lmet                    S-spc                   @asf     C-sft   _      _        _
+)
+
+;; Purpose of this layer is that the right shift key makes my parenthesis keys
+;; act like curly braces now
+;; In this layer I had to escape parenthesis keys because they are also used
+;; to enclose functions in lisp
+(deflayer rshift
+  esc       f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    S-prnt  ins    del
+  ~         !        ?       {       }       %      ^       &        *        C-bspc  \)     \_       +      S-prnt
+  S-tab     Q        W       E       R       T      _       Y        U        I       O      P        "      |
+  @lsf      A        S       D       F       G      _       H        J        K       L      rsft     S-ret
+  @lct      Z        X       C       V       B      B       N        M        <       >      ralt     _
+  C-sft     M-sft    lmet                    @mod                    @asf     C-sft   _      _        _
+)
+
+;; This layer makes parenthesis keys act like brightness control keys
+(deflayer control
+  esc       f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    prnt    ins    del
+  `         1        2       C--     C-+     5      6       7        8        bspc    0      -        =      C-prnt
+  C-tab     C-q      C-w     C-e     C-r     C-t    _       C-y      C-u      C-i     C-o    C-p      C-'    C-\
+  lctl      C-a      C-s     C-d     C-f     C-g    _       C-h      C-j      C-k     C-l    C-;      C-ret
+  lalt      C-z      C-x     C-c     C-v     C-b    C-b     C-n      C-m      C-,     C-.    ralt     _
+  C-sft     M-sft    A-sft                   C-spc          @sym     C-sft    _       _      _
+)
+
+;; Because I have buttons dedicated to alt+sft pressed down in a single key
+;; press
+(deflayer altsft
+  esc       f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    prnt    ins    del
+  `         1        2       3       4       5      6       7        8        bspc    0      -        =      bspc
+  A-S-tab   A-S-q    A-S-w   A-S-e   A-S-r   A-S-t  _       A-S-y    A-S-u    A-S-i   A-S-o  A-S-p    A-S-'  A-S-\
+  lctl      A-S-a    A-S-s   A-S-d   A-S-f   A-S-g  _       A-S-h    A-S-j    A-S-k   A-S-l  rsft     A-S-ret
+  lalt      A-S-z    A-S-x   A-S-c   A-S-v   A-S-b  A-S-b   A-S-n    A-S-m    A-S-,   A-S-.  ralt     _
+  C-sft     M-sft    A-sft                   A-S-ret                   @asf     C-sft   _      _        _
+)
+
+;; A layer dedicated to numbers
+(deflayer nums
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _       _      _
+  _         _        _       [       ]       _      _       _        _        bspc    _      _         _     _
+  _         3        4       7       8       _      _       _        _        _       _      _         _     _
+  _         1        2       5       6       _      _       _        _        _       _      _         _
+  _         _        _       9       0       _      _       _        _        _       _      _         _
+  _         _        _                       spc                     _        _       _      _         _
+)
+
+;; A layer dedicated to symbols
+(deflayer syms
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _       _      _
+  _         _        _       [       ]       _      _       _        _        |       _      _         _     _
+  _         !        +       \_      &       #      _       _        @        `       \      ~         _     _
+  f11       ^        -       esc     tab     =      _       ?        :        /       $      @asf      _
+  _         _        _       ;       *       _      _       _        %        _       _      _         _
+  _         _        _                       ret                     _        _       _      _         _
+)
+
+;; A layer for arrow keys
+(deflayer vim
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _       _      _
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _
+  _         _        _       _       _       _      _       left     down     up      right  _         _
+  _         _        _       _       _       _      _       _        _        _       _      _         _
+  _         _        _                       _                       _        _       _      _         _
+)
+
+;; I don't use this layer. I used to map it to `q` key so that holding it down
+;; would be `lmet` and pressing would be `q`. For tiling window managers.
+(deflayer modkey
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _       _      _
+  _         _        _       _       _       _      _       _        _        M-bspc  _      _         _     _
+  _         _        _       _       _       _      _       _        _        _       _      _         _     _
+  _         _        _       _       _       _      _       M-h      M-j      M-k     M-l    _         _
+  _         _        _       _       _       _      _       _        M-m      _       _      _         _
+  _         _        _                       _                       _        _       _      _         _
+)
+
+
+
+#|_________________________________________________________________________________
 (deflayer template
   _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
@@ -8,59 +172,22 @@
   _    _    _    _    _    _    _    _    _    _    _    _
   _    _    _              _              _    _
 )
-Always make sure the number of underscores is the same as the number of keys in every layer and in defsrc. 
-No need to create layers for function/multimedia keys as they're mapped by firmware.
-|#
-
-(defcfg ;; For linux & by-path lists unpluggable devices
-  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
-  output (uinput-sink "KMonad output")
-  fallthrough true ;; If set to false you won't be able to access keys that you haven't made a binding for
-  allow-cmd true ;; If you wish to run system commands on a key/combo press then enable this
-)
-
-(defsrc ;; This is not the layer that gets activated when kmonad is launched
-  esc   f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  prnt  ins  del
-  `     1    2    3    4    5    6    7    8    9    0    -    =    bspc
-  tab   q    w    e    r    t    y    u    i    o    p    [    ]    \
-  caps  a    s    d    f    g    h    j    k    l    ;    '    ret
-  lsft  z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl  lmet lalt           spc            ralt rctl
-)
-
-(defalias
-num  (tap-hold 200 spc (layer-toggle nums)) ;; Tap on space for space and hold for nums/syms layer
-ec  (tap-hold 200 esc ctl)                  ;; Tap on escape for escape and hold for left ctrl
-vi  (layer-toggle vim)                      ;; enables the number layer 
-fll (around f lalt)
-prv C-S-tab
-nxt C-tab
-tog f11
-)
 
 (deflayer qwerty                            ;; The default layer that'd be read when you launch kmonad
   caps f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  prnt  ins  del
-  `    @tog @prv @nxt @vi  5    6    7    8    9    0    bspc =    end
+  `    1    2    3    4    5    6    7    8    bspc @tog bspc =    end
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   @ec  a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl lalt lmet           @num            rmet rctl
+  lctl lalt lmet           spc            rmet rctl
 )
 
-(deflayer nums
-  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _
-  _    _    _    _    _    _    _    _    _    _    _    _    _    _
-  _    !    @    #    $    \_   =    %    ^    &    *    _    _    _
-  _    1    2    3    4    9    0    5    6    7    8    _    _     
-  _    _    _    -    \(   _    \)   +    _    _    _    _
-  _    _    _              _              _    _
+(deflayer control
+  esc       f1       f2      f3      f4      f5     f6      f7       f8       f9      f10    f11      f12    prnt    ins    del
+  `         1        2       C--     C-+     5      6       7        8        bspc    0      -        =      bspc
+  C-tab     C-q      C-w     C-e     C-r     C-t    _       C-y      C-u      C-i     C-o    C-p      C-'    C-\
+  lctl      C-a      C-s     C-d     C-f     C-g    _       C-h      C-j      C-k     C-l    C-;      C-ret
+  lalt      C-z      C-x     C-c     C-v     C-b    C-b     C-n      C-m      C-,     C-.    ralt     _
+  C-sft     M-sft    A-sft                   C-spc          @sym     C-sft    _       _      _
 )
-
-(deflayer vim
-  _    _    _    _    _    _    _    _    _    _     _    _    _   _     _    _
-  _    _    _    _    _    _    _    _    _    _     _    _    _   _
-  _    _    _    _    _    _    _    _    _    _     _    _    _   _
-  _    _    _    _    _    _    left down up   right _    _    _
-  _    _    _    _    _    _    _    _    _    _     _    _
-  _    _    _              _              _    _
-)
+|#
