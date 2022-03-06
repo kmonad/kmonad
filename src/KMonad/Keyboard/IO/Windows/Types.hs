@@ -162,9 +162,9 @@ winCodeToKeyCode = M.fromList $
   , (0x27, KeyRight)
   , (0x28, KeyDown)
   -- , (0x29, ???)            -- Defined as VK_SELECT
-  , (0x2A, KeyPrint)
+  -- , (0x2A, ???)            -- Defined as VK_PRINT (legacy PrintScreen)
   -- , (0x2B, ???)            -- Defined as VK_EXECUTE
-  , (0x2C, KeyPrint)          -- Defined as VK_PRINT_SCREEN
+  , (0x2C, KeyPrint)          -- Defined as VK_PRINT_SCREEN / VK_SNAPSHOT
   , (0x2D, KeyInsert)
   , (0x2E, KeyDelete)
   , (0x2F, KeyHelp)
@@ -534,7 +534,7 @@ keyCodeToWinCode = M.fromList $
   , (KeyPlay, 0xFA)
   --, (KeyFastForward, ???)
   --, (KeyBassBoost, ???)
-  , (KeyPrint, 0x2A)
+  , (KeyPrint, 0x2C)
   -- , (KeyHp, ???)
   -- , (KeyCamera, ???)
   -- , (KeySound, ???)
@@ -580,5 +580,4 @@ keyCodeToWinCode = M.fromList $
   -- , (Missing253, ???)
   -- , (Missing254, ???)
   -- , (Missing255, ???)
-  ]
-  
+  ]  
