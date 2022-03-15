@@ -229,6 +229,9 @@ install the extension, and activate the extension.
   $ /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
 
+Note: If activation failed (e.g. because a newer version is already installed), replace `activate` in the above command with `forceActivate` and try again.
+
+
 #### Installing kmonad
 
 Compilation under Mac currently works with `stack`. Compilation under
