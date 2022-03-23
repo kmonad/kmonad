@@ -1,0 +1,89 @@
+
+(defcfg
+  ;; Linux
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad output")
+
+  ;; Windows
+  ;; input  (low-level-hook)
+  ;; output (send-event-sink)
+
+  ;; MacOS
+  ;; input  (iokit-name "my-keyboard-product-string")
+  ;; output (kext)
+
+  fallthrough true
+)
+
+
+;;(defsrc
+;;  ZenkakuHankaku  1    2    3    4    5    6    7    8    9    0    -    =  Yen   bspc
+;;  tab  q    w    e    r    t    y    u    i    o    p    [    ]   
+;;  caps a    s    d    f    g    h    j    k    l    ;    '    \   ret
+;;  lsft z    x    c    v    b    n    m    ,    .    /    Kpjpcomma   rsft
+;;  lctl lmet lalt      Muhenkan    spc      Henkan   KatakanaHiragana     ralt 
+;;)
+
+
+
+(defsrc
+  ZenkakuHankaku  1    2    3    4    5    6    7    8    9    0    -    =  Yen   bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]   
+  caps a    s    d    f    g    h    j    k    l    ;    '    \   ret
+  lsft z    x    c    v    b    n    m    ,    .    /    Ro   rsft
+  lctl lmet lalt      Muhenkan    spc      Henkan   KatakanaHiragana     ralt 
+)
+
+
+
+(defalias
+  fnav  (tap-hold 180 f (layer-toggle navigation))
+  vnum  (tap-hold 180 v (layer-toggle numpad))
+  snav  (tap-hold 180 spc (layer-toggle navigation))
+  snum  (tap-hold 180 spc (layer-toggle numpad))
+  asft  (tap-hold 180 a lsft)
+  sctl  (tap-hold 180 spc lctl)
+  splt  (layer-switch split)
+  qwert  (layer-switch qwerty)
+)
+
+
+(deflayer qwerty
+  grv  1    2    3     4      5    6    7    8    9    0    -    =   bspc   bspc
+  tab  q    w    e     r      t    y    u    i    o    p    [    ]    
+  @splt @asft s    d    @fnav    g    h    j    k    l    ;   '   ret   ret
+  lsft z    x    c    @vnum    b    n    m    ,    .    /   rsft rsft
+  lctl lmet lalt      @snum       @sctl     @snav   @snum      ralt
+)
+
+(deflayer split
+  grv  1    2    3     4      5    6    7    8    9    0    -    =   bspc   bspc
+  tab  q     w    e     r      t  1   y    u    i    o    p   [       
+  @qwert @asft s    d    @fnav   g  1   h    j    k    l    ;   '   ret
+  lsft z     x    c    @vnum   b  1   n    m    ,    .    /    rsft
+  lctl lmet lalt      @snum       @sctl     @snav   @snum      ralt
+)
+
+(deflayer navigation
+  _    _    _    _    _    _    _    _     _    _     _    _    _    _    _
+  _    _    _    _    _    _    _    home  up  pgup   _    _    _    
+  _    _    _    _    _    _    _    left down right  _    _  5  _   
+  _    _    _    _    _    _    _    end  down pgdn   _    _    _
+  _    _    _         1     _     2    3     _    
+)
+(deflayer numpad
+  _    _    _    _    _    _    _    _     _    _     _    _    _    _    _
+  _    _    _    _    _    _    _    7    8     9     0    _    _    
+  _  lsft lctl lalt   _    _    _    4    5     6     _    _  5  _     
+  _    _    _    _    _    _    0    1    2     3     _    _    _
+  _    _    _       3       _        4  5    _    
+)
+
+(deflayer splittttt
+  grv  1    2    3     4      5    6    7    8    9    0    -    =   bspc   bspc
+  tab  q    w    e     r      t  0  y    u    i    o    p    [        
+  caps @asft s    d    @fnav    g  0  h    j    k    l    ;   '   ret   
+  lsft z    x    c    @vnum    b  0  n    m    ,    .    /    rsft
+  lctl lmet lalt      @snum       @sctl     @snav   @snum      ralt
+)
+
