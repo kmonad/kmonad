@@ -58,9 +58,13 @@ For more information on how to install KMonad, please refer to:
 
 For information on how to configure KMonad, please refer you to:
 - [the configuration tutorial](keymap/tutorial.kbd)
-- [user configurations](keymap/user)
+- [user configurations](https://github.com/kmonad/kmonad-contrib)
 
-Want to add your own keyboard configuration to `./keymap`? Fork KMonad, create a new subdirectory using your GitHub username and submit a pull request.
+Want to add your own keyboard configuration to [kmonad-contrib]? Just
+fork the repository, create a new subdirectory using your GitHub
+username and submit a pull request!
+
+[kmonad-contrib]: https://github.com/kmonad/kmonad-contrib
 
 ### Editor Support for the Configuration Language
 - [Emacs](https://github.com/kmonad/kbd-mode)
