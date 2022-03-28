@@ -71,14 +71,23 @@ instance Default UinputCfg where
 -- $cfgs-mac
 
 -- | Holds the product string of keyboard if given. Else, Nothing.
-newtype IOKitCfg = IOKitCfg
-  { _productStr :: Maybe Text
+data IOKitCfg = IOKitCfg
+  -- Prepend `cfg` to distinguish from `DeviceProperties`'s fields.
+  { _cfgManufacturer :: Text
+  , _cfgProductName  :: Text
+  , _cfgSerialNumber :: Text
+  , _cfgTransport    :: Text
+  , _cfgCountryCode   :: Word64
+  , _cfgLocationID    :: Word64
+  , _cfgProductID     :: Word64
+  , _cfgVendorID      :: Word64
+  , _cfgVersionNumber :: Word64
   } deriving Show
 makeClassy ''IOKitCfg
 
 -- | By default, no product string (will grab all keyboards).
 instance Default IOKitCfg where
-  def = IOKitCfg Nothing
+  def = IOKitCfg "" "" "" "" 0 0 0 0 0
 
 -- | No config options for Kext/Dext
 data ExtCfg = ExtCfg deriving Show
@@ -107,7 +116,7 @@ instance HasKeyRepeatCfg SendEventCfg where keyRepeatCfg = seRepCfg
 
 data KeyInputCfg
   = LinuxEvdevCfg          EvdevCfg
-  | MacIOKitCfg            IOKitCfg
+  | MacIOKitCfg            (Maybe IOKitCfg)
   | WindowsLowLevelHookCfg LowLevelHookCfg
   deriving Show
 
