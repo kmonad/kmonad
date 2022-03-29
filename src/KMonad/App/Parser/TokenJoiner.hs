@@ -74,7 +74,7 @@ instance Show JoinError where
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
-    NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
+    NestedTrans           -> "Encountered 'Transparent' outside of top-level layer"
     InvalidComposeKey     -> "Encountered invalid button as Compose key"
     LengthMismatch t l s  -> mconcat
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
@@ -230,7 +230,7 @@ getAllow = do
 
 pickInput :: IToken -> J KeyInputCfg
 pickInput (KDeviceSource f)     = pure $ LinuxEvdevCfg          $ EvdevCfg $ f
-pickInput (KIOKitSource n)      = pure $ MacIOKitCfg            $ IOKitCfg $ n
+pickInput (KIOKitSource dp)     = pure $ MacIOKitCfg            $ dp
 pickInput (KLowLevelHookSource) = pure $ WindowsLowLevelHookCfg $ LowLevelHookCfg
 
 pickOutput :: OToken -> J KeyOutputCfg
@@ -239,12 +239,12 @@ pickOutput (KUinputSink t init repcfg) = pure $ LinuxUinputCfg
         , _postInit     = unpack <$> init
         , _mayRepeatCfg = repcfg
         }
+pickOutput KExtSink       = pure $ MacExtCfg           $ ExtCfg
 -- FIXME: The following is ugly syntax
 pickOutput (KSendEventSink delay interval) = let
   d'  = maybe def (\dl -> def { _delay    = fi dl }) delay
   d'' = maybe d'  (\iv -> d'  { _interval = fi iv }) interval
   in pure $ WindowsSendEventCfg  $ SendEventCfg d''
-pickOutput KExtSink       = pure $ MacExtCfg           $ ExtCfg
 
 --------------------------------------------------------------------------------
 -- $als

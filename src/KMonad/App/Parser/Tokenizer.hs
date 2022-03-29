@@ -333,7 +333,9 @@ itokens :: [(Text, Parser IToken)]
 itokens =
   [ ("device-file"   , KDeviceSource <$> (T.unpack <$> textP))
   , ("low-level-hook", pure KLowLevelHookSource)
-  , ("iokit-name"    , KIOKitSource <$> optional textP)]
+  , ("iokit-name"    , KIOKitSource <$> optional (textP >>= mkCfg))]
+  where
+    mkCfg n = pure $ def {_cfgProductName = n}
 
 -- | Parse an output token
 otokenP :: Parser OToken

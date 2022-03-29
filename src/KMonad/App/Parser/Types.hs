@@ -162,7 +162,7 @@ data DefLayer = DefLayer
 data IToken
   = KDeviceSource FilePath
   | KLowLevelHookSource
-  | KIOKitSource (Maybe Text)
+  | KIOKitSource (Maybe IOKitCfg)
   deriving Show
 
 -- | All different output-tokens KMonad can take

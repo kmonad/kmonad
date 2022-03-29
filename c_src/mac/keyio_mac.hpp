@@ -1,11 +1,14 @@
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDShared.h>
+#include <stdlib.h> // malloc, free
 #include <unistd.h>
 #include <errno.h>
 #include <thread>
 #include <map>
 #include <iostream>
 #include <mach/mach_error.h>
+
+#include "device_properties.h"
 
 int init_sink(void);
 int exit_sink(void);
@@ -30,7 +33,6 @@ static std::thread thread;
 static CFRunLoopRef listener_loop;
 static std::map<io_service_t,IOHIDDeviceRef> source_device;
 static int fd[2];
-static char *prod = nullptr;
 
 void print_iokit_error(const char *fname, int freturn = 0) {
     std::cerr << fname << " error";
@@ -40,6 +42,14 @@ void print_iokit_error(const char *fname, int freturn = 0) {
         std::cerr << mach_error_string(freturn);
     }
     std::cerr << std::endl;
+}
+
+/* Make a CFString out of a C string */
+CFStringRef make_cfstring(const char *str)
+{
+    return CStringCreateWithCString(kCFAllocatorDefault,
+                                    str,
+                                    kCFStringEncodingUTF8);
 }
 
 /*
@@ -58,48 +68,57 @@ void input_callback(void *context, IOReturn result, void *sender, IOHIDValueRef 
     write(fd[1], &e, sizeof(struct KeyEvent));
 }
 
-void open_matching_devices(char *product, io_iterator_t iter) {
+void open_matching_devices(struct device_properties *identifiers, io_iterator_t iter) {
     io_name_t name;
     kern_return_t kr;
-    CFStringRef cfproduct = NULL;
-    if(product) {
-        cfproduct = CFStringCreateWithCString(kCFAllocatorDefault, product, CFStringGetSystemEncoding());
-        if(cfproduct == NULL) {
-            print_iokit_error("CFStringCreateWithCString");
+
+    CFStringRef cfkarabiner = make_cfstring("Karabiner VirtualHIDKeyboard");
+    if (cfkarabiner == NULL) {
+        print_iokit_error("CFStringCreateWithCString");
+        return;
+    }
+
+    if (identifiers != NULL) {
+        struct device_properties *current_device_properties = malloc(sizeof *current_device_properties);
+        if (current_device_properties == NULL) {
+            print_iokit_error("malloc error: device properties");
             return;
         }
     }
-    CFStringRef cfkarabiner = CFStringCreateWithCString(kCFAllocatorDefault, "Karabiner VirtualHIDKeyboard", CFStringGetSystemEncoding());
-    if(cfkarabiner == NULL) {
-        print_iokit_error("CFStringCreateWithCString");
-        if(product) {
-            CFRelease(cfproduct);
-        }
-        return;
-    }
+
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
         CFStringRef cfcurr = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
-        if(cfcurr == NULL) {
+        if (cfcurr == NULL) {
             print_iokit_error("IORegistryEntryCreateCFProperty");
             continue;
         }
-        bool match = (CFStringCompare(cfcurr, cfkarabiner, 0) != kCFCompareEqualTo);
-        if(product) {
-            match = match && (CFStringCompare(cfcurr, cfproduct, 0) == kCFCompareEqualTo);
+
+        if (CFStringCompare(cfcurr, cfkarabiner, 0) == kCFCompareEqualTo) {
+            CFRelease(cfcurr);
+            continue;
         }
         CFRelease(cfcurr);
-        if(!match) continue;
+
+        bool match = true;
+        if (identifiers != NULL) {
+            get_device_properties(curr, current_device_properties);
+            match = compare_device_properties(identifiers, current_device_properties);
+        }
+
+        if (!match) continue;
+
         IOHIDDeviceRef dev = IOHIDDeviceCreate(kCFAllocatorDefault, curr);
         source_device[curr] = dev;
         IOHIDDeviceRegisterInputValueCallback(dev, input_callback, NULL);
         kr = IOHIDDeviceOpen(dev, kIOHIDOptionsTypeSeizeDevice);
-        if(kr != kIOReturnSuccess) {
+        if (kr != kIOReturnSuccess) {
             print_iokit_error("IOHIDDeviceOpen", kr);
         }
         IOHIDDeviceScheduleWithRunLoop(dev, listener_loop, kCFRunLoopDefaultMode);
     }
-    if(product) {
-        CFRelease(cfproduct);
+
+    if (identifiers != NULL) {
+        free(identifiers);
     }
     CFRelease(cfkarabiner);
 }
@@ -110,8 +129,8 @@ void open_matching_devices(char *product, io_iterator_t iter) {
  *
  */
 void matched_callback(void *context, io_iterator_t iter) {
-    char *product = (char *)context;
-    open_matching_devices(product, iter);
+    struct device_properties *identifiers = (struct device_properties *)context;
+    open_matching_devices(identifiers, iter);
 }
 
 /*
@@ -138,7 +157,7 @@ extern "C" int wait_key(struct KeyEvent *e) {
  * new input from the user is available from that keyboard. Then
  * sleeps indefinitely, ready to received asynchronous callbacks.
  */
-void monitor_kb(char *product) {
+void monitor_kb(struct device_properties *identifiers) {
     kern_return_t kr;
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     if(!matching_dictionary) {
@@ -165,7 +184,7 @@ void monitor_kb(char *product) {
         return;
     }
     listener_loop = CFRunLoopGetCurrent();
-    open_matching_devices(product, iter);
+    open_matching_devices(identifiers, iter);
     IONotificationPortRef notification_port = IONotificationPortCreate(kIOMasterPortDefault);
     CFRunLoopSourceRef notification_source = IONotificationPortGetRunLoopSource(notification_port);
     CFRunLoopAddSource(listener_loop, notification_source, kCFRunLoopDefaultMode);
@@ -174,7 +193,7 @@ void monitor_kb(char *product) {
                                           kIOMatchedNotification,
                                           matching_dictionary,
                                           matched_callback,
-                                          product,
+                                          identifiers,
                                           &iter);
     if(kr != KERN_SUCCESS) {
         print_iokit_error("IOServiceAddMatchingNotification", kr);
@@ -211,17 +230,13 @@ void monitor_kb(char *product) {
  * Loads a the karabiner kernel extension that will send key events
  * back to the OS.
  */
-extern "C" int grab_kb(char *product) {
+extern "C" int grab_kb(struct device_properties *identifiers) {
     // Source
     if (pipe(fd) == -1) {
         std::cerr << "pipe error: " << errno << std::endl;
         return errno;
     }
-    if(product) {
-        prod = (char *)malloc(strlen(product) + 1);
-        strcpy(prod, product);
-    }
-    thread = std::thread{monitor_kb, prod};
+    thread = std::thread{monitor_kb, identifiers};
     // Sink
     return init_sink();
 }
@@ -239,9 +254,6 @@ extern "C" int release_kb() {
         thread.join();
     } else {
         std::cerr << "No thread was running!" << std::endl;
-    }
-    if(prod) {
-        free(prod);
     }
     if (close(fd[0]) == -1) {
         std::cerr << "close error: " << errno << std::endl;
