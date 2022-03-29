@@ -99,9 +99,9 @@ manualAliases =
   , ("paus", ["pause", "KeyPause"])
   , ("cmps", ["compose", "cmp", "nUS\\", "KeyCompose"])
   , ("102d", ["102nd", "102", "lsgt", "nubs", "app", "Key102nd"])
-  , ("docs",  ["documents", "dcs", "KeyDocuments"])
-  , ("zenk", ["zenkaku", "KeyZenkakuHankaku", "zenkakuhankaku", "hank"])
-  , ("hang", ["hangeul", "hanguel", "KeyHangeul", "KeyHanguel"])
+--  , ("docs",  ["documents", "dcs", "KeyDocuments"])
+--  , ("zenk", ["zenkaku", "KeyZenkakuHankaku", "zenkakuhankaku", "hank"])
+--  , ("hang", ["hangeul", "hanguel", "KeyHangeul", "KeyHanguel"])
   ]
 
 -- | F11 and KeyF11 for f11 etc.
