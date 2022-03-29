@@ -9,6 +9,7 @@ module KMonad.App.KeyIO.Mac.IOKitSource
 where
 
 import KMonad.Prelude
+import qualified Debug.Trace as D (trace)
 
 import Foreign.C.String
 import Foreign.Ptr
@@ -128,7 +129,11 @@ withIOKitSource maybeCfg = mkCtx $ \f -> do
           Nothing -> do
             liftIO $ grabKb nullPtr
           (Just cfg) -> do
-            liftIO $ deviceProperties cfg >>= grabKb
+            liftIO $ do
+              dp <- deviceProperties cfg
+              str <- print dp
+              let t f dp = (D.trace ("DeviceProperites: \n" <> str) f dp)
+              t grabKb dp
 
         logInfo "Opening HID device(s)"
         liftIO . mallocBytes $ sizeOf (undefined :: RawEvent)
@@ -145,3 +150,21 @@ withIOKitSource maybeCfg = mkCtx $ \f -> do
                            (Keycode $ re^.reCode)
 
   bracket init cleanup $ \ptr -> f (nextEvent ptr)
+
+  where
+    print dp = do
+      dp <- peek dp
+      let get x dp = peekCString (x dp)
+      m <- get _manufacturer  dp
+      p <- get _productName   dp
+      s <- get _serialNumber  dp
+      t <- get _transport     dp
+      return $ "manu: " <> m <> " :: " <> show (length m) <> "\n" <>
+               "name: " <> p <> " :: " <> show (length p) <> "\n" <>
+               "seri: " <> s <> " :: " <> show (length s) <> "\n" <>
+               "tran: " <> t <> " :: " <> show (length t) <> "\n" <>
+               "coun: " <> show (_countryCode   dp) <> "\n" <>
+               "loca: " <> show (_locationID    dp) <> "\n" <>
+               "prid: " <> show (_productID     dp) <> "\n" <>
+               "vend: " <> show (_vendorID      dp) <> "\n" <>
+               "vrsn: " <> show (_versionNumber dp) <> "\n"
