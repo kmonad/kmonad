@@ -1,6 +1,5 @@
-#include "keyio_mac.hpp"
-
 #include "karabiner_virtual_hid_device_methods.hpp"
+#include "common.hpp"
 
 /*
  * Resources needed to post altered key events back to the OS. They

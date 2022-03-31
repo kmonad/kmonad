@@ -1,7 +1,6 @@
-#include "keyio_mac.hpp"
-
 #include "virtual_hid_device_driver.hpp"
 #include "virtual_hid_device_service.hpp"
+#include "common.hpp"
 
 /*
  * Resources needed to post altered key events back to the OS. They
@@ -19,39 +18,41 @@ int init_sink() {
     std::filesystem::path client_socket_file_path("/tmp/karabiner_driverkit_virtual_hid_device_service_client.sock");
     client = new pqrs::karabiner::driverkit::virtual_hid_device_service::client(client_socket_file_path);
     auto copy = client;
+
     client->async_driver_loaded();
     client->async_driver_version_matched();
     client->async_virtual_hid_keyboard_ready();
     client->async_virtual_hid_pointing_ready();
+
     /**/
     client->connected.connect([copy] {
-                                  std::cout << "connected" << std::endl;
-                                  copy->async_virtual_hid_keyboard_initialize(pqrs::hid::country_code::us);
-                              });
+        std::cout << "connected" << std::endl;
+        copy->async_virtual_hid_keyboard_initialize(pqrs::hid::country_code::us);
+    });
     client->connect_failed.connect([](auto&& error_code) {
-                                       std::cout << "connect_failed " << error_code << std::endl;
-                                   });
+        std::cout << "connect_failed " << error_code << std::endl;
+    });
     client->closed.connect([] {
-                               std::cout << "closed" << std::endl;
-                           });
+        std::cout << "closed" << std::endl;
+    });
     client->error_occurred.connect([](auto&& error_code) {
-                                       std::cout << "error_occurred " << error_code << std::endl;
-                                   });
+        std::cout << "error_occurred " << error_code << std::endl;
+    });
     client->driver_loaded_response.connect([](auto&& driver_loaded) {
-                                               static std::optional<bool> previous_value;
+        static std::optional<bool> previous_value;
 
-                                               if (previous_value != driver_loaded) {
-                                                   std::cout << "driver_loaded " << driver_loaded << std::endl;
-                                                   previous_value = driver_loaded;
-                                               }
-                                           });
+        if (previous_value != driver_loaded) {
+          std::cout << "driver_loaded " << driver_loaded << std::endl;
+          previous_value = driver_loaded;
+        }
+    });
     client->driver_version_matched_response.connect([](auto&& driver_version_matched) {
-                                                        static std::optional<bool> previous_value;
-                                                        if (previous_value != driver_version_matched) {
-                                                            std::cout << "driver_version_matched " << driver_version_matched << std::endl;
-                                                            previous_value = driver_version_matched;
-                                                        }
-                                                    });
+        static std::optional<bool> previous_value;
+        if (previous_value != driver_version_matched) {
+          std::cout << "driver_version_matched " << driver_version_matched << std::endl;
+          previous_value = driver_version_matched;
+        }
+    });
     /**/
     client->async_start();
     return 0;

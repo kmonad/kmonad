@@ -43,9 +43,7 @@ int main() {
     printf("Note: only prints non-empty fields.\n\n");
     for(mach_port_t curr = IOIteratorNext(iter); curr; curr = IOIteratorNext(iter)) {
         get_device_properties(curr, properties);
-        printf("=========================\n");
         print_device_properties(properties);
-        printf("=========================\n");
     }
 
     free(properties);

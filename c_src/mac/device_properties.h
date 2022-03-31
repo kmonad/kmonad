@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 struct device_properties {
-    char *product_name;
     char *manufacturer;
+    char *product_name;
     char *serial_number;
     char *transport;
 
