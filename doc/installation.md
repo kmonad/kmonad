@@ -29,6 +29,10 @@
 
 ## Compilation
 
+Note that, regardless of which compilation method you choose, `git`
+needs to be in `$PATH` when compiling kmonad.  This is because we insert
+the current commit into the output of `--version` at compile time.
+
 ### Using `stack`
 The currently recommended, cross-platform solution to compiling KMonad is to use the
 [stack](https://github.com/commercialhaskell/stack) Haskell project manager.
@@ -228,6 +232,9 @@ install the extension, and activate the extension.
 ```console
   $ /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
+
+Note: If activation failed (e.g. because a newer version is already installed), replace `activate` in the above command with `forceActivate` and try again.
+
 
 #### Installing kmonad
 

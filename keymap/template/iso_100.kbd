@@ -2,8 +2,8 @@
 
                      KMonad: ISO 100% template
 
-  This file contains the `defsrc' configuration for a standard ISO ten-key-less
-  keyboard. Modelled on a standard European 100% keyboard.
+  This file contains the `defsrc' configuration for a standard
+  ISO 100% keyboard, modelled on a standard European model.
 
   Copy out the `defsrc' layer to start your own keyboard configuration. Copy
   out the `deflayer' template to easily start a new layer with matching
