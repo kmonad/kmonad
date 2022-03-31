@@ -154,6 +154,15 @@ extern "C" int wait_key(struct KeyEvent *e) {
 }
 
 /*
+ * `kIOMasterPortDefault` is deprecated in macOS 12.
+ */
+#ifdef __MAC_12_0
+  #define _kIOMainPortDefault kIOMainPortDefault
+#else
+  #define _kIOMainPortDefault kIOMasterPortDefault
+#endif
+
+/*
  * For each keyboard, registers an asynchronous callback to run when
  * new input from the user is available from that keyboard. Then
  * sleeps indefinitely, ready to received asynchronous callbacks.
@@ -177,7 +186,7 @@ static void monitor_kb(struct device_properties *identifiers) {
     CFRelease(cfValue);
     io_iterator_t iter = IO_OBJECT_NULL;
     CFRetain(matching_dictionary);
-    kr = IOServiceGetMatchingServices(kIOMasterPortDefault,
+    kr = IOServiceGetMatchingServices(_kIOMainPortDefault,
                                       matching_dictionary,
                                       &iter);
     if(kr != KERN_SUCCESS) {
@@ -186,7 +195,7 @@ static void monitor_kb(struct device_properties *identifiers) {
     }
     listener_loop = CFRunLoopGetCurrent();
     open_matching_devices(identifiers, iter);
-    IONotificationPortRef notification_port = IONotificationPortCreate(kIOMasterPortDefault);
+    IONotificationPortRef notification_port = IONotificationPortCreate(_kIOMainPortDefault);
     CFRunLoopSourceRef notification_source = IONotificationPortGetRunLoopSource(notification_port);
     CFRunLoopAddSource(listener_loop, notification_source, kCFRunLoopDefaultMode);
     CFRetain(matching_dictionary);

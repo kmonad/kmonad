@@ -4,6 +4,15 @@
 
 #include "device_properties.h"
 
+/*
+ * `kIOMasterPortDefault` is deprecated in macOS 12.
+ */
+#ifdef __MAC_12_0
+  #define _kIOMainPortDefault kIOMainPortDefault
+#else
+  #define _kIOMainPortDefault kIOMasterPortDefault
+#endif
+
 int main() {
     CFMutableDictionaryRef matching_dictionary = IOServiceMatching(kIOHIDDeviceKey);
     if(!matching_dictionary) {
@@ -25,7 +34,7 @@ int main() {
     CFRelease(cfValue);
 
     io_iterator_t iter = IO_OBJECT_NULL;
-    kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
+    kern_return_t r = IOServiceGetMatchingServices(_kIOMainPortDefault,
                                                    matching_dictionary,
                                                    &iter);
     if(r != KERN_SUCCESS) {

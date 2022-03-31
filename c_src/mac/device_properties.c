@@ -13,7 +13,7 @@ bool get_number(CFTypeRef value, int64_t *varPtr)
 /* Get a string value out of a CFType object. */
 char *get_cstring(CFTypeRef value)
 {
-    return CFStringGetCStringPtr((CFStringRef) value, kCFStringEncodingUTF8);
+    return (char *)CFStringGetCStringPtr((CFStringRef) value, kCFStringEncodingUTF8);
 }
 
 /* Get a property of the device. */
