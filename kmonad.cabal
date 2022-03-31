@@ -192,7 +192,7 @@ library
       cxx-sources:
         c_src/mac/dext.cpp
       cxx-options:
-        -std=c++2a
+        -std=gnu++2a
     extra-libraries:
       c++
     build-depends:
