@@ -30,12 +30,15 @@ import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
 import qualified KMonad.Model.Keymap   as Km
+import KMonad.App.Types (HasAppEnv)
+import KMonad.Keyboard (HasKeyEvent(keycode))
+import KMonad.Keyboard.Types (mkHandledEvent)
 
 -- FIXME: This should live somewhere else
 
-#ifdef linux_HOST_OS
-import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
-#endif
+
+
+
 
 --------------------------------------------------------------------------------
 -- $start
@@ -93,7 +96,8 @@ initAppEnv cfg = do
 
   -- Initialize output components
   otv <- lift . atomically $ newEmptyTMVar
-  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
+  -- TODO: out hooks do not seem to be used
+  ohk <- Hs.mkHooks $ ((atomically . takeTMVar) otv) >>= (pure . mkHandledEvent)
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
@@ -122,6 +126,12 @@ initAppEnv cfg = do
 --
 -- FIXME: this needs to live somewhere else
 
+-- | Handle passthrough event
+passthroughEvent :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => KeyEvent -> RIO e ()
+passthroughEvent e 
+  | e^.switch == Press   = emit $ mkPress $ e^.keycode
+  | e^.switch == Release = emit $ mkRelease $ e^.keycode
+
 -- | Trigger the button-action press currently registered to 'Keycode'
 pressKey :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => Keycode -> RIO e ()
 pressKey c =
@@ -133,7 +143,8 @@ pressKey c =
       if ft
         then do
           emit $ mkPress c
-          await (isReleaseOf c) $ \_ -> do
+          await (isReleaseOf c) $ \e -> do
+            traceM $ pack $ "Release trigger: " ++ show e
             emit $ mkRelease c
             pure Catch
         else pure ()
@@ -164,14 +175,11 @@ pressKey c =
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
 loop = forever $ view sluice >>= Sl.pull >>= \case
-  e | e^.switch == Press -> pressKey $ e^.keycode
-  _                      -> pure ()
+  e | _passthrough e                     -> passthroughEvent $ _wrappedEvent e
+  e | (_wrappedEvent e)^.switch == Press -> pressKey $ (_wrappedEvent e)^.keycode
+  _                                      -> pure ()
 
 -- | Run KMonad using the provided configuration
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
 startApp c = do
-#ifdef linux_HOST_OS
-  -- Ignore SIGCHLD to avoid zombie processes.
-  liftIO . void $ installHandler sigCHLD Ignore Nothing
-#endif
   runContT (initAppEnv c) (flip runRIO loop)

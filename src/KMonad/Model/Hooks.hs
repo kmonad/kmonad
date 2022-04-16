@@ -30,6 +30,7 @@ import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
+import KMonad.Keyboard.Types
 import KMonad.Util
 
 import RIO.Partial (fromJust)
@@ -65,21 +66,21 @@ type Store = M.HashMap Unique Entry
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  { _eventSrc   :: IO WrappedKeyEvent   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
 makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
-mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
+mkHooks' :: MonadUnliftIO m => m WrappedKeyEvent -> m Hooks
 mkHooks' s = withRunInIO $ \u -> do
   itr <- atomically $ newEmptyTMVar
   hks <- atomically $ newTVar M.empty
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
+mkHooks :: MonadUnliftIO m => m WrappedKeyEvent -> ContT r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
@@ -144,22 +145,30 @@ cancelHook hs tag = do
 -- how this updates the 'Hooks' environment.
 
 -- | Run the function stored in a Hook on the event and the elapsed time
-runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
-runEntry t e v = liftIO $ do
-  (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+-- runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
+-- runEntry t e v = liftIO $ do
+--   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+runEntry :: MonadIO m => SystemTime -> KeyEvent -> Catch -> Entry -> m Catch
+runEntry t e c v = if
+  c == Catch then pure Catch
+  else liftIO $ do
+    (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)
   => Hooks
   -> KeyEvent
-  -> RIO e (Maybe KeyEvent)
+  -> RIO e (Maybe WrappedKeyEvent)
 runHooks hs e = do
   logDebug "Running hooks"
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
   now <- liftIO getSystemTime
-  foldMapM (runEntry now e) (M.elems m) >>= \case
+  -- foldMapM (runEntry now e) (M.elems m) >>= \case
+  --   Catch   -> pure $ Nothing
+  --   NoCatch -> pure $ Just e
+  foldM (runEntry now e) NoCatch (M.elems m) >>= \case
     Catch   -> pure $ Nothing
-    NoCatch -> pure $ Just e
+    NoCatch -> pure $ Just $ mkHandledEvent e
 
 
 --------------------------------------------------------------------------------
@@ -176,7 +185,7 @@ runHooks hs e = do
 -- comes up.
 step :: (HasLogFunc e)
   => Hooks                  -- ^ The 'Hooks' environment
-  -> RIO e (Maybe KeyEvent) -- ^ An action that returns perhaps the next event
+  -> RIO e (Maybe WrappedKeyEvent) -- ^ An action that returns perhaps the next event
 step h = do
 
   -- Asynchronously start reading the next event
@@ -189,11 +198,12 @@ step h = do
   -- the hooks on that event.
   let read = atomically next >>= \case
         Left  t -> cancelHook h t >> read -- We caught a cancellation
-        Right e -> runHooks h e           -- We caught a real event
+        Right e | (_passthrough e) -> pure $ Just e -- We have a passthrough event
+                | otherwise -> runHooks h (_wrappedEvent e)           -- We caught a real event
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
 pull :: HasLogFunc e
   => Hooks
-  -> RIO e KeyEvent
+  -> RIO e WrappedKeyEvent
 pull h = step h >>= maybe (pull h) pure

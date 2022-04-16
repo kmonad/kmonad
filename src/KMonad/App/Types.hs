@@ -129,7 +129,7 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   inject e = do
     di <- view dispatch
     logDebug $ "Injecting event: " <> display e
-    Dp.rerun di [e]
+    Dp.rerun di [mkHandledEvent e]
 
   -- Shell-command through spawnCommand
   shellCmd t = do

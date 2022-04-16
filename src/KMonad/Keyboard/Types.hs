@@ -5,6 +5,9 @@ module KMonad.Keyboard.Types
   , KeyEvent
   , mkKeyEvent
   , HasKeyEvent(..)
+  , WrappedKeyEvent(..)
+  , mkPassthroughEvent
+  , mkHandledEvent
   , KeyPred
   , LayerTag
   , LMap
@@ -55,6 +58,22 @@ instance Ord KeyEvent where
 
 -- | Predicate on KeyEvent's
 type KeyPred = KeyEvent -> Bool
+
+-- $wrapped
+data WrappedKeyEvent = WrappedKeyEvent
+  { _wrappedEvent :: KeyEvent -- ^ Event being wrapped
+  , _passthrough :: Bool -- ^ whether to run translating hooks and resolve buttons on this event
+  }
+makeClassy ''WrappedKeyEvent
+
+mkPassthroughEvent :: KeyEvent -> WrappedKeyEvent
+mkPassthroughEvent e = WrappedKeyEvent e True
+
+mkHandledEvent :: KeyEvent -> WrappedKeyEvent
+mkHandledEvent e = WrappedKeyEvent e False
+
+instance Display WrappedKeyEvent where
+  textDisplay a = textDisplay (a^.wrappedEvent) <> " " <> tshow (a^.passthrough)
 
 --------------------------------------------------------------------------------
 -- $lmap

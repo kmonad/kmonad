@@ -130,6 +130,7 @@ data LayerOp
 --
 -- The fundamental components that make up any 'KMonad.Model.Button.Button' operation.
 
+-- TODO: Comments here seem flipped
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.
 class Monad m => MonadKIO m where

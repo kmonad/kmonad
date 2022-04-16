@@ -58,7 +58,7 @@ import qualified RIO.Text as T
 data Dispatch = Dispatch
   { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
   , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
-  , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
+  , _rerunBuf :: TVar (Seq WrappedKeyEvent)    -- ^ Buffer for rerunning events
   }
 makeLenses ''Dispatch
 
@@ -82,7 +82,7 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
+pull :: (HasLogFunc e) => Dispatch -> RIO e WrappedKeyEvent
 pull d = do
   -- Check for an unfinished read attempt started previously. If it exists,
   -- fetch it, otherwise, start a new read attempt.
@@ -99,7 +99,7 @@ pull d = do
               <> "\nRerunning event: " <> display e'
       atomically $ putTMVar (d^.readProc) a
       pure e'
-    Right e' -> pure e'
+    Right e' -> pure $ mkHandledEvent e'
 
   where
     -- Pop the head off the rerun-buffer (or 'retrySTM' if empty)
@@ -110,5 +110,5 @@ pull d = do
         pure e
 
 -- | Add a list of elements to be rerun.
-rerun :: (HasLogFunc e) => Dispatch -> [KeyEvent] -> RIO e ()
+rerun :: (HasLogFunc e) => Dispatch -> [WrappedKeyEvent] -> RIO e ()
 rerun d es = atomically $ modifyTVar (d^.rerunBuf) (>< Seq.fromList es)

@@ -59,6 +59,7 @@ import KMonad.Prelude
 import KMonad.Model.Action
 import KMonad.Keyboard
 import KMonad.Util
+import Data.Foldable
 
 
 --------------------------------------------------------------------------------
@@ -289,8 +290,10 @@ tapNextRelease t h = onPress $ do
         | isRel && (e^.keycode `elem` ks) -> doHold e
         -- Else, if it is a press, store the keycode and wait again
         | not isRel                       -> go ((e^.keycode):ks) *> pure NoCatch
-        -- Else, if it is a release of some button held before me, just ignore
+        -- Old: Else, if it is a release of some button held before me, just ignore
         | otherwise                       -> go ks *> pure NoCatch
+        -- New: Put into the queue instead, only evaluate after this key is resolved
+        -- | otherwise                       -> inject e *> go ks *> 
 
     -- Behave like a tap is simple: tap the button `t` and release processing
     doTap :: MonadK m => m Catch
@@ -301,6 +304,51 @@ tapNextRelease t h = onPress $ do
     -- we rethrow this release.
     doHold :: MonadK m => KeyEvent -> m Catch
     doHold e = press h *> hold False *> inject e *> pure Catch
+
+
+-- -- | Create a tap-hold style button that makes its decision based on the next
+-- -- detected release in the following manner:
+-- -- 1. It is the release of this button: We are tapping
+-- -- 2. It is of some other button that was pressed *before* this one, ignore.
+-- -- 3. It is of some other button that was pressed *after* this one, we hold.
+-- --
+-- -- It does all of this while holding processing of other buttons, so time will
+-- -- get rolled back like a TapHold button.
+-- tapNextRelease :: Button -> Button -> Button
+-- tapNextRelease t h = onPress $ do
+--   -- hold True
+--   go [] []
+--   where
+--     go :: MonadK m => [Keycode] -> [KeyEvent] ->  m ()
+--     go ks es = hookF InputHook $ \e -> do
+--       p <- matchMy Release
+--       let isRel = isRelease e
+--       if
+--         -- If the next event is my own release: we act as if we were tapped
+--         | p e -> doTap $ reverse es
+--         -- If the next event is the release of some button that was held after me
+--         -- we act as if we were held
+--         | isRel && (e^.keycode `elem` ks) -> doHold e $ reverse es
+--         -- Else, if it is a press, store the keycode and wait again
+--         | not isRel                       -> go ((e^.keycode):ks) (e:es) *> pure Catch
+--         -- Old: Else, if it is a release of some button held before me, just ignore
+--         | otherwise                       -> go ks ((traceShowId e):es) *> pure Catch
+--         -- otherwise                       -> go ks es *> pure NoCatch
+--         -- New: Put into the queue instead, only evaluate after this key is resolved
+--         -- otherwise                       -> inject e *> go ks *> 
+
+--     replay :: MonadK m => [KeyEvent] -> m ()
+--     replay es = foldl (\a e -> a >> inject e) (return ()) es
+
+--     -- Behave like a tap is simple: tap the button `t` and release processing
+--     doTap :: MonadK m => [KeyEvent] -> m Catch
+--     doTap es = tap t *> replay es *> pure Catch
+
+--     -- Behave like a hold is not simple: first we release the processing hold,
+--     -- then we catch the release of ButtonX that triggered this action, and then
+--     -- we rethrow this release.
+--     doHold :: MonadK m => KeyEvent -> [KeyEvent] -> m Catch
+--     doHold e es = press h *> replay es *> inject e *> pure Catch
 
 
 
