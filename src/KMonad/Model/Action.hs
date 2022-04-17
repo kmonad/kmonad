@@ -145,7 +145,8 @@ class Monad m => MonadKIO m where
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
   -- | Insert an event in the input queue
-  inject     :: KeyEvent -> m ()
+  -- inject     :: KeyEvent -> m ()
+  inject     :: WrappedKeyEvent -> m ()
   -- | Run a shell-command
   shellCmd   :: Text -> m ()
 

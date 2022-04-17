@@ -303,7 +303,7 @@ tapNextRelease t h = onPress $ do
     -- then we catch the release of ButtonX that triggered this action, and then
     -- we rethrow this release.
     doHold :: MonadK m => KeyEvent -> m Catch
-    doHold e = press h *> hold False *> inject e *> pure Catch
+    doHold e = press h *> hold False *> inject (mkHandledEvent e) *> pure Catch
 
 
 -- -- | Create a tap-hold style button that makes its decision based on the next
@@ -391,7 +391,7 @@ tapHoldNextRelease ms t h mtb = onPress $ do
     onRelSelf = tap t *> hold False *> pure Catch
 
     onRelOther :: MonadK m => KeyEvent -> m Catch
-    onRelOther e = press h *> hold False *> inject e *> pure Catch
+    onRelOther e = press h *> hold False *> inject (mkHandledEvent e) *> pure Catch
 
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
@@ -482,7 +482,7 @@ stickyKey ms b = onPress $ go
          -- The release of some other button; ignore these
 
   doHold :: MonadK m => KeyEvent -> m ()
-  doHold e = press b *> inject e
+  doHold e = press b *> inject (mkHandledEvent e)
 
   doTap :: MonadK m => m ()
   doTap =
@@ -490,6 +490,6 @@ stickyKey ms b = onPress $ go
            (pure isPress)  -- presses definitely happen after us
            (pure ())
            (\t -> (runAction $ b^.pressAction)
-               *> inject (t^.event)
+               *> inject (mkHandledEvent (t^.event))
                *> after 3 (runAction $ b^.releaseAction)
                $> Catch)

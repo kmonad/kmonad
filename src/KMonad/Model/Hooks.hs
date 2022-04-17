@@ -145,14 +145,14 @@ cancelHook hs tag = do
 -- how this updates the 'Hooks' environment.
 
 -- | Run the function stored in a Hook on the event and the elapsed time
--- runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
--- runEntry t e v = liftIO $ do
---   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
-runEntry :: MonadIO m => SystemTime -> KeyEvent -> Catch -> Entry -> m Catch
-runEntry t e c v = if
-  c == Catch then pure Catch
-  else liftIO $ do
-    (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
+runEntry t e v = liftIO $ do
+  (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+-- runEntry :: MonadIO m => SystemTime -> KeyEvent -> Catch -> Entry -> m Catch
+-- runEntry t e c v = if
+--   c == Catch then pure Catch
+--   else liftIO $ do
+--     (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)
@@ -163,12 +163,12 @@ runHooks hs e = do
   logDebug "Running hooks"
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
   now <- liftIO getSystemTime
-  -- foldMapM (runEntry now e) (M.elems m) >>= \case
-  --   Catch   -> pure $ Nothing
-  --   NoCatch -> pure $ Just e
-  foldM (runEntry now e) NoCatch (M.elems m) >>= \case
+  foldMapM (runEntry now e) (M.elems m) >>= \case
     Catch   -> pure $ Nothing
     NoCatch -> pure $ Just $ mkHandledEvent e
+  -- foldM (runEntry now e) NoCatch (M.elems m) >>= \case
+  --   Catch   -> pure $ Nothing
+  --   NoCatch -> pure $ Just $ mkHandledEvent e
 
 
 --------------------------------------------------------------------------------

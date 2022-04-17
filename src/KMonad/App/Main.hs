@@ -33,6 +33,7 @@ import qualified KMonad.Model.Keymap   as Km
 import KMonad.App.Types (HasAppEnv)
 import KMonad.Keyboard (HasKeyEvent(keycode))
 import KMonad.Keyboard.Types (mkHandledEvent)
+import KMonad.Keyboard.IO.Linux.Types (mkPassthroughEvent)
 
 -- FIXME: This should live somewhere else
 
@@ -140,24 +141,28 @@ pressKey c =
     -- If the keycode does not occur in our keymap
     Nothing -> do
       ft <- view fallThrough
+      traceM $ pack $ "Received keycode " ++ show c ++ " as fallthrough"
       if ft
         then do
           emit $ mkPress c
           await (isReleaseOf c) $ \e -> do
             traceM $ pack $ "Release trigger: " ++ show e
-            emit $ mkRelease c
+            --emit $ mkRelease c
+            inject $ mkPassthroughEvent $ mkRelease c
             pure Catch
         else pure ()
 
     -- If the keycode does occur in our keymap
-    Just b  -> runBEnv b Press >>= \case
-      Nothing -> pure ()  -- If the previous action on this key was *not* a release
+    Just b  -> traceM (pack $ "Received keycode " ++ show c ++ " as button") >> runBEnv b Press >>= \case
+      Nothing -> traceM "Doing nothing because of BEnv" >> pure ()  -- If the previous action on this key was *not* a release
       Just a  -> do
         -- Execute the press and register the release
+        traceM "Running associated actions"
         app <- view appEnv
         runRIO (KEnv app b) $ do
           runAction a
           awaitMy Release $ do
+            traceM $ pack ("Processing release on keycode " <> show c)
             runBEnv b Release >>= \case
               Nothing -> pure ()
               Just a  -> runAction a
