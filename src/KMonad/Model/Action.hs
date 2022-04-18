@@ -130,7 +130,7 @@ data LayerOp
 --
 -- The fundamental components that make up any 'KMonad.Model.Button.Button' operation.
 
--- TODO: Comments here seem flipped
+-- TODO: The comments here seem flipped, change MonadK and MonadKIO?
 -- | 'MonadK' contains all the operations used to constitute button actions. It
 -- encapsulates all the side-effects required to get everything running.
 class Monad m => MonadKIO m where
@@ -144,8 +144,7 @@ class Monad m => MonadKIO m where
   register   :: HookLocation -> Hook m -> m ()
   -- | Run a layer-stack manipulation
   layerOp    :: LayerOp -> m ()
-  -- | Insert an event in the input queue
-  -- inject     :: KeyEvent -> m ()
+  -- | Insert a wrapped event in the input queue
   inject     :: WrappedKeyEvent -> m ()
   -- | Run a shell-command
   shellCmd   :: Text -> m ()

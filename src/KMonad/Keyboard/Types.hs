@@ -60,18 +60,30 @@ instance Ord KeyEvent where
 type KeyPred = KeyEvent -> Bool
 
 -- $wrapped
+--
+-- A WrappedKeyEvent wraps a KeyEvent and additionally indicates whether the
+-- event is supposed to be handled by KMonad logic (for example, translated to a
+-- different button), or has already been handled before and is thus supposed to
+-- pass through KMonad's logic unchanged (passthrough = True).
+-- 
+-- | Passthrough indicates whether a lookup into KMonad's button map will occur or not
 data WrappedKeyEvent = WrappedKeyEvent
-  { _wrappedEvent :: KeyEvent -- ^ Event being wrapped
-  , _passthrough :: Bool -- ^ whether to run translating hooks and resolve buttons on this event
+  { _wrappedEvent :: KeyEvent -- ^ Event being wrapped. TODO: ideally, want to call this event, but that yields a naming conflict. How to deal with this?
+  , _passthrough :: Bool      -- ^ whether to run translating hooks and resolve buttons on this event
   }
 makeClassy ''WrappedKeyEvent
 
+-- | Create a WrappedKeyEvent that won't be lookup up and instead emitted directly after
+-- passing through the sluice.
 mkPassthroughEvent :: KeyEvent -> WrappedKeyEvent
 mkPassthroughEvent e = WrappedKeyEvent e True
 
+-- | Create a WrappedKeyEvent that will be looked up internally and can translate to a
+-- different button
 mkHandledEvent :: KeyEvent -> WrappedKeyEvent
 mkHandledEvent e = WrappedKeyEvent e False
 
+-- | Print out a WrappedKeyEvent nicely.
 instance Display WrappedKeyEvent where
   textDisplay a = textDisplay (a^.wrappedEvent) <> " " <> tshow (a^.passthrough)
 

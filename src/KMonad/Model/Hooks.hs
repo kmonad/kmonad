@@ -30,7 +30,6 @@ import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
-import KMonad.Keyboard.Types
 import KMonad.Util
 
 import RIO.Partial (fromJust)
@@ -148,11 +147,6 @@ cancelHook hs tag = do
 runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
 runEntry t e v = liftIO $ do
   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
--- runEntry :: MonadIO m => SystemTime -> KeyEvent -> Catch -> Entry -> m Catch
--- runEntry t e c v = if
---   c == Catch then pure Catch
---   else liftIO $ do
---     (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)
@@ -166,9 +160,6 @@ runHooks hs e = do
   foldMapM (runEntry now e) (M.elems m) >>= \case
     Catch   -> pure $ Nothing
     NoCatch -> pure $ Just $ mkHandledEvent e
-  -- foldM (runEntry now e) NoCatch (M.elems m) >>= \case
-  --   Catch   -> pure $ Nothing
-  --   NoCatch -> pure $ Just $ mkHandledEvent e
 
 
 --------------------------------------------------------------------------------
@@ -198,8 +189,8 @@ step h = do
   -- the hooks on that event.
   let read = atomically next >>= \case
         Left  t -> cancelHook h t >> read -- We caught a cancellation
-        Right e | (_passthrough e) -> pure $ Just e -- We have a passthrough event
-                | otherwise -> runHooks h (_wrappedEvent e)           -- We caught a real event
+        Right e | (_passthrough e) -> pure $ Just e -- We caught a passthrough event that has already been handled
+                | otherwise        -> runHooks h (_wrappedEvent e) -- We caught a real event
   read
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'

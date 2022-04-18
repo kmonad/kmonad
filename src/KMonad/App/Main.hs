@@ -30,16 +30,12 @@ import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
 import qualified KMonad.Model.Keymap   as Km
-import KMonad.App.Types (HasAppEnv)
-import KMonad.Keyboard (HasKeyEvent(keycode))
-import KMonad.Keyboard.Types (mkHandledEvent)
-import KMonad.Keyboard.IO.Linux.Types (mkPassthroughEvent)
 
 -- FIXME: This should live somewhere else
 
-
-
-
+#ifdef linux_HOST_OS
+import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
+#endif
 
 --------------------------------------------------------------------------------
 -- $start
@@ -97,8 +93,7 @@ initAppEnv cfg = do
 
   -- Initialize output components
   otv <- lift . atomically $ newEmptyTMVar
-  -- TODO: out hooks do not seem to be used
-  ohk <- Hs.mkHooks $ ((atomically . takeTMVar) otv) >>= (pure . mkHandledEvent)
+  ohk <- Hs.mkHooks $ (atomically . takeTMVar) otv >>= pure . mkHandledEvent
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
@@ -127,7 +122,7 @@ initAppEnv cfg = do
 --
 -- FIXME: this needs to live somewhere else
 
--- | Handle passthrough event
+-- | Handle passthrough event by directly emitting press or release
 passthroughEvent :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => KeyEvent -> RIO e ()
 passthroughEvent e 
   | e^.switch == Press   = emit $ mkPress $ e^.keycode
@@ -141,28 +136,23 @@ pressKey c =
     -- If the keycode does not occur in our keymap
     Nothing -> do
       ft <- view fallThrough
-      traceM $ pack $ "Received keycode " ++ show c ++ " as fallthrough"
       if ft
         then do
           emit $ mkPress c
           await (isReleaseOf c) $ \e -> do
-            traceM $ pack $ "Release trigger: " ++ show e
-            --emit $ mkRelease c
-            inject $ mkPassthroughEvent $ mkRelease c
+            inject $ mkPassthroughEvent (mkRelease c)
             pure Catch
         else pure ()
 
     -- If the keycode does occur in our keymap
-    Just b  -> traceM (pack $ "Received keycode " ++ show c ++ " as button") >> runBEnv b Press >>= \case
-      Nothing -> traceM "Doing nothing because of BEnv" >> pure ()  -- If the previous action on this key was *not* a release
+    Just b  -> runBEnv b Press >>= \case
+      Nothing -> pure ()  -- If the previous action on this key was *not* a release
       Just a  -> do
         -- Execute the press and register the release
-        traceM "Running associated actions"
         app <- view appEnv
         runRIO (KEnv app b) $ do
           runAction a
           awaitMy Release $ do
-            traceM $ pack ("Processing release on keycode " <> show c)
             runBEnv b Release >>= \case
               Nothing -> pure ()
               Just a  -> runAction a
@@ -180,11 +170,15 @@ pressKey c =
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
 loop = forever $ view sluice >>= Sl.pull >>= \case
-  e | _passthrough e                     -> passthroughEvent $ _wrappedEvent e
+  e | _passthrough e                     -> passthroughEvent $ _wrappedEvent e --TODO: lenses do not seem to work here, what's wrong?
   e | (_wrappedEvent e)^.switch == Press -> pressKey $ (_wrappedEvent e)^.keycode
   _                                      -> pure ()
 
 -- | Run KMonad using the provided configuration
 startApp :: HasLogFunc e => AppCfg -> RIO e ()
 startApp c = do
+#ifdef linux_HOST_OS
+  -- Ignore SIGCHLD to avoid zombie processes.
+  liftIO . void $ installHandler sigCHLD Ignore Nothing
+#endif
   runContT (initAppEnv c) (flip runRIO loop)
