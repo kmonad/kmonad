@@ -195,7 +195,8 @@ preferences—that's why there are so many! Particularly when using
 home-row modifiers, you will find some of the more crazy seeming buttons
 to be the most comfortable.
 
-+ `tap-macro`: take a sequence of keys and tap them
++ `tap-macro`: take a sequence of keys and tap them, but don’t release
+  the last key until the button is released.
 
   ```clojure
   (defalias ta1 (tap-macro K M o n a d))
@@ -209,6 +210,13 @@ to be the most comfortable.
     ta1 (tap-macro K M o n a d :delay 5)
     ;; equivalent to: (tap-macro K P5 M P5 o P5 n P5 a P5 d)
   )
+  ```
+
++ `tap-macro-release`: like `tap-macro` but don’t press the last key
+  until the button is released.
+
+  ```clojure
+  (defalias ta2 (tap-macro-release K M o n a d))
   ```
 
 + `multi-tap`: combine a sequence of keys into one key with a timeout
