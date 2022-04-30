@@ -121,6 +121,8 @@ makeClassy ''Hook
 -- $wrapped
 --
 -- A WrappedEvent wraps a KeyEvent or a hook tag.
+-- This is used to carry enough information to allow re-running an event if it
+-- was held in the sluice.
 --
 -- TODO: Should this live here? 
 data WrappedEvent =
