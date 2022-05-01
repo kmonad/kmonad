@@ -65,22 +65,21 @@ type Store = M.HashMap Unique Entry
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  { _eventSrc   :: IO WrappedEvent   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
 makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
-mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
-mkHooks' s = withRunInIO $ \u -> do
-  itr <- newEmptyTMVarIO
+mkHooks' :: MonadUnliftIO m => m WrappedEvent -> TMVar Unique -> m Hooks
+mkHooks' s itr = withRunInIO $ \u -> do
   hks <- newTVarIO M.empty
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
-mkHooks = lift . mkHooks'
+mkHooks :: MonadUnliftIO m => m WrappedEvent -> TMVar Unique -> ContT r m Hooks
+mkHooks s itr = lift (mkHooks' s itr)
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
 ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
@@ -122,7 +121,7 @@ register hs h = do
 cancelHook :: (HasLogFunc e)
   => Hooks
   -> Unique
-  -> RIO e ()
+  -> RIO e Bool
 cancelHook hs tag = do
   e <- atomically $ do
     m <- readTVar $ hs^.hooks
@@ -130,11 +129,13 @@ cancelHook hs tag = do
     when (isJust v) $ modifyTVar (hs^.hooks) (M.delete tag)
     pure v
   case e of
-    Nothing ->
-      logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
+    Nothing -> do
+      logDebug $ "Tried cancelling hook: " <> display (hashUnique tag)
+      pure False
     Just e' -> do
       logDebug $ "Cancelling hook: " <> display (hashUnique tag)
       liftIO $ e' ^. hTimeout . to fromJust . action
+      pure True
 
 
 --------------------------------------------------------------------------------
@@ -152,14 +153,12 @@ runEntry t e v = liftIO $ do
 runHooks :: (HasLogFunc e)
   => Hooks
   -> KeyEvent
-  -> RIO e (Maybe KeyEvent)
+  -> RIO e Catch
 runHooks hs e = do
   logDebug "Running hooks"
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
   now <- liftIO getSystemTime
-  foldMapM (runEntry now e) (M.elems m) >>= \case
-    Catch   -> pure Nothing
-    NoCatch -> pure $ Just e
+  foldMapM (runEntry now e) (M.elems m)
 
 
 --------------------------------------------------------------------------------
@@ -176,24 +175,18 @@ runHooks hs e = do
 -- comes up.
 step :: (HasLogFunc e)
   => Hooks                  -- ^ The 'Hooks' environment
-  -> RIO e (Maybe KeyEvent) -- ^ An action that returns perhaps the next event
+  -> RIO e (Maybe WrappedEvent) -- ^ An action that returns perhaps the next event
 step h = do
-
-  -- Asynchronously start reading the next event
-  a <- async . liftIO $ h^.eventSrc
-
-  -- Handle any timer event first, and then try to read from the source
-  let next = (Left <$> takeTMVar (h^.injectTmr)) `orElse` (Right <$> waitSTM a)
-
-  -- Keep taking and cancelling timers until we encounter a key event, then run
-  -- the hooks on that event.
-  let read = atomically next >>= \case
-        Left  t -> cancelHook h t >> read -- We caught a cancellation
-        Right e -> runHooks h e           -- We caught a real event
-  read
+  liftIO (h^.eventSrc) >>= \case
+    WrappedTag t -> cancelHook h t >>= \case  -- We caught a cancellation
+      False -> pure $ Just $ WrappedTag t
+      True -> pure Nothing
+    WrappedKeyEvent c e -> do -- We caught a real event
+      cNew <- runHooks h e
+      pure $ Just $ WrappedKeyEvent (cNew <> c) e
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
 pull :: HasLogFunc e
   => Hooks
-  -> RIO e KeyEvent
+  -> RIO e WrappedEvent
 pull h = step h >>= maybe (pull h) pure
