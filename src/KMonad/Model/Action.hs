@@ -26,6 +26,8 @@ module KMonad.Model.Action
   , HookLocation(..)
   , Hook(..)
 
+  , WrappedEvent(..)
+
     -- * Lenses
   , HasHook(..)
   , HasTimeout(..)
@@ -57,6 +59,8 @@ module KMonad.Model.Action
   )
 
 where
+
+import Data.Unique
 
 import KMonad.Prelude hiding (timeout)
 
@@ -93,8 +97,10 @@ makeClassy ''Trigger
 
 -- | ADT signalling where to install a hook
 data HookLocation
-  = InputHook  -- ^ Install the hook immediately after receiving a 'KeyEvent'
-  | OutputHook -- ^ Install the hook just before emitting a 'KeyEvent'
+  = InputHookPrio   -- ^ Install the hook immediately after receiving a 'KeyEvent'
+                    -- and before the sluice
+  | InputHook       -- ^ Installthe hook after the sluice
+  | OutputHook      -- ^ Install the hook just before emitting a 'KeyEvent'
   deriving (Eq, Show)
 
 -- | A 'Timeout' value describes how long to wait and what to do upon timeout
@@ -110,6 +116,28 @@ data Hook m = Hook
   , _keyH     :: Trigger -> m Catch -- ^ The function to call on the next 'KeyEvent'
   }
 makeClassy ''Hook
+
+--------------------------------------------------------------------------------
+-- $wrapped
+--
+-- A WrappedEvent wraps a KeyEvent or a hook tag.
+-- This is used to carry enough information to allow re-running an event if it
+-- was held in the sluice.
+--
+-- TODO: Should this live here? 
+data WrappedEvent =
+  WrappedKeyEvent {
+    _catch   :: Catch
+  , _keyEvent :: KeyEvent 
+  } |
+  WrappedTag {
+    _tag :: Unique
+  }
+
+-- | Print out a WrappedKeyEvent nicely.
+instance Display WrappedEvent where
+  textDisplay (WrappedKeyEvent c e) = "WrappedKeyEvent " <> textDisplay e <> ", " <> tshow c
+  textDisplay (WrappedTag t) = "WrappedKeyEvent " <> tshow (hashUnique t)
 
 
 --------------------------------------------------------------------------------
@@ -218,18 +246,19 @@ awaitMy s a = matchMy s >>= flip await (const a)
 -- | Try to call a function on a succesful match of a predicate within a certain
 -- time period. On a timeout, perform an action.
 within :: MonadK m
-  => Milliseconds          -- ^ The time within which this filter is active
+  => HookLocation
+  -> Milliseconds          -- ^ The time within which this filter is active
   -> m KeyPred             -- ^ The predicate used to find a match
   -> m ()                  -- ^ The action to call on timeout
   -> (Trigger -> m Catch)  -- ^ The action to call on a succesful match
   -> m ()                  -- ^ The resulting action
-within d p a f = do
+within l d p a f = do
   p' <- p
   -- define f' to run action on predicate match, or rehook on predicate mismatch
   let f' t = if p' (t^.event)
         then f t
-        else within (d - t^.elapsed) p a f $> NoCatch
-  tHookF InputHook d a f'
+        else within l (d - t^.elapsed) p a f $> NoCatch
+  tHookF l d a f'
 
 -- | Like `within`, but acquires a hold when starting, and releases when done
 withinHeld :: MonadK m
@@ -240,4 +269,4 @@ withinHeld :: MonadK m
   -> m ()                  -- ^ The resulting action
 withinHeld d p a f = do
   hold True
-  within d p (a <* hold False) (\x -> f x <* hold False)
+  within InputHookPrio d p (a <* hold False) (\x -> f x <* hold False)

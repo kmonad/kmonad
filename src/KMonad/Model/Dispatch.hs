@@ -43,7 +43,9 @@ where
 
 import KMonad.Prelude
 import KMonad.Keyboard
+import KMonad.Model.Action (WrappedEvent(..), Catch(..))
 
+import Data.Unique
 import RIO.Seq (Seq(..), (><))
 import qualified RIO.Seq  as Seq
 import qualified RIO.Text as T
@@ -58,20 +60,21 @@ import qualified RIO.Text as T
 data Dispatch = Dispatch
   { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
   , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
-  , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
+  , _rerunBuf :: TVar (Seq WrappedEvent)    -- ^ Buffer for rerunning events
+  , _injectTmr :: TMVar Unique -- ^ Used to signal timeouts
   }
 makeLenses ''Dispatch
 
 -- | Create a new 'Dispatch' environment
-mkDispatch' :: MonadUnliftIO m => m KeyEvent -> m Dispatch
-mkDispatch' s = withRunInIO $ \u -> do
+mkDispatch' :: MonadUnliftIO m => m KeyEvent -> TMVar Unique -> m Dispatch
+mkDispatch' s itr = withRunInIO $ \u -> do
   rpc <- newEmptyTMVarIO
   rrb <- newTVarIO Seq.empty
-  pure $ Dispatch (u s) rpc rrb
+  pure $ Dispatch (u s) rpc rrb itr
 
 -- | Create a new 'Dispatch' environment in a 'ContT' environment
-mkDispatch :: MonadUnliftIO m => m KeyEvent -> ContT r m Dispatch
-mkDispatch = lift . mkDispatch'
+mkDispatch :: MonadUnliftIO m => m KeyEvent -> TMVar Unique -> ContT r m Dispatch
+mkDispatch s itr = lift (mkDispatch' s itr)
 
 --------------------------------------------------------------------------------
 -- $op
@@ -82,7 +85,7 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
+pull :: (HasLogFunc e) => Dispatch -> RIO e WrappedEvent
 pull d = do
   -- Check for an unfinished read attempt started previously. If it exists,
   -- fetch it, otherwise, start a new read attempt.
@@ -92,14 +95,22 @@ pull d = do
 
   -- First try reading from the rerunBuf, or failing that, from the
   -- read-process. If both fail we enter an STM race.
-  atomically ((Left <$> popRerun) `orElse` (Right <$> waitSTM a)) >>= \case
-    -- If we take from the rerunBuf, put the running read-process back in place
-    Left e' -> do
-      logDebug $ "\n" <> display (T.replicate 80 "-")
-              <> "\nRerunning event: " <> display e'
-      atomically $ putTMVar (d^.readProc) a
-      pure e'
-    Right e' -> pure e'
+  atomically (
+    (Left <$> takeTMVar (d^.injectTmr))
+    `orElse`(Right . Left <$> popRerun)
+    `orElse` (Right . Right <$> waitSTM a)
+    ) >>= \case
+      -- If there's a timer, pass it through
+      Left t -> do
+        atomically $ putTMVar (d^.readProc) a
+        pure (WrappedTag t)
+      -- If we take from the rerunBuf, put the running read-process back in place
+      Right (Left e') -> do
+        logDebug $ "\n" <> display (T.replicate 80 "-")
+                <> "\nRerunning event: " <> display e'
+        atomically $ putTMVar (d^.readProc) a
+        pure e'
+      Right (Right e') -> pure (WrappedKeyEvent NoCatch e')
 
   where
     -- Pop the head off the rerun-buffer (or 'retrySTM' if empty)
@@ -110,5 +121,5 @@ pull d = do
         pure e
 
 -- | Add a list of elements to be rerun.
-rerun :: (HasLogFunc e) => Dispatch -> [KeyEvent] -> RIO e ()
+rerun :: (HasLogFunc e) => Dispatch -> [WrappedEvent] -> RIO e ()
 rerun d es = atomically $ modifyTVar (d^.rerunBuf) (>< Seq.fromList es)
