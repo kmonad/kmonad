@@ -40,6 +40,14 @@ with lib;
         The kmonad package.
       '';
     };
+
+    make-group = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Whether to make a service group when multiple configs are present.
+      '';
+    };
   };
 
   config = {
@@ -55,8 +63,8 @@ with lib;
 
     systemd = with lib; with builtins;
       let
-        # If only one config file is supplied, unify all kmonad units under a target
-        make-group = (length cfg.configfiles + length cfg.optionalconfigs) > 1;
+        # If more than one config file is supplied, unify all kmonad units under a target
+        make-group = cfg.make-group && (length cfg.configfiles + length cfg.optionalconfigs) > 1;
 
         # All systemd units require the graphics target directly (if a single config),
         # or indirectly (via kmonad.target).
