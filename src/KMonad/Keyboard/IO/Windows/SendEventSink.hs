@@ -29,12 +29,17 @@ import KMonad.Keyboard.IO.Windows.Types
 
 --------------------------------------------------------------------------------
 
-foreign import ccall "sendKey"
-  sendKey :: Ptr WinKeyEvent -> IO ()
+foreign import ccall "sendKey" sendKey :: Ptr WinKeyEvent -> IO ()
+
+
+
 
 -- | The SKSink environment
 data SKSink = SKSink
-  { _buffer :: Ptr WinKeyEvent -- ^ The pointer we write events to
+  { _buffer :: MVar (Ptr WinKeyEvent) -- ^ The pointer we write events to
+  , _keyrep :: MVar (Maybe (Keycode, Async ()))
+  , _delay  :: Int -- ^ How long to wait before starting key repeat in ms
+  , _rate   :: Int -- ^ How long to wait between key repeats in ms
   }
 makeClassy ''SKSink
 
@@ -46,19 +51,51 @@ sendEventKeySink = mkKeySink skOpen skClose skSend
 skOpen :: HasLogFunc e => RIO e SKSink
 skOpen = do
   logInfo "Initializing Windows key sink"
-  liftIO $ SKSink <$> mallocBytes (sizeOf (undefined :: WinKeyEvent))
+  bv <- liftIO $ mallocBytes (sizeOf (undefined :: WinKeyEvent))
+  bm <- newMVar bv
+  r <- newMVar Nothing
+  pure $ SKSink bm r 100 100
 
 -- | Close the 'SKSink' environment
 skClose :: HasLogFunc e => SKSink -> RIO e ()
-skClose sk = do
+skClose s = do
   logInfo "Closing Windows key sink"
-  liftIO . free $ sk^.buffer
+  withMVar (s^.keyrep) $ \r -> maybe (pure ()) cancel (r^?_Just._2)
+  withMVar (s^.buffer) (liftIO . free)
+
+-- | Send 1 key event to Windows
+emit :: MonadUnliftIO m => SKSink -> WinKeyEvent -> m ()
+emit s w = withMVar (s^.buffer) $ \b -> liftIO $ poke b w >> sendKey b
 
 -- | Write an event to the pointer and prompt windows to inject it
 --
 -- NOTE: This can throw an error if event-conversion fails.
 skSend :: HasLogFunc e => SKSink -> KeyEvent -> RIO e ()
-skSend sk e = either throwIO go $ toWinKeyEvent e
-  where go e' = liftIO $ do
-          poke (sk^.buffer) e'
-          sendKey $ sk^.buffer
+skSend s e = do
+
+  w <- either throwIO pure $ toWinKeyEvent e -- the event for windows
+  r <- takeMVar $ s^.keyrep                  -- the keyrep token
+
+   -- Whether this keycode is currently active in key-repeat
+  let beingRepped = Just (e^.keycode) == (r^?_Just._1)
+
+  -- When we're going to emit a press we are not already repeating
+  let handleNewPress = do
+        maybe (pure ()) cancel (r^?_Just._2)
+        emit s w
+        a <- async $ do
+          threadDelay (s^.delay)
+          forever $ emit s w >> threadDelay (s^.rate)
+        pure $ Just (e^.keycode, a)
+
+  -- When the event is a release
+  let handleRelease = do
+        when beingRepped $ maybe (pure ()) cancel (r^?_Just._2)
+        emit s w
+        pure $ if beingRepped then Nothing else r
+
+  -- Perform the correct action and store the rep-env
+  newRep <- if | isPress e && not beingRepped -> handleNewPress
+               | isRelease e                  -> handleRelease
+               | otherwise                    -> pure r
+  putMVar (s^.keyrep) newRep
