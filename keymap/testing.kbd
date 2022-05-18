@@ -1,6 +1,6 @@
 (defcfg
   input (low-level-hook)
-  output (send-event-sink)
+  output (send-event-sink 1000 500)
 )
 
 (defsrc q w e r t y lsft)
