@@ -45,7 +45,7 @@ makeClassy ''SKSink
 
 -- | Return a 'KeySink' using Window's @sendEvent@ functionality.
 sendEventKeySink :: HasLogFunc e => Maybe (Int, Int) -> RIO e (Acquire KeySink)
-sendEventKeySink di = mkKeySink (skOpen (fromMaybe (200, 100) di)) skClose skSend
+sendEventKeySink di = mkKeySink (skOpen (fromMaybe (300, 100) di)) skClose skSend
 
 -- | Create the 'SKSink' environment
 skOpen :: HasLogFunc e => (Int, Int) -> RIO e SKSink
@@ -54,7 +54,7 @@ skOpen (d, i) = do
   bv <- liftIO $ mallocBytes (sizeOf (undefined :: WinKeyEvent))
   bm <- newMVar bv
   r <- newMVar Nothing
-  pure $ SKSink bm r 100 100
+  pure $ SKSink bm r d i
 
 -- | Close the 'SKSink' environment
 skClose :: HasLogFunc e => SKSink -> RIO e ()
