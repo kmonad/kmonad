@@ -44,12 +44,12 @@ data SKSink = SKSink
 makeClassy ''SKSink
 
 -- | Return a 'KeySink' using Window's @sendEvent@ functionality.
-sendEventKeySink :: HasLogFunc e => RIO e (Acquire KeySink)
-sendEventKeySink = mkKeySink skOpen skClose skSend
+sendEventKeySink :: HasLogFunc e => Maybe (Int, Int) -> RIO e (Acquire KeySink)
+sendEventKeySink di = mkKeySink (skOpen (fromMaybe (200, 100) di)) skClose skSend
 
 -- | Create the 'SKSink' environment
-skOpen :: HasLogFunc e => RIO e SKSink
-skOpen = do
+skOpen :: HasLogFunc e => (Int, Int) -> RIO e SKSink
+skOpen (d, i) = do
   logInfo "Initializing Windows key sink"
   bv <- liftIO $ mallocBytes (sizeOf (undefined :: WinKeyEvent))
   bm <- newMVar bv

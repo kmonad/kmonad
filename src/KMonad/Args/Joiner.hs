@@ -260,7 +260,7 @@ pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
   where cfg = defUinputCfg { _keyboardName = T.unpack t
                            , _postInit     = T.unpack <$> init }
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
 #endif
@@ -275,9 +275,9 @@ pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Windows correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
-pickOutput KSendEventSink    = pure $ runLF sendEventKeySink
-pickOutput (KUinputSink _ _) = throwError $ InvalidOS "UinputSink"
-pickOutput KKextSink         = throwError $ InvalidOS "KextSink"
+pickOutput (KSendEventSink di) = pure $ runLF (sendEventKeySink di)
+pickOutput (KUinputSink _ _)   = throwError $ InvalidOS "UinputSink"
+pickOutput KKextSink           = throwError $ InvalidOS "KextSink"
 
 #endif
 
@@ -293,7 +293,7 @@ pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput KKextSink            = pure $ runLF kextSink
 pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
-pickOutput KSendEventSink       = throwError $ InvalidOS "SendEventSink"
+pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 
 #endif
 
