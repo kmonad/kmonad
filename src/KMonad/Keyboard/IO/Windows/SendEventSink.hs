@@ -84,8 +84,8 @@ skSend s e = do
         maybe (pure ()) cancel (r^?_Just._2)
         emit s w
         a <- async $ do
-          threadDelay (s^.delay)
-          forever $ emit s w >> threadDelay (s^.rate)
+          threadDelay (1000 * s^.delay)
+          forever $ emit s w >> threadDelay (1000 * s^.rate)
         pure $ Just (e^.keycode, a)
 
   -- When the event is a release
