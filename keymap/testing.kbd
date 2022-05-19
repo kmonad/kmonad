@@ -1,0 +1,9 @@
+(defcfg
+  input (low-level-hook)
+  output (send-event-sink 300 100)
+)
+
+(defsrc q w e r t y lsft)
+
+(deflayer base
+  q w e r t y lsft)

@@ -331,7 +331,7 @@ otokenP = choice $ map (try . uncurry statement) otokens
 otokens :: [(Text, Parser OToken)]
 otokens =
   [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
-  , ("send-event-sink", pure KSendEventSink)
+  , ("send-event-sink", KSendEventSink <$> (optional $ (,) <$> lexeme numP <*> numP))
   , ("kext"           , pure KKextSink)]
 
 -- | Parse the DefCfg token
