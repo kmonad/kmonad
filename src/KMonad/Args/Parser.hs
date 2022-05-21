@@ -187,7 +187,7 @@ exprP = paren . choice $
 -- | Different ways to refer to shifted versions of keycodes
 shiftedNames :: [(Text, DefButton)]
 shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) in
-                 map f $ cps <> num <> oth
+                 map f $ cps <> num <> oth <> lng
   where
     cps = zip (map T.singleton ['A'..'Z'])
           [ KeyA, KeyB, KeyC, KeyD, KeyE, KeyF, KeyG, KeyH, KeyI, KeyJ, KeyK, KeyL, KeyM,
@@ -197,6 +197,8 @@ shiftedNames = let f = second $ \kc -> KAround (KEmit KeyLeftShift) (KEmit kc) i
     oth = zip (map T.singleton "<>:~\"|{}+?")
           [ KeyComma, KeyDot, KeySemicolon, KeyGrave, KeyApostrophe, KeyBackslash
           , KeyLeftBrace, KeyRightBrace, KeyEqual, KeySlash]
+    lng = [ ("quot", KeyApostrophe), ("pipe", KeyBackslash), ("cln", KeySemicolon)
+          , ("tild", KeyGrave) , ("udrs", KeyMinus)]
 
 -- | Names for various buttons
 buttonNames :: [(Text, DefButton)]

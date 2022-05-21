@@ -385,7 +385,7 @@ aliases = Q.mkMultiMap
   , (KeyLeftBrace,      ["lbrc", "["])
   , (KeyRightBrace,     ["rbrc", "]"])
   , (KeySemicolon,      ["scln", ";"])
-  , (KeyApostrophe,     ["apos", "'"])
+  , (KeyApostrophe,     ["apos", "'", "apo"])
   , (KeyGrave,          ["grv", "`"])
   , (KeyBackslash,      ["bksl", "\\"]) -- NOTE: "\\" here is a 1char string, the first \ is consumed by Haskell as an escape character
   , (KeyComma,          ["comm", ","])
