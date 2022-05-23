@@ -1,127 +1,142 @@
-{ pkgs, config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
-let cfg = config.services.kmonad;
-in
+let
+  cfg = config.services.kmonad;
 
-with lib;
-{
-  options.services.kmonad = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        If enabled, run kmonad after boot.
-      '';
+  # Per-keyboard options:
+  keyboard = { name, ... }: {
+    options = {
+      name = lib.mkOption {
+        type = lib.types.str;
+        example = "laptop-internal";
+        description = "Keyboard name.";
+      };
+
+      device = lib.mkOption {
+        type = lib.types.path;
+        example = "/dev/input/by-id/some-dev";
+        description = "Path to the keyboard's device file.";
+      };
+
+      compose = {
+        key = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = "ralt";
+          description = "The (optional) compose key to use.";
+        };
+
+        delay = lib.mkOption {
+          type = lib.types.int;
+          default = 5;
+          description = "The delay (in milliseconds) between compose key sequences.";
+        };
+      };
+
+      fallthrough = lib.mkEnableOption "Reemit unhandled key events.";
+
+      allowCommands = lib.mkEnableOption "Allow keys to run shell commands.";
+
+      config = lib.mkOption {
+        type = lib.types.lines;
+        description = ''
+          Keyboard configuration excluding the defcfg block.
+        '';
+      };
     };
 
-    configfiles = mkOption {
-      type = types.listOf types.path;
-      default = [];
-      example = "[ my-config.kbd ]";
-      description = ''
-        Config files for dedicated kmonad instances.
-      '';
-    };
-
-    optionalconfigs = mkOption {
-      type = types.listOf types.path;
-      default = [];
-      example = "[ optional.kbd ]";
-      description = ''
-        Config files for dedicated kmonad instances which may not always be present.
-      '';
-    };
-
-    package = mkOption {
-      type = types.package;
-      default = pkgs.kmonad;
-      example = "pkgs.kmonad";
-      description = ''
-        The kmonad package.
-      '';
-    };
-
-    make-group = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Whether to make a service group when multiple configs are present.
-      '';
+    config = {
+      name = lib.mkDefault name;
     };
   };
 
-  config = {
+  # Create a complete KMonad configuration file:
+  mkCfg = keyboard:
+    let defcfg = ''
+      (defcfg
+        input  (device-file "${keyboard.device}")
+        output (uinput-sink "kmonad-${keyboard.name}")
+    '' +
+    lib.optionalString (keyboard.compose.key != null) ''
+      cmp-seq ${keyboard.compose.key}
+      cmp-seq-delay ${toString keyboard.compose.delay}
+    '' + ''
+        fallthrough ${lib.boolToString keyboard.fallthrough}
+        allow-cmd ${lib.boolToString keyboard.allowCommands}
+      )
+    '';
+    in
+    pkgs.writeTextFile {
+      name = "kmonad-${keyboard.name}.cfg";
+      text = defcfg + "\n" + keyboard.config;
+      checkPhase = "${cfg.package}/bin/kmonad -d $out";
+    };
+
+  # Build a systemd path config that starts the service below when a
+  # keyboard device appears:
+  mkPath = keyboard: rec {
+    name = "kmonad-${keyboard.name}";
+    value = {
+      description = "KMonad trigger for ${keyboard.device}";
+      wantedBy = [ "default.target" ];
+      pathConfig.Unit = "${name}.service";
+      pathConfig.PathExists = keyboard.device;
+    };
+  };
+
+  # Build a systemd service that starts KMonad:
+  mkService = keyboard: {
+    name = "kmonad-${keyboard.name}";
+    value = {
+      description = "KMonad for ${keyboard.device}";
+      script = "${cfg.package}/bin/kmonad ${mkCfg keyboard}";
+      serviceConfig.Restart = "no";
+      serviceConfig.User = "kmonad";
+      serviceConfig.SupplementaryGroups = [ "input" "uinput" ];
+      serviceConfig.Nice = -20;
+    };
+  };
+in
+{
+  options.services.kmonad = {
+    enable = lib.mkEnableOption "KMonad: An advanced keyboard manager.";
+
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.kmonad;
+      example = "pkgs.haskellPacakges.kmonad";
+      description = "The KMonad package to use.";
+    };
+
+    keyboards = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule keyboard);
+      default = { };
+      description = "Keyboard configuration.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
 
-    users.groups.uinput = {};
+    users.groups.uinput = { };
+    users.groups.kmonad = { };
 
-    services.udev.extraRules = mkIf cfg.enable
-      ''
-        # KMonad user access to /dev/uinput
-        KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
-      '';
+    users.users.kmonad = {
+      description = "KMonad system user.";
+      group = "kmonad";
+      isSystemUser = true;
+    };
 
-    systemd = with lib; with builtins;
-      let
-        # If more than one config file is supplied, unify all kmonad units under a target
-        make-group = cfg.make-group && (length cfg.configfiles + length cfg.optionalconfigs) > 1;
+    services.udev.extraRules = ''
+      # KMonad user access to /dev/uinput
+      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+    '';
 
-        # All systemd units require the graphics target directly (if a single config),
-        # or indirectly (via kmonad.target).
-        wantedBy = [ "graphical.target" ];
+    systemd.paths =
+      builtins.listToAttrs
+        (map mkPath (builtins.attrValues cfg.keyboards));
 
-        mk-kmonad-target = services: {
-          # The kmonad.target allows you to restart all kmonad instances with:
-          #
-          #     systemctl restart kmonad.target
-          #
-          # this works because this unit requires all config-based services
-          description = "KMonad target";
-          requires = map (service: service.name + ".service") services;
-          inherit wantedBy;
-        };
-
-        mk-kmonad-service = { is-optional }: kbd-path:
-          let
-            # prettify the service's name by taking the config filename...
-            conf-file = lists.last (strings.splitString "/" (toString kbd-path));
-            # ...and dropping the extension
-            conf-name = lists.head (strings.splitString "." conf-file);
-          in {
-          name = "kmonad-" +conf-name;
-          value = {
-            enable = true;
-            description = "KMonad Instance for: " +conf-name;
-            serviceConfig = {
-              Type = "simple";
-              Restart = "always";
-              RestartSec = 3;
-              Nice = -20;
-              ExecStart =
-                "${cfg.package}/bin/kmonad ${kbd-path}" +
-                  # kmonad will error on initialization for any unplugged keyboards
-                  # when run in systemd. All optional configs will silently error
-                  #
-                  # TODO: maybe try to restart the unit?
-                  (if is-optional then " || true" else "");
-            };
-          } // (if make-group
-                then { partOf = [ "kmonad.target" ]; }
-                else { inherit wantedBy; });
-        };
-
-        required-units = map (mk-kmonad-service { is-optional=false; }) cfg.configfiles;
-
-        optional-units = map (mk-kmonad-service { is-optional=true;  }) cfg.optionalconfigs;
-
-      in
-        mkIf cfg.enable ({
-            # convert our output [{name=_; value=_;}] map to {name=value;} for the systemd module
-            services = listToAttrs (required-units ++ optional-units);
-          } // (
-            # additionally, if make-group is true, add the targets.kmonad attr and pass in all units
-            attrsets.optionalAttrs make-group
-              { targets.kmonad = mk-kmonad-target (required-units ++ optional-units); })
-          );
+    systemd.services =
+      builtins.listToAttrs
+        (map mkService (builtins.attrValues cfg.keyboards));
   };
 }
