@@ -281,6 +281,7 @@ winCodeToKeyCode = M.fromList $
   , (0xBE, KeyDot)          -- Defined as VK_OEM_PERIOD
   , (0xBF, KeySlash)        -- Defined as VK_OEM_2
   , (0xC0, KeyGrave)        -- Defined as VK_OEM_3
+  , (0xC1, KeyRo)
   , (0xDB, KeyLeftBrace)    -- Defined as VK_OEM_4
   , (0xDC, KeyBackslash)    -- Defined as VK_OEM_5
   , (0xDD, KeyRightBrace)   -- Defined as VK_OEM_6
@@ -413,7 +414,7 @@ keyCodeToWinCode = M.fromList $
   , (Key102nd, 0xE2)
   , (KeyF11, 0x7A)
   , (KeyF12, 0x7B)
-  -- , (KeyRo, ???)
+  , (KeyRo, 0xC1)
   , (KeyKatakana, 0x15)
   -- , (KeyHiragana, ???)
   , (KeyHenkan, 0x1C)
