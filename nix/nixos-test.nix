@@ -1,17 +1,6 @@
-# To run this test:
-#
-#   $ nix flake check
-#
-# To run this test with debugging output:
-#
-#   $ nix flake check --print-build-logs
-#
-# To run the tests and interact with the VM:
-#
-#   $ nix build .#checks.x86_64-linux.default.driverInteractive
-#   $ result/bin/nixos-test-driver
-#
-{ pkgs, module }:
+{ sources ? import ./sources.nix
+, pkgs ? (import sources.nixpkgs { })
+}:
 
 let
   config = pkgs.runCommand "kmonad-config" { } ''
@@ -25,7 +14,9 @@ pkgs.nixosTest {
 
   nodes = {
     machine = { ... }: {
-      imports = [ module ];
+      imports = [
+        ./nixos-module.nix
+      ];
 
       users.users.jdoe = {
         createHome = true;
@@ -40,7 +31,7 @@ pkgs.nixosTest {
           config = builtins.readFile (toString config);
           compose.key = null;
           fallthrough = true;
-          device = "/dev/input/by-path/pci-0000:00:0a.0-event-kbd";
+          device = "/dev/input/event0";
         };
       };
     };
@@ -52,7 +43,6 @@ pkgs.nixosTest {
 
     with subtest("Verify KMonad started"):
         machine.wait_for_unit("kmonad-qemu.service")
-        machine.wait_until_succeeds("pgrep kmonad")
 
     with subtest("Log In"):
         machine.wait_until_tty_matches(1, "login: ")
