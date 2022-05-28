@@ -18,6 +18,21 @@ let
         description = "Path to the keyboard's device file.";
       };
 
+      extraGroups = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "openrazer" ];
+        description = ''
+          Extra permission groups to attach to the KMonad instance for
+          this keyboard.
+
+          Since KMonad runs as an unprivileged user, it may sometimes
+          need extra permissions in order to read the keyboard device
+          file.  If your keyboard's device file isn't in the input
+          group you'll need to list its group in this option.
+        '';
+      };
+
       compose = {
         key = lib.mkOption {
           type = lib.types.nullOr lib.types.str;
@@ -91,7 +106,7 @@ let
       script = "${cfg.package}/bin/kmonad ${mkCfg keyboard}";
       serviceConfig.Restart = "no";
       serviceConfig.User = "kmonad";
-      serviceConfig.SupplementaryGroups = [ "input" "uinput" ];
+      serviceConfig.SupplementaryGroups = [ "input" "uinput" ] ++ keyboard.extraGroups;
       serviceConfig.Nice = -20;
     };
   };
