@@ -86,22 +86,34 @@
           module = self.nixosModules.default;
         };
 
-      devShells = forAllSystems (system: {
-        default = nixpkgsFor.${system}.haskellPackages.shellFor {
-          NIX_PATH = "nixpkgs=${nixpkgsFor.${system}.path}";
+      devShells = forAllSystems (system:
+        let shellFor = haskell: name:
+          haskell.shellFor {
+            NIX_PATH = "nixpkgs=${nixpkgsFor.${system}.path}";
 
-          packages = _: [ self.packages.${system}.kmonad ];
-          withHoogle = true;
-          buildInputs = with nixpkgsFor.${system}; [
-            haskellPackages.cabal-fmt
-            haskellPackages.cabal-install
-            haskellPackages.ghcid
-            haskellPackages.haskell-language-server
-            haskellPackages.hlint
-            haskellPackages.ormolu
-            haskellPackages.stack
-          ];
-        };
-      });
+            packages = _: [ self.packages.${system}.${name} ];
+            withHoogle = true;
+            buildInputs = [
+              haskell.cabal-fmt
+              haskell.cabal-install
+              haskell.ghcid
+              haskell.haskell-language-server
+              haskell.hlint
+              haskell.ormolu
+              haskell.stack
+            ];
+          }; in
+        {
+          default = shellFor
+            nixpkgsFor.${system}.haskellPackages
+            "kmonad";
+        } // builtins.listToAttrs (map
+          (compiler: {
+            name = "kmonad-${compiler}";
+            value = shellFor
+              nixpkgsFor.${system}.haskell.packages.${compiler}
+              "kmonad-${compiler}";
+          })
+          supportedCompilers));
     };
 }
