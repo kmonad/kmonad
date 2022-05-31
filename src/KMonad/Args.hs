@@ -27,7 +27,7 @@ import KMonad.Args.Types
 loadConfig :: HasLogFunc e => Cmd -> RIO e AppCfg
 loadConfig cmd = do
 
-  tks <- loadTokens (cmd^.cfgFile)      -- This can throw a PErrors
+  tks <- loadTokens (cmd^.cfgFile)      -- This can throw a ParseError
   cgt <- joinConfigIO (joinCLI cmd tks) -- This can throw a JoinError
 
   -- Try loading the sink and src

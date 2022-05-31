@@ -34,9 +34,12 @@ where
 
 import KMonad.Prelude hiding (try, bool)
 
+import KMonad.Parsing
 import KMonad.Args.Types
 import KMonad.Keyboard
 import KMonad.Keyboard.ComposeSeq
+
+
 
 import Data.Char
 import RIO.List (sortBy, find)
@@ -51,9 +54,9 @@ import qualified Text.Megaparsec.Char.Lexer as L
 -- $run
 
 -- | Try to parse a list of 'KExpr' from 'Text'
-parseTokens :: Text -> Either PErrors [KExpr]
+parseTokens :: Text -> Either ParseError [KExpr]
 parseTokens t = case runParser configP "" t  of
-  Left  e -> Left $ PErrors e
+  Left  e -> Left $ ParseError e
   Right x -> Right x
 
 -- | Load a set of tokens from file, throw an error on parse-fail
@@ -65,13 +68,6 @@ loadTokens pth = parseTokens <$> readFileUtf8 pth >>= \case
 
 --------------------------------------------------------------------------------
 -- $basic
-
--- | Consume whitespace
-sc :: Parser ()
-sc = L.space
-  space1
-  (L.skipLineComment  ";;")
-  (L.skipBlockComment "#|" "|#")
 
 -- | Consume whitespace after the provided parser
 lexeme :: Parser a -> Parser a

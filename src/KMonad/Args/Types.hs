@@ -10,12 +10,9 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Args.Types
-  ( -- * $bsc
-    Parser
-  , PErrors(..)
-
+  (
     -- * $cfg
-  , CfgToken(..)
+    CfgToken(..)
 
     -- * $but
   , DefButton(..)
@@ -35,10 +32,6 @@ module KMonad.Args.Types
     -- * $lenses
   , AsKExpr(..)
   , AsDefSetting(..)
-
-    -- * Reexports
-  , module Text.Megaparsec
-  , module Text.Megaparsec.Char
 ) where
 
 
@@ -48,25 +41,6 @@ import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 import KMonad.Util
-
-import Text.Megaparsec
-import Text.Megaparsec.Char
-
---------------------------------------------------------------------------------
--- $bsc
---
--- The basic types of parsing
-
--- | Parser's operate on Text and carry no state
-type Parser = Parsec Void Text
-
--- | The type of errors returned by the Megaparsec parsers
-newtype PErrors = PErrors (ParseErrorBundle Text Void)
-
-instance Show PErrors where
-  show (PErrors e) = "Parse error at " <> errorBundlePretty e
-
-instance Exception PErrors
 
 --------------------------------------------------------------------------------
 -- $but
