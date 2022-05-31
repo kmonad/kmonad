@@ -92,6 +92,8 @@ library
       KMonad.Keyboard.Ops
       KMonad.Keyboard.Types
       KMonad.Prelude
+      KMonad.Prelude.Imports
+      KMonad.Prelude.Definitions
       KMonad.Util
       KMonad.Util.LayerStack
       KMonad.Util.MultiMap
