@@ -94,12 +94,9 @@
             packages = _: [ self.packages.${system}.${name} ];
             withHoogle = true;
             buildInputs = [
-              haskell.cabal-fmt
               haskell.cabal-install
-              haskell.ghcid
               haskell.haskell-language-server
               haskell.hlint
-              haskell.ormolu
               haskell.stack
             ];
           }; in
