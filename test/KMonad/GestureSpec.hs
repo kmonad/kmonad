@@ -3,6 +3,8 @@ module KMonad.GestureSpec ( spec ) where
 import KMonad.Prelude
 import KMonad.Gesture
 
+import Data.Either (fromRight)
+
 import Test.Hspec hiding (around)
 
 r :: Either a b -> b
