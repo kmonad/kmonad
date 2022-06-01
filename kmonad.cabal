@@ -39,6 +39,7 @@ library
   build-depends:
       base
     , cereal
+    -- , hspec
     , lens
     , megaparsec
     , mtl
@@ -71,6 +72,12 @@ library
       KMonad.App
       KMonad.App.Main
       KMonad.App.Types
+      KMonad.Args
+      KMonad.Args.Cmd
+      KMonad.Args.Parser
+      KMonad.Args.Joiner
+      KMonad.Args.TH
+      KMonad.Args.Types
       KMonad.Model
       KMonad.Model.Action
       KMonad.Model.BEnv
@@ -79,18 +86,14 @@ library
       KMonad.Model.Hooks
       KMonad.Model.Keymap
       KMonad.Model.Sluice
-      KMonad.Args
-      KMonad.Args.Cmd
-      KMonad.Args.Parser
-      KMonad.Args.Joiner
-      KMonad.Args.TH
-      KMonad.Args.Types
+      KMonad.Gesture
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
       KMonad.Keyboard.Keycode
       KMonad.Keyboard.Ops
       KMonad.Keyboard.Types
+      KMonad.Parsing
       KMonad.Prelude
       KMonad.Prelude.Imports
       KMonad.Prelude.Definitions
@@ -156,3 +159,38 @@ executable kmonad
   build-depends:
       base
     , kmonad
+
+test-suite spec
+  main-is: Spec.hs
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  ghc-options:
+      -Wall
+  build-depends:
+      base
+    , kmonad
+    , hspec
+  other-modules:
+      KMonad.GestureSpec
+  default-language:
+      Haskell2010
+  build-tool-depends: hspec-discover:hspec-discover == 2.*
+  default-extensions:
+      ConstraintKinds
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      MultiParamTypeClasses
+      MultiWayIf
+      NoImplicitPrelude
+      OverloadedStrings
+      RankNTypes
+      TemplateHaskell
+      TupleSections
+      TypeFamilies
