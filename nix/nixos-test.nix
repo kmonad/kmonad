@@ -19,54 +19,87 @@ let
       '/^\(defcfg/,/^\)/d' \
       ${../keymap/tutorial.kbd} > $out
   '';
+
+  qemu-keyboard = "/dev/input/by-path/pci-0000:00:0a.0-event-kbd";
+
+  users = { ... }: {
+    users.users.jdoe = {
+      createHome = true;
+      isNormalUser = true;
+      password = "password";
+      group = "users";
+    };
+
+  };
 in
 pkgs.nixosTest {
   name = "kmonad-test";
 
   nodes = {
-    machine = { ... }: {
-      imports = [ module ];
-
-      users.users.jdoe = {
-        createHome = true;
-        isNormalUser = true;
-        password = "password";
-        group = "users";
-      };
+    tutorial = { ... }: {
+      imports = [
+        module
+        users
+      ];
 
       services.kmonad = {
         enable = true;
         keyboards.qemu = {
+          device = qemu-keyboard;
+          config = builtins.readFile ../keymap/tutorial.kbd;
+        };
+      };
+    };
+
+    defcfgGenerated = { ... }: {
+      imports = [
+        module
+        users
+      ];
+
+      services.kmonad = {
+        enable = true;
+        keyboards.qemu = {
+          device = qemu-keyboard;
           config = builtins.readFile (toString config);
-          compose.key = null;
-          fallthrough = true;
-          device = "/dev/input/by-path/pci-0000:00:0a.0-event-kbd";
+
+          defcfg = {
+            enable = true;
+            compose.key = null;
+            fallthrough = true;
+          };
         };
       };
     };
   };
 
-  testScript = ''
-    with subtest("Start machines"):
-        start_all()
+  testScript =
+    let node = name: ''
+      with subtest("Verify KMonad started"):
+          ${name}.wait_for_unit("kmonad-qemu.service")
+          ${name}.wait_until_succeeds("pgrep kmonad")
 
-    with subtest("Verify KMonad started"):
-        machine.wait_for_unit("kmonad-qemu.service")
-        machine.wait_until_succeeds("pgrep kmonad")
+      with subtest("Log In"):
+          ${name}.wait_until_tty_matches(1, "login: ")
+          ${name}.send_chars("jdoe\n")
+          ${name}.wait_until_tty_matches(1, "Password: ")
+          ${name}.send_chars("password\n")
+          ${name}.wait_until_tty_matches(1, "$")
 
-    with subtest("Log In"):
-        machine.wait_until_tty_matches(1, "login: ")
-        machine.send_chars("jdoe\n")
-        machine.wait_until_tty_matches(1, "Password: ")
-        machine.send_chars("password\n")
-        machine.wait_until_tty_matches(1, "$")
+      with subtest("Test Tutorial Numbers Layer"):
+          ${name}.send_chars("echo ")
+          ${name}.send_key("meta_l-k") # Should send "5"
+          ${name}.send_key("meta_l-l") # Should send "6"
+          ${name}.send_chars(" > /tmp/keys\n")
+          ${name}.wait_until_succeeds("test -e /tmp/keys")
+          ${name}.succeed("test \"$(cat /tmp/keys)\" -eq 56")
+    '';
+    in
+    ''
+      with subtest("Start nodes"):
+          start_all()
 
-    with subtest("Test Tutorial Numbers Layer"):
-        machine.send_chars("echo ")
-        machine.send_key("meta_l-k") # Should send "5"
-        machine.send_key("meta_l-l") # Should send "6"
-        machine.send_chars(" > /tmp/keys\n")
-        machine.wait_until_succeeds("test -e /tmp/keys")
-        machine.succeed("test \"$(cat /tmp/keys)\" -eq 56")
-  '';
+    ''
+    + node "tutorial"
+    + node "defcfgGenerated";
 }
