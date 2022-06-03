@@ -33,29 +33,36 @@ let
         '';
       };
 
-      compose = {
-        key = lib.mkOption {
-          type = lib.types.nullOr lib.types.str;
-          default = "ralt";
-          description = "The (optional) compose key to use.";
+      defcfg = {
+        enable = lib.mkEnableOption ''
+          Automatically generate the defcfg block.
+
+          When this is option is set to true the config option for
+          this keyboard should not include a defcfg block.
+        '';
+
+        compose = {
+          key = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = "ralt";
+            description = "The (optional) compose key to use.";
+          };
+
+          delay = lib.mkOption {
+            type = lib.types.int;
+            default = 5;
+            description = "The delay (in milliseconds) between compose key sequences.";
+          };
         };
 
-        delay = lib.mkOption {
-          type = lib.types.int;
-          default = 5;
-          description = "The delay (in milliseconds) between compose key sequences.";
-        };
+        fallthrough = lib.mkEnableOption "Reemit unhandled key events.";
+
+        allowCommands = lib.mkEnableOption "Allow keys to run shell commands.";
       };
-
-      fallthrough = lib.mkEnableOption "Reemit unhandled key events.";
-
-      allowCommands = lib.mkEnableOption "Allow keys to run shell commands.";
 
       config = lib.mkOption {
         type = lib.types.lines;
-        description = ''
-          Keyboard configuration excluding the defcfg block.
-        '';
+        description = "Keyboard configuration.";
       };
     };
 
@@ -71,18 +78,18 @@ let
         input  (device-file "${keyboard.device}")
         output (uinput-sink "kmonad-${keyboard.name}")
     '' +
-    lib.optionalString (keyboard.compose.key != null) ''
-      cmp-seq ${keyboard.compose.key}
-      cmp-seq-delay ${toString keyboard.compose.delay}
+    lib.optionalString (keyboard.defcfg.compose.key != null) ''
+      cmp-seq ${keyboard.defcfg.compose.key}
+      cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
     '' + ''
-        fallthrough ${lib.boolToString keyboard.fallthrough}
-        allow-cmd ${lib.boolToString keyboard.allowCommands}
+        fallthrough ${lib.boolToString keyboard.defcfg.fallthrough}
+        allow-cmd ${lib.boolToString keyboard.defcfg.allowCommands}
       )
     '';
     in
     pkgs.writeTextFile {
       name = "kmonad-${keyboard.name}.cfg";
-      text = defcfg + "\n" + keyboard.config;
+      text = lib.optionalString keyboard.defcfg.enable (defcfg + "\n") + keyboard.config;
       checkPhase = "${cfg.package}/bin/kmonad -d $out";
     };
 
@@ -99,17 +106,32 @@ let
   };
 
   # Build a systemd service that starts KMonad:
-  mkService = keyboard: {
-    name = "kmonad-${keyboard.name}";
-    value = {
-      description = "KMonad for ${keyboard.device}";
-      script = "${cfg.package}/bin/kmonad ${mkCfg keyboard}";
-      serviceConfig.Restart = "no";
-      serviceConfig.User = "kmonad";
-      serviceConfig.SupplementaryGroups = [ "input" "uinput" ] ++ keyboard.extraGroups;
-      serviceConfig.Nice = -20;
+  mkService = keyboard:
+    let
+      cmd = [
+        "${cfg.package}/bin/kmonad"
+        "--input"
+        ''device-file "${keyboard.device}"''
+      ] ++ cfg.extraArgs ++ [
+        "${mkCfg keyboard}"
+      ];
+
+      groups = [
+        "input"
+        "uinput"
+      ] ++ keyboard.extraGroups;
+    in
+    {
+      name = "kmonad-${keyboard.name}";
+      value = {
+        description = "KMonad for ${keyboard.device}";
+        script = lib.escapeShellArgs cmd;
+        serviceConfig.Restart = "no";
+        serviceConfig.User = "kmonad";
+        serviceConfig.SupplementaryGroups = groups;
+        serviceConfig.Nice = -20;
+      };
     };
-  };
 in
 {
   options.services.kmonad = {
@@ -126,6 +148,13 @@ in
       type = lib.types.attrsOf (lib.types.submodule keyboard);
       default = { };
       description = "Keyboard configuration.";
+    };
+
+    extraArgs = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "--log-level" "debug" ];
+      description = "Extra arguments to pass to KMonad.";
     };
   };
 
