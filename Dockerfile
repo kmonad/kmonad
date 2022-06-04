@@ -1,4 +1,4 @@
-FROM lierdakil/alpine-haskell:8.10.4
+FROM lierdakil/alpine-haskell:8.10.7
 
 WORKDIR /usr/src/kmonad/
 RUN apk --no-cache add git
