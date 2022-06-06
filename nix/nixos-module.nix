@@ -9,6 +9,7 @@ let
       name = lib.mkOption {
         type = lib.types.str;
         example = "laptop-internal";
+        default = name;
         description = "Keyboard name.";
       };
 
