@@ -338,6 +338,8 @@ joinButton ns als =
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
+    KPressOnly c -> ret $ pressOnly c
+    KReleaseOnly c -> ret $ releaseOnly c
     KCommand pr mbR -> ret $ cmdButton pr mbR
     KLayerToggle t -> if t `elem` ns
       then ret $ layerToggle t

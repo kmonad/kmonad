@@ -263,6 +263,8 @@ buttonP = (lexeme . choice . map try $
 keywordButtons :: [(Text, Parser DefButton)]
 keywordButtons =
   [ ("around"         , KAround      <$> buttonP     <*> buttonP)
+  , ("press-only"     , KPressOnly   <$> keycodeP)
+  , ("release-only"   , KReleaseOnly <$> keycodeP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
   , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-hold-next"

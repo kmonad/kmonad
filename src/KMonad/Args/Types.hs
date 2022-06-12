@@ -54,6 +54,8 @@ import KMonad.Util
 data DefButton
   = KRef Text                              -- ^ Reference a named button
   | KEmit Keycode                          -- ^ Emit a keycode
+  | KPressOnly Keycode                     -- ^ Emit only the press of a keycode
+  | KReleaseOnly Keycode                   -- ^ Emit only the release of a keycode
   | KLayerToggle Text                      -- ^ Toggle to a layer when held
   | KLayerSwitch Text                      -- ^ Switch base-layer when pressed
   | KLayerAdd Text                         -- ^ Add a layer when pressed

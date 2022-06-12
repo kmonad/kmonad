@@ -109,6 +109,21 @@ Defining fancy buttons is why we're here, right? There are a variety of
 these things here, as well as some helpers to make entering them into
 layers (more below) much easier.
 
+## Press- or release-only buttons
+
+- `(press-only x)` : Send the *press* of x when this button is tapped
+- `(release-only x)` : Send the *release* of x when this button is tapped
+
+It is possible to define buttons that only press or release a virtual output
+button. They are useful in tap-macros, especially ones that are going to be
+executed in a 'known context'. Assume you want to use your physical alt button
+to *both* open a layer, but also to function as a basic `alt` key. This can be
+achieved by `(around met (layer-toggle my-layer))`. However, if you have a macro
+inside `my-layer` that taps alt, then this would release alt until the layer is
+reactivated (by physically releasing and repressing the `alt` key). The macro,
+however, can instead be affixed by `(press-only met)`, making the last step of
+the macro the reactivation of the `alt` key, solving the problem.
+
 ## Modded Buttons
 
 To make key-entry easier, kmonad already provides some syntax for

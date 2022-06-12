@@ -27,6 +27,8 @@ module KMonad.Model.Button
   -- * Simple buttons
   -- $simple
   , emitB
+  , pressOnly
+  , releaseOnly
   , modded
   , layerToggle
   , layerSwitch
@@ -126,6 +128,14 @@ emitB :: Keycode -> Button
 emitB c = mkButton
   (emit $ mkPress c)
   (emit $ mkRelease c)
+
+-- | A button that emits only a Press of a keycode.
+pressOnly :: Keycode -> Button
+pressOnly c = onPress $ emit $ mkPress c
+
+-- | A button that emits only a Release of a keycode.
+releaseOnly :: Keycode -> Button
+releaseOnly c = onPress $ emit $ mkRelease c
 
 -- | Create a new button that first presses a 'Keycode' before running an inner
 -- button, releasing the 'Keycode' again after the inner 'Button' is released.
