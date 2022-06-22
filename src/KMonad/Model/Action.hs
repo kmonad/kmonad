@@ -189,7 +189,7 @@ after :: MonadK m
   -> m ()
   -> m ()
 after d a = do
-  let rehook t = after (d - t^.elapsed) a *> pure NoCatch
+  let rehook t = after (d - t^.elapsed) a $> NoCatch
   tHookF InputHook d a rehook
 
 -- | Perform an action immediately after the current action is finished. NOTE:
