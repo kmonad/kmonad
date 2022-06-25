@@ -23,6 +23,7 @@ module KMonad.Args.Parser
   -- * Building Parsers
   , symbol
   , numP
+  , buttonP
 
   -- * Parsers for Tokens and Buttons
   , otokens
@@ -229,19 +230,19 @@ rmTapMacroP =
   char '#' *> paren (KTapMacro <$> some buttonP
                                <*> optional (keywordP "delay" numP))
 
--- | Compose-key sequence
-composeSeqP :: Parser [DefButton]
-composeSeqP = do
+-- | Unicode or compose-key sequence
+specialCharP :: Parser DefButton
+specialCharP = do
   -- Lookup 1 character in the compose-seq list
   c <- anySingle <?> "special character"
-  s <- case find (\(_, c', _) -> (c' == c)) ssComposed of
-         Nothing -> fail "Unrecognized compose-char"
-         Just b  -> pure $ b^._1
+  case find (\(_, c', _) -> (c' == c)) ssComposed of
+         Just compo -> case runParser (some buttonP) "" (compo^._1) of
+            Left  _ -> fail "Could not parse compose sequence"
+            Right b -> pure $ KComposeSeq b
+         Nothing | fromEnum c < 128 -> fail "Unrecognized character"
+                 | otherwise -> pure $ KUnicodeChar c
 
   -- If matching, parse a button-sequence from the stored text
-  case runParser (some buttonP) "" s of
-    Left  _ -> fail "Could not parse compose sequence"
-    Right b -> pure b
 
 -- | Parse a dead-key sequence as a `+` followed by some symbol
 deadkeySeqP :: Parser [DefButton]
@@ -308,7 +309,7 @@ noKeywordButtons =
   , lexeme $ try rmTapMacroP
   , lexeme $ try pauseP
   , KEmit <$> keycodeP
-  , KComposeSeq <$> composeSeqP
+  , specialCharP
   ]
 
 --------------------------------------------------------------------------------
