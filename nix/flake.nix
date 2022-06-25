@@ -74,7 +74,18 @@
           # Just the executables for the default compiler:
           default = pkgs.haskell.lib.justStaticExecutables
             (derivation pkgs pkgs.haskellPackages);
-        } // builtins.listToAttrs (map
+        } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+          list-keyboards = pkgs.stdenv.mkDerivation {
+            name = "list-keyboards";
+            version = self.shortRev;
+            src = ../c_src/mac;
+            buildInputs = [
+              pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+              pkgs.darwin.IOKit
+            ];
+            installFlags = [ "DESTDIR=$(out)" ];
+          };
+        }) // builtins.listToAttrs (map
           (compiler: {
             name = "kmonad-${compiler}";
             value = derivation pkgs pkgs.haskell.packages.${compiler};
