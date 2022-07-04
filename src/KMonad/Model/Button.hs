@@ -42,6 +42,7 @@ module KMonad.Model.Button
   , aroundNext
   , aroundNextTimeout
   , aroundNextSingle
+  , beforeAfterNext
   , layerDelay
   , layerNext
   , tapHold
@@ -273,6 +274,17 @@ tapHoldNext ms t h mtb = onPress $ within ms (pure $ const True) onTimeout $ \tr
   where
     onTimeout :: MonadK m =>  m ()
     onTimeout = press $ fromMaybe h mtb
+
+-- | Surround some future button with a before and after tap
+beforeAfterNext :: Button -> Button -> Button
+beforeAfterNext b a = onPress $ do
+  tap b
+  await isPress $ \e -> do
+    await (isReleaseOf $ e^.keycode) $ \_ -> do
+      tap a
+      pure NoCatch
+    pure NoCatch
+
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:

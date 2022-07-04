@@ -83,6 +83,7 @@ data DefButton
   | KCommand Text (Maybe Text)             -- ^ Execute a shell command on press, as well
                                            --   as possibly on release
   | KStickyKey Int DefButton               -- ^ Act as if a button is pressed for a period of time
+  | KBeforeAfterNext DefButton DefButton   -- ^ Surround a future button in a before and after tap
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
   deriving Show
