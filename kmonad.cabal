@@ -37,15 +37,25 @@ library
     -Wno-name-shadowing
     -Wno-unused-imports
   build-depends:
-      base
+      ansi-wl-pprint
+    , base
+    , binary
     , cereal
-    -- , hspec
+    , dhall
+    , either
+    , exceptions
+    , Glob
+    , hspec
     , lens
     , megaparsec
     , mtl
     , optparse-applicative
+    , ordered-containers
+    , pretty-simple
+    , raw-strings-qq
     , resourcet
     , rio
+    , rio-orphans
     , time
     , unliftio
     , template-haskell
@@ -57,7 +67,6 @@ library
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
-      GeneralizedNewtypeDeriving
       LambdaCase
       MultiParamTypeClasses
       MultiWayIf
@@ -69,44 +78,106 @@ library
       TypeFamilies
 
   exposed-modules:
-      KMonad.App
-      KMonad.App.Main
-      KMonad.App.Types
-      KMonad.Args
-      KMonad.Args.Cmd
-      KMonad.Args.Parser
-      KMonad.Args.Joiner
-      KMonad.Args.TH
-      KMonad.Args.Types
-      KMonad.Model
-      KMonad.Model.Action
-      KMonad.Model.BEnv
-      KMonad.Model.Button
-      KMonad.Model.Dispatch
-      KMonad.Model.Hooks
-      KMonad.Model.Keymap
-      KMonad.Model.Sluice
-      KMonad.Gesture
-      KMonad.Keyboard
-      KMonad.Keyboard.ComposeSeq
-      KMonad.Keyboard.IO
-      KMonad.Keyboard.Keycode
-      KMonad.Keyboard.Ops
-      KMonad.Keyboard.Types
-      KMonad.Parsing
-      KMonad.Prelude
-      KMonad.Prelude.Imports
-      KMonad.Prelude.Definitions
-      KMonad.Util
-      KMonad.Util.LayerStack
-      KMonad.Util.MultiMap
-      Paths_kmonad
+      K
+      K.App
+      K.Initial
+      K.Initial.Initial
+      K.Initial.Parsing
+      K.Initial.Util
+      K.Initial.Util.Cmd
+      K.Initial.Util.Initial
+      K.Initial.Util.Name
+      K.Initial.Util.Path
+      K.Initial.Util.Time
+      K.Gesture
+      K.Gesture.Initial
+      K.Keyboard
+      K.Keyboard.Initial
+      K.Keyboard.Locale
+      K.Layers
+      K.Layers.Initial
+      K.Layers.KbdFile
+      K.Layers.KbdFile.Initial
+      K.Layers.KbdFile.KExpr
+      K.Shell
+      K.Shell.Cfg
+      K.Shell.Cfg.Cfgable
+      K.Shell.Cfg.CfgFile
+      K.Shell.Cfg.Default
+      K.Shell.Cfg.Expr
+      K.Shell.Cfg.Expr.Cmd
+      K.Shell.Cfg.Expr.Initial
+      K.Shell.Cfg.Expr.KeyInput
+      K.Shell.Cfg.Expr.KeyOutput
+      K.Shell.Cfg.Expr.KeyRepeat
+      K.Shell.Cfg.Expr.Path
+      K.Shell.Cfg.Expr.Toggles
+      K.Shell.Cfg.Invoc
+      K.Shell.Cfg.Initial
+      K.Shell.Env
+      K.Shell.Env.Initial
+      K.Shell.Error
+      K.Shell.Initial
+      K.Shell.KeyIO
+      K.Shell.KeyIO.Env
+      K.Shell.KeyIO.Initial
+      K.Shell.KeyIO.LinEvdevSrc
+      K.Shell.KeyIO.LinUinputSnk
+      K.Shell.Logging
+      -- KMonad.App
+      -- KMonad.App.Cfg
+      -- KMonad.App.Cfg.Cfgable
+      -- KMonad.App.Cfg.Default
+      -- KMonad.App.Cfg.Expr
+      -- KMonad.App.Cfg.Expr.Types
+      -- KMonad.App.Cfg.Expr.Cmd
+      -- KMonad.App.Cfg.Expr.KeyInput
+      -- KMonad.App.Cfg.Expr.KeyOutput
+      -- KMonad.App.Cfg.Expr.KeyRepeat
+      -- KMonad.App.Cfg.Expr.Logging
+      -- KMonad.App.Cfg.Expr.Path
+      -- KMonad.App.Cfg.Invoc
+      -- KMonad.App.Cfg.Types
+      -- KMonad.App.Main
+      -- KMonad.App.Types
+      -- KMonad.Args
+      -- KMonad.Args.Cmd
+      -- KMonad.Args.Parser
+      -- KMonad.Args.Joiner
+      -- KMonad.Args.TH
+      -- KMonad.Args.Types
+      -- KMonad.Logging
+      -- KMonad.Logging.Cfg
+      -- KMonad.Model
+      -- KMonad.Model.Action
+      -- KMonad.Model.BEnv
+      -- KMonad.Model.Button
+      -- KMonad.Model.Dispatch
+      -- KMonad.Model.Hooks
+      -- KMonad.Model.Keymap
+      -- KMonad.Model.Sluice
+      -- KMonad.Parsing
+      -- KMonad.Gesture
+      -- KMonad.Keyboard
+      -- KMonad.Keyboard.ComposeSeq
+      -- KMonad.Keyboard.IO
+      -- KMonad.Keyboard.Keycode
+      -- KMonad.Keyboard.Ops
+      -- KMonad.Keyboard.Types
+      -- KMonad.Prelude
+      -- KMonad.Prelude.Imports
+      -- KMonad.Prelude.Parsing
+      -- KMonad.Prelude.Definitions
+      -- KMonad.Util
+      -- KMonad.Util.LayerStack
+      -- KMonad.Util.MultiMap
+      -- Paths_kmonad
 
   if os(linux)
     exposed-modules:
-      KMonad.Keyboard.IO.Linux.DeviceSource
-      KMonad.Keyboard.IO.Linux.Types
-      KMonad.Keyboard.IO.Linux.UinputSink
+      -- KMonad.Keyboard.IO.Linux.DeviceSource
+      -- KMonad.Keyboard.IO.Linux.Types
+      -- KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
     build-depends:
@@ -114,9 +185,9 @@ library
 
   if os(windows)
     exposed-modules:
-      KMonad.Keyboard.IO.Windows.LowLevelHookSource
-      KMonad.Keyboard.IO.Windows.SendEventSink
-      KMonad.Keyboard.IO.Windows.Types
+      -- KMonad.Keyboard.IO.Windows.LowLevelHookSource
+      -- KMonad.Keyboard.IO.Windows.SendEventSink
+      -- KMonad.Keyboard.IO.Windows.Types
     c-sources:
       c_src/keyio_win.c
     build-depends:
@@ -124,9 +195,9 @@ library
 
   if os(darwin)
     exposed-modules:
-      KMonad.Keyboard.IO.Mac.IOKitSource
-      KMonad.Keyboard.IO.Mac.KextSink
-      KMonad.Keyboard.IO.Mac.Types
+      -- KMonad.Keyboard.IO.Mac.IOKitSource
+      -- KMonad.Keyboard.IO.Mac.KextSink
+      -- KMonad.Keyboard.IO.Mac.Types
     if flag(kext)
       cxx-sources:
         c_src/mac/kext.cpp
@@ -172,7 +243,7 @@ test-suite spec
     , kmonad
     , hspec
   other-modules:
-      KMonad.GestureSpec
+      -- KMonad.GestureSpec
   default-language:
       Haskell2010
   build-tool-depends: hspec-discover:hspec-discover == 2.*
