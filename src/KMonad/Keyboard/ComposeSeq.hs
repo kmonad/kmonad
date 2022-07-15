@@ -135,6 +135,8 @@ ssComposed =
     , ("` E"      , 'È'     , "Egrave")
     , ("' E"      , 'É'     , "Eacute")
     , ("^ E"      , 'Ê'     , "Ecircumflex")
+    , ("^ U"      , 'Û'     , "Ucircumflex")
+    , ("` U"      , 'Ù'     , "Ugrave")
     , ("\" E"     , 'Ë'     , "Ediaeresis")
     , ("` I"      , 'Ì'     , "Igrave")
     , ("' I"      , 'Í'     , "Iacute")
