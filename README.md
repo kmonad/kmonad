@@ -80,7 +80,10 @@ For several commonly asked questions regarding various configuration issues, ple
 - [the FAQ](doc/faq.md)
 
 ## Disclaimer
-The original maintainer is chronically ill and currently unable to work on
-KMonad. Luckily we have a very helpful and pleasant community that is happy to
-be of assistance. When energy and circumstance permits, the core developer will
-labour to make progress, but for now this will be sporadically and unpredictably.
+The core maintainer is currently chronically ill with debilitating autoimmune
+symptoms. They come and go, but when they are there they very much get in the
+way of concentrated work. It is very much his intent to keep working on KMonad
+until it is very, very good. But please be aware that he might be gone for weeks
+on end, not out of a lack of interest, but out of a lack of capacity. You are
+always free to reach out to him by email.
+
