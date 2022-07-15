@@ -1,0 +1,67 @@
+let max4 =
+      { minus = [ "min" ]
+      , equal = [ "eql" ]
+      , backspace = [ "back", "bspc" ]
+      , leftbrace = [ "lbrc", "brcL" ]
+      , rightbrace = [ "rbrc", "brcR" ]
+      , enter = [ "ret", "ent" ]
+      , leftctrl = [ "lctl", "ctlL" ]
+      , semicolon = [ "semi", "scln" ]
+      , apostrophe = [ "apo" ]
+      , grave = [ "grv" ]
+      , leftshift = [ "lsft", "sftL", "sft", "S", "LS" ]
+      , backslash = [ "bsls" ]
+      , comma = [ "com" ]
+      , slash = [ "sls", "slsh" ]
+      , rightshift = [ "rsft", "sftR", "RS" ]
+      , leftalt = [ "lalt", "altL", "A", "LA" ]
+      , space = [ "spc" ]
+      , capslock = [ "caps", "clck" ]
+      , numlock = [ "num", "nlck" ]
+      , zenkakuhankaku = [ "zenk" ]
+      , _102nd = [ "_102" ]
+      , katakana = [ "kata" ]
+      , hiragana = [ "hira" ]
+      , henkan = [ "henk" ]
+      , katakanahiragana = [ "kahi" ]
+      , muhenkan = [ "muhe" ]
+      , rightctrl = [ "rctl", "ctlR", "CR" ]
+      , rightalt = [ "ralt", "altR", "RA" ]
+      , pageup = [ "pgup", "_Pup" ]
+      , right = [ "rght", "_Pdn" ]
+      , pagedown = [ "pgdn" ]
+      , insert = [ "ins" ]
+      , delete = [ "del" ]
+      , mute = [ "_Vno" ]
+      , volumedown = [ "_Vdn" ]
+      , volumeup = [ "_Vup" ]
+      , pause = [ "paus" ]
+      , leftmeta = [ "lmet", "metL", "M", "ML" ]
+      , rightmeta = [ "rmet", "metR", "MR" ]
+      , compose = [ "cmps", "comp" ]
+      , sleep = [ "zzz" ]
+      , brightnessdown = [ "_Bdn" ]
+      , brightnessup = [ "_Bup" ]
+      }
+
+let symbols =
+      { apostrophe = "_'"
+      , comma = [ "_," ]
+      , dot = [ "_." ]
+      , equal = [ "_=" ]
+      , kpasterisk = [ "kp*" ]
+      , kpcomma = [ "kp," ]
+      , kpdot = [ "kp." ]
+      , kpminus = [ "kp-" ]
+      , kpplus = [ "kp+" ]
+      , leftbrace = [ "_[" ]
+      , minus = [ "_-" ]
+      , rightbrace = [ "_]" ]
+      , slash = [ "_/" ]
+      }
+
+let escaped = { apostrophe = [ "_\\'" ], semicolon = [ "_\\;" ] }
+
+let all = max4 // symbols // escaped
+
+in  { max4, symbols, escaped, all }

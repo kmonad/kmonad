@@ -15,7 +15,7 @@ module Main
   )
 where
 
-import qualified KMonad.App as KMonad (main)
+import K (begin, IO)
 
 main :: IO ()
-main = KMonad.main
+main = begin

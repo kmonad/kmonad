@@ -23,19 +23,19 @@ spec = do
   describe "gesture" $ do
 
     it "parses \"a b c\" as series of taps" $ do
-      prsGesture "a b c" `shouldBe` Right abc
+      readGesture "a b c" `shouldBe` Right abc
 
     it "parses \"S-a\" as S held around tap of a" $ do
-      prsGesture "S-a" `shouldBe` Right sa
+      readGesture "S-a" `shouldBe` Right sa
 
     it "parses \"C-S-a\" as C around S around a" $ do
-      prsGesture "C-S-a" `shouldBe` Right csa
+      readGesture "C-S-a" `shouldBe` Right csa
 
     it "parses \"C-(  )-C\" as the press and release of C" $ do
-      prsGesture "C-( )-C" `shouldBe` Right c
+      readGesture "C-( )-C" `shouldBe` Right c
 
     it "parser \"C-(S-a b)-C\" as C around shifted-a b" $ do
-      prsGesture "C-(S-a b)-C" `shouldBe` Right xx
+      readGesture "C-(S-a b)-C" `shouldBe` Right xx
 
     it "parses \"S-[a b c]\" as S around taps of a b c" $ do
-      prsGesture "S-[a b c]" `shouldBe` Right sabc
+      readGesture "S-[a b c]" `shouldBe` Right sabc
