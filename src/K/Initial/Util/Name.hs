@@ -41,6 +41,7 @@ type NameMap a = M.HashMap Name a -- ^ A hashmap of named things
 data NameError
   = EmptyName            -- ^ Encountered an empty 'Name'
   | DuplicateNames Names -- ^ Encountered duplicate 'Names'
+  | NoSuchName Name      -- ^ Tried to access a nonexistent 'Name'
   deriving Eq
 makeClassyPrisms ''NameError
 
@@ -48,6 +49,7 @@ instance Show NameError where
   show EmptyName = "Encountered an empty <Name>"
   show (DuplicateNames ns) = "Encountered duplicate names: "
     <> (unpack . T.intercalate ", " . map tshow $ ns)
+  show (NoSuchName n) = "Could not find <Name>: " <> unpack n
 
 instance Exception NameError
 instance AsNameError SomeException where _NameError = Exc.exception
@@ -98,3 +100,13 @@ mkNameMap x = do
     [] -> pure ()
     ns -> errThrowing _DuplicateNames ns
   pure $ M.fromList x
+
+-- | Insert aliases for some name into a NameMap
+--
+-- NOTE: This is more general than 'Name', and might be a map-utility (or 'At'
+-- utility) instead. However, the NameError lines up very well with what can go
+-- wrong (maybe it's more of a KeyError...), and I only ever use aliases in the
+-- context of names, so for KMonad, this is a practical place to keep this
+-- operation.
+-- addAliases :: CanNameError e m => [(Name, [Name])] -> NameMap a -> m (NameMap a)
+-- addAliases as m = do

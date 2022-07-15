@@ -11,6 +11,7 @@ module K.Initial.Util.Initial
   , inRIO
   , reportFail
 
+  , alistFlatten
   , throwEither
   , devFail
   , ffiErr
@@ -23,9 +24,9 @@ where
 
 import K.Initial.Initial
 
-import qualified RIO.List     as L
-import qualified Control.Monad.Error.Lens as Err
-
+import qualified RIO.HashMap as M
+import qualified RIO.List as L
+import qualified RIO.Text as T
 
 -- control flow ----------------------------------------------------------------
 
@@ -60,7 +61,25 @@ duplicates l = (L.\\) l $ L.nub l
 aflat :: [(a, [b])] -> [(a, b)]
 aflat = foldMap (\(a, bs) -> map (a,) bs)
 
+-- alist helpers ---------------------------------------------------------------
 
+type AList k v = [(k, v)]
+
+-- | Flatten an alist that contains values that are lists
+alistFlatten :: AList k [v] -> AList k v
+alistFlatten = foldMap (\(k, vs) -> map (k,) vs)
+
+-- -- | Turn an alist into a map. If any duplicate key is encountered, error.
+-- alistToMap :: AList k v -> m (M.HashMap k v)
+-- alistToMap x = do
+--   case duplicates $ x^..folded._1 of
+--     [] -> pure ()
+--     ks -> throwError
+
+-- text helpers ----------------------------------------------------------------
+
+listShow :: Show a => [a] -> Text
+listShow = T.intercalate ", " . map tshow
 
 -- maybe helpers ---------------------------------------------------------------
 

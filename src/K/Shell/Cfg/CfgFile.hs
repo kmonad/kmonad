@@ -5,7 +5,7 @@
 module K.Shell.Cfg.CfgFile where
 
 import K.Initial.Parsing
--- import K.Gesture
+
 import K.Shell.Cfg.Initial
 import K.Shell.Cfg.Cfgable
 import K.Shell.Cfg.Expr
@@ -44,8 +44,6 @@ instance HasNames (DMap a) where names = from _DMap . folded . _1
 
 -- | Dhall doesn't allow numeric keys, so keycodes are encoded as "_xxx" strings.
 type DCode = Text
-
-
 
 -- | The types we expect to import directly from Dhall
 --
@@ -118,66 +116,75 @@ loadCfgFile p = do
 
 -- validation ------------------------------------------------------------------
 
--- | Try to read a Keycode from a DCode, throwing an error on fail
-readDCode :: (CanCfgFileError e m) => DCode -> m Keycode
-readDCode t = let err = errThrowing _CfgBadKeycode t in
-                case unpack t of
-                  ('_':s) -> maybe err pure (readMaybe s)
-                  _ -> err
+-- | Extract a validated 'Locale' from a 'DCfg' value
+extractLocale :: CanLocale v r m => DCfg -> m Locale
+extractLocale c = do
+
+
+
+  undefined
+
+
+-- -- | Try to read a Keycode from a DCode, throwing an error on fail
+-- readDCode :: (CanCfgFileError e m) => DCode -> m Keycode
+-- readDCode t = let err = errThrowing _CfgBadKeycode t in
+--                 case unpack t of
+--                   ('_':s) -> maybe err pure (readMaybe s)
+--                   _ -> err
 
 -- | Take all the fields in a 'CfgFile' and make a valid 'Change ShellCfg'
 validateCfgFile :: (CanCfgFileError e m)
   => DCfg -> m (Change ShellCfg)
 validateCfgFile c = do
+  undefined
+  -- -- Convert 'DMap DCode [Name]' to 'NameMap Keycode'
+  -- let namedDCodes = c^..keycodes.from _DMap.to aflat.folded.swapped
+  -- namedCodes <- mkNameMap =<< mapM (traverse readDCode) namedDCodes
 
-  -- Convert 'DMap DCode [Name]' to 'NameMap Keycode'
-  let namedDCodes = c^..keycodes.from _DMap.to aflat.folded.swapped
-  namedCodes <- mkNameMap =<< mapM (traverse readDCode) namedDCodes
+  -- -- Ensure no overlap between keynames and gesture names
+  -- case duplicates (namedCodes^..names <> c^..gestures.names) of
+  --   [] -> pure ()
+  --   ns -> errThrowing _DuplicateNames ns
 
-  -- Ensure no overlap between keynames and gesture names
-  case duplicates (namedCodes^..names <> c^..gestures.names) of
-    [] -> pure ()
-    ns -> errThrowing _DuplicateNames ns
+  -- -- Extract and validate flags by looking them up and extracting their change
+  -- fchange <- flip foldMapM (c^.flags) $ \flag -> do
+  --   case lookupLong flag shellFlags of
+  --     Nothing -> errThrowing _CfgUnknownFlag flag
+  --     Just x  -> pure $ x^.change
 
-  -- Extract and validate flags by looking them up and extracting their change
-  fchange <- flip foldMapM (c^.flags) $ \flag -> do
-    case lookupLong flag shellFlags of
-      Nothing -> errThrowing _CfgUnknownFlag flag
-      Just x  -> pure $ x^.change
+  -- -- Extract and validate options by looking them up and calling their
+  -- -- mkChange function on the provided Text value in the CfgFile
+  -- ochange <- flip foldMapM (c^.options.from _DMap) $ \(okey, oval) -> do
+  --   case lookupLong okey shellOptions of
+  --     Nothing -> errThrowing _CfgUnknownOption okey
+  --     Just x  -> case (x^.mkChange) oval of
+  --       Left e -> errThrowing _CfgExprError e
+  --       Right y -> pure y
 
-  -- Extract and validate options by looking them up and calling their
-  -- mkChange function on the provided Text value in the CfgFile
-  ochange <- flip foldMapM (c^.options.from _DMap) $ \(okey, oval) -> do
-    case lookupLong okey shellOptions of
-      Nothing -> errThrowing _CfgUnknownOption okey
-      Just x  -> case (x^.mkChange) oval of
-        Left e -> errThrowing _CfgExprError e
-        Right y -> pure y
+  -- -- Extract all 'Toggles' expressions
+  -- togTxt <- forM (c^.gestures.from _DMap) $ \(n, t) ->
+  --   case decode togglesExpr t of
+  --     Left e -> errThrowing _CfgExprError e
+  --     Right x -> pure (n, x)
 
-  -- Extract all 'Toggles' expressions
-  togTxt <- forM (c^.gestures.from _DMap) $ \(n, t) ->
-    case decode togglesExpr t of
-      Left e -> errThrowing _CfgExprError e
-      Right x -> pure (n, x)
+  -- -- Convert all 'Toggles Keyname' to 'Toggles Keycode'
+  -- togNat <- forM togTxt $ \(n, t) ->
+  --   case togglesMapMaybe (`M.lookup` namedCodes) t of
+  --     Left n  -> errThrowing _CfgMissingKeyname n
+  --     Right x -> pure (n, x)
 
-  -- Convert all 'Toggles Keyname' to 'Toggles Keycode'
-  togNat <- forM togTxt $ \(n, t) ->
-    case togglesMapMaybe (`M.lookup` namedCodes) t of
-      Left n  -> errThrowing _CfgMissingKeyname n
-      Right x -> pure (n, x)
+  -- -- Convert all 'Toggles Keycode' to proper 'Gesture Keycode'
+  -- gests <- forM togNat $ \(n, t) -> case mkGesture t of
+  --   Left e -> errThrowing _CfgGestureError e
+  --   Right x -> pure (n, x)
 
-  -- Convert all 'Toggles Keycode' to proper 'Gesture Keycode'
-  gests <- forM togNat $ \(n, t) -> case mkGesture t of
-    Left e -> errThrowing _CfgGestureError e
-    Right x -> pure (n, x)
+  -- -- Gather all the codes and gestures into a LocaleCfg
+  -- let loc = Locale
+  --       { _namedCodes = namedCodes
+  --       , _namedRaps  = M.fromList gests }
 
-  -- Gather all the codes and gestures into a LocaleCfg
-  let loc = Locale
-        { _namedCodes = namedCodes
-        , _namedRaps  = M.fromList gests }
-
-  -- Gather all LocaleCfg, options, and flags into 1 update to ShellCfg
-  pure . mconcat $
-    [ setVal locale loc "set keynames and gesturenames"
-    , fchange
-    , ochange ]
+  -- -- Gather all LocaleCfg, options, and flags into 1 update to ShellCfg
+  -- pure . mconcat $
+  --   [ setVal locale loc "set keynames and gesturenames"
+  --   , fchange
+  --   , ochange ]
