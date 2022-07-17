@@ -81,8 +81,8 @@ decoded e = to $ decode e
 -- constructors ----------------------------------------------------------------
 
 -- | Create an 'Expr' from an a list of named alternatives
-namedExpr :: Eq a => ExprType -> Named a -> Expr a
-namedExpr t ns = Expr t nameFor' $ namedP ns
+namedExpr :: Eq a => ExprType -> Labeled a -> Expr a
+namedExpr t ns = Expr t nameFor' $ labeledP ns
   where
     nameFor' a = fromMaybe (error msg) $ nameFor a ns
     msg = devFail "Name left unspecified in Expr: <" <> unpack t <> ">"

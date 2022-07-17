@@ -86,7 +86,7 @@ library
       K.Initial.Util
       K.Initial.Util.Cmd
       K.Initial.Util.Initial
-      K.Initial.Util.Name
+      K.Initial.Util.Label
       K.Initial.Util.Path
       K.Initial.Util.Time
       K.Gesture

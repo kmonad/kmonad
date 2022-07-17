@@ -1,6 +1,6 @@
 -- |
 
-module K.Initial.Util.Name
+module K.Initial.Util.Label
   ( Name
   , Names
   , Named

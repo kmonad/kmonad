@@ -22,9 +22,9 @@ import qualified Control.Monad.Error.Lens as Err
 
 -- | Bindings of names to keycodes and names to gestures of keycodes
 data Locale = Locale
-  { _namedCodes :: NameMap Keycode
+  { _namedCodes :: Labeled Keycode
     -- ^ A collection of name-to-keycode correspondences
-  , _namedRaps  :: NameMap Rap
+  , _namedRaps  :: Labeled Rap
     -- ^ A collection of name-to-gesture correspondences
   } deriving (Eq, Show)
 makeClassy ''Locale
@@ -33,7 +33,7 @@ makeClassy ''Locale
 
 data LocaleError
   = MissingKey Keyname
-  | MissingRap Name
+  | MissingRap Label
 makeClassyPrisms ''LocaleError
 
 instance Show LocaleError where
@@ -59,6 +59,6 @@ lookupCode n = view (namedCodes.at n)
   >>= maybe (errThrowing _MissingKey n) pure
 
 -- | Lookup a rap by its name
-lookupRap :: CanLocale v r m => Name -> m Rap
+lookupRap :: CanLocale v r m => Label -> m Rap
 lookupRap n = view (namedRaps.at n)
   >>= maybe (errThrowing _MissingRap n) pure

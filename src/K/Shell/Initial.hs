@@ -59,7 +59,7 @@ data OS
   = Linux
   | Windows
   | Mac
-  | OtherOS Name
+  | OtherOS Label
   deriving (Eq, Show)
 
 currentOS :: OS

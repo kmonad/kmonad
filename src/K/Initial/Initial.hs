@@ -57,8 +57,6 @@ import RIO as X hiding
     -- We wrap our own logging API over RIO, so we free up some words
   , log, logInfo, logError, logWarn, logDebug
 
-
-
   )
 
 import Data.Monoid

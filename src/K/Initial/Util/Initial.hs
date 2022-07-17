@@ -69,6 +69,7 @@ type AList k v = [(k, v)]
 alistFlatten :: AList k [v] -> AList k v
 alistFlatten = foldMap (\(k, vs) -> map (k,) vs)
 
+
 -- -- | Turn an alist into a map. If any duplicate key is encountered, error.
 -- alistToMap :: AList k v -> m (M.HashMap k v)
 -- alistToMap x = do

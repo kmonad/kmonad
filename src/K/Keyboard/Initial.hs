@@ -19,8 +19,8 @@ import K.Gesture
 -- | Keycodes are represented as a natural number
 type Keycode = Natural
 
--- | Keynames are simple names
-type Keyname = Name
+-- | Keynames are simply labels
+type Keyname = Label
 
 -- | A gesture on the keyboard
 --

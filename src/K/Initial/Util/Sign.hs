@@ -1,5 +1,4 @@
--- |
-
+{-| A small utility library for working with named items. -}
 module K.Initial.Util.Sign where
 
 import K.Initial
@@ -13,34 +12,43 @@ instance Show Sign where show = unpack . _sign
 -- errors ----------------------------------------------------------------------
 
 -- | Trying to lookup a non-existent 'Sign'
-newtype LookupError = NoSuchSign Sign
+newtype LookupError s = NoSuchSign s
 makeClassyPrisms ''LookupError
 
 -- | Trying to overwrite a pre-existing 'Sign'
-newtype InsertError = DuplicateSign Sign
+newtype InsertError s = DuplicateSign s
 makeClassyPrisms ''InsertError
 
--- | Either an lookup or insertion error
-data SignError
-  = SignLookupError LookupError
-  | SignInsertError InsertError
+-- | Either a lookup or insertion error
+data SignError s
+  = SignLookupError (LookupError s)
+  | SignInsertError (InsertError s)
 makeClassyPrisms ''SignError
 
-instance Show LookupError where
+instance Show s => Show (LookupError s) where
   show (NoSuchSign s) = "Could not find sign: " <> show s
 
-instance Show InsertError where
+instance Show s => Show (InsertError s) where
   show (DuplicateSign s) = "Sign already exists: " <> show s
 
-instance Show SignError where
+instance Show s => Show (SignError s) where
   show (SignLookupError e) = show e
   show (SignInsertError e) = show e
 
-instance Exception LookupError
-instance Exception InsertError
-instance Exception SignError
+instance (Show s, Typeable s) => Exception (LookupError s)
+instance (Show s, Typeable s) => Exception (InsertError s)
+instance (Show s, Typeable s) => Exception (SignError s)
 
-instance AsLookupError SignError where _LookupError = _SignLookupError
-instance AsInsertError SignError where _InsertError = _SignInsertError
+instance AsLookupError (SignError s) s where _LookupError = _SignLookupError
+instance AsInsertError (SignError s) s where _InsertError = _SignInsertError
 
 -- classes ---------------------------------------------------------------------
+
+-- newtype Signed a = Signed { M.HashMap  }
+
+-- api  ------------------------------------------------------------------------
+
+{- The functions I am working towards -}
+
+addAliases :: At m => [(IxValue m, [IxValue m])] -> m -> m
+addAliases = undefined

@@ -27,7 +27,7 @@ module K.Initial.Parsing
   , terminators
   , terminated
   , maybeRestP
-  , namedP
+  , labeledP
   , pairP
   , prefixP
 
@@ -145,10 +145,14 @@ listOfP :: ParserT m a -> ParserT m [a]
 listOfP p = between (char '[') (char ']') $ sepBy p (hlex $ char ',')
 
 -- | Create a parser that matches symbols to values and only consumes on match.
-namedP :: Named a -> ParserT m a
-namedP = do
+--
+-- NOTE: This only works because 'toPairs' produces a list of pairs sorted
+-- descending on label length. I.e., we check for "abcd" before we check "ab".
+-- We need to check the longest labels first.
+labeledP :: Labeled a -> ParserT m a
+labeledP = do
   let mkP (s, x) = terminated (string s) $> x
-  choice . map mkP . L.sortBy (bigger `on` fst)
+  choice . map mkP . toPairs
 
 -- | Create a parser that matches 2 parsers in sequence as a tuple
 pairP :: ParserT m a -> ParserT m b -> ParserT m (a, b)

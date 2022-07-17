@@ -1,13 +1,10 @@
 -- |
 
 module K.Shell.Cfg.Initial
-  ( -- * Basic types
-    Label
-
-    -- * Configuration data
+  ( -- * Configuration data
     -- ** Configuration ADTs
     -- $vals
-  , KeyInputCfg(..)
+    KeyInputCfg(..)
   , KeyOutputCfg(..)
   , KeyRepeatCfg(..)
   , LogColor(..)
@@ -47,7 +44,7 @@ import qualified RIO.HashMap as M
 -- Maybe this could be a newtype, but atm the boilerplate is not worth it
 --
 -- Note that all Dhall record keys are valid 'Label' (but not vice versa)
-type Label = Text
+-- type Label = Text
 
 -- config adts -----------------------------------------------------------------
 
