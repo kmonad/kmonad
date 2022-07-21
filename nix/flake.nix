@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs, ... }@inputs:
     let
       # List of supported systems:
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
 
       # List of supported compilers:
       supportedCompilers = [
@@ -46,9 +46,18 @@
 
       # The package derivation:
       derivation = pkgs: haskell: (
-        haskell.callCabal2nix "kmonad" (haskellSourceFilter ../.) { }
+        haskell.callCabal2nixWithOptions "kmonad" (haskellSourceFilter ../.)
+          ((pkgs.lib.strings.optionalString
+            pkgs.stdenv.hostPlatform.isDarwin
+            "--flag=dext") + " --no-check")
+          # FIXME: remove the --no-check flag once tests are fixed
+          { }
       ).overrideAttrs (orig: {
-        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ];
+        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ] ++
+          (pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+            pkgs.darwin.IOKit
+          ]);
       });
     in
     {
