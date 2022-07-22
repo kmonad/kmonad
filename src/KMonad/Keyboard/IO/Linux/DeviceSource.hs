@@ -13,6 +13,7 @@ Portability : portable
 module KMonad.Keyboard.IO.Linux.DeviceSource
   ( deviceSource
   , deviceSource64
+  , deviceSourceMultiple64
 
   , KeyEventParser
   , decode64
