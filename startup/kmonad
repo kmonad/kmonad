@@ -1,0 +1,27 @@
+#!/sbin/openrc-run
+#
+# NOTE: This is a service for the openrc init system.
+#
+# How to use this service:
+#
+# 1. Place this file in the `/etc/init.d/' directory
+#
+# 2. Start the service
+#
+#      rc-service kmonad start
+#
+# 3. If everything works as intended, add service to default runlevel as it will
+#    run after boot runlevel
+#
+#      rc-update add kmonad default
+#
+# Note that any X11-specific functionality has to be placed in an
+# appropriate place (e.g. `~/.xinitrc'), as the service will execute
+# _before_ the X server is started.
+#
+# The paths below should be absolute paths.
+
+command=/path/to/kmonad
+command_args="/path/to/config.kbd"
+command_background="true"
+pidfile="/run/kmonad.pid"
