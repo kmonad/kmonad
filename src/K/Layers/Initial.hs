@@ -98,6 +98,6 @@ newtype Layer c = Layer { _layer :: [(c, But c)]}
   deriving (Eq, Show, Functor)
 
 data KeymapCfg = KeymapCfg
-  { _layers  :: Named (Layer Keycode)
-  , _aliases :: Named (But Keycode)
+  { _layers  :: Labeled (Layer Keycode)
+  , _aliases :: Labeled (But Keycode)
   }
