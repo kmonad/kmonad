@@ -301,7 +301,7 @@ just collections of keys.
   thus not be used as one! It only serves to define where the different
   keys are and what kind of layout kmonad is initially dealing with.
 
-  For example, an ISO 60% keyboard may be represented as:
+  For example, an ANSI 60% keyboard may be represented as:
 
   ```
   (defsrc
