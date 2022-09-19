@@ -126,6 +126,9 @@ You also can install MSYS2, Haskell and stack via [scoop](https://scoop.sh/).
 Simply run these commands in Windows PowerShell:
 
 ```posh
+   # set required privileges to run scripts (required for scoop installer)
+   Set-ExecutionPolicy RemoteSigned -scope CurrentUser
+
    # install scoop (no admin rights required)
    iwr -useb get.scoop.sh | iex
 
@@ -141,6 +144,12 @@ Simply run these commands in Windows PowerShell:
    stack build
 
    # the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
+   
+   # install kmonad.exe (copies kmonad.exe to %APPDATA%\local\bin\)
+   stack install
+   
+   # run kmonad.exe
+   kmonad.exe .\path\to\config.kbd
 ```
 
 ### macOS
