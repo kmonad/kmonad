@@ -114,6 +114,14 @@ Do this as the build step (the first one) in the previous instructions:
 docker build -t kmonad-builder github.com/kmonad/kmonad.git
 ```
 
+#### Podman
+If you are using Podman you must disable labels when bind-mounting a directory to copy the KMonad binary to.
+
+In the steps above, the only difference is including `--security-opt label=disable` in the second command (`docker run`). The full command will appear as below:
+```shell
+podman run --rm -it -v ${PWD}:/host/ --security-opt label=disable kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+```
+
 ### Windows environment
 
 I have little experience with Haskell under windows, but I managed to compile
