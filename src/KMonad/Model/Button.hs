@@ -473,30 +473,36 @@ stickyKey ms b = onPress $ go
                $> Catch)
 
 matchTapSeq :: [([([Text], Keycode)], (Button, Bool))] -> [(([Text], Keycode), (Button, Bool))] -> Maybe (Button, Bool) -> [([Keycode], Text)] -> Button
-matchTapSeq seqs escs orElse modDefs = onPress $ awaitMy Release (pure Catch) >> go seqs []
+matchTapSeq seqs_ escs elseB modDefs = onPress $ awaitMy Release (pure Catch) >> go seqs_ []
   where
     tapIt :: [Keycode] -> (Button, Bool) -> AnyK ()
     tapIt held (b, cont) = do
       tap b
       my Release >>= inject
       when cont $
-        go seqs held
+        go seqs_ held
 
     go :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> AnyK ()
-    go []   held | Just orElse <- orElse                 = tapIt held orElse
-    go seqs held | (_, bb):_ <- filter (null . fst) seqs = tapIt held bb
-    go seqs held                                         = hookF InputHook (h seqs held)
+    go seqs held = hookF InputHook $ \e -> do
+      let c = e^.keycode
+      let modc = (getModNames held, c)
+      case e^.switch of
+        Release | c `elem` held                 -> go seqs (filter (/= c) held) $> Catch
+        Release                                 -> go seqs held                 $> NoCatch
+        Press   | Just escB <- lookup modc escs -> tapIt (c:held) escB          $> Catch
+        Press   | c `elem` allModKeys           -> go seqs (c:held)             $> Catch
+        Press  -> let seqs' = narrow modc seqs  in handleSeqInput seqs' (c:held) $> Catch
 
-    h :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> KeyEvent -> AnyK Catch
-    h seqs held e = case (e^.switch, e^.keycode) of
-      (Press, c) | c `elem` concatMap fst modDefs       -> go seqs (c:held)                        $> Catch
-      (Press, c) | Just bb <- lookup (mods held c) escs -> tapIt (c:held) bb                       $> Catch
-      (Press, c)                                        -> go (narrow (mods held c) seqs) (c:held) $> Catch
-      (Release, c) | c `elem` held                      -> go seqs (filter (/= c) held)            $> Catch
-      (Release, _)                                      -> go seqs held                            $> NoCatch
+    handleSeqInput :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> AnyK ()
+    handleSeqInput []   held | Just elseB <- elseB                   = tapIt held elseB
+    handleSeqInput seqs held | (_, bb):_ <- filter (null . fst) seqs = tapIt held bb
+    handleSeqInput seqs held                                         = go seqs held
 
     narrow :: Eq a => a -> [([a], b)] -> [([a], b)]
     narrow x xs = [(xs', y) | (x':xs', y) <- xs, x' == x]
 
-    mods :: [Keycode] -> Keycode -> ([Text], Keycode)
-    mods = (,) . nub . sort . concatMap (\c -> map snd $ filter ((c `elem`) . fst) modDefs)
+    getModNames :: [Keycode] -> [Text]
+    getModNames = nub . sort . concatMap (\c -> map snd $ filter ((c `elem`) . fst) modDefs)
+
+    allModKeys :: [Keycode]
+    allModKeys = concatMap fst modDefs
