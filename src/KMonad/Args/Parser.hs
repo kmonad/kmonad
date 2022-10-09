@@ -294,13 +294,17 @@ keywordButtons =
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
-  , ("match-tap-seq"  , KMatchTapSeq <$> some ((,) <$> some (lexeme keycodeP) <*> contStopBtn)
-                                     <*> (keywordP "esc" (some ((,) <$> lexeme keycodeP <*> contStopBtn)) <|> pure [])
-                                     <*> optional (keywordP "else" contStopBtn))
+  , ("match-tap-seq"  , KMatchTapSeq <$> some ((,) <$> some (lexeme keycodeWithMods) <*> contStopBtn)
+                                     <*> (keywordP "esc" (some $ (,) <$> lexeme keycodeWithMods <*> contStopBtn) <|> pure [])
+                                     <*> optional (keywordP "else" contStopBtn)
+                                     <*> (keywordP "mod" (some $ (,) <$> some (lexeme keycodeP) <*> lexeme textP) <|> pure []))
   ]
  where
   timed :: Parser [(Int, DefButton)]
   timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
+
+  keycodeWithMods :: Parser ([Text], Keycode)
+  keycodeWithMods = (,) . nub . sort <$> many (lexeme textP) <*> keycodeP
 
   contStopBtn :: Parser (DefButton, Bool)
   contStopBtn = ((, True) <$> keywordP "cont" buttonP) <|> ((,False) <$> keywordP "stop" buttonP)

@@ -472,8 +472,8 @@ stickyKey ms b = onPress $ go
                *> after 3 (runAction $ b^.releaseAction)
                $> Catch)
 
-matchTapSeq :: [([Keycode], (Button, Bool))] -> [(Keycode, (Button, Bool))] -> Maybe (Button, Bool) -> Button
-matchTapSeq seqs escs orElse = onPress $ awaitMy Release (pure Catch) >> go seqs []
+matchTapSeq :: [([([Text], Keycode)], (Button, Bool))] -> [(([Text], Keycode), (Button, Bool))] -> Maybe (Button, Bool) -> [([Keycode], Text)] -> Button
+matchTapSeq seqs escs orElse modDefs = onPress $ awaitMy Release (pure Catch) >> go seqs []
   where
     tapIt :: [Keycode] -> (Button, Bool) -> AnyK ()
     tapIt held (b, cont) = do
@@ -482,17 +482,21 @@ matchTapSeq seqs escs orElse = onPress $ awaitMy Release (pure Catch) >> go seqs
       when cont $
         go seqs held
 
-    go :: [([Keycode], (Button, Bool))] -> [Keycode] -> AnyK ()
+    go :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> AnyK ()
     go []   held | Just orElse <- orElse                 = tapIt held orElse
     go seqs held | (_, bb):_ <- filter (null . fst) seqs = tapIt held bb
     go seqs held                                         = hookF InputHook (h seqs held)
 
-    h :: [([Keycode], (Button, Bool))] -> [Keycode] -> KeyEvent -> AnyK Catch
+    h :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> KeyEvent -> AnyK Catch
     h seqs held e = case (e^.switch, e^.keycode) of
-      (Press, c) | Just bb <- lookup c escs -> tapIt (c:held) bb            $> Catch
-      (Press, c)                            -> go (narrow c seqs) (c:held)  $> Catch
-      (Release, c) | c `elem` held          -> go seqs (filter (/= c) held) $> Catch
-      (Release, _)                          -> go seqs held                 $> NoCatch
+      (Press, c) | c `elem` concatMap fst modDefs       -> go seqs (c:held)                        $> Catch
+      (Press, c) | Just bb <- lookup (mods held c) escs -> tapIt (c:held) bb                       $> Catch
+      (Press, c)                                        -> go (narrow (mods held c) seqs) (c:held) $> Catch
+      (Release, c) | c `elem` held                      -> go seqs (filter (/= c) held)            $> Catch
+      (Release, _)                                      -> go seqs held                            $> NoCatch
 
     narrow :: Eq a => a -> [([a], b)] -> [([a], b)]
     narrow x xs = [(xs', y) | (x':xs', y) <- xs, x' == x]
+
+    mods :: [Keycode] -> Keycode -> ([Text], Keycode)
+    mods = (,) . nub . sort . concatMap (\c -> map snd $ filter ((c `elem`) . fst) modDefs)

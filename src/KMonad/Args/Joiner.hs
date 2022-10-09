@@ -385,7 +385,7 @@ joinButton ns als =
     KStickyKey s d     -> jst $ stickyKey (fi s) <$> go d
 
     -- Pattern matching buttons
-    KMatchTapSeq seqs escs db -> jst $ matchTapSeq <$> mapM f seqs <*> mapM f escs <*> mapM g db
+    KMatchTapSeq seqs escs db mods -> jst $ matchTapSeq <$> mapM f seqs <*> mapM f escs <*> mapM g db <*> pure mods
       where f :: (a, (DefButton, b)) -> J (a, (Button, b))
             f (x, db) = (x,) <$> g db
             g :: (DefButton, b) -> J (Button, b)
