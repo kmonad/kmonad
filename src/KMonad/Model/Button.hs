@@ -479,8 +479,10 @@ matchTapSeq seqs_ escs elseB modDefs = onPress $ awaitMy Release (pure Catch) >>
     tapIt held (b, cont) = do
       tap b
       my Release >>= inject
-      when cont $
-        go seqs_ held
+      if cont
+        then go seqs_ held
+        else mapM_ (inject . mkKeyEvent Press)
+                   (filter (`elem` allModKeys) held)
 
     go :: [([([Text], Keycode)], (Button, Bool))] -> [Keycode] -> AnyK ()
     go seqs held = hookF InputHook $ \e -> do
