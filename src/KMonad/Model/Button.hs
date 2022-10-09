@@ -54,6 +54,10 @@ module KMonad.Model.Button
   , tapMacro
   , tapMacroRelease
   , stickyKey
+
+  -- * Pattern matching buttons
+  -- $ patternmatching
+  , matchTapSeq
   )
 where
 
@@ -467,3 +471,28 @@ stickyKey ms b = onPress $ go
                *> inject (t^.event)
                *> after 3 (runAction $ b^.releaseAction)
                $> Catch)
+
+matchTapSeq :: [([Keycode], (Button, Bool))] -> [(Keycode, (Button, Bool))] -> Maybe (Button, Bool) -> Button
+matchTapSeq seqs escs orElse = onPress $ awaitMy Release (pure Catch) >> go seqs []
+  where
+    tapIt :: (Button, Bool) -> AnyK ()
+    tapIt (b, cont) = do
+      tap b
+      my Release >>= inject
+      when cont $
+        go seqs []
+
+    go :: [([Keycode], (Button, Bool))] -> [Keycode] -> AnyK ()
+    go []   _ | Just orElse <- orElse                 = tapIt orElse
+    go seqs _ | (_, bb):_ <- filter (null . fst) seqs = tapIt bb
+    go seqs held                                      = hookF InputHook (h seqs held)
+
+    h :: [([Keycode], (Button, Bool))] -> [Keycode] -> KeyEvent -> AnyK Catch
+    h seqs held e = case (e^.switch, e^.keycode) of
+      (Press, c) | Just bb <- lookup c escs -> tapIt bb                     $> Catch
+      (Press, c)                            -> go (narrow c seqs) (c:held)  $> Catch
+      (Release, c) | c `elem` held          -> go seqs (filter (/= c) held) $> Catch
+      (Release, _)                          -> go seqs held                 $> NoCatch
+
+    narrow :: Eq a => a -> [([a], b)] -> [([a], b)]
+    narrow x xs = [(xs', y) | (x':xs', y) <- xs, x' == x]
