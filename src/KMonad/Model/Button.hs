@@ -475,21 +475,21 @@ stickyKey ms b = onPress $ go
 matchTapSeq :: [([Keycode], (Button, Bool))] -> [(Keycode, (Button, Bool))] -> Maybe (Button, Bool) -> Button
 matchTapSeq seqs escs orElse = onPress $ awaitMy Release (pure Catch) >> go seqs []
   where
-    tapIt :: (Button, Bool) -> AnyK ()
-    tapIt (b, cont) = do
+    tapIt :: [Keycode] -> (Button, Bool) -> AnyK ()
+    tapIt held (b, cont) = do
       tap b
       my Release >>= inject
       when cont $
-        go seqs []
+        go seqs held
 
     go :: [([Keycode], (Button, Bool))] -> [Keycode] -> AnyK ()
-    go []   _ | Just orElse <- orElse                 = tapIt orElse
-    go seqs _ | (_, bb):_ <- filter (null . fst) seqs = tapIt bb
-    go seqs held                                      = hookF InputHook (h seqs held)
+    go []   held | Just orElse <- orElse                 = tapIt held orElse
+    go seqs held | (_, bb):_ <- filter (null . fst) seqs = tapIt held bb
+    go seqs held                                         = hookF InputHook (h seqs held)
 
     h :: [([Keycode], (Button, Bool))] -> [Keycode] -> KeyEvent -> AnyK Catch
     h seqs held e = case (e^.switch, e^.keycode) of
-      (Press, c) | Just bb <- lookup c escs -> tapIt bb                     $> Catch
+      (Press, c) | Just bb <- lookup c escs -> tapIt (c:held) bb            $> Catch
       (Press, c)                            -> go (narrow c seqs) (c:held)  $> Catch
       (Release, c) | c `elem` held          -> go seqs (filter (/= c) held) $> Catch
       (Release, _)                          -> go seqs held                 $> NoCatch
