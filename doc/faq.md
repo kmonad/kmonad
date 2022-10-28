@@ -6,6 +6,7 @@
     - [Q: How do I know which event-file corresponds to my keyboard?](#q-how-do-i-know-which-event-file-corresponds-to-my-keyboard)
     - [Q: How do I emit Hyper_L?](#q-how-do-i-emit-hyper_l)
     - [Q: How does Unicode entry work?](#q-how-does-unicode-entry-work)
+    - [Q: How do I use the same layout definition for different keyboards](#q-how-do-i-use-the-same-layout-definition-for-different-keyboards)
 - [Windows](#windows)
     - [How do I start KMonad?](#how-do-i-start-kmonad)
         - [Using the command-line](#using-the-command-line)
@@ -75,6 +76,34 @@ X11 lines up well with KMonad. See [this issue](https://github.com/kmonad/kmonad
 
 A: Unicode entry works via X11 compose-key sequences. For information on how to
 configure kmonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
+
+### Q: How do I use the same layout for different keyboards
+
+A:
+Create a layout file with an environment variable instead of `device-file` option, i.e. `kmonad.kbd`.
+
+```
+(defcfg
+	input (device-file "$KBD_DEV")
+	output (uinput-sink "KMonad kbd")
+	fallthrough true
+	cmp-seq lctl
+)
+```
+
+Use following shell script to list available keyboard devices and select one of them. You will need
+[fzf](https://github.com/junegunn/fzf) and kmonad available in your `$PATH`.
+
+```bash
+#!/bin/bash
+
+KBD_DEV=$(find /dev/input/by-path/*kbd* | fzf)
+export KBD_DEV
+KBDCFG=$(envsubst < kmonad.kbd)
+
+kmonad <(echo "$KBDCFG")
+```
+
 
 ## Windows
 
