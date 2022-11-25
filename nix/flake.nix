@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs, ... }@inputs:
     let
       # List of supported systems:
-      supportedSystems = [ "x86_64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
 
       # List of supported compilers:
       supportedCompilers = [
