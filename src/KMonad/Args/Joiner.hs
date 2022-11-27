@@ -32,6 +32,8 @@ import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
+import KMonad.Parsing (runParser, some)
+import KMonad.Args.Parser (buttonP)
 
 #ifdef linux_HOST_OS
 import KMonad.Keyboard.IO.Linux.DeviceSource
@@ -49,6 +51,7 @@ import KMonad.Keyboard.IO.Mac.KextSink
 #endif
 
 import Control.Monad.Except
+import Numeric (showHex)
 
 import RIO.List (headMaybe, intersperse, uncons)
 import RIO.Partial (fromJust)
@@ -364,6 +367,12 @@ joinButton ns als =
     KComposeSeq bs     -> do csd <- getCmpSeqDelay
                              c   <- view cmpKey
                              jst $ tapMacro . (c:) <$> isps bs csd
+    KUnicodeChar cb    -> do csd <- getCmpSeqDelay
+                             -- c   <- view unicodeKey
+                             let uniInputKeys = T.pack
+                                  $ "C-S-u " ++ intersperse ' ' (showHex (fromEnum cb) "") ++ " spc"
+                             case runParser (some buttonP) "" uniInputKeys of
+                               Right bs -> jst $ tapMacro <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
     KBeforeAfterNext b a -> jst $ beforeAfterNext <$> go b <*> go a
     KTapMacroRelease bs mbD ->
