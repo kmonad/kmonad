@@ -305,6 +305,8 @@ data Keycode
   | KeyFn
   | KeyLaunchpad
   | KeyMissionCtrl
+  | KeySpotlight
+  | KeyDictation
 #endif
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
@@ -409,5 +411,7 @@ aliases = Q.mkMultiMap
 #ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
+  , (KeySpotlight,      ["spot"])
+  , (KeyDictation,      ["dict"])
 #endif
   ]
