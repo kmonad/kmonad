@@ -1,4 +1,4 @@
-resolver: lts-18.27
+resolver: lts-20.0
 packages:
 - .
 extra-deps:
