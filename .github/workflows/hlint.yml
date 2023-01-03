@@ -1,0 +1,23 @@
+# Source: https://github.com/xmonad/xmonad-contrib/blob/e2ffa533da76e6375179eff942bb0647dd22fb58/.github/workflows/hlint.yaml
+name: hlint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  hlint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: 'Set up HLint'
+      uses: haskell/actions/hlint-setup@v2
+      with:
+        version: '3.5'
+
+    - name: 'Run HLint'
+      uses: haskell/actions/hlint-run@v2
+      with:
+        path: '["src/", "test/", "app/"]'
+        fail-on: status
