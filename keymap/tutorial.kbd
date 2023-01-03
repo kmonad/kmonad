@@ -760,8 +760,19 @@
     Tesc Ta         -> xa
     Pa Pesc Ra Resc -> ax (because 'a' was already pressed when we started, so
                            foo decides it is tapping)
+    Pesc Pa Resc Ra -> xa (because the first release we encounter is of esc)
     Pesc Ta Resc    -> A (because a was pressed *and* released after we started,
                           so foo decides it is holding)
+
+  `tap-next-press` is also a lot like `tap-next`, but decides whether to tap or
+  hold based on whether another key is pressed before this one is released.
+  Using the minilanguage:
+    (tap-next-press x lsft)
+  Then:
+    Tesc Ta -> xa
+    Pa Pesc Ra Resc -> ax (because esc is released before another key is pressed)
+    Pesc Pa Resc Ra -> A (because a is pressed before esc is released)
+    Pesc Ta Resc    -> A (a is pressed before esc is released here as well)
 
   These increasingly stranger buttons are, I think, coming from the stubborn
   drive of some of my more eccentric (and I mean that in the most positive way)
@@ -785,6 +796,7 @@
   xth (tap-hold 400 x lsft)     ;; Long delay for easier testing
   thn (tap-hold-next 400 x lsft)
   tnr (tap-next-release x lsft)
+  tnp (tap-next-press x lsft)
   tnh (tap-hold-next-release 2000 x lsft)
 
   ;; Used it the colemak layer
@@ -797,7 +809,7 @@
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
   @thn _    _    _    _    _    _    _    _    _    _    _    _
   @xtn _    _    _    _    _    _    _    _    _    _    @xth
-  @tnr _    _              _              _    _    _    @tnh
+  @tnr @tnp _              _              _    _    _    @tnh
 )
 
 
