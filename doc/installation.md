@@ -58,6 +58,18 @@ because you installed it yourself or because you are using NixOS, you can build
 nix-build nix
 ```
 
+On MacOS, you'll have to use something like the following to get nix to pull in
+the karabiner submodule:
+
+```shell
+nix build "./nix?submodules=1"
+```
+
+If you want to pull in kmonad as a flake input for configuring a darwin system,
+you may find it necessary to use a reference like:
+`git+https://github.com/kmonad/kmonad?submodules=1&dir=nix` instead of
+`github:...`.
+
 Another option with `nix` is to use the `nix-shell` to ensure you have the
 correct environment to run `stack` in. You can enter the development environment
 using:
@@ -65,7 +77,6 @@ using:
 ```shell
 nix-shell nix/shell.nix
 ```
-
 
 Note: we do also have to compile a little bit of C-code, so make sure `gcc` is
 installed as well.

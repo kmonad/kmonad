@@ -1,2 +1,10 @@
-all: list-keyboards.c
-	gcc $< -o list-keyboards -framework IOKit -framework CoreFoundation
+.PHONY: all install
+
+all: list-keyboards
+
+install: list-keyboards
+	mkdir -p $(DESTDIR)/bin
+	cp $< $(DESTDIR)/bin
+
+list-keyboards: list-keyboards.c
+	$(CC) $< -o $@ -framework IOKit -framework CoreFoundation

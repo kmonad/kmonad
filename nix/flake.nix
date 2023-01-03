@@ -8,7 +8,12 @@
   outputs = { self, nixpkgs, ... }@inputs:
     let
       # List of supported systems:
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
 
       # List of supported compilers:
       supportedCompilers = [
@@ -46,10 +51,30 @@
 
       # The package derivation:
       derivation = pkgs: haskell: (
-        haskell.callCabal2nix "kmonad" (haskellSourceFilter ../.) { }
+        haskell.callCabal2nixWithOptions "kmonad" (haskellSourceFilter ../.)
+          (pkgs.lib.strings.optionalString
+            pkgs.stdenv.hostPlatform.isDarwin
+            "--flag=dext")
+          { }
       ).overrideAttrs (orig: {
-        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ];
-      });
+        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ] ++
+          (pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+            pkgs.darwin.IOKit
+          ]);
+      } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+        configureFlags = orig.configureFlags ++ [
+          "--extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include"
+          "--extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit"
+        ];
+        statSubmodulePhase = ''
+          stat c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include || (
+            echo "Karabiner submodule not found. This flake needs to be built with submodules on darwin. See the kmonad docs for more information." 1>&2
+            exit 1
+          )
+        '';
+        preConfigurePhases = [ "statSubmodulePhase" ] ++ orig.preConfigurePhases;
+      }));
     in
     {
       packages = forAllSystems (system:
@@ -61,7 +86,18 @@
           # Just the executables for the default compiler:
           default = pkgs.haskell.lib.justStaticExecutables
             (derivation pkgs pkgs.haskellPackages);
-        } // builtins.listToAttrs (map
+        } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+          list-keyboards = pkgs.stdenv.mkDerivation {
+            name = "list-keyboards";
+            version = self.shortRev;
+            src = ../c_src/mac;
+            buildInputs = [
+              pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+              pkgs.darwin.IOKit
+            ];
+            installFlags = [ "DESTDIR=$(out)" ];
+          };
+        }) // builtins.listToAttrs (map
           (compiler: {
             name = "kmonad-${compiler}";
             value = derivation pkgs pkgs.haskell.packages.${compiler};
