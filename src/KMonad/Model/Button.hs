@@ -212,7 +212,7 @@ aroundNextTimeout ::
   -> Button       -- ^ The 'Button' to use to surround next
   -> Button       -- ^ The 'Button' to tap on timeout
   -> Button       -- ^ The resulting button
-aroundNextTimeout d b t = onPress $ within d (pure isPress) (tap t) $ \trig -> do
+aroundNextTimeout d b t = onPress $ within InputHook d (pure isPress) (tap t) $ \trig -> do
   runAction $ b^.pressAction
   await (isReleaseOf $ trig^.event.keycode) $ \_ -> do
     runAction $ b^.releaseAction
@@ -267,7 +267,7 @@ tapNext t h = onPress $ hookF InputHook $ \e -> do
 
 -- | Like 'tapNext', except that after some interval it switches anyways
 tapHoldNext :: Milliseconds -> Button -> Button -> Maybe Button -> Button
-tapHoldNext ms t h mtb = onPress $ within ms (pure $ const True) onTimeout $ \tr -> do
+tapHoldNext ms t h mtb = onPress $ within InputHook ms (pure $ const True) onTimeout $ \tr -> do
   p <- matchMy Release
   if p $ tr^.event
     then tap t   $> Catch
@@ -301,7 +301,7 @@ tapNextRelease t h = onPress $ do
   go []
   where
     go :: MonadK m => [Keycode] ->  m ()
-    go ks = hookF InputHook $ \e -> do
+    go ks = hookF InputHookPrio $ \e -> do
       p <- matchMy Release
       let isRel = isRelease e
       if
@@ -345,7 +345,7 @@ tapHoldNextRelease ms t h mtb = onPress $ do
   where
 
     go :: MonadK m => Milliseconds -> [Keycode] ->  m ()
-    go ms' ks = tHookF InputHook ms' onTimeout $ \r -> do
+    go ms' ks = tHookF InputHookPrio ms' onTimeout $ \r -> do
       p <- matchMy Release
       let e = r^.event
       let isRel = isRelease e
@@ -488,7 +488,7 @@ stickyKey ms b = onPress $ go
 
   doTap :: MonadK m => m ()
   doTap =
-    within ms
+    within InputHook ms
            (pure isPress)  -- presses definitely happen after us
            (pure ())
            (\t -> runAction (b^.pressAction)
