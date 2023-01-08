@@ -83,7 +83,7 @@ fromMacKeycode = flip M.lookup kcMap
 -- | Lookup the correspondig 'MacKeycode' for this 'Keycode'
 toMacKeycode :: Keycode -> Maybe MacKeycode
 toMacKeycode = flip M.lookup revMap
-  where revMap = M.fromList $ (M.toList kcMap) ^.. folded . swapped
+  where revMap = M.fromList $ M.toList kcMap ^.. folded . swapped
 
 -- | Convert a 'KeyEvent' to a 'MacKeyEvent'
 --
@@ -117,7 +117,7 @@ fromMacKeyEvent (MacKeyEvent (s, (p, u)))
 -- See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-315.7.16/IOHIDFamily/IOHIDUsageTables.h
 -- See https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-700/IOHIDFamily/AppleHIDUsageTables.h.auto.html
 kcMap :: M.HashMap MacKeycode Keycode
-kcMap = M.fromList $
+kcMap = M.fromList
   [ ((0x7,0x4), KeyA)
   , ((0x7,0x5), KeyB)
   , ((0x7,0x6), KeyC)

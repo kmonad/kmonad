@@ -325,7 +325,7 @@ instance Display Keycode where
 
 -- | The set of all existing 'Keycode'
 kcAll :: S.HashSet Keycode
-kcAll = S.fromList $ [minBound .. maxBound]
+kcAll = S.fromList [minBound .. maxBound]
 
 -- | The set of all 'Keycode' that are not of the MissingXX pattern
 kcNotMissing :: S.HashSet Keycode

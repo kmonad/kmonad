@@ -124,7 +124,7 @@ fromWinKeyEvent (WinKeyEvent (s, c)) = case fromWinKeycode c of
 -- FIXME: There are loads of missing correspondences, mostly for rare-keys. How
 -- do these line up? Ideally this mapping would be total.
 winCodeToKeyCode :: M.HashMap WinKeycode Keycode
-winCodeToKeyCode = M.fromList $
+winCodeToKeyCode = M.fromList
   [ (0x00, Missing254)     -- Not documented, but happens often. Why??
   -- , (0x01, ???)         -- Defined as VK_LBUTTON
   -- , (0x02, ???)         -- Defined as VK_RBUTTON
@@ -319,12 +319,12 @@ winCodeToKeyCode = M.fromList $
   ]
 
 -- | Translate a KMonad KeyCode to the corresponding Windows virtual-key code
--- 
+--
 -- We cannot simply reverse the above map for the opposite direction, because
 -- there will be duplicates where more than one virtual-key code produces the
 -- same KMonad KeyCode. See https://github.com/kmonad/kmonad/issues/326
 keyCodeToWinCode :: M.HashMap Keycode WinKeycode
-keyCodeToWinCode = M.fromList $
+keyCodeToWinCode = M.fromList
   [ -- (KeyReserved, ???)
     (KeyEsc, 0x1B)
   , (Key1, 0x31)
@@ -581,4 +581,4 @@ keyCodeToWinCode = M.fromList $
   -- , (Missing253, ???)
   -- , (Missing254, ???)
   -- , (Missing255, ???)
-  ]  
+  ]

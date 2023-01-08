@@ -129,7 +129,7 @@ joinConfigIO es = case runJ joinConfig $ defJCfg es of
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
-extract p = catMaybes . map (preview p)
+extract p = mapMaybe (preview p)
 
 data SingletonError
   = None
@@ -144,14 +144,14 @@ onlyOne xs = case uncons xs of
 
 -- | Take the one and only block matching the prism from the expressions
 oneBlock :: Text -> Prism' KExpr a -> J a
-oneBlock t l = onlyOne . extract l <$> view kes >>= \case
+oneBlock t l = (view kes <&> (extract l >>> onlyOne)) >>= \case
   Right x        -> pure x
   Left None      -> throwError $ MissingBlock t
   Left Duplicate -> throwError $ DuplicateBlock t
 
 -- | Update the JCfg and then run the entire joining process
 joinConfig :: J CfgToken
-joinConfig = getOverride >>= \cfg -> (local (const cfg) joinConfig')
+joinConfig = getOverride >>= \cfg -> local (const cfg) joinConfig'
 
 -- | Join an entire 'CfgToken' from the current list of 'KExpr'.
 joinConfig' :: J CfgToken
@@ -166,8 +166,8 @@ joinConfig' = do
   al <- getAllow
 
   -- Extract the other blocks and join them into a keymap
-  let als = extract _KDefAlias    $ es
-  let lys = extract _KDefLayer    $ es
+  let als = extract _KDefAlias es
+  let lys = extract _KDefLayer es
   src      <- oneBlock "defsrc" _KDefSrc
   (km, fl) <- joinKeymap src als lys
 
@@ -310,7 +310,7 @@ joinAliases :: LNames -> [DefAlias] -> J Aliases
 joinAliases ns als = foldM f M.empty $ concat als
   where f mp (t, b) = if t `M.member` mp
           then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> (unnest $ joinButton ns mp b)
+          else flip (M.insert t) mp <$> unnest (joinButton ns mp b)
 
 --------------------------------------------------------------------------------
 -- $but
@@ -318,7 +318,7 @@ joinAliases ns als = foldM f M.empty $ concat als
 -- | Turn 'Nothing's (caused by joining a KTrans) into the appropriate error.
 -- KTrans buttons may only occur in 'DefLayer' definitions.
 unnest :: J (Maybe Button) -> J Button
-unnest = join . fmap (maybe (throwError NestedTrans) (pure . id))
+unnest = (maybe (throwError NestedTrans) pure =<<)
 
 -- | Turn a button token into an actual KMonad `Button` value
 joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
@@ -403,7 +403,7 @@ joinKeymap src als lys = do
   als' <- joinAliases nms als               -- Join aliases into 1 hashmap
   lys' <- mapM (joinLayer als' nms src) lys -- Join all layers
   -- Return the layerstack and the name of the first layer
-  pure $ (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
+  pure (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
 
 -- | Check and join 1 deflayer.
 joinLayer ::

@@ -120,7 +120,7 @@ mkLayerStack nestMaps = let
 -- try a lookup like this: `stack^? atKey KeyA`
 atKey :: (CanKey l, CanKey k) => k -> Fold (LayerStack l k a) a
 atKey c = folding $ \m -> m ^.. stack . folded . to (getK m) . folded
-  where getK m n = fromMaybe [] (pure <$> M.lookup (n, c) (m^.items))
+  where getK m n = maybe [] pure (M.lookup (n, c) (m^.items))
 
 -- | Try to look up a key in a specific layer, regardless of the stack
 inLayer :: (CanKey l, CanKey k) => l -> k -> Fold (LayerStack l k a) a
@@ -136,7 +136,7 @@ pushLayer :: (CanKey l, CanKey k)
   -> LayerStack l k a
   -> Either (LayerStackError l) (LayerStack l k a)
 pushLayer n keymap = if n `elem` keymap^.maps
-  then Right $ keymap & stack %~ (addFront n)
+  then Right $ keymap & stack %~ addFront n
   else Left  $ LayerDoesNotExist n
   where addFront a as = case break (a ==) as of
           (frnt, a':rest) -> a':(frnt <> rest)

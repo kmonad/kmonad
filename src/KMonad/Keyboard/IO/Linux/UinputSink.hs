@@ -131,7 +131,7 @@ send_event :: ()
   -> LinuxKeyEvent
   -> RIO e ()
 send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
-  (liftIO $ c_send_event h typ c val s' ns')
+  liftIO (c_send_event h typ c val s' ns')
     `onErr` SinkEncodeError (u^.cfg.keyboardName) e
 
 
@@ -155,18 +155,18 @@ usClose :: HasLogFunc e => UinputSink -> RIO e ()
 usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
   where
     release h = do
-      logInfo $ "Unregistering Uinput device"
+      logInfo "Unregistering Uinput device"
       release_uinput_keysink h
         `onErr` UinputReleaseError (snk^.cfg.keyboardName)
 
     close h = do
-      logInfo $ "Closing Uinput device file"
+      logInfo "Closing Uinput device file"
       liftIO $ closeFd h
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
 usWrite :: HasLogFunc e => UinputSink -> KeyEvent -> RIO e ()
 usWrite u e = withMVar (u^.st) $ \fd -> do
-  now <- liftIO $ getSystemTime
+  now <- liftIO getSystemTime
   send_event u fd . toLinuxKeyEvent e $ now
   send_event u fd . sync              $ now

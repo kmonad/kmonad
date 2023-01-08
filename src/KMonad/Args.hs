@@ -76,7 +76,7 @@ joinCLI cmd = traverse._KDefCfg %~ insertCliOption cliList
   insertCliOption cliSettings cfgSettings =
     foldr (\s cfgs ->
              if   s `elem` cfgs
-             then foldr (\x xs -> (if s == x then s else x) : xs) [] cfgs
+             then map (\x -> if s == x then s else x) cfgs
              else s : cfgs)
           cfgSettings
           cliSettings

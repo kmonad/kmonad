@@ -65,8 +65,8 @@ makeLenses ''Dispatch
 -- | Create a new 'Dispatch' environment
 mkDispatch' :: MonadUnliftIO m => m KeyEvent -> m Dispatch
 mkDispatch' s = withRunInIO $ \u -> do
-  rpc <- atomically $ newEmptyTMVar
-  rrb <- atomically $ newTVar Seq.empty
+  rpc <- newEmptyTMVarIO
+  rrb <- newTVarIO Seq.empty
   pure $ Dispatch (u s) rpc rrb
 
 -- | Create a new 'Dispatch' environment in a 'ContT' environment

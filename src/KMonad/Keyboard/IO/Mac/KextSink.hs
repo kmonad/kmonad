@@ -16,7 +16,7 @@ import KMonad.Keyboard.IO.Mac.Types
 foreign import ccall "send_key"
   send_key :: Ptr MacKeyEvent -> IO ()
 
-data EvBuf = EvBuf
+newtype EvBuf = EvBuf
   { _buffer :: Ptr MacKeyEvent -- ^ The pointer we write events to
   }
 makeClassy ''EvBuf

@@ -77,7 +77,7 @@ defEventParser = KeyEventParser 24 decode64
 
 -- | The KeyEventParser that works on my 64-bit Linux environment
 decode64 :: B.ByteString -> Either String LinuxKeyEvent
-decode64 bs = (linuxKeyEvent . fliptup) <$> result
+decode64 bs = linuxKeyEvent . fliptup <$> result
   where
     result :: Either String (Int32, Word16, Word16, Word64, Word64)
     result = B.decode . B.reverse $ bs
@@ -134,7 +134,7 @@ lsOpen pr pt = do
   h  <- liftIO . openFd pt ReadOnly Nothing $
     OpenFileFlags False False False False False
   hd <- liftIO $ fdToHandle h
-  logInfo $ "Initiating ioctl grab"
+  logInfo "Initiating ioctl grab"
   ioctl_keyboard h True `onErr` IOCtlGrabError pt
   return $ DeviceFile (DeviceSourceCfg pt pr) h hd
 
@@ -143,7 +143,7 @@ lsOpen pr pt = do
 -- 'IOCtlReleaseError' if the ioctl release could not be properly performed.
 lsClose :: (HasLogFunc e) => DeviceFile -> RIO e ()
 lsClose src = do
-  logInfo $ "Releasing ioctl grab"
+  logInfo "Releasing ioctl grab"
   ioctl_keyboard (src^.fd) False `onErr` IOCtlReleaseError (src^.pth)
   liftIO . closeFd $ src^.fd
 
@@ -153,7 +153,7 @@ lsClose src = do
 lsRead :: (HasLogFunc e) => DeviceFile -> RIO e KeyEvent
 lsRead src = do
   bts <- B.hGet (src^.hdl) (src^.nbytes)
-  case (src^.prs $ bts) of
+  case src^.prs $ bts of
     Right p -> case fromLinuxKeyEvent p of
       Just e  -> return e
       Nothing -> lsRead src

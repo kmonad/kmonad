@@ -209,7 +209,7 @@ matchMy s = (==) <$> my s
 await :: MonadKIO m => KeyPred -> (KeyEvent -> m Catch) -> m ()
 await p a = hookF InputHook $ \e -> if p e
   then a e
-  else await p a *> pure NoCatch
+  else await p a $> NoCatch
 
 -- | Execute an action on the detection of the Switch of the active button.
 awaitMy :: MonadK m => Switch -> m Catch -> m ()
@@ -228,7 +228,7 @@ within d p a f = do
   -- define f' to run action on predicate match, or rehook on predicate mismatch
   let f' t = if p' (t^.event)
         then f t
-        else within (d - t^.elapsed) p a f *> pure NoCatch
+        else within (d - t^.elapsed) p a f $> NoCatch
   tHookF InputHook d a f'
 
 -- | Like `within`, but acquires a hold when starting, and releases when done

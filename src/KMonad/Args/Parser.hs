@@ -61,7 +61,7 @@ parseTokens t = case runParser configP "" t  of
 
 -- | Load a set of tokens from file, throw an error on parse-fail
 loadTokens :: FilePath -> RIO e [KExpr]
-loadTokens pth = parseTokens <$> readFileUtf8 pth >>= \case
+loadTokens pth = (readFileUtf8 pth <&> parseTokens) >>= \case
   Left e   -> throwM e
   Right xs -> pure xs
 
@@ -109,7 +109,7 @@ fromNamed = choice . map mkOne . srt
         x  -> x
 
     -- | Make a parser that matches a terminated symbol or fails
-    mkOne (s, x) = terminated (string s) *> pure x
+    mkOne (s, x) = terminated (string s) $> x
 
 -- | Run a parser between 2 sets of parentheses
 paren :: Parser a -> Parser a
@@ -121,8 +121,8 @@ statement s = paren . (symbol s *>)
 
 -- | Run a parser that parser a bool value
 bool :: Parser Bool
-bool = symbol "true" *> pure True
-   <|> symbol "false" *> pure False
+bool = (symbol "true"  $> True)
+   <|> (symbol "false" $> False)
 
 -- | Parse a LISP-like keyword of the form @:keyword value@
 keywordP :: Text -> Parser p -> Parser p
@@ -217,7 +217,7 @@ moddedP = KAround <$> prfx <*> buttonP
                , ("A-", KeyLeftAlt),   ("M-", KeyLeftMeta)
                , ("RS-", KeyRightShift), ("RC-", KeyRightCtrl)
                , ("RA-", KeyRightAlt),   ("RM-", KeyRightMeta)]
-        prfx = choice $ map (\(t, p) -> prefix (string t) *> pure (KEmit p)) mods
+        prfx = choice $ map (\(t, p) -> prefix (string t) $> KEmit p) mods
 
 -- | Parse Pxxx as pauses (useful in macros)
 pauseP :: Parser DefButton
@@ -234,7 +234,7 @@ composeSeqP :: Parser [DefButton]
 composeSeqP = do
   -- Lookup 1 character in the compose-seq list
   c <- anySingle <?> "special character"
-  s <- case find (\(_, c', _) -> (c' == c)) ssComposed of
+  s <- case find (\(_, c', _) -> c' == c) ssComposed of
          Nothing -> fail "Unrecognized compose-char"
          Just b  -> pure $ b^._1
 
@@ -336,7 +336,7 @@ otokenP = choice $ map (try . uncurry statement) otokens
 otokens :: [(Text, Parser OToken)]
 otokens =
   [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
-  , ("send-event-sink", KSendEventSink <$> (optional $ (,) <$> lexeme numP <*> numP))
+  , ("send-event-sink", KSendEventSink <$> optional ((,) <$> lexeme numP <*> numP))
   , ("kext"           , pure KKextSink)]
 
 -- | Parse the DefCfg token

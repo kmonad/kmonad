@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.IO
 Description : The logic behind sending and receiving key events to the OS

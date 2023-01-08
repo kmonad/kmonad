@@ -471,7 +471,7 @@ layerNext t = onPress $ do
 -- pressed for the button after it if that button was pressed in the
 -- given timeframe.
 stickyKey :: Milliseconds -> Button -> Button
-stickyKey ms b = onPress $ go
+stickyKey ms b = onPress go
  where
   go :: MonadK m => m ()
   go = hookF InputHook $ \e -> do

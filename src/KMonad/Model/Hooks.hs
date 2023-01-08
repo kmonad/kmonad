@@ -74,8 +74,8 @@ makeLenses ''Hooks
 -- | Create a new 'Hooks' environment which reads events from the provided action
 mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
 mkHooks' s = withRunInIO $ \u -> do
-  itr <- atomically $ newEmptyTMVar
-  hks <- atomically $ newTVar M.empty
+  itr <- newEmptyTMVarIO
+  hks <- newTVarIO M.empty
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
@@ -89,7 +89,7 @@ ioHook h = withRunInIO $ \u -> do
   t <- case _hTimeout h of
     Nothing -> pure Nothing
     Just t' -> pure . Just $ Timeout (t'^.delay) (u (_action t'))
-  let f = \e -> u $ (_keyH h) e
+  let f e = u $ _keyH h e
   pure $ Hook t f
 
 
@@ -115,7 +115,7 @@ register hs h = do
     Just t' -> void . async $ do
       logDebug $ "Registering " <> display (t'^.delay)
               <> "ms hook: " <> display (hashUnique tag)
-      threadDelay $ 1000 * (fromIntegral $ t'^.delay)
+      threadDelay $ 1000 * fromIntegral (t'^.delay)
       atomically $ putTMVar (hs^.injectTmr) tag
 
 -- | Cancel a hook by removing it from the store
@@ -158,7 +158,7 @@ runHooks hs e = do
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
   now <- liftIO getSystemTime
   foldMapM (runEntry now e) (M.elems m) >>= \case
-    Catch   -> pure $ Nothing
+    Catch   -> pure Nothing
     NoCatch -> pure $ Just e
 
 
@@ -181,7 +181,7 @@ step h = do
 
   -- Asynchronously start reading the next event
   a <- async . liftIO $ h^.eventSrc
- 
+
   -- Handle any timer event first, and then try to read from the source
   let next = (Left <$> takeTMVar (h^.injectTmr)) `orElse` (Right <$> waitSTM a)
 

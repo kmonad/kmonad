@@ -70,7 +70,7 @@ mkKeymap n = lift . mkKeymap' n
 -- | Print a header message followed by an enumeration of the layer-stack
 debugReport :: HasLogFunc e => Keymap -> Utf8Builder -> RIO e ()
 debugReport h hdr = do
-  st <- view Ls.stack <$> (readIORef $ h^.stack)
+  st <- view Ls.stack <$> readIORef (h^.stack)
   let ub = foldMap (\(i, n) -> " "  <> display i
                             <> ". " <> display n <> "\n")
              (zip ([1..] :: [Int]) st)
@@ -84,13 +84,13 @@ layerOp :: (HasLogFunc e)
   -> RIO e ()     -- ^ The resulting action
 layerOp h o = let km = h^.stack in case o of
   (PushLayer n) -> do
-    Ls.pushLayer n <$> readIORef km >>= \case
+    (readIORef km <&> Ls.pushLayer n) >>= \case
       Left e   -> throwIO e
       Right m' -> writeIORef km m'
     debugReport h $ "Pushed layer to stack: " <> display n
 
   (PopLayer n) -> do
-    Ls.popLayer n <$> readIORef km >>= \case
+    (readIORef km <&> Ls.popLayer n) >>= \case
       Left (Ls.LayerNotOnStack _) -> do
         debugReport h $ "WARNING: Tried popping layer that was not on stack " <> display n
       Left e                      -> throwIO e
@@ -99,7 +99,7 @@ layerOp h o = let km = h^.stack in case o of
         debugReport h $ "Popped layer from stack: " <> display n
 
   (SetBaseLayer n) -> do
-    (n `elem`) . view Ls.maps <$> (readIORef km) >>= \case
+    (readIORef km <&> (view Ls.maps >>> (n `elem`))) >>= \case
       True  -> writeIORef (h^.baseL) n
       False -> throwIO $ Ls.LayerDoesNotExist n
     debugReport h $ "Set base layer to: " <> display n

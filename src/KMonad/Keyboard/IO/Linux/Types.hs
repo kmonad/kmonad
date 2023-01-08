@@ -119,4 +119,4 @@ toLinuxKeyEvent e (MkSystemTime s ns)
   = LinuxKeyEvent (fi s, fi ns, 1, c, val)
   where
     c   = fi . fromEnum $ e^.keycode
-    val = if (e^.switch == Press) then 1 else 0
+    val = if e^.switch == Press then 1 else 0

@@ -77,7 +77,7 @@ initAppEnv cfg = do
   lgf <- view logFuncL
 
   -- Wait a bit for the user to release the 'Return' key with which they started KMonad
-  threadDelay $ (fromIntegral $ cfg^.startDelay) * 1000
+  threadDelay $ fromIntegral (cfg^.startDelay) * 1000
 
   -- Acquire the keysource and keysink
   snk <- using $ cfg^.keySinkDev
@@ -92,7 +92,7 @@ initAppEnv cfg = do
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   -- Initialize output components
-  otv <- lift . atomically $ newEmptyTMVar
+  otv <- lift newEmptyTMVarIO
   ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
 
   -- Setup thread to read from outHooks and emit to keysink
@@ -130,13 +130,11 @@ pressKey c =
     -- If the keycode does not occur in our keymap
     Nothing -> do
       ft <- view fallThrough
-      if ft
-        then do
+      when ft $ do
           emit $ mkPress c
           await (isReleaseOf c) $ \_ -> do
             emit $ mkRelease c
             pure Catch
-        else pure ()
 
     -- If the keycode does occur in our keymap
     Just b  -> runBEnv b Press >>= \case
@@ -174,4 +172,4 @@ startApp c = do
   -- Ignore SIGCHLD to avoid zombie processes.
   liftIO . void $ installHandler sigCHLD Ignore Nothing
 #endif
-  runContT (initAppEnv c) (flip runRIO loop)
+  runContT (initAppEnv c) (`runRIO` loop)

@@ -1,0 +1,2 @@
+# Ignore these warnings.
+- ignore: {name: "Use camelCase"}

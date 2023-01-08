@@ -48,7 +48,7 @@ makeLenses ''MultiMap
 instance (CanMM k v) => Semigroup (MultiMap k v) where
   (MultiMap a) <> (MultiMap b) = MultiMap $ M.unionWith (<>) a b
 instance (CanMM k v) => Monoid (MultiMap k v) where
-  mempty = MultiMap $ M.empty
+  mempty = MultiMap M.empty
 
 type instance Index   (MultiMap k v) = k
 type instance IxValue (MultiMap k v) = S.HashSet v

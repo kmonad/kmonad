@@ -30,14 +30,14 @@ foreign import ccall "wait_key"
   wait_key :: Ptr MacKeyEvent -> IO Word8
 
 
-data EvBuf = EvBuf
-  { _buffer :: !(Ptr MacKeyEvent)
+newtype EvBuf = EvBuf
+  { _buffer :: Ptr MacKeyEvent
   }
 makeLenses ''EvBuf
 
 -- | Return a KeySource using the Mac IOKit approach
 iokitSource :: HasLogFunc e
-  => (Maybe String)
+  => Maybe String
   -> RIO e (Acquire KeySource)
 iokitSource name = mkKeySource (iokitOpen name) iokitClose iokitRead
 
@@ -46,7 +46,7 @@ iokitSource name = mkKeySource (iokitOpen name) iokitClose iokitRead
 
 -- | Ask IOKit to open keyboards matching the specified name
 iokitOpen :: HasLogFunc e
-  => (Maybe String)
+  => Maybe String
   -> RIO e EvBuf
 iokitOpen m = do
   logInfo "Opening IOKit devices"
