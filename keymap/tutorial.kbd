@@ -503,7 +503,7 @@
   The `tap-macro-release` is like `tap-macro`, except that it
   waits to press the last button when the `tap-macro-release`
   gets released.  It might be useful when combined with a
-  footswitch that sends keybooard scan codes.
+  footswitch that sends keyboard scan codes.
 
     (tap-macro-release i K M o n a d esc)
 
