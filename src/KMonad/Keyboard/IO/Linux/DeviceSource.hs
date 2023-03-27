@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.DeviceSource
 Description : Load and acquire a linux /dev/input device
@@ -12,6 +13,7 @@ Portability : portable
 module KMonad.Keyboard.IO.Linux.DeviceSource
   ( deviceSource
   , deviceSource64
+  , deviceSourceMultiple64
 
   , KeyEventParser
   , decode64
@@ -119,6 +121,50 @@ deviceSource64 :: HasLogFunc e
   -> RIO e (Acquire KeySource)
 deviceSource64 = deviceSource defEventParser
 
+-- | Open multiple device files
+deviceSourceMultiple :: HasLogFunc e
+  => KeyEventParser -- ^ The method by which to read and decode events
+  -> [FilePath]     -- ^ The filepath to the device file
+  -> RIO e (Acquire KeySource)
+deviceSourceMultiple pr pts = mkKeySource open close read
+  where
+
+    open = do
+      -- TODO: if one lsOpen fails, the previous ones won't be closed.
+      --       we should do the open/close with bracket inside the reader.
+      handles <- traverse (lsOpen pr) pts
+      chan <- newTChanIO
+      readers <- traverse (\src -> async (keepReadingInto chan src)) handles
+      return (handles, chan, readers)
+
+    close (handles, _chan, readers) = do
+      traverse_ cancel readers
+      traverse_ lsClose handles
+
+    read (_, chan, _) = do
+      item <- atomically $ readTChan chan
+      case item of
+        Right ev -> return ev
+        Left ex -> throwIO ex
+
+    lsReadInto chan src = do
+      ev <- lsRead src
+      atomically $ writeTChan chan (Right ev)
+
+    keepReadingInto chan src =
+      forever $ do
+        lsReadInto chan src
+          `catches`
+          [ Handler $ \(ex :: DeviceSourceError) -> atomically $ writeTChan chan (Left $ toException ex)
+          , Handler $ \(ex :: IOException) -> atomically $ writeTChan chan (Left $ toException ex)
+          ]
+
+-- | Open multiple device files on a standard linux 64 bit architecture
+deviceSourceMultiple64 :: HasLogFunc e
+  => [FilePath]  -- ^ The filepath to the device file
+  -> RIO e (Acquire KeySource)
+deviceSourceMultiple64 = deviceSourceMultiple defEventParser
+
 
 --------------------------------------------------------------------------------
 -- $io
@@ -128,7 +174,7 @@ deviceSource64 = deviceSource defEventParser
 -- 'IOCtlGrabError' if an ioctl grab could not be properly performed.
 lsOpen :: (HasLogFunc e)
   => KeyEventParser   -- ^ The method by which to decode events
-  -> FilePath      -- ^ The path to the device file
+  -> FilePath         -- ^ The path to the device file
   -> RIO e DeviceFile
 lsOpen pr pt = do
   h  <- liftIO . openFd pt ReadOnly Nothing $

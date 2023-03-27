@@ -251,7 +251,7 @@ getCmpSeqDelay = do
 
 -- | The Linux correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
+pickInput (KDeviceSource f)   = pure $ runLF (deviceSourceMultiple64 f)
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
