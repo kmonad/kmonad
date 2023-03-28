@@ -65,9 +65,9 @@ newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent}
 
 -- | Create a new KeySource
 mkKeySource :: HasLogFunc e
-  => RIO e src               -- ^ Action to acquire the keysink
-  -> (src -> RIO e ())       -- ^ Action to close the keysink
-  -> (src -> RIO e KeyEvent) -- ^ Action to write with the keysink
+  => RIO e src               -- ^ Action to acquire the keysource
+  -> (src -> RIO e ())       -- ^ Action to close the keysource
+  -> (src -> RIO e KeyEvent) -- ^ Action to write with the keysource
   -> RIO e (Acquire KeySource)
 mkKeySource o c r = do
   u <- askUnliftIO
