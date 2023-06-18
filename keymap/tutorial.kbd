@@ -752,6 +752,27 @@
   KMonad emits 200 Px 4800 Rx, and the operating system's auto-repeat feature,
   if any, emits multiple x's because it sees that the x key is held for 4800 ms.
 
+  A note about tap action duration:
+  For simplicity we reuse the `tap-next` example above, set foo to:
+    (tap-next x lsft)
+  Now, any keystroke performed by baseline human will have some duration, a
+  'Tesc' is actually 'Pesc <some time passed> Resc'.  A true tap 'Tesc' with no
+  delay between the press and release will sometime experience registration
+  problems in programs.  However the tap action performed by KMonad IS this kind
+  of 'true tap', that is:
+    Tesc (Pesc 100 Resc) -> Px Rx
+  For various reasons we do not want KMonad to have some default duration in the
+  tap action it performs.  If you are having issues in programs, you can instead
+  use the aforementioned `around` and `pause` function to give the tap action
+  some duration.  Set foo to:
+    (tap-next (around x (pause 2000)) lsft)
+  or equivalently:
+    (tap-next (around x P2000) lsft)
+  then we have:
+    Tesc (Pesc 100 Resc) -> Px 2000 Rx
+  2000 ms is just for you to distinctively see the effect, in practice 35 ms
+  should be enough for most scenarios (slightly longer than 2 frames in 60 fps).
+
   The `tap-next-release` is like `tap-next`, except it decides whether to tap or
   hold based on the next release of a key that was *not* pressed before us. This
   also performs rollback like `tap-hold`. So, using the minilanguage and foo as:
