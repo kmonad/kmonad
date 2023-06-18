@@ -84,10 +84,10 @@ Create a layout file with an environment variable instead of `device-file` optio
 
 ```
 (defcfg
-	input (device-file "$KBD_DEV")
-	output (uinput-sink "KMonad kbd")
-	fallthrough true
-	cmp-seq lctl
+    input (device-file "$KBD_DEV")
+    output (uinput-sink "KMonad kbd")
+    fallthrough true
+    cmp-seq lctl
 )
 ```
 
