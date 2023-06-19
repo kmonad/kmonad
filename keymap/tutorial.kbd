@@ -129,6 +129,18 @@
   programs that capture keyboard input like AHK. You specify windows output using:
     (send-event-sink)
 
+  Specific to Windows, KMonad also handles key auto-repeat.  Therefore your
+  Windows system settings for key repeat delay and key repeat rate will have no
+  effect when KMonad is running.  To set the repeat delay and rate from KMonad,
+  pass the optional arguments pair to `send-event-sink`:
+    (send-event-sink [ <delay> <rate> ])
+  where:
+    <delay> : how many ms before a key starts repeating
+    <rate>  : how many ms between each repeat event
+  A value of 500 ms delay and 30 ms rate should mimic the default Windows
+  settings pretty well:
+    (send-event-sink 500 30)
+
 
   -- Mac OS -----
 
