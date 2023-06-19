@@ -77,17 +77,17 @@ X11 lines up well with KMonad. See [this issue](https://github.com/kmonad/kmonad
 A: Unicode entry works via X11 compose-key sequences. For information on how to
 configure kmonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
 
-### Q: How do I use the same layout for different keyboards
+### Q: How do I use the same layout definition for different keyboards
 
 A:
 Create a layout file with an environment variable instead of `device-file` option, i.e. `kmonad.kbd`.
 
 ```
 (defcfg
-	input (device-file "$KBD_DEV")
-	output (uinput-sink "KMonad kbd")
-	fallthrough true
-	cmp-seq lctl
+    input (device-file "$KBD_DEV")
+    output (uinput-sink "KMonad kbd")
+    fallthrough true
+    cmp-seq lctl
 )
 ```
 
