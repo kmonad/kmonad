@@ -18,7 +18,7 @@ int main() {
     CFDictionarySetValue(matching_dictionary,CFSTR(kIOHIDDeviceUsageKey),cfValue);
     CFRelease(cfValue);
     io_iterator_t iter = IO_OBJECT_NULL;
-    kern_return_t r = IOServiceGetMatchingServices(kIOMasterPortDefault,
+    kern_return_t r = IOServiceGetMatchingServices(kIOMainPortDefault,
                                                    matching_dictionary,
                                                    &iter);
     if(r != KERN_SUCCESS) {
