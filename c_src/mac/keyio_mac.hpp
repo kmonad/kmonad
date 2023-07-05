@@ -157,7 +157,7 @@ void monitor_kb(char *product) {
     CFRelease(cfValue);
     io_iterator_t iter = IO_OBJECT_NULL;
     CFRetain(matching_dictionary);
-    kr = IOServiceGetMatchingServices(kIOMasterPortDefault,
+    kr = IOServiceGetMatchingServices(kIOMainPortDefault,
                                       matching_dictionary,
                                       &iter);
     if(kr != KERN_SUCCESS) {
@@ -166,7 +166,7 @@ void monitor_kb(char *product) {
     }
     listener_loop = CFRunLoopGetCurrent();
     open_matching_devices(product, iter);
-    IONotificationPortRef notification_port = IONotificationPortCreate(kIOMasterPortDefault);
+    IONotificationPortRef notification_port = IONotificationPortCreate(kIOMainPortDefault);
     CFRunLoopSourceRef notification_source = IONotificationPortGetRunLoopSource(notification_port);
     CFRunLoopAddSource(listener_loop, notification_source, kCFRunLoopDefaultMode);
     CFRetain(matching_dictionary);
