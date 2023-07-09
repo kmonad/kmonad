@@ -39,7 +39,8 @@
 
   Also, as you might have noticed, whitespace is possible anywhere.
 
-  To check for syntax errors while editing, invoke kmonad with the -d option.
+  To check for syntax errors while editing, invoke KMonad with the -d option.
+
   -------------------------------------------------------------------------- |#
 
 
@@ -53,8 +54,8 @@
   include at least an 'input' field and an 'output' field. These describe how
   KMonad captures its inputs and how it emits its outputs.
 
-  First, let's go over the optional, non-OS specific settings. Currently there is
-  only 2:
+  First, let's go over the optional, non-OS specific settings. Currently there
+  are only 2:
 
   - fallthrough: `true` or `false`, defaults to `false`
 
@@ -383,10 +384,10 @@
   characters, the same is true for all capitals, and < > : ~ " | { } \_ + and ?.
 
   To wrap up 'modded-buttons', let's look back at C-A-del. We have 8 variants:
-  C- : (around lctl X)
-  A- : (around lalt X)
-  M- : (around lmet X)
-  S- : (around lsft X)
+    C- : (around lctl X)
+    A- : (around lalt X)
+    M- : (around lmet X)
+    S- : (around lsft X)
 
   Then RC-, RA-, RM-, and RS- behave exactly the same, except using the
   right-modifier.
@@ -397,7 +398,8 @@
     C-RC-RA-A-M-S-RS-m ;; Sure, but why would you?
 
   Also, note that although we provide special syntax for certain modifiers,
-  these buttons are in no way 'special' in KMonad. There is no concept of 'modifier'.
+  these buttons are in no way 'special' in KMonad. There is no concept of
+  'modifier':
     (around a (around b c)) ;; Perfectly valid
 
   -------------------------------------------------------------------------- |#
@@ -419,7 +421,7 @@
 #| --------------------------------------------------------------------------
                           Optional: sticky keys
 
-  KMonad also support so called "sticky keys".  These are keys that will
+  KMonad also supports so called "sticky keys".  These are keys that will
   behave as if they were pressed after just tapping them.  This behaviour
   wears off after the next button is pressed, which makes them ideal for
   things like a quick control or shift.  For example, tapping a sticky and
@@ -508,7 +510,7 @@
     (tap-macro K M o n a d :delay 5)
     #(K M o n a d :delay 5)
 
-  The above would be equivalent to e.g.
+  The above would be equivalent to
 
     (tap-macro K P5 M P5 o P5 n P5 a P5 d)
 
@@ -525,7 +527,7 @@
   huge risks:
   1. You accidentally leak your config and expose your password
   2. Anyone who knows about the button can get clear-text representation of your
-  password with any text editor, shell, or text-input field.
+     password with any text editor, shell, or text-input field.
 
   Support for triggering shell commands directly from KMonad is described in the
   command buttons section below.
@@ -597,7 +599,7 @@
   KMonad starts. Since `layer-toggle` can only ever add on and remove from the
   top of that, it can never change the base-layer. The following button will
   unregister the bottom-most layer of the keymap, and replace it with another
-  layer.
+  layer:
     (layer-switch my-layer)
 
   This is where things start getting potentially dangerous (i.e. get KMonad into
@@ -680,7 +682,7 @@
 (defalias
   add (layer-add multi-overlay) ;; multi-overlay is defined in the next
   rem (layer-rem multi-overlay) ;; section below this
-  )
+)
 
 #| --------------------------------------------------------------------------
                           Optional: Multi-use buttons
@@ -692,13 +694,14 @@
 
   For the next section being able to talk about examples is going to be handy,
   so consider the following scenario and mini-language that will be the same
-  between scenarios.
+  between scenarios:
+
     - We have some button `foo` that will be different between scenarios
     - `foo` is bound to 'Esc' on the input keyboard
     - the letters a s d f are bound to themselves
-    - Px  signifies the press of button x on the keyboard
-    - Rx  signifies the release of said button
-    - Tx  signifies the sequential and near instantaneous press and release of x
+    - Px signifies the press of button x on the keyboard
+    - Rx signifies the release of said button
+    - Tx signifies the sequential and near instantaneous press and release of x
     - 100 signifies 100ms pass
 
   So for example:
@@ -913,7 +916,7 @@
   syntactic sugar for keyboard macros.
 
   To get this to work on Linux you will need to set your compose-key with a tool
-  like `setxkbmap', as well as tell kmonad that information. See the `defcfg'
+  like `setxkbmap', as well as tell KMonad that information. See the `defcfg'
   block at the top of this file for a working example. Note that you need to
   wait ever so slightly for the keyboard to register with linux before the
   command gets executed, that's why the `sleep 1`. Also, note that all the
@@ -928,7 +931,7 @@
 
       setxkbmap -option compose:menu
 
-  you will have to set your compose key within kmonad to `compose' and not
+  you will have to set your compose key within KMonad to `compose' and not
   `menu'.
 
   After this, this should work out of the box under Linux. Windows does not
@@ -961,7 +964,7 @@
                         Optional: Command buttons
 
   Currently we also provide the ability to launch arbitrary shell-commands from
-  inside kmonad. These commands are simply handed off to the command-shell
+  inside KMonad. These commands are simply handed off to the command-shell
   without any further checking or waiting.
 
   NOTE: currently only tested on Linux, but should work on any platform, as long
