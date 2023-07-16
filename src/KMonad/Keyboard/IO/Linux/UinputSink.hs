@@ -141,7 +141,7 @@ send_event u (Fd h) e@(LinuxKeyEvent (s', ns', typ, c, val)) = do
 usOpen :: HasLogFunc e => UinputCfg -> RIO e UinputSink
 usOpen c = do
   when (null $ c ^. keyboardName) $ throwM EmptyNameError
-  fd <- liftIO . openFd "/dev/uinput" WriteOnly Nothing $
+  fd <- liftIO . openFd "/dev/uinput" ReadWrite Nothing $
     OpenFileFlags False False False True False
   logInfo "Registering Uinput device"
   acquire_uinput_keysink fd c `onErr` UinputRegistrationError (c ^. keyboardName)
