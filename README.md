@@ -5,11 +5,11 @@
 <h4 align="center">The Onion of Keyboard Management Tools, available on GNU/Linux, Windows, and MacOS!</h4>
 
 <p align="center">
-<a href="#features">Features</a> •
-<a href="#installation">Installation</a> •
-<a href="#configuration">Configuration</a> •
-<a href="#troubleshooting">Troubleshooting</a> •
-<a href="#disclaimer">Disclaimer</a> •
+    <a href="#features">Features</a> •
+    <a href="#installation">Installation</a> •
+    <a href="#configuration">Configuration</a> •
+    <a href="#troubleshooting">Troubleshooting</a> •
+    <a href="#disclaimer">Disclaimer</a>
 </p>
 
 ## Introduction
@@ -35,11 +35,11 @@ KMonad lets you map any keyboard button to any keymap. Want to swap the useless 
 
 #### Layers
 
-A layer is a set of keymaps assigned to your keyboard's buttons. You can have as many layers on top of your base layer as you want. For instance, you can have your regular QWERTY layout, a Colemak/ Dvorak layout, a numbers and symbols layer, a function keys layer, a layer for mouse navigation and system controls --- all in a 60% keyboard. When a particular layer is active, any keypress is interpreted according to the layout defined in that layer. With proper configurations, you can jump to a specific layer or switch to one for the next keypress, or do various other complex manipulations.
+A layer is a set of keymaps assigned to your keyboard's buttons. You can have as many layers on top of your base layer as you want. For instance, you can have your regular QWERTY layout, a Colemak/Dvorak layout, a numbers and symbols layer, a function keys layer, a layer for mouse navigation and system controls --- all in a 60% keyboard. When a particular layer is active, any keypress is interpreted according to the layout defined in that layer. With proper configurations, you can jump to a specific layer or switch to one for the next keypress, or do various other complex manipulations.
 
 #### Multi-Use and Multi-Tap Buttons
 
-One of the distinguishing features of KMonad is the vast capabilities with Multi-Use Buttons. You can have a single button do different things based on whether it is pressed quickly in succession, or pressed once, or held. For example, you can configure the **Caps Lock** key to act as an **Escape** button when pressed once and released, a **Ctrl** modifier when held-down, and a button to jump to a layer when pressed twice quickly in succession. You can make the left and right **Shift** keys to act like left and right parentheses (like the Space Cadet Shift keys) when tapped once, and regular **Shift** keys when held down. The possibilities are infinite!
+Multi-Use Buttons are one of the distinguishing features of KMonad. You can have a single button do different things based on whether it is pressed quickly in succession, or pressed once, or held. For example, you can configure the **Caps Lock** key to act as an **Escape** button when pressed once and released, a **Ctrl** modifier when held-down, and a button to jump to a layer when pressed twice quickly in succession. You can make the left and right **Shift** keys to act like left and right parentheses (like the Space Cadet Shift keys) when tapped once, and regular **Shift** keys when held down. The possibilities are infinite!
 
 #### Command Buttons
 
@@ -86,4 +86,3 @@ way of concentrated work. It is very much his intent to keep working on KMonad
 until it is very, very good. But please be aware that he might be gone for weeks
 on end, not out of a lack of interest, but out of a lack of capacity. You are
 always free to reach out to him by email.
-
