@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP            #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.DeviceSource
@@ -131,7 +132,11 @@ lsOpen :: (HasLogFunc e)
   -> FilePath      -- ^ The path to the device file
   -> RIO e DeviceFile
 lsOpen pr pt = do
+#if MIN_VERSION_unix(2,8,0)
+  h  <- liftIO . openFd pt ReadOnly $
+#else
   h  <- liftIO . openFd pt ReadOnly Nothing $
+#endif
     OpenFileFlags False False False False False
   hd <- liftIO $ fdToHandle h
   logInfo "Initiating ioctl grab"
