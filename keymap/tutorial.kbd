@@ -20,7 +20,7 @@
 
   KMonad's configuration language is styled on various lisps, like scheme or
   Common Lisp. In a lisp, every statement is entered between '(' and ')'s. If
-  you are more used to Fortan style languages (python, ruby, C, Java, etc.), the
+  you are more used to Fortran style languages (python, ruby, C, Java, etc.), the
   change is quite straightforward: the function name moves into the parentheses,
   and you don't use commas to separate arguments. I.e.
 
