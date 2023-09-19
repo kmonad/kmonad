@@ -72,8 +72,9 @@ username and submit a pull request!
 - [VSCode](https://github.com/canadaduane/vscode-kmonad)
 
 ### Startup
-There are startup scripts available for different init systems in
-[startup](startup/).
+- There are startup scripts available for different init systems in [`startup/`](startup/).
+- A [GNOME Shell extension](https://extensions.gnome.org/extension/6069/kmonad-toggle/)
+  is available.
 
 ## Troubleshooting
 For several commonly asked questions regarding various configuration issues, please see:
