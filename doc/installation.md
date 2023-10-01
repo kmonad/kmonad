@@ -174,7 +174,8 @@ Simply run these commands in Windows PowerShell:
 ### macOS
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
-Catalina) and macOS 11.0 (Big Sur).
+Catalina) and macOS 11.0 (Big Sur). After the patch which upgraded
+driverkit-based extension to 3.1.0, kmonad also supports macOS 17.0 (Sonoma).
 
 Note: under macOS, `kmonad` uses one of two "system extensions" to
 post modified key events to the OS. For macOS Catalina and prior, we
@@ -234,7 +235,8 @@ dext installed (though maybe a different version number). Run
 CFBundleVersion` to check the version: if `1.15.0` is shown, then the
 installed dext is compatibile with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
-this may work too (but has not been tested).
+this may work too (but has not been tested). For running kmonad on macOS
+17.0 (Sonoma), you should install the dext version 3.1.0.
 
 ##### Build and sign the dext yourself
 
