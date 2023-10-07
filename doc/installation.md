@@ -163,10 +163,10 @@ Simply run these commands in Windows PowerShell:
    stack build
 
    # the new kmonad.exe will be in .\.stack-work\install\xxxxxxx\bin\
-   
+
    # install kmonad.exe (copies kmonad.exe to %APPDATA%\local\bin\)
    stack install
-   
+
    # run kmonad.exe
    kmonad.exe .\path\to\config.kbd
 ```
@@ -342,17 +342,17 @@ So, for instance, if `build` returns
 
 ``` console
   $ guix build kmonad
-  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1
-  /gnu/store/al0bmdxvl3a8s11vxn13y2nkq4hbg4c8-kmonad-0.4.1-static
+  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.2
+  /gnu/store/al0bmdxvl3a8s11vxn13y2nkq4hbg4c8-kmonad-0.4.2-static
 ```
 
 `<kmonad-path>` will be
-`/gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1` and the copy
+`/gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.2` and the copy
 operation will then be as follows
 
 ``` console
   # cp \
-  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.1/lib/udev/rules.d/70-kmonad.rules \
+  /gnu/store/9mx79afpjqxjiiqgh1xv3b7ckblnl4wk-kmonad-0.4.2/lib/udev/rules.d/70-kmonad.rules \
   /lib/udev/rules.d/
 ```
 
@@ -397,8 +397,8 @@ binary release of kmonad and packages it in the nix-store:
     pkgs = import <nixpkgs> { };
 
     kmonad-bin = pkgs.fetchurl {
-      url = "https://github.com/kmonad/kmonad/releases/download/0.4.1/kmonad-0.4.1-linux";
-      sha256 = "13vs7xq9clgg6pd9gr49h5ljgyg0kc63qd3ghh3dvmi3rkkmi7l3";
+      url = "https://github.com/kmonad/kmonad/releases/download/0.4.2/kmonad-0.4.2-linux";
+      sha256 = "f18334b4d037ca5140f800029222855669748622";
     };
   in
   pkgs.runCommand "kmonad" {}
