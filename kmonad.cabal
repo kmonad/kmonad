@@ -68,6 +68,9 @@ library
       TupleSections
       TypeFamilies
 
+  autogen-modules:
+      Paths_kmonad
+
   exposed-modules:
       KMonad.App
       KMonad.App.Main
