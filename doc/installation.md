@@ -492,7 +492,7 @@ binary release of kmonad and packages it in the nix-store:
      };
    ```
 
-5. If you've set `enable = true;` at the previous step, do not put a
+4. If you've set `enable = true;` at the previous step, do not put a
    `setxkbmap` line in your `config.kbd`. Instead, set the options like
    this:
 
@@ -503,7 +503,7 @@ binary release of kmonad and packages it in the nix-store:
      };
    ```
 
-6. If you want your main user to use kmonad, add it to the `uinput` and
+5. If you want your main user to use kmonad, add it to the `uinput` and
    `input` groups:
 
    ``` nix
@@ -513,7 +513,7 @@ binary release of kmonad and packages it in the nix-store:
      };
    ```
 
-7. Rebuild system:
+6. Rebuild system:
 
    ``` console
      # nixos-rebuild switch
