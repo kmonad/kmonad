@@ -55,7 +55,7 @@ because you installed it yourself or because you are using NixOS, you can build
 `kmonad` using the following command.
 
 ```shell
-nix-build nix
+nix build nix
 ```
 
 On MacOS, you'll have to use something like the following to get nix to pull in
@@ -89,7 +89,7 @@ binary for the state of HEAD yourself, please copy the contents of
 `./nix/static` into the `kmonad` project root, and then call:
 
 ```shell
-$(nix-build --no-link -A fullBuildScript)
+$(nix build --no-link -A fullBuildScript)
 ```
 
 ### Using Docker
