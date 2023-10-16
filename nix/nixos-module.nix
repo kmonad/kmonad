@@ -126,7 +126,7 @@ let
       value = {
         description = "KMonad for ${keyboard.device}";
         script = lib.escapeShellArgs cmd;
-        serviceConfig.Restart = "no";
+        serviceConfig.Restart = "yes";
         serviceConfig.User = "kmonad";
         serviceConfig.SupplementaryGroups = groups;
         serviceConfig.Nice = -20;
