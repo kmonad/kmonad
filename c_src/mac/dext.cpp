@@ -1,3 +1,5 @@
+#include <filesystem> // Include this before virtual_hid_device_service.hpp to avoid compile error
+
 #include "keyio_mac.hpp"
 
 #include "virtual_hid_device_driver.hpp"
@@ -16,8 +18,7 @@ static pqrs::karabiner::driverkit::virtual_hid_device_driver::hid_report::consum
 
 int init_sink() {
     pqrs::dispatcher::extra::initialize_shared_dispatcher();
-    std::filesystem::path client_socket_file_path("/tmp/karabiner_driverkit_virtual_hid_device_service_client.sock");
-    client = new pqrs::karabiner::driverkit::virtual_hid_device_service::client(client_socket_file_path);
+    client = new pqrs::karabiner::driverkit::virtual_hid_device_service::client();
     auto copy = client;
     client->async_driver_loaded();
     client->async_driver_version_matched();
