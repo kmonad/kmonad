@@ -395,6 +395,7 @@ aliases = Q.mkMultiMap
   , (KeyComma,          ["comm", ","])
   , (KeyDot,            ["."])
   , (KeySlash,          ["/"])
+  , (KeyMenu,           ["menu"])
   , (KeyNumLock,        ["nlck"])
   , (KeyKpSlash,        ["kp/"])
   , (KeyKpEnter,        ["kprt"])
