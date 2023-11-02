@@ -382,6 +382,8 @@ aliases = Q.mkMultiMap
   , (KeyScrollLock,     ["scrlck", "slck"])
   , (KeyScrollUp,       ["scrup", "sup"])
   , (KeyScrollDown,     ["scrdn", "sdwn", "sdn"])
+  , (KeyCopy,           ["copy"])
+  , (KeyPaste,          ["pste"])
   , (KeyPrint,          ["prnt"])
   , (KeyWakeUp,         ["wkup"])
   , (KeyLeft,           ["lft"])
