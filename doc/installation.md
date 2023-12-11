@@ -231,7 +231,7 @@ Therefore, if you use Karabiner-Elements, you may already have the
 dext installed (though maybe a different version number). Run
 `defaults read
 /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
-CFBundleVersion` to check the version: if `1.15.0` is shown, then the
+CFBundleVersion` to check the version: if `2.1.0` is shown, then the
 installed dext is compatibile with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
 this may work too (but has not been tested).
@@ -254,7 +254,7 @@ install the extension, and activate the extension.
 
 ```console
   $ cd kmonad/
-  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-1.15.0.pkg
+  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-2.1.0.pkg
 ```
 
 ```console
