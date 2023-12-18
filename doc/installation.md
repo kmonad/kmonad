@@ -174,8 +174,9 @@ Simply run these commands in Windows PowerShell:
 ### macOS
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
-Catalina) and macOS 11.0 (Big Sur). After the patch which upgraded
-driverkit-based extension to 3.1.0, kmonad also supports macOS 17.0 (Sonoma).
+Catalina) and macOS 11.0 (Big Sur). When using driverkit-based extension
+v2.1.0 and later, kmonad also supports macOS 16.0 (Ventura) and 17.0
+(Sonoma).
 
 Note: under macOS, `kmonad` uses one of two "system extensions" to
 post modified key events to the OS. For macOS Catalina and prior, we
@@ -232,11 +233,10 @@ Therefore, if you use Karabiner-Elements, you may already have the
 dext installed (though maybe a different version number). Run
 `defaults read
 /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
-CFBundleVersion` to check the version: if `2.1.0` is shown, then the
+CFBundleVersion` to check the version: if `3.1.0` is shown, then the
 installed dext is compatibile with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
-this may work too (but has not been tested). For running kmonad on macOS
-17.0 (Sonoma), you should install the dext version 3.1.0.
+this may work too (but has not been tested).
 
 ##### Build and sign the dext yourself
 
@@ -256,7 +256,7 @@ install the extension, and activate the extension.
 
 ```console
   $ cd kmonad/
-  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-2.1.0.pkg
+  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-3.1.0.pkg
 ```
 
 ```console
