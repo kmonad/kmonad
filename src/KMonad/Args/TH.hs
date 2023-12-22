@@ -16,15 +16,18 @@ import KMonad.Prelude
 
 import Language.Haskell.TH (Exp, Q)
 import Language.Haskell.TH.Syntax (runIO)
+import UnliftIO.Directory (findExecutable)
 import UnliftIO.Process (readProcessWithExitCode)
 
-
--- | Get the git hash of the current revision at compile time
+-- | Get the git hash of the current commit at compile time.
 gitHash :: Q Exp
 gitHash = do
   str <- runIO do
-    (exitCode, hash, _) <- readProcessWithExitCode "git" ["rev-parse", "HEAD"] ""
-    pure case exitCode of
-      ExitSuccess -> takeWhile (/= '\n') hash
-      _           -> ""
+    findExecutable "git" >>= \case
+      Nothing  -> pure ""                         -- Git not present
+      Just git -> do
+        (exitCode, hash, _) <- readProcessWithExitCode git ["rev-parse", "HEAD"] ""
+        pure case exitCode of
+          ExitSuccess -> takeWhile (/= '\n') hash
+          _           -> ""                       -- Not in a git repo
   [| fromString str |]
