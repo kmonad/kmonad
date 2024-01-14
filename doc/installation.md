@@ -175,7 +175,7 @@ Simply run these commands in Windows PowerShell:
 
 kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
 Catalina) and macOS 11.0 (Big Sur). When using driverkit-based extension
-v2.1.0 and later, kmonad also supports macOS 16.0 (Ventura) and 17.0
+v2.1.0 and later, kmonad also supports macOS 13.0 (Ventura) and 14.0
 (Sonoma).
 
 Note: under macOS, `kmonad` uses one of two "system extensions" to
