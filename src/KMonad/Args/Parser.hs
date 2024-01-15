@@ -324,9 +324,9 @@ itokenP = choice $ map (try . uncurry statement) itokens
 -- | Input tokens to parse; the format is @(keyword, how to parse the token)@
 itokens :: [(Text, Parser IToken)]
 itokens =
-  [ ("device-file"   , KDeviceSource <$> (T.unpack <$> textP))
+  [ ("device-file"   , KDeviceSource <$> (T.unpack <$> lexeme textP))
   , ("low-level-hook", pure KLowLevelHookSource)
-  , ("iokit-name"    , KIOKitSource <$> optional textP)]
+  , ("iokit-name"    , KIOKitSource <$> optional (lexeme textP))]
 
 -- | Parse an output token
 otokenP :: Parser OToken
@@ -335,8 +335,8 @@ otokenP = choice $ map (try . uncurry statement) otokens
 -- | Output tokens to parse; the format is @(keyword, how to parse the token)@
 otokens :: [(Text, Parser OToken)]
 otokens =
-  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional textP)
-  , ("send-event-sink", KSendEventSink <$> optional ((,) <$> lexeme numP <*> numP))
+  [ ("uinput-sink"    , KUinputSink <$> lexeme textP <*> optional (lexeme textP))
+  , ("send-event-sink", KSendEventSink <$> optional ((,) <$> lexeme numP <*> lexeme numP))
   , ("kext"           , pure KKextSink)]
 
 -- | Parse the DefCfg token
