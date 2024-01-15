@@ -12,3 +12,4 @@
 /bin/
 result
 /.cache/
+.direnv
