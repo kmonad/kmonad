@@ -171,7 +171,7 @@ The definition of a key chord then looks like this:
   some timeout, some other button is tapped.
 
   ```clojure
-  ntm (around-next-timeout 500 sft XX)
+  (around-next-timeout 500 sft XX)
   ```
   
 + `sticky keys`: act like the key is held temporarily after just one
@@ -180,6 +180,16 @@ The definition of a key chord then looks like this:
   ```clojure
   (defalias slc (sticky-key 500 lctl))
   ```
+  
++ `stepped button`: perform different buttons in sequence.
+  ```clojure
+  (stepped (press-only lctl) (release-only lctl))
+  ```
+  
+  This button:
+  - presses control the first time it is tapped
+  - releases control the second time it is tapped
+  
 
 + `pause`: pause for the given number of ms.
 
