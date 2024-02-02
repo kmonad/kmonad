@@ -55,6 +55,7 @@ main = getCmd >>= runCmd
 -- 3. Maybe start KMonad
 runCmd :: Cmd -> IO ()
 runCmd c = do
+  hSetBuffering stdout LineBuffering
   o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logLvl)
   withLogFunc o $ \f -> runRIO f $ do
     cfg <- loadConfig c
