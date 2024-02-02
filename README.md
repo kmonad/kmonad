@@ -21,7 +21,7 @@ If you want to get started with the latest, stable binary release, please check 
 Additionally, if you need any help or just want to say hi,
 you can join our [Matrix space](https://matrix.to/#/#Kmonad:matrix.org) or
 jump into our [IRC channel](https://web.libera.chat/#kmonad).
-There is also an unofficial [Discord server](https://discord.gg/3tFfWmnahN).
+There is also an unofficial [Discord server](https://discord.gg/3tFfWmnahN), and a [Kmonad Subreddit](https://www.reddit.com/r/Kmonad/).
 
 ## Features
 
