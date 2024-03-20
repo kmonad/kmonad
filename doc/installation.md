@@ -384,117 +384,46 @@ You can install `kmonad` via `xbps-install`:
 
 ### NixOS
 
-There is not currently a `kmonad` package in `nixpkgs`, however the
-following instructions show how to create your own adhoc derivation, and
-how to configure udev rules in nixos. There is also a NixOS module
-included in this repository that can be used instead of a manual
-configuration.
+The following instructions show how to install and configure KMonad in NixOS.
+There is a NixOS module included in this repository that can be used
+instead of a manual configuration.
 
-#### The Derivation
-Create a `kmonad.nix` derivation such as this one which fetches a static
-binary release of kmonad and packages it in the nix-store:
+#### configuration.nix
 
-``` nix
-  let
-    pkgs = import <nixpkgs> { };
+1. Clone this repository or copy the file
+   [`nix/nixos-module.nix`](../nix/nixos-module.nix) somewhere to your system.
 
-    kmonad-bin = pkgs.fetchurl {
-      url = "https://github.com/kmonad/kmonad/releases/download/0.4.2/kmonad";
-      sha256 = "0j73dzsfnsa7s96gnxhy9v2wz4l8pln0safdlbkz5j4gdasz3lsl";
-    };
-  in
-  pkgs.runCommand "kmonad" {}
-      ''
-        #!${pkgs.stdenv.shell}
-        mkdir -p $out/bin
-        cp ${kmonad-bin} $out/bin/kmonad
-        chmod +x $out/bin/*
-      ''
-```
-
-#### Configuration.nix
-
-1. Import `kmonad.nix` into your `configuration.nix` file using a `let`
-   expression:
-
-   ``` nix
-     let
-       kmonad =  import /path/to/kmonad.nix;
-     in {
-       <your_config>
-     }
-   ```
-
-2. Add `kmonad` to `environment.systemPackages`:
-
-   ``` nix
-     environment.systemPackages = with pkgs; [
-       ...
-       kmonad
-       ...
-     ];
-   ```
-
-3. Create the `uinput` group and add your user to `uinput` and `input`:
-
-   ``` nix
-     users.groups = { uinput = {}; };
-
-     users.extraUsers.userName = {
-       ...
-       extraGroups = [ ... "input" "uinput" ];
-     };
-   ```
-
-4. Add `udev` rules:
-
-   ``` nix
-     services.udev.extraRules =
-       ''
-         # KMonad user access to /dev/uinput
-         KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
-       '';
-   ```
-
-5. Rebuild system:
-
-   ``` console
-     # nixos-rebuild switch
-   ```
-
-#### The NixOS module
-
-1. Clone this repository or copy the file `nix/nixos-module.nix`
-   somewhere to your system.
-
-2. Add `nixos-module.nix` into your `configuration.nix` as an import:
+2. Import `nixos-module.nix`, install KMonad, and configure your keyboard in
+   `configuration.nix`
 
    ``` nix
      imports =
        [
-         /path/to/nixos-module.nix;
+         ...
+         /path/to/nixos-module.nix
        ];
-   ```
 
-3. Configure the module:
+     environment.systemPackages = with pkgs; [
+       ...
+       haskellPackages.kmonad
+       ...
+     ];
 
-   ``` nix
-      services.kmonad = {
-	    enable = true;
+     services.kmonad = {
+      enable = true;
         keyboards = {
-		  { any name for your keyboard } = {
-		    device = "/dev/input/by-id/{ your keyboard id that usually ends with -kbd }";
-		    config = ''
-               { content of config.kbd here }
-   		    '';
-		  };
-  	    }; 
-   	# Modify the following line if you copied nixos-module.nix elsewhere or if you want to use the derivation described above
-   	# package = import /pack/to/kmonad.nix;
+          myKMonadOutput = {
+            device = "/dev/input/by-id/my-keyboard-kbd";
+            config = builtins.readFile /path/to/my/config.kbd;
+          };
+        };
+
+       # If you've installed KMonad from a different source, update this property
+       package = pkgs.haskellPackages.kmonad;
      };
    ```
 
-4. If you've set `enable = true;` at the previous step, do not put a
+   If you've set `enable = true;` in `services.kmonad`, do not put a
    `setxkbmap` line in your `config.kbd`. Instead, set the options like
    this:
 
@@ -505,18 +434,8 @@ binary release of kmonad and packages it in the nix-store:
      };
    ```
 
-5. If you want your main user to use kmonad, add it to the `uinput` and
-   `input` groups:
-
-   ``` nix
-     users.extraUsers.userName = {
-       ...
-       extraGroups = [ ... "input" "uinput" ];
-     };
-   ```
-
-6. Rebuild system:
+3. Rebuild system:
 
    ``` console
-     # nixos-rebuild switch
+     nixos-rebuild switch
    ```
