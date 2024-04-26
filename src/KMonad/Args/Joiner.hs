@@ -65,8 +65,10 @@ data JoinError
   | MissingBlock     Text
   | DuplicateAlias   Text
   | DuplicateLayer   Text
+  | DuplicateSource  (Maybe Text)
   | MissingAlias     Text
   | MissingLayer     Text
+  | MissingSource    (Maybe Text)
   | MissingSetting   Text
   | DuplicateSetting Text
   | InvalidOS        Text
@@ -80,8 +82,14 @@ instance Show JoinError where
     MissingBlock      t   -> "Missing at least 1 block of type: "    <> T.unpack t
     DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
     DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
+    DuplicateSource   t   -> case t of
+      Just t  -> "Multiple sources of the same name: " <> T.unpack t
+      Nothing -> "Multiple default sources"
     MissingAlias      t   -> "Reference to non-existent alias: "     <> T.unpack t
     MissingLayer      t   -> "Reference to non-existent layer: "     <> T.unpack t
+    MissingSource     t   -> case t of
+      Just t  -> "Reference to non-existent source: " <> T.unpack t
+      Nothing -> "Reference to non-existent default source"
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
@@ -168,8 +176,8 @@ joinConfig' = do
   -- Extract the other blocks and join them into a keymap
   let als = extract _KDefAlias es
   let lys = extract _KDefLayer es
-  src      <- oneBlock "defsrc" _KDefSrc
-  (km, fl) <- joinKeymap src als lys
+  let srcs = extract _KDefSrc es
+  (km, fl) <- joinKeymap srcs als lys
 
   pure $ CfgToken
     { _snk   = o
@@ -392,17 +400,33 @@ joinButton ns als =
 
 
 --------------------------------------------------------------------------------
+-- $src
+
+type Sources = M.HashMap (Maybe Text) DefSrc
+
+-- | Build up a hashmap of text to source mappings.
+joinSources :: [DefSrc] -> J Sources
+joinSources = foldM joiner mempty
+  where
+   joiner :: Sources -> DefSrc -> J Sources
+   joiner sources src@DefSrc{_srcName=n}
+     | n `M.member` sources = throwError $ DuplicateSource n
+     | otherwise            = pure $ M.insert n src sources
+
+--------------------------------------------------------------------------------
 -- $kmap
 
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
-joinKeymap :: DefSrc -> [DefAlias] -> [DefLayer] -> J (LMap Button, LayerTag)
-joinKeymap _   _   []  = throwError $ MissingBlock "deflayer"
-joinKeymap src als lys = do
+joinKeymap :: [DefSrc] -> [DefAlias] -> [DefLayer] -> J (LMap Button, LayerTag)
+joinKeymap []   _   _   = throwError $ MissingBlock "defsrc"
+joinKeymap _    _   []  = throwError $ MissingBlock "deflayer"
+joinKeymap srcs als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
-  nms  <- foldM f [] $ map _layerName lys   -- Extract all names
-  als' <- joinAliases nms als               -- Join aliases into 1 hashmap
-  lys' <- mapM (joinLayer als' nms src) lys -- Join all layers
+  nms   <- foldM f [] $ map _layerName lys     -- Extract all names
+  als'  <- joinAliases nms als                 -- Join aliases into 1 hashmap
+  srcs' <- joinSources  srcs                   -- Join all sources into 1 hashmap
+  lys'  <- mapM (joinLayer als' nms srcs') lys -- Join all layers
   -- Return the layerstack and the name of the first layer
   pure (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
 
@@ -410,11 +434,13 @@ joinKeymap src als lys = do
 joinLayer ::
      Aliases                       -- ^ Mapping of names to buttons
   -> LNames                        -- ^ List of valid layer names
-  -> DefSrc                        -- ^ Layout of the source layer
+  -> Sources                       -- ^ Mapping of names to source layer
   -> DefLayer                      -- ^ The layer token to join
   -> J (Text, [(Keycode, Button)]) -- ^ The resulting tuple
-joinLayer als ns src DefLayer{_layerName=n, _buttons=bs} = do
-
+joinLayer als ns srcs DefLayer{_layerName=n, _associatedSrcName=assocSrc, _buttons=bs} = do
+  src <- case M.lookup assocSrc srcs of
+    Just src -> pure $ src^.keycodes
+    Nothing  -> throwError $ MissingSource assocSrc
   -- Ensure length-match between src and buttons
   when (length bs /= length src) $
     throwError $ LengthMismatch n (length bs) (length src)

@@ -61,9 +61,9 @@
 
     KMonad catches input events and tries to match them to various handlers. If
     it cannot match an event to any handler (for example, if it isn't included
-    in the `defsrc` block, or if it is, but the current keymap does not map any
-    buttons to it), then the event gets quietly ignored. If `fallthrough` is set
-    to `true`, any unhandled events simply get reemitted.
+    in the corresponding `defsrc` block, or if it is, but the current keymap
+    does not map any buttons to it), then the event gets quietly ignored. If
+    `fallthrough` is set to `true`, any unhandled events simply get reemitted.
 
   - allow-cmd: `true` or `false`, defaults to `false`
 
@@ -187,7 +187,7 @@
 
 
 #| --------------------------------------------------------------------------
-                         Necessary: the `defsrc` block
+                      Necessary: at least 1 `defsrc` block
 
   It is difficult to explain the `defsrc` block without immediately going into
   `deflayer` blocks as well. Essentially, KMonad maps input-events to various
@@ -208,10 +208,8 @@
   particular case you probably want to set `fallthrough` to `true` in your
   `defcfg` block though.
 
-  In the future we would like to provide support for multiple, named `defsrc`
-  blocks, so that it becomes easier to specify various layers for just the
-  numpad, for example, but at the moment any more or less than 1 `defsrc` block
-  will result in an error.
+  There is also support for named `defsrc` blocks. They contain `:name <my-source>`
+  as the first argument in their definition.
 
   The layouting in the `defsrc` block is completely free, whitespace simply gets
   ignored. We strive to provide a name for every keycode that is no longer than
@@ -238,6 +236,14 @@
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
   lctl lmet lalt           spc            ralt rmet cmp  rctl
+)
+
+(defsrc :name numpad
+  nlck kp/ kp* kp-
+  kp7  kp8 kp9 kp+
+  kp4  kp5 kp6
+  kp1  kp2 kp3 kprt
+  kp0    kp.
 )
 
 
@@ -282,6 +288,9 @@
   layer, followed by N 'statements-that-evaluate-to-a-button', where N is
   exactly how many entries are defined in the `defsrc` statement.
 
+  Optionally you can add a `:source <my-source>` parameter after the name to map
+  a layer using a named `defsrc` block.
+
   It is also important to mention that the 'keymap' in KMonad is modelled as a
   stack of layers (just like in QMK). When an event is registered we look in the
   top-most layer for a handler. If we don't find one we try the next layer, and
@@ -323,6 +332,14 @@
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
   lctl @num lalt           spc            ralt rmet @sym @tst
+)
+
+(deflayer phone :source numpad
+  nlck kp/ kp* kp-
+  kp1  kp2 kp3 kp+
+  kp4  kp5 kp6
+  kp7  kp8 kp9 kprt
+  kp0    kp.
 )
 
 

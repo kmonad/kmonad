@@ -68,7 +68,7 @@ The following are all global config options that one can set in the
 `defcfg` block.
 
 + `fallthrough` (boolean, defaults to `false`): re-emit keys that are
-  not defined in a `defsrc` block.
+  not defined in the corresponding `defsrc` block.
 
   This allows one to only specify certain parts of a layout, with all
   other keys having their "default" meaning.
@@ -317,6 +317,8 @@ just collections of keys.
   `defsrc` is very similar to a layer visually, it is not a one and will
   thus not be used as one! It only serves to define where the different
   keys are and what kind of layout kmonad is initially dealing with.
+  It also supports giving a name via `:name <my-soucre-name>` as the
+  first argument.
 
   For example, an ANSI 60% keyboard may be represented as:
 
@@ -337,6 +339,9 @@ just collections of keys.
 
    For example, defining a qwerty layer, as well as one for special
    symbols and numbers:
+
+   To use a named source block add `:source <my-source-name>` after
+   the layer name.
 
   ```
   (deflayer qwerty

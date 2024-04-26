@@ -368,10 +368,17 @@ defaliasP = many $ (,) <$> lexeme word <*> buttonP
 -- $defsrc
 
 defsrcP :: Parser DefSrc
-defsrcP = many $ lexeme keycodeP
-
+defsrcP =
+  DefSrc
+    <$> optional (keywordP "name" word)
+    <*> many (lexeme keycodeP)
 
 --------------------------------------------------------------------------------
 -- $deflayer
+
 deflayerP :: Parser DefLayer
-deflayerP = DefLayer <$> lexeme word <*> many (lexeme buttonP)
+deflayerP =
+  DefLayer
+    <$> lexeme word
+    <*> optional (keywordP "source" word)
+    <*> many (lexeme buttonP)

@@ -22,7 +22,7 @@ module KMonad.Args.Types
   , DefSettings
   , DefAlias
   , DefLayer(..)
-  , DefSrc
+  , DefSrc(..)
   , KExpr(..)
 
     -- * $defio
@@ -32,6 +32,7 @@ module KMonad.Args.Types
     -- * $lenses
   , AsKExpr(..)
   , AsDefSetting(..)
+  , HasDefSrc(..)
 ) where
 
 
@@ -117,16 +118,23 @@ makeClassy ''CfgToken
 -- A collection of all the different top-level statements possible in a config
 -- file.
 
--- | A list of keycodes describing the ordering of all the other layers
-type DefSrc = [Keycode]
+-- | A list of keycodes describing the ordering used by all other layers
+-- | which is associated with a name.
+data DefSrc = DefSrc
+  { _srcName  :: Maybe Text -- ^ A unique name used to refer to this layer.
+  , _keycodes :: [Keycode]  -- ^ Layer settings containing also the buttons.
+  }
+  deriving Show
+makeClassy ''DefSrc
 
 -- | A mapping from names to button tokens
 type DefAlias = [(Text, DefButton)]
 
 -- | A layer of buttons
 data DefLayer = DefLayer
-  { _layerName :: Text        -- ^ A unique name used to refer to this layer
-  , _buttons   :: [DefButton] -- ^ A list of button tokens
+  { _layerName         :: Text        -- ^ A unique name used to refer to this layer
+  , _associatedSrcName :: Maybe Text  -- ^ The source used by the layer
+  , _buttons           :: [DefButton] -- ^ A list of button tokens
   }
   deriving Show
 
