@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass, CPP #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.Keycode
 Description : Description of all possible keycodes.
@@ -301,13 +301,11 @@ data Keycode
   | Missing253
   | Missing254
   | Missing255
-#ifdef darwin_HOST_OS
   | KeyFn
   | KeyLaunchpad
   | KeyMissionCtrl
   | KeySpotlight
   | KeyDictation
-#endif
   deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
 
 
@@ -408,10 +406,8 @@ aliases = Q.mkMultiMap
   , (KeyNextSong,       ["next"])
   , (KeyPlayPause,      ["pp"])
   , (KeyPreviousSong,   ["prev"])
-#ifdef darwin_HOST_OS
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
   , (KeySpotlight,      ["spot"])
   , (KeyDictation,      ["dict"])
-#endif
   ]
