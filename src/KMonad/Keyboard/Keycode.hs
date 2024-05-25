@@ -301,6 +301,7 @@ data Keycode
   | Missing253
   | Missing254
   | Missing255
+  -- Darwin
   | KeyFn
   | KeyLaunchpad
   | KeyMissionCtrl
@@ -406,6 +407,7 @@ aliases = Q.mkMultiMap
   , (KeyNextSong,       ["next"])
   , (KeyPlayPause,      ["pp"])
   , (KeyPreviousSong,   ["prev"])
+  -- Darwin
   , (KeyLaunchpad,      ["lp"])
   , (KeyMissionCtrl,    ["mctl"])
   , (KeySpotlight,      ["spot"])
