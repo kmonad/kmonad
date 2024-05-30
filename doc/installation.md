@@ -384,58 +384,66 @@ You can install `kmonad` via `xbps-install`:
 
 ### NixOS
 
-The following instructions show how to install and configure KMonad in NixOS.
+The following instructions show how to install and configure KMonad in NixOS with flakes enabled.
 There is a NixOS module included in this repository that can be used
 instead of a manual configuration.
 
+#### flake.nix
+
+1. Add KMonad as an input:
+
+   ``` nix
+   kmonad = {
+     url = "git+https://github.com/kmonad/kmonad?submodules=1&dir=nix";
+     inputs.nixpkgs.follows = "nixpkgs";
+   };
+   ```
+
+2. Import the NixOS module in your configuration:
+
+   ``` nix
+   outputs = { kmonad, … }:
+     {
+       nixosConfigurations.«systemName» = nixpkgs.lib.nixosSystem {
+         modules = [
+           kmonad.nixosModules.default
+         ];
+       };
+     };
+   ```
+
 #### configuration.nix
 
-1. Clone this repository or copy the file
-   [`nix/nixos-module.nix`](../nix/nixos-module.nix) somewhere to your system.
+Finally, you can add
 
-2. Import `nixos-module.nix`, install KMonad, and configure your keyboard in
-   `configuration.nix`
-
-   ``` nix
-     imports =
-       [
-         ...
-         /path/to/nixos-module.nix
-       ];
-
-     environment.systemPackages = with pkgs; [
-       ...
-       haskellPackages.kmonad
-       ...
-     ];
-
-     services.kmonad = {
-      enable = true;
-        keyboards = {
-          myKMonadOutput = {
-            device = "/dev/input/by-id/my-keyboard-kbd";
-            config = builtins.readFile /path/to/my/config.kbd;
-          };
-        };
-
-       # If you've installed KMonad from a different source, update this property
-       package = pkgs.haskellPackages.kmonad;
+``` nix
+services.kmonad = {
+ enable = true;
+   keyboards = {
+     myKMonadOutput = {
+       device = "/dev/input/by-id/my-keyboard-kbd";
+       config = builtins.readFile /path/to/my/config.kbd;
      };
-   ```
+   };
+};
+```
 
-   If you've set `enable = true;` in `services.kmonad`, do not put a
-   `setxkbmap` line in your `config.kbd`. Instead, set the options like
-   this:
+to your `configuration.nix`.
+For more configuration options, see [nixos-module.nix](../nix/nixos-module.nix).
 
-   ``` nix
-     services.xserver = {
-       xkbOptions = "compose:ralt";
-       layout = "us";
-     };
-   ```
+If you've set `enable = true;` in `services.kmonad`,
+do not put a `setxkbmap` line in your `config.kbd`.
+Instead, set the options like this:
 
-3. Rebuild system:
+``` nix
+services.xserver = {
+  xkbOptions = "compose:ralt";
+  layout = "us";
+};
+```
 
-   ``` console
-     nixos-rebuild switch
-   ```
+All that's left is to rebuild your system!
+
+``` console
+$ sudo nixos-rebuild switch --flake /path/to/flake
+```
