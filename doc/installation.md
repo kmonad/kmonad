@@ -431,6 +431,14 @@ services.kmonad = {
 to your `configuration.nix`.
 For more configuration options, see [nixos-module.nix](../nix/nixos-module.nix).
 
+If you just enable the service and don't specify a keyboard, you may have to add
+
+``` nix
+users.users.«userName».extraGroups = [ "input" "uinput" ];
+```
+
+to your configuration.
+
 If you've set `enable = true;` in `services.kmonad`,
 do not put a `setxkbmap` line in your `config.kbd`.
 Instead, set the options like this:
