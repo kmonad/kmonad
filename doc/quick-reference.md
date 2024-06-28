@@ -146,7 +146,7 @@ The definition of a key chord then looks like this:
 ## General Purpose Buttons
 
 + `defalias`: define a name for a button. This can then be referenced in
-  a layer using the `@name` syntax (see [layers][] below).
+  a layer using the `@name` syntax (see [layers](#layers) below).
 
   ```clojure
   (defalias
