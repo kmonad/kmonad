@@ -27,6 +27,7 @@ module KMonad.Args.Parser
   -- * Parsers for Tokens and Buttons
   , otokens
   , itokens
+  , buttonP
   , keywordButtons
   , noKeywordButtons
   )
@@ -240,6 +241,7 @@ composeSeqP = do
 
   -- If matching, parse a button-sequence from the stored text
   case runParser (some buttonP) "" s of
+    -- Parse error never reaches the user. They simply get a message about an unexpected character.
     Left  _ -> fail "Could not parse compose sequence"
     Right b -> pure b
 
