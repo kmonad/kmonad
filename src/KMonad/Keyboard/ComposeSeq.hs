@@ -44,7 +44,6 @@ ssComposed' =
     , ( "spc ("   , '˘'     , "breve" )
     , ( "\" \""   , '¨'     , "diaeresis" )
     , ("spc <"    , 'ˇ'     , "caron")
-    , ("` spc"    , '`'     , "grave")
     , (", spc"    , '¸'     , "cedilla")
     , ("spc spc"  , ' '     , "nobreakspace")
     , ("spc ."    , ' '     , "U2008")
@@ -741,6 +740,7 @@ ssComposed' =
     , ("> _"      , '≥'     , "U2265")
 
     -- Sequences that should exist but do not work
+    --, ("` spc"    , '`'     , "grave") -- recursive and incorrect. It's <dead_grave> <space> and <dead_grave> is not mapped in en_US
     --, ("^ spc", '^', "asciicircum") -- This overlaps with the normal 'shifted-6' macro for
     -- , ("' j", 'j́', "jacute")
     ]
