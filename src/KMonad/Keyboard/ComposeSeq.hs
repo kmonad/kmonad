@@ -20,6 +20,7 @@ module KMonad.Keyboard.ComposeSeq
 where
 
 import KMonad.Prelude
+import RIO.Text.Partial (replace)
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +31,14 @@ import KMonad.Prelude
 -- 3. A descriptive-name
 --
 ssComposed :: [(Text, Char, Text)]
-ssComposed =
+ssComposed = over (each . _1) sanitize ssComposed'
+ where
+  sanitize =
+    replace "(" "\\("
+    . replace ")" "\\)"
+    . replace "_" "\\_"
+ssComposed' :: [(Text, Char, Text)]
+ssComposed' =
     [ ("' '"      , '´'     , "acute")
     , ( "^ -"     , '¯'     , "macron" )
     , ( "spc ("   , '˘'     , "breve" )
