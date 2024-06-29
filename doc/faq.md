@@ -16,6 +16,7 @@
 - [General](#general)
     - [Q: Why doesn't the 'Print' keycode work for my print screen button?](#q-why-doesnt-the-print-keycode-work-for-my-print-screen-button)
     - [Q: Why can't I remap the Fn key on my laptop?](#q-why-cant-i-remap-the-fn-key-on-my-laptop)
+    - [Q: Why do some key combination not work?](#q-why-do-some-key-combination-not-work)
     - [Q: When I run KMonad I get error `Not available under this OS`](#q-when-i-run-kmonad-i-get-error-not-available-under-this-os)
 
 <!-- markdown-toc end -->
@@ -212,6 +213,21 @@ creating a numpad in the middle of the laptop keyboard. This remapping happens
 in the hardware, before any event is ever registered with the operating system,
 therefore KMonad has no way to 'get' at any of those events. This means that we
 cannot remap them in any way.
+
+### Q: Why do some key combination not work?
+
+A: Some keyboards have a low
+[rollover](https://en.wikipedia.org/wiki/Key_rollover).
+It is the lowest maximum number of keys which can be pressed together and
+handled correctly. Most keyboards then have to resort to blocking.
+So If you have buttons which work fine individually but some special
+combination does not, check whether you are affected by it.
+To do this you can use an
+[online rollover test](https://www.mechanical-keyboard.org/key-rollover-test/).
+For correct results it is recommended to turn off KMonad
+(Also note that some keys cannot be captured by a website).
+Another option is to try a different keyboard.
+The only other fix is circumvention.
 
 ### Q: When I run KMonad I get error `Not available under this OS`
 
