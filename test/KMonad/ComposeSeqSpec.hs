@@ -18,5 +18,5 @@ spec = describe "compose-sequences" $ traverse_ checkComposeSeq ssComposed
   parsesAsValidComposeSeq (Right (KComposeSeq seq')) = all isSimple seq'
   parsesAsValidComposeSeq _ = False
   isSimple (KEmit _) = True
-  isSimple (KAround b1 b2) = isSimple b1 && isSimple b2
+  isSimple (KAround (KEmit KeyLeftShift) (KEmit _)) = True
   isSimple _ = False
