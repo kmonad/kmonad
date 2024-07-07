@@ -167,6 +167,16 @@ The definition of a key chord then looks like this:
   ```clojure
   (defalias ns  (around-next sft))  ;; Shift the next press
   ```
+
++ `around-next-single`: perform only the next event (keypress or release)
+  inside some context.
+
++ `before-after-next`: tap a button prior to key press and tap another
+  after key release.
+  ```clojure
+  (before-after-next tab S-tab a)
+  ```
+
 + `around-next-timeout`: like `around-next` except that if other button press is not detected within
   some timeout, some other button is tapped.
 
@@ -174,14 +184,15 @@ The definition of a key chord then looks like this:
   (around-next-timeout 500 sft XX)
   ```
   
-+ `sticky keys`: act like the key is held temporarily after just one
++ `sticky-key`: act like the key is held temporarily after just one
   press for the given amount of time (in ms).
 
   ```clojure
   (defalias slc (sticky-key 500 lctl))
   ```
   
-+ `stepped button`: perform different buttons in sequence.
++ `stepped`: perform the next button in the circular sequence
+  whenever it is pressed.
   ```clojure
   (stepped (press-only lctl) (release-only lctl))
   ```
