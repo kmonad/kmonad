@@ -19,6 +19,7 @@ description:
 extra-source-files:
     changelog.md
     doc/quick-reference.md
+    keymap/tutorial.kbd
 
 flag kext
     description: build against the kext [macOS only]
