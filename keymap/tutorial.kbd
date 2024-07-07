@@ -487,6 +487,22 @@
   sl (sticky-key 300 lsft)
   sr (sticky-key 300 rsft))
 
+#| --------------------------------------------------------------------------
+                           Optional: stepped buttons
+
+  Stepped buttons are a bit out there. They allow you to define a button
+  which does something different depending on how often you have pressed it
+  in the past.
+  Why is this useful?
+  Simple, if you want a ctrl-lock which should work like caps-lock but for
+  ctrl you can use `stepped` in combination with `press-only` and create
+  `@ctl-lck` (see below).
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  ctl-lck (stepped (press-only lctl) (release-only lctl)))
+
 
 ;; Now we define the 'tst' button as opening and closing a bunch of layers at
 ;; the same time. If you understand why this works, you're starting to grok
@@ -922,15 +938,46 @@
   leader-key that simply times out (by passing a non-button), or a key that can
   still function as a normal key, but also as a leader key when used slowly.
 
+  The variant `around-next-single` does the same thing as `around-next` except
+  it really only concernes the next event (press or release).
+  Consider the button `@ns` (see below) in the following scenario:
+
+    P@ns Pa Tb Ra Tc -> A B c
+
+  If we had used `@ns'` instead, we would get a result we would expect more:
+
+    P@ns' Pa Tb Ra Tc -> A b c
+
+  but we get the following problem instead, since it handles any following
+  event, not just key presses:
+
+    Pa P@ns' Ra Tb -> a b
+
+  Another button which may be seen as a variant is `before-after-next`.
+  It taps a button before and another after the actual button.
+  It can be used to recreate `(around-next a)` via:
+
+    (before-after-next (press-only a) (release-only a))
+
+  but it can also be used in a more productive sense like `@inn`.
+  If you can switch with `tab` and `S-tab` between something,
+  you can use `@inn` to type your next key there:
+
+    T@inn Pctl Ta Rctl
+
+  would commonly select everything in the next container.
+
   I think expansion of this button-style is probably the future of leader-key,
   hydra-style functionality support in KMonad.
 
   -------------------------------------------------------------------------- |#
 
 (defalias
-  ns  (around-next sft)  ;; Shift the next press
-  nnm (around-next @num) ;; Perform next press in numbers layer
+  ns  (around-next sft)        ;; Shift until the release of the next press
+  ns' (around-next-single sft) ;; Shift the next event
+  nnm (around-next @num)       ;; Perform next press in numbers layer
   ntm (around-next-timeout 500 sft XX)
+  inn (before-after-next tab S-tab)
 
 
 )
