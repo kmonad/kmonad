@@ -55,6 +55,7 @@ library
       ConstraintKinds
       DeriveFunctor
       DeriveGeneric
+      DeriveDataTypeable
       DeriveTraversable
       FlexibleContexts
       FlexibleInstances
@@ -63,6 +64,7 @@ library
       LambdaCase
       MultiParamTypeClasses
       MultiWayIf
+      NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
       RankNTypes
@@ -188,6 +190,7 @@ test-suite spec
       ConstraintKinds
       DeriveFunctor
       DeriveGeneric
+      DeriveDataTypeable
       DeriveTraversable
       FlexibleContexts
       FlexibleInstances
@@ -196,6 +199,7 @@ test-suite spec
       LambdaCase
       MultiParamTypeClasses
       MultiWayIf
+      NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
       RankNTypes

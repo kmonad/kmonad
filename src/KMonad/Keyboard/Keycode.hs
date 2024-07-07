@@ -307,7 +307,7 @@ data Keycode
   | KeyMissionCtrl
   | KeySpotlight
   | KeyDictation
-  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable)
+  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable, Typeable, Data)
 
 
 instance Display Keycode where
