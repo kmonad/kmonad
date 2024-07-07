@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Clone project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get ghc version for ${{ matrix.resolver }}
         shell: bash
@@ -38,7 +38,7 @@ jobs:
           echo "::set-output name=ghc::$GHCVER"
         id: ghc-version
 
-      - uses: haskell/actions/setup@v1
+      - uses: haskell-actions/setup@v2
         name: Setup GHC ${{ steps.ghc-version.outputs.ghc }}
         id: hs-setup
         with:
@@ -57,7 +57,7 @@ jobs:
         run: New-Item -ItemType directory -Path ${{ steps.hs-setup.outputs.stack-root }}
 
       - name: Cache Haskell package metadata
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.hs-setup.outputs.stack-root }}/pantry
           key: stack-pantry-${{ runner.os }}-${{ steps.cache-date.outputs.date }}
@@ -65,7 +65,7 @@ jobs:
             stack-pantry-${{ runner.os }}-
 
       - name: Cache Haskell dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ${{ steps.hs-setup.outputs.stack-root }}/*
