@@ -18,10 +18,7 @@ jobs:
             # , windows-latest
             ]
         resolver:
-          [ lts-16               # GHC 8.8
-          , lts-18               # GHC 8.10
-          , lts-19               # GHC 9.0
-          , lts-20               # GHC 9.2
+          [ lts-20               # GHC 9.2
           , lts-21               # GHC 9.4
           , lts-22               # GHC 9.6
           , nightly-2024-07-05   # GHC 9.8
