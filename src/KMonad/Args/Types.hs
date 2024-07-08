@@ -74,6 +74,8 @@ data DefButton
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KStepped [DefButton]                   -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
+  | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
+  | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's alone
   | KAroundNextTimeout Int DefButton DefButton
   | KTapMacro [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press

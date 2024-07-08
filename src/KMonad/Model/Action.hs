@@ -66,7 +66,7 @@ import KMonad.Util
 --------------------------------------------------------------------------------
 -- $keyfun
 
--- | Boolean isomorph signalling wether an event should be caught or not
+-- | Boolean isomorph signalling whether an event should be caught or not.
 data Catch = Catch | NoCatch deriving (Show, Eq)
 
 instance Semigroup Catch where

@@ -161,6 +161,31 @@ The definition of a key chord then looks like this:
   (defalias ad (around alt del)) ;; this is like pressing Alt+Del
   ```
 
++ `around-only`: `around` but release the outer button as soon as others are pressed.
+
+    ```clojure
+    (defalias
+      A (around lsft a)
+      A' (around-only lsft a)
+    )
+    ```
+
+    `@A'` is simply an uppercase letter but with the following difference to the `@A`:
+
+    P@A Pb R@A Rb -> AB
+    P@A' Pb R@A' Rb -> Ab
+
++ `around-when-alone`: similar to `around-only` but when all other buttons have been released
+    the outer button is repressed.
+
+    ```clojure
+    (defalias
+        A'' (around-when-alone lsft a)
+    )
+    ```
+
+    P@A'' Tb Tc R@A'' -> Plsft Pa Rlsft Tb Tlsft Tc Plsft Ra Rlsft
+
 + `around-next`: perform the next button-press inside some context (like
   `layer-next` but more generalized)
 
@@ -183,24 +208,24 @@ The definition of a key chord then looks like this:
   ```clojure
   (around-next-timeout 500 sft XX)
   ```
-  
+
 + `sticky-key`: act like the key is held temporarily after just one
   press for the given amount of time (in ms).
 
   ```clojure
   (defalias slc (sticky-key 500 lctl))
   ```
-  
+
 + `stepped`: perform the next button in the circular sequence
   whenever it is pressed.
   ```clojure
   (stepped (press-only lctl) (release-only lctl))
   ```
-  
+
   This button:
   - presses control the first time it is tapped
   - releases control the second time it is tapped
-  
+
 
 + `pause`: pause for the given number of ms.
 
@@ -306,8 +331,8 @@ to be the most comfortable.
   ```clojure
   (defalias thr (tap-hold-next-release 1000 a sft))
   ```
-  
-+ `tap-hold-next` and `tap-hold-next-release` can take an optional 
+
++ `tap-hold-next` and `tap-hold-next-release` can take an optional
   `:timeout-button` keyword to specify a button other than the
   hold button which should be held when the timeout expires.
 
