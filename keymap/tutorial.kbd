@@ -414,6 +414,13 @@
   release first release bar, and then foo. Once created, this new button can be
   passed to anything in KMonad that expects a button.
 
+  There also exists some variants like `around-only` or `around-when-alone`.
+  `around-only` releases the outer button just before another button is pressed.
+  If no other button is released
+
+  `around-when-alone` is another variant which works like `around-only` but
+  represses the outer button when all other buttons have been released.
+
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no Keycodes for these buttons in KMonad, but they are buttons. They simply
   evaluate to `(around lsft x)`. All shifted numbers have their corresponding

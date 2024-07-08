@@ -161,6 +161,31 @@ The definition of a key chord then looks like this:
   (defalias ad (around alt del)) ;; this is like pressing Alt+Del
   ```
 
++ `around-only`: `around` but release the outer button as soon as others are pressed.
+    
+    ```clojure
+    (defalias
+      A (around lsft a)
+      A' (around-only lsft a)
+    )
+    ```
+
+    `@A'` is simply an uppercase letter but with the following difference to the `@A`:
+
+    P@A Pb R@A Rb -> AB
+    P@A' Pb R@A' Rb -> Ab
+    
++ `around-when-alone`: similar to `around-only` but when all other buttons have been released
+    the outer button is repressed.
+
+    ```clojure
+    (defalias
+        A'' (around-when-alone lsft a)
+    )
+    ```
+
+    P@A'' Tb Tc R@A'' -> Plsft Pa Rlsft Tb Tlsft Tc Plsft Ra Rlsft
+
 + `around-next`: perform the next button-press inside some context (like
   `layer-next` but more generalized)
 

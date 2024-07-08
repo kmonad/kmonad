@@ -265,6 +265,8 @@ buttonP = (lexeme . choice . map try $
 keywordButtons :: [(Text, Parser DefButton)]
 keywordButtons =
   [ ("around"         , KAround      <$> buttonP     <*> buttonP)
+  , ("around-only"    , KAroundOnly  <$> buttonP     <*> buttonP)
+  , ("around-when-alone", KAroundWhenAlone <$> buttonP <*> buttonP)
   , ("press-only"     , KPressOnly   <$> keycodeP)
   , ("release-only"   , KReleaseOnly <$> keycodeP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
