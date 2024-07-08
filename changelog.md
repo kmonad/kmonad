@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   when others are pressed.
 - Added `around-when-alone`, which also represses the outer button when only
   the inner button is pressed and all others have been released.
+- Allow customization of implicit `around`s
 
 ### Changed
 

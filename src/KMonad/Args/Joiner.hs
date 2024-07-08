@@ -73,6 +73,7 @@ data JoinError
   | MissingSetting   Text
   | DuplicateSetting Text
   | InvalidOS        Text
+  | ImplArndDisabled
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
@@ -97,6 +98,7 @@ instance Show JoinError where
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
+    ImplArndDisabled      -> "Implicit around via `A` or `S-a` are disabled in your config"
     NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
     InvalidComposeKey     -> "Encountered invalid button as Compose key"
     LengthMismatch t l s  -> mconcat
@@ -110,6 +112,7 @@ instance Exception JoinError
 -- | Joining Config
 data JCfg = JCfg
   { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
+  , _implArnd :: ImplArnd -- ^ How to handle implicit `around`s
   , _kes     :: [KExpr] -- ^ The source expresions we operate on
   }
 makeLenses ''JCfg
@@ -117,6 +120,7 @@ makeLenses ''JCfg
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
   (emitB KeyRightAlt)
+  IAAround
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
@@ -208,6 +212,7 @@ getOverride = do
   let go e v = case v of
         SCmpSeq b  -> getB b >>= maybe (throwError InvalidComposeKey)
                                        (\b' -> pure $ set cmpKey b' e)
+        SImplArnd ia -> pure $ set implArnd ia e
         _ -> pure e
   foldM go env cfg
 
@@ -333,6 +338,12 @@ joinAliases ns als = foldM f M.empty $ concat als
 unnest :: J (Maybe Button) -> J Button
 unnest = (maybe (throwError NestedTrans) pure =<<)
 
+fromImplArnd :: DefButton -> DefButton -> ImplArnd -> J DefButton
+fromImplArnd _ _ IADisabled        = throwError ImplArndDisabled
+fromImplArnd o i IAAround          = pure $ KAround o i
+fromImplArnd o i IAAroundOnly      = pure $ KAroundOnly o i
+fromImplArnd o i IAAroundWhenAlone = pure $ KAroundWhenAlone o i
+
 -- | Turn a button token into an actual KMonad `Button` value
 joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
 joinButton ns als =
@@ -392,6 +403,7 @@ joinButton ns als =
     KTapNextPress t h  -> jst $ tapNextPress       <$> go t <*> go h
     KAroundOnly o i    -> jst $ aroundOnly         <$> go o <*> go i
     KAroundWhenAlone o i -> jst $ aroundWhenAlone  <$> go o <*> go i
+    KAroundImplicit o i  -> joinButton ns als =<< fromImplArnd o i =<< view implArnd
     KAroundNext b      -> jst $ aroundNext         <$> go b
     KAroundNextSingle b -> jst $ aroundNextSingle <$> go b
     KAroundNextTimeout ms b t -> jst $ aroundNextTimeout (fi ms) <$> go b <*> go t

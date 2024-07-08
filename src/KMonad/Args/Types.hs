@@ -16,6 +16,7 @@ module KMonad.Args.Types
 
     -- * $but
   , DefButton(..)
+  , ImplArnd(..)
 
     -- * $tls
   , DefSetting(..)
@@ -76,6 +77,7 @@ data DefButton
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
   | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's alone
+  | KAroundImplicit DefButton DefButton    -- ^ Wrap 1 button around another
   | KAroundNextTimeout Int DefButton DefButton
   | KTapMacro [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
@@ -95,6 +97,13 @@ data DefButton
 
 instance Plated DefButton
 
+-- | Possible values for implicit around
+data ImplArnd
+  = IADisabled
+  | IAAround
+  | IAAroundOnly
+  | IAAroundWhenAlone
+  deriving Show
 
 --------------------------------------------------------------------------------
 -- $cfg
@@ -170,6 +179,7 @@ data DefSetting
   | SFallThrough Bool
   | SAllowCmd    Bool
   | SCmpSeqDelay Int
+  | SImplArnd    ImplArnd
   deriving (Show)
 makeClassyPrisms ''DefSetting
 
@@ -182,6 +192,7 @@ instance Eq DefSetting where
   SCmpSeq{}      == SCmpSeq{}      = True
   SFallThrough{} == SFallThrough{} = True
   SAllowCmd{}    == SAllowCmd{}    = True
+  SImplArnd{}    == SImplArnd{}    = True
   _              == _              = False
 
 -- | A list of different 'DefSetting' values
