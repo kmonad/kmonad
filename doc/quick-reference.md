@@ -86,6 +86,12 @@ The following are all global config options that one can set in the
 + `cmp-seq-delay` (natural number): delay between each pressed key in a
   compose-key sequence.
 
++ `implicit-around` (around variant, defaults to `around`):
+  Specifies the variant of `around` to use in implicit around constructs
+  like `A` or `S-a`.
+  You can also specify `disabled`, which causes implicit arounds to
+  result in errors.
+
 ## Full Example
 
 Below is an example of a full `defcfg` block for a GNU/Linux system.
@@ -129,10 +135,10 @@ the macro the reactivation of the `alt` key, solving the problem.
 To make key-entry easier, kmonad already provides some syntax for
 Emacs-like specification of key chords. They are defined like this:
 
-  - `C-` : `(around lctl X)`
-  - `A-` : `(around lalt X)`
-  - `M-` : `(around lmet X)`
-  - `S-` : `(around lsft X)`
+  - `C-` : `(around-implicit lctl X)`
+  - `A-` : `(around-implicit lalt X)`
+  - `M-` : `(around-implicit lmet X)`
+  - `S-` : `(around-implicit lsft X)`
 
 Then `RC-`, `RA-`, `RM-`, and `RS-` behave exactly the same, except
 using the right-modifier.
@@ -140,7 +146,7 @@ using the right-modifier.
 The definition of a key chord then looks like this:
 
 ```clojure
-(defalias Ca C-a) ;; this is equivalent to (defalias Ca (around Ctl a))
+(defalias Ca C-a) ;; this is equivalent to (defalias Ca (around-implicit Ctl a))
 ```
 
 ## General Purpose Buttons
@@ -185,6 +191,16 @@ The definition of a key chord then looks like this:
     ```
 
     P@A'' Tb Tc R@A'' -> Plsft Pa Rlsft Tb Tlsft Tc Plsft Ra Rlsft
+
++ `around-implicit`: the around variant used implicit
+    
+    ```closure
+    (defalias
+        =A (around-implicit lsft a)
+    )
+    ```
+
+    `@=A` is the desugared form of `A`
 
 + `around-next`: perform the next button-press inside some context (like
   `layer-next` but more generalized)
