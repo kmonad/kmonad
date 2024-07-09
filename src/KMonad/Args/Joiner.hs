@@ -122,7 +122,7 @@ makeLenses ''JCfg
 defJCfg :: [KExpr] ->JCfg
 defJCfg = JCfg
   (emitB KeyRightAlt)
-  IAAround
+  IAAroundOnly
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }

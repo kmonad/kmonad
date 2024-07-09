@@ -86,7 +86,7 @@ The following are all global config options that one can set in the
 + `cmp-seq-delay` (natural number): delay between each pressed key in a
   compose-key sequence.
 
-+ `implicit-around` (around variant, defaults to `around`):
++ `implicit-around` (around variant, defaults to `around-only`):
   Specifies the variant of `around` to use in implicit around constructs
   like `A` or `S-a`.
   You can also specify `disabled`, which causes implicit arounds to
