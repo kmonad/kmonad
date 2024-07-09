@@ -230,7 +230,7 @@ aroundWhenAlone ::
 aroundWhenAlone outer inner = onPress $ do
   runAction $ outer^.pressAction
   runAction $ inner^.pressAction
-  (`go` mempty) =<< matchMy Release
+  flip go S.empty =<< matchMy Release
   pure ()
  where
   go :: KeyPred -> HashSet Keycode -> AnyK ()
