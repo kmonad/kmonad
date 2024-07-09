@@ -72,6 +72,7 @@ data JoinError
   | MissingSource    (Maybe Text)
   | MissingSetting   Text
   | DuplicateSetting Text
+  | DuplicateLayerSetting Text Text
   | InvalidOS        Text
   | ImplArndDisabled
   | NestedTrans
@@ -97,6 +98,7 @@ instance Show JoinError where
       Nothing -> "Reference to non-existent default source"
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
+    DuplicateLayerSetting t s -> "Duplicate setting in 'deflayer '"  <> T.unpack t <> "': " <> T.unpack s
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
     ImplArndDisabled      -> "Implicit around via `A` or `S-a` are disabled in your config"
     NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
@@ -460,7 +462,11 @@ joinLayer ::
   -> Sources                       -- ^ Mapping of names to source layer
   -> DefLayer                      -- ^ The layer token to join
   -> J (Text, [(Keycode, Button)]) -- ^ The resulting tuple
-joinLayer als ns srcs DefLayer{_layerName=n, _associatedSrcName=assocSrc, _buttons=bs} = do
+joinLayer als ns srcs l@(DefLayer n settings) = do
+  let bs = settings ^.. each . _LButton
+  assocSrc <- getAssocSrc l
+  implAround <- getImplAround l
+
   src <- case M.lookup assocSrc srcs of
     Just src -> pure $ src^.keycodes
     Nothing  -> throwError $ MissingSource assocSrc
@@ -472,8 +478,20 @@ joinLayer als ns srcs DefLayer{_layerName=n, _associatedSrcName=assocSrc, _butto
   let f acc (kc, b) = joinButton ns als b >>= \case
         Nothing -> pure acc
         Just b' -> pure $ (kc, b') : acc
-  (n,) <$> foldM f [] (zip src bs)
+  maybe id (local . set implArnd) implAround $
+    (n,) <$> foldM f [] (zip src bs)
 
+getAssocSrc :: DefLayer -> J (Maybe Text)
+getAssocSrc (DefLayer n settings) = case onlyOne (settings ^.. each . _LSrcName) of
+  Right x        -> pure $ Just x
+  Left None      -> pure Nothing
+  Left Duplicate -> throwError $ DuplicateLayerSetting n "source"
+
+getImplAround :: DefLayer -> J (Maybe ImplArnd)
+getImplAround (DefLayer n settings) = case onlyOne (settings ^.. each . _LImplArnd) of
+  Right x        -> pure $ Just x
+  Left None      -> pure Nothing
+  Left Duplicate -> throwError $ DuplicateLayerSetting n "implicit-around"
 
 --------------------------------------------------------------------------------
 -- $test

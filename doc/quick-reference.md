@@ -395,6 +395,9 @@ just collections of keys.
    To use a named source block add `:source <my-source-name>` after
    the layer name.
 
+   you can also overwrite the `implicit-around` setting by adding
+   `:implicit-around <setting>`.
+
   ```
   (deflayer qwerty
     grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc

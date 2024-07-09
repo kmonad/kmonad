@@ -301,6 +301,9 @@
   Optionally you can add a `:source <my-source>` parameter after the name to map
   a layer using a named `defsrc` block.
 
+  You can also overwrite the option `implicit-around` for a layer by adding
+  `:implicit-around <setting>`.
+
   It is also important to mention that the 'keymap' in KMonad is modelled as a
   stack of layers (just like in QMK). When an event is registered we look in the
   top-most layer for a handler. If we don't find one we try the next layer, and
@@ -345,6 +348,7 @@
 )
 
 (deflayer phone :source numpad
+  :implicit-around disabled
   nlck kp/ kp* kp-
   kp1  kp2 kp3 kp+
   kp4  kp5 kp6
