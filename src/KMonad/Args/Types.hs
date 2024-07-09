@@ -22,6 +22,7 @@ module KMonad.Args.Types
   , DefSetting(..)
   , DefSettings
   , DefAlias
+  , DefLayerSetting(..)
   , DefLayer(..)
   , DefSrc(..)
   , KExpr(..)
@@ -34,6 +35,7 @@ module KMonad.Args.Types
   , AsKExpr(..)
   , AsDefSetting(..)
   , HasDefSrc(..)
+  , AsDefLayerSetting(..)
 ) where
 
 
@@ -143,11 +145,17 @@ makeClassy ''DefSrc
 -- | A mapping from names to button tokens
 type DefAlias = [(Text, DefButton)]
 
+data DefLayerSetting
+  = LSrcName Text
+  | LImplArnd ImplArnd
+  | LButton DefButton
+  deriving Show
+makeClassyPrisms ''DefLayerSetting
+
 -- | A layer of buttons
 data DefLayer = DefLayer
-  { _layerName         :: Text        -- ^ A unique name used to refer to this layer
-  , _associatedSrcName :: Maybe Text  -- ^ The source used by the layer
-  , _buttons           :: [DefButton] -- ^ A list of button tokens
+  { _layerName :: Text
+  , _layerSettings :: [DefLayerSetting]
   }
   deriving Show
 

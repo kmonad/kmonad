@@ -49,7 +49,7 @@ tutorialMentionsEveryButton =
       . unless (containsButton btn cnt)
       $ expectationFailure ("Buttontype `" <> showConstr btn <> "` is never used")
   containsButton btn = any . anyButton $ (== btn) . toConstr
-  anyButton f (KDefLayer (DefLayer{_buttons})) = any (anySubButton f) _buttons
+  anyButton f (KDefLayer DefLayer{_layerSettings = lyrBtns}) = anyOf (each . _LButton) (anySubButton f) lyrBtns
   anyButton f (KDefAlias als) = any (anySubButton f . snd) als
   anyButton _ _ = False
   anySubButton f x = f x || anyOf plate f x

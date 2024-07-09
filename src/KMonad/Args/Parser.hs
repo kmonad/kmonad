@@ -394,8 +394,12 @@ defsrcP =
 -- $deflayer
 
 deflayerP :: Parser DefLayer
-deflayerP =
-  DefLayer
-    <$> lexeme word
-    <*> optional (keywordP "source" word)
-    <*> many (lexeme buttonP)
+deflayerP = DefLayer <$> lexeme word <*> many (lexeme layerSettingP)
+
+layerSettingP :: Parser DefLayerSetting
+layerSettingP =
+  lexeme . choice . map try $
+    [ LSrcName <$> keywordP "source" word
+    , LImplArnd <$> keywordP "implicit-around" implArndP
+    , LButton <$> buttonP
+    ]
