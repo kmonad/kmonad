@@ -197,6 +197,7 @@ joinConfig' = do
 -- | Return a JCfg with all settings from defcfg applied to the env's JCfg
 getOverride :: J JCfg
 getOverride = do
+  -- FIXME: duplicates don't throw errors
   env <- ask
   cfg <- oneBlock "defcfg" _KDefCfg
   let getB = joinButton [] M.empty

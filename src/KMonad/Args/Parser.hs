@@ -354,7 +354,6 @@ settingP = let f s p = symbol s *> p in
     [ SIToken      <$> f "input"         itokenP
     , SOToken      <$> f "output"        otokenP
     , SCmpSeq      <$> f "cmp-seq"       buttonP
-    , SInitStr     <$> f "init"          textP
     , SFallThrough <$> f "fallthrough"   bool
     , SAllowCmd    <$> f "allow-cmd"     bool
     , SCmpSeqDelay <$> f "cmp-seq-delay" numP

@@ -151,25 +151,24 @@ data IToken
   = KDeviceSource FilePath
   | KLowLevelHookSource
   | KIOKitSource (Maybe Text)
-  deriving Show
+  deriving (Show)
 
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
   | KSendEventSink (Maybe (Int, Int))
   | KKextSink
-  deriving Show
+  deriving (Show)
 
 -- | All possible single settings
 data DefSetting
   = SIToken      IToken
   | SOToken      OToken
   | SCmpSeq      DefButton
-  | SInitStr     Text
   | SFallThrough Bool
   | SAllowCmd    Bool
   | SCmpSeqDelay Int
-  deriving Show
+  deriving (Show)
 makeClassyPrisms ''DefSetting
 
 -- | 'Eq' instance for a 'DefSetting'. Because every one of these options may be
@@ -179,7 +178,6 @@ instance Eq DefSetting where
   SIToken{}      == SIToken{}      = True
   SOToken{}      == SOToken{}      = True
   SCmpSeq{}      == SCmpSeq{}      = True
-  SInitStr{}     == SInitStr{}     = True
   SFallThrough{} == SFallThrough{} = True
   SAllowCmd{}    == SAllowCmd{}    = True
   _              == _              = False
