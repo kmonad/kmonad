@@ -28,6 +28,7 @@ module KMonad.Args.Parser
   , otokens
   , itokens
   , buttonP
+  , implArndButtons
   , keywordButtons
   , noKeywordButtons
   )
