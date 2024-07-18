@@ -290,6 +290,7 @@ keywordButtons =
   , ("layer-delay"    , KLayerDelay  <$> lexeme numP <*> lexeme word)
   , ("layer-next"     , KLayerNext   <$> lexeme word)
   , ("around-next"    , KAroundNext  <$> buttonP)
+  , ("around-next-single", KAroundNextSingle <$> buttonP)
   , ("before-after-next", KBeforeAfterNext <$> buttonP <*> buttonP)
   , ("around-next-timeout", KAroundNextTimeout <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-macro"
@@ -353,7 +354,6 @@ settingP = let f s p = symbol s *> p in
     [ SIToken      <$> f "input"         itokenP
     , SOToken      <$> f "output"        otokenP
     , SCmpSeq      <$> f "cmp-seq"       buttonP
-    , SInitStr     <$> f "init"          textP
     , SFallThrough <$> f "fallthrough"   bool
     , SAllowCmd    <$> f "allow-cmd"     bool
     , SCmpSeqDelay <$> f "cmp-seq-delay" numP

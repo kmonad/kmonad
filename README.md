@@ -61,6 +61,7 @@ For more information on how to install KMonad, please refer to:
 
 For information on how to configure KMonad, please refer you to:
 - [the configuration tutorial](keymap/tutorial.kbd)
+- [quick reference](doc/quick-reference.md)
 - [user configurations](https://github.com/kmonad/kmonad-contrib)
 
 Want to add your own keyboard configuration to [kmonad-contrib]? Just

@@ -44,7 +44,6 @@ data Cmd = Cmd
     -- All 'KDefCfg' options of a 'KExpr'
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
   , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
-  , _initStr   :: Maybe DefSetting -- ^ TODO: What does this do?
   , _cmpSeq    :: Maybe DefSetting -- ^ Key to use for compose-key sequences
   , _oToken    :: Maybe DefSetting -- ^ How to emit the output
   , _iToken    :: Maybe DefSetting -- ^ How to capture the input
@@ -83,7 +82,6 @@ cmdP =
       <*> startDelayP
       <*> cmdAllowP
       <*> fallThrghP
-      <*> initStrP
       <*> cmpSeqP
       <*> oTokenP
       <*> iTokenP
@@ -129,15 +127,6 @@ fallThrghP = SFallThrough <$> switch
   (  long "fallthrough"
   <> short 'f'
   <> help "Whether to simply re-emit unhandled events"
-  )
-
--- | TODO what does this do?
-initStrP :: Parser (Maybe DefSetting)
-initStrP = optional $ SInitStr <$> strOption
-  (  long "init"
-  <> short 't'
-  <> metavar "STRING"
-  <> help "TODO"
   )
 
 -- | Key to use for compose-key sequences

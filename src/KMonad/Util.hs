@@ -43,7 +43,7 @@ import Data.Time.Clock.System
 
 -- | Newtype wrapper around 'Int' to add type safety to our time values
 newtype Milliseconds = Milliseconds { unMS :: Int }
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display)
+  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display, Typeable, Data)
 
 -- | Calculate how much time has elapsed between 2 time points
 tDiff :: ()
