@@ -50,7 +50,7 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (headMaybe, intersperse, uncons)
+import RIO.List (headMaybe, intersperse, uncons, sort, group)
 import RIO.Partial (fromJust)
 import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
@@ -66,6 +66,7 @@ data JoinError
   | DuplicateAlias   Text
   | DuplicateLayer   Text
   | DuplicateSource  (Maybe Text)
+  | DuplicateKeyInSource (Maybe Text) [Keycode]
   | MissingAlias     Text
   | MissingLayer     Text
   | MissingSource    (Maybe Text)
@@ -85,6 +86,9 @@ instance Show JoinError where
     DuplicateSource   t   -> case t of
       Just t  -> "Multiple sources of the same name: " <> T.unpack t
       Nothing -> "Multiple default sources"
+    DuplicateKeyInSource   t ks   -> case t of
+      Just t  -> "Keycodes appear multiple times in source `" <> T.unpack t <> "`:" <> ((' ' :) . show =<< ks)
+      Nothing -> "Keycodes appear multiple times in default source: " <> ((' ' :) . show =<< ks)
     MissingAlias      t   -> "Reference to non-existent alias: "     <> T.unpack t
     MissingLayer      t   -> "Reference to non-existent layer: "     <> T.unpack t
     MissingSource     t   -> case t of
@@ -410,9 +414,13 @@ joinSources :: [DefSrc] -> J Sources
 joinSources = foldM joiner mempty
   where
    joiner :: Sources -> DefSrc -> J Sources
-   joiner sources src@DefSrc{_srcName=n}
+   joiner sources src@DefSrc{ _srcName = n, _keycodes = ks }
      | n `M.member` sources = throwError $ DuplicateSource n
+     | not (null dups)      = throwError $ DuplicateKeyInSource n dups
      | otherwise            = pure $ M.insert n src sources
+    where
+     dups :: [Keycode]
+     dups = concatMap (take 1) . filter ((> 1) . length) . group . sort $ ks
 
 --------------------------------------------------------------------------------
 -- $kmap

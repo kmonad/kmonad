@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 - Update Karabiner-DriverKit to 3.1.0 (#780)
 - Added tests to check that every button has documentation (#857)
+- `defsrc` with duplicate keycodes are now forbidden (#860)
 
 ### Fixed
 
