@@ -270,11 +270,17 @@ Note: If activation failed (e.g. because a newer version is already installed), 
 
 Compilation under Mac currently works with `stack`. Compilation under
 Mac via `nix` is not tested or planned. Installation under Mac via
-Hackage is not tested, but may work for the adveturous. To compile on
+Hackage is not tested, but may work for the adventurous. To compile on
 Mac, download the kmonad source:
 
 ``` console
   $ git clone --recursive https://github.com/kmonad/kmonad.git
+```
+
+and install `stack`
+
+``` console
+  $ brew install haskell-stack
 ```
 
 Then build kmonad with `stack`. If you are building against the kext, run:
@@ -287,6 +293,12 @@ If you are building against the dext, run
 
 ``` console
   $ stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+```
+
+Finally, run the following to place the executable `kmonad` in `~/.local/bin/` (which you may want to ensure is on your `PATH`)
+
+``` console
+  $ stack install
 ```
 
 #### Giving kmonad additional permissions
