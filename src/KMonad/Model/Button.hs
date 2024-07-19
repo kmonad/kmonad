@@ -221,8 +221,8 @@ aroundOnly outer inner = onPress $ do
         pure NoCatch
       | otherwise -> go isMyRelease $> NoCatch
 
--- | A variat of `around-only` which represses it's outter button all other keys
--- have been released.
+-- | A variat of `around-only` which represses it's outter button when all
+-- other keys after it have been released.
 aroundWhenAlone ::
      Button -- ^ The outer 'Button'
   -> Button -- ^ The inner 'Button'

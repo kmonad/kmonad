@@ -181,8 +181,8 @@ The definition of a key chord then looks like this:
     P@A Pb R@A Rb -> AB
     P@A' Pb R@A' Rb -> Ab
     
-+ `around-when-alone`: similar to `around-only` but when all other buttons have been released
-    the outer button is repressed.
++ `around-when-alone`: similar to `around-only` but when all other buttons which have been
+    pressed after this one have been released the outer button is repressed.
 
     ```clojure
     (defalias
