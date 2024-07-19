@@ -193,7 +193,7 @@ The definition of a key chord then looks like this:
     P@A'' Tb Tc R@A'' -> Plsft Pa Rlsft Tb Tlsft Tc Plsft Ra Rlsft
 
 + `around-implicit`: the around variant used implicit
-    
+
     ```closure
     (defalias
         =A (around-implicit lsft a)

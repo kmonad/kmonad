@@ -78,7 +78,7 @@ data DefButton
   | KStepped [DefButton]                   -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
-  | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's alone
+  | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's "alone"
   | KAroundImplicit DefButton DefButton    -- ^ Wrap 1 button around another
   | KAroundNextTimeout Int DefButton DefButton
   | KTapMacro [DefButton] (Maybe Int)

@@ -429,11 +429,13 @@
   passed to anything in KMonad that expects a button.
 
   There also exists some variants like `around-only` or `around-when-alone`.
-  `around-only` releases the outer button just before another button is pressed.
-  If no other button is released
+  `around-only` also releases the outer button just before another button is
+  pressed. If no other button has been pressed prior to it's release it releases
+  the inner than the outer button similarly to `around`.
 
   `around-when-alone` is another variant which works like `around-only` but
-  represses the outer button when all other buttons have been released.
+  represses the outer button when all other which have been pressed after
+  itself have been released.
 
   `around-implicit` is one of the above variants and is specified `defcfg` block.
 
