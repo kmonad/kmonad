@@ -65,6 +65,16 @@
     does not map any buttons to it), then the event gets quietly ignored. If
     `fallthrough` is set to `true`, any unhandled events simply get reemitted.
 
+    In more practical terms, this allows you to only specify the keys that
+    you want to overwrite in your `defsrc' block. For example, the following
+    configuration would rebind Caps Lock to Escape only when tapped.
+
+      (defcfg
+        input … output …
+        fallthrough true)
+      (defsrc caps)
+      (deflayer my-layer (tap-next esc caps))
+
   - allow-cmd: `true` or `false`, defaults to `false`
 
     If this is set to `false`, any action that runs a shell-command will simply
