@@ -6,9 +6,9 @@
     - [Q: How do I know which event-file corresponds to my keyboard?](#q-how-do-i-know-which-event-file-corresponds-to-my-keyboard)
     - [Q: How do I emit Hyper_L?](#q-how-do-i-emit-hyper_l)
     - [Q: How does Unicode entry work?](#q-how-does-unicode-entry-work)
-    - [Q: How do I use the same layout definition for different keyboards](#q-how-do-i-use-the-same-layout-definition-for-different-keyboards)
+    - [Q: How do I use the same layout definition for different keyboards?](#q-how-do-i-use-the-same-layout-definition-for-different-keyboards)
 - [Windows](#windows)
-    - [How do I start KMonad?](#how-do-i-start-kmonad)
+    - [Q: How do I start KMonad?](#q-how-do-i-start-kmonad)
         - [Using the command-line](#using-the-command-line)
         - [Making a launcher](#making-a-launcher)
 - [Mac](#mac)
@@ -18,6 +18,7 @@
     - [Q: Why can't I remap the Fn key on my laptop?](#q-why-cant-i-remap-the-fn-key-on-my-laptop)
     - [Q: Why do some key combination not work?](#q-why-do-some-key-combination-not-work)
     - [Q: When I run KMonad I get error `Not available under this OS`](#q-when-i-run-kmonad-i-get-error-not-available-under-this-os)
+    - [Q: Where can I find a list of keycodes which can be used in KMonad?](#q-where-can-i-find-a-list-of-keycodes-which-can-be-used-in-kmonad)
 
 <!-- markdown-toc end -->
 
@@ -77,7 +78,7 @@ X11 lines up well with KMonad. See [this issue](https://github.com/kmonad/kmonad
 A: Unicode entry works via X11 compose-key sequences. For information on how to
 configure KMonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
 
-### Q: How do I use the same layout definition for different keyboards
+### Q: How do I use the same layout definition for different keyboards?
 
 A:
 Create a layout file with an environment variable instead of `device-file` option, i.e. `kmonad.kbd`.
@@ -107,7 +108,7 @@ kmonad <(echo "$KBDCFG")
 
 ## Windows
 
-### How do I start KMonad?
+### Q: How do I start KMonad?
 
 A: This might be confusing if you are used to using a GUI and clicking on
 things. Double clicking KMonad will look like it does nothing. KMonad is a
