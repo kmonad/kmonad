@@ -328,7 +328,7 @@ just collections of keys.
   `defsrc` is very similar to a layer visually, it is not a one and will
   thus not be used as one! It only serves to define where the different
   keys are and what kind of layout kmonad is initially dealing with.
-  It also supports giving a name via `:name <my-soucre-name>` as the
+  It also supports giving a name via `:name <my-source-name>` as the
   first argument.
 
   For example, an ANSI 60% keyboard may be represented as:
