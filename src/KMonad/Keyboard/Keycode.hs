@@ -412,4 +412,9 @@ aliases = Q.mkMultiMap
   , (KeyMissionCtrl,    ["mctl"])
   , (KeySpotlight,      ["spot"])
   , (KeyDictation,      ["dict"])
+  -- Japanese
+  , (KeyZenkakuHankaku,   ["zeh"])
+  , (KeyMuhenkan,         ["muh"])
+  , (KeyHenkan,           ["hen"])
+  , (KeyKatakanaHiragana, ["kah"])
   ]
