@@ -9,12 +9,20 @@ import KMonad.Prelude
 
 import Test.Hspec
 
+import qualified RIO.Text as T
+
 spec :: Spec
 spec = describe "compose-sequences" $ traverse_ checkComposeSeq ssComposed
  where
-  checkComposeSeq (_, c, name) =
-    it ("Compose sequence for " <> unpack name <> " is valid") $
-      runParser buttonP "" (pack [c]) `shouldSatisfy` parsesAsValidComposeSeq
+  checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
+    let c' = T.singleton c
+    let actualSeq = runParser buttonP "" c'
+    let expectedSeq = runParser (KComposeSeq <$> some buttonP) "" expected
+    let actualE2E = parseTokens $ "(deflayer <test> " <> c' <> " )"
+    let expectedE2E = first ParseError expectedSeq <&> \x -> [KDefLayer (DefLayer "<test>" Nothing [x])]
+    it "Is compose sequence" $ actualSeq `shouldSatisfy` parsesAsValidComposeSeq
+    it "Matches expected" $ actualSeq `shouldBe` expectedSeq
+    it "Could parse in E2E" $ actualE2E `shouldBe` expectedE2E
   parsesAsValidComposeSeq (Right (KComposeSeq seq')) = all isSimple seq'
   parsesAsValidComposeSeq _ = False
   isSimple (KEmit _) = True
