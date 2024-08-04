@@ -86,6 +86,13 @@
     is a thing. For more information on the `cmd-button' function, see the
     section on Command buttons below.
 
+  - implicit-around: `around`, `around-only` (default), `around-when-alone` or `disabled`
+
+    An implicit around may be in `A` or `_` but also in modded buttons (`S-a`).
+    This changes how implicit arounds are handled, for more details see `around`
+    below.
+    `disabled` results in an error when implicit around is used.
+
   There are also some optional OS specific settings that we support:
 
   - `cmp-seq': KEY, defaults to `RightAlt' (Linux X11 specific)
@@ -193,6 +200,9 @@
 
   ;; Set this to false to disable any command-execution in KMonad
   allow-cmd true
+
+  ;; Set the implicit around to `around`
+  implicit-around around
 )
 
 
@@ -301,6 +311,9 @@
   Optionally you can add a `:source <my-source>` parameter after the name to map
   a layer using a named `defsrc` block.
 
+  You can also overwrite the option `implicit-around` for a layer by adding
+  `:implicit-around <setting>`.
+
   It is also important to mention that the 'keymap' in KMonad is modelled as a
   stack of layers (just like in QMK). When an event is registered we look in the
   top-most layer for a handler. If we don't find one we try the next layer, and
@@ -345,6 +358,7 @@
 )
 
 (deflayer phone :source numpad
+  :implicit-around disabled
   nlck kp/ kp* kp-
   kp1  kp2 kp3 kp+
   kp4  kp5 kp6
@@ -410,7 +424,7 @@
   This looks like a simple declarative statement, but it's helpful to realize
   that is simply syntactic sugar around 2 function calls. This statement is
   equivalent to:
-    (around ctl (around alt del))
+    (around-implicit ctl (around alt del))
 
   This highlights a core design principle in KMonad: we try to provide very
   simple buttons, and then we provide rules and functions for combining them
@@ -424,16 +438,28 @@
   release first release bar, and then foo. Once created, this new button can be
   passed to anything in KMonad that expects a button.
 
+  There also exists some variants like `around-only` or `around-when-alone`.
+  `around-only` also releases the outer button just before another button is
+  pressed. If no other button has been pressed prior to it's release it releases
+  the inner than the outer button similarly to `around`.
+
+  `around-when-alone` is another variant which works like `around-only` but
+  represses the outer button when all other which have been pressed after
+  itself have been released.
+
+  `around-implicit` is one of the above variants and is specified `defcfg` block.
+
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no Keycodes for these buttons in KMonad, but they are buttons. They simply
-  evaluate to `(around lsft x)`. All shifted numbers have their corresponding
-  characters, the same is true for all capitals, and < > : ~ " | { } \_ + and ?.
+  evaluate to `(around-implicit lsft x)`. All shifted numbers have their
+  corresponding characters, the same is true for all capitals,
+  and < > : ~ " | { } \_ + and ?.
 
   To wrap up 'modded-buttons', let's look back at C-A-del. We have 8 variants:
-    C- : (around lctl X)
-    A- : (around lalt X)
-    M- : (around lmet X)
-    S- : (around lsft X)
+    C- : (around-implicit lctl X)
+    A- : (around-implicit lalt X)
+    M- : (around-implicit lmet X)
+    S- : (around-implicit lsft X)
 
   Then RC-, RA-, RM-, and RS- behave exactly the same, except using the
   right-modifier.
@@ -459,9 +485,10 @@
 
   ;; Something silly
   md1 (around a (around b c))    ;; abc
-  md2 (around a (around lsft b)) ;; aB
+  md2 (around a (around-only lsft b)) ;; aB
   md3 C-A-M-S-l
   md4 (around % b)               ;; BEWARE: %B, not %b, do you see why?
+  md5 (around-when-alone lctl c)
 )
 
 #| --------------------------------------------------------------------------

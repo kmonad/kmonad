@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   To name a source block add `:name <name>` at the beginning of the
   `defsrc` block. To use it add `:source <name>` after the layer name to the
   `deflayer` block. (#831)
+- Added `around-only`, which works like `around` but releases the outer button
+  when others are pressed. (#859)
+- Added `around-when-alone`, which also represses the outer button when only
+  the inner button is pressed and all others have been released. (#859)
+- Allow customization of implicit `around`s (#859)
 
 ### Changed
 
@@ -30,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed broken compose sequences (#823)
 - Fixed parse errors when using keys only available on darwin os (#828)
 - Fixed `around-next` wasn't parsable (#857)
+- Fixed unexpected behaviour with implicit around (see #733) (#859)
 
 ## 0.4.2 – 2023-10-07
 
