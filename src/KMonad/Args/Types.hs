@@ -89,7 +89,7 @@ data DefButton
   | KBeforeAfterNext DefButton DefButton   -- ^ Surround a future button in a before and after tap
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
-  deriving (Show, Typeable, Data)
+  deriving (Show, Eq, Typeable, Data)
 
 instance Plated DefButton
 
@@ -126,7 +126,7 @@ data DefSrc = DefSrc
   { _srcName  :: Maybe Text -- ^ A unique name used to refer to this layer.
   , _keycodes :: [Keycode]  -- ^ Layer settings containing also the buttons.
   }
-  deriving Show
+  deriving (Show, Eq)
 makeClassy ''DefSrc
 
 -- | A mapping from names to button tokens
@@ -138,7 +138,7 @@ data DefLayer = DefLayer
   , _associatedSrcName :: Maybe Text  -- ^ The source used by the layer
   , _buttons           :: [DefButton] -- ^ A list of button tokens
   }
-  deriving Show
+  deriving (Show, Eq)
 
 
 --------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ data KExpr
   | KDefSrc   DefSrc
   | KDefLayer DefLayer
   | KDefAlias DefAlias
-  deriving Show
+  deriving (Show, Eq)
 makeClassyPrisms ''KExpr
 
 
