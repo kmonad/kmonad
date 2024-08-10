@@ -37,7 +37,7 @@ import qualified RIO.Text.Partial  as T (head)
 -- headers:
 -- https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h.
 --
--- Anywhere there are missing regions in the linux headers, we've defined
+-- Anywhere there are missing regions in the Linux headers, we've defined
 -- @MissingXX@ values for the ADT.
 --
 -- Calling 'RIO.Partial.toEnum' on a Linux keycode value should produce the

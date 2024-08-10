@@ -103,7 +103,7 @@ sync (MkSystemTime s ns) = LinuxKeyEvent (fi s, fi ns, 0, 0, 0)
 --           see: https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h
 --         for sync: always 0
 
--- | Translate a 'LinuxKeyEvent' to a kmonad 'KeyEvent'
+-- | Translate a 'LinuxKeyEvent' to a KMonad 'KeyEvent'
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (_, _, typ, c, val))
   | c > 255 = Nothing
@@ -113,7 +113,7 @@ fromLinuxKeyEvent (LinuxKeyEvent (_, _, typ, c, val))
   where
     kc = toEnum . fromIntegral $ c -- This is theoretically partial, but practically not
 
--- | Translate kmonad 'KeyEvent' along with a 'SystemTime' to 'LinuxKeyEvent's
+-- | Translate KMonad 'KeyEvent' along with a 'SystemTime' to 'LinuxKeyEvent's
 -- for writing.
 toLinuxKeyEvent :: KeyEvent -> SystemTime -> LinuxKeyEvent
 toLinuxKeyEvent e (MkSystemTime s ns)

@@ -75,7 +75,7 @@ X11 lines up well with KMonad. See [this issue](https://github.com/kmonad/kmonad
 ### Q: How does Unicode entry work?
 
 A: Unicode entry works via X11 compose-key sequences. For information on how to
-configure kmonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
+configure KMonad to make use of this, please see [the tutorial](../keymap/tutorial.kbd).
 
 ### Q: How do I use the same layout definition for different keyboards
 
@@ -187,9 +187,9 @@ corresponding to F1; macOS then translates this keycode to a special feature
 driver](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice/issues/1). But
 `kmonad` intercepts key presses before this translation can occur, and it emits
 keypresses through a driver of its own. Therefore macOS does not translate any
-keypresses emitted by kmonad, and the checkbox labeled "Use F1, F2, etc. keys as
+keypresses emitted by KMonad, and the checkbox labeled "Use F1, F2, etc. keys as
 standard function keys" in `System Preferences` will have no effect on keyboards
-modified by kmonad.
+modified by KMonad.
 
 However, we can simulate the default behavior of Apple keyboards by emitting
 keycodes that correspond to the special features printed on the function
@@ -200,7 +200,7 @@ example.
 
 ### Q: Why doesn't the 'Print' keycode work for my print screen button?
 
-A: Because the Keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
+A: Because the keycode for "print screen" is actually 'SysReq' ("ssrq" or "sys")
 for relatively interesting historical reasons. Have a look at [this
 issue](https://github.com/kmonad/kmonad/issues/59) if you want more
 information.

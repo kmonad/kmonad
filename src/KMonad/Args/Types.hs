@@ -110,7 +110,7 @@ data ImplArnd
 --------------------------------------------------------------------------------
 -- $cfg
 --
--- The Cfg token that can be extracted from a config-text without ever enterring
+-- The Cfg token that can be extracted from a config-text without ever entering
 -- IO. This will then directly be translated to a DaemonCfg
 --
 

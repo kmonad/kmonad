@@ -30,7 +30,7 @@
 ## Compilation
 
 Note that, regardless of which compilation method you choose, `git`
-needs to be in `$PATH` when compiling kmonad.  This is because we insert
+needs to be in `$PATH` when compiling KMonad.  This is because we insert
 the current commit into the output of `--version` at compile time.
 
 ### Using `stack`
@@ -65,7 +65,7 @@ the karabiner submodule:
 nix build "./nix?submodules=1"
 ```
 
-If you want to pull in kmonad as a flake input for configuring a darwin system,
+If you want to pull in KMonad as a flake input for configuring a Darwin system,
 you may find it necessary to use a reference like:
 `git+https://github.com/kmonad/kmonad?submodules=1&dir=nix` instead of
 `github:...`.
@@ -119,7 +119,7 @@ docker rmi kmonad-builder
 You will find a `kmonad` binary in your current directory.
 
 As an added bonus, with recent Docker versions you can build images straight
-from public repo URLs, whithout even needing to clone the repo.
+from public repo URLs, without even needing to clone the repo.
 Do this as the build step (the first one) in the previous instructions:
 ``` shell
 docker build -t kmonad-builder github.com/kmonad/kmonad.git
@@ -136,10 +136,10 @@ podman run --rm -it -v ${PWD}:/host/ --security-opt label=disable kmonad-builder
 ### Windows environment
 
 I have little experience with Haskell under windows, but I managed to compile
-`kmonad` under Windows10 using a [Haskell platform
+`kmonad` under Windows 10 using a [Haskell platform
 installation](https://www.haskell.org/platform). I also needed to install
 [mingw](http://mingw.org) to provide `gcc`. With both the Haskell platform and
-`mingw` building `kmonad` under Windows10 should as simple as `stack build`.
+`mingw` building `kmonad` under Windows 10 should be as simple as `stack build`.
 
 You also can install MSYS2, Haskell and stack via [scoop](https://scoop.sh/).
 Simply run these commands in Windows PowerShell:
@@ -173,16 +173,16 @@ Simply run these commands in Windows PowerShell:
 
 ### macOS
 
-kmonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
+KMonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
 Catalina) and macOS 11.0 (Big Sur). When using driverkit-based extension
-v2.1.0 and later, kmonad also supports macOS 13.0 (Ventura) and 14.0
+v2.1.0 and later, KMonad also supports macOS 13.0 (Ventura) and 14.0
 (Sonoma).
 
-Note: under macOS, `kmonad` uses one of two "system extensions" to
+Note: Under macOS, `kmonad` uses one of two "system extensions" to
 post modified key events to the OS. For macOS Catalina and prior, we
 use a [kernel
 extension](https://github.com/pqrs-org/Karabiner-VirtualHIDDevice)
-(kext), which is bundled with kmonad as a submodule in
+(kext), which is bundled with KMonad as a submodule in
 `c_src/mac/Karabiner-VirtualHIDDevice`. For macOS Catalina and later,
 we use a [driverkit-based
 extension](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice)
@@ -234,7 +234,7 @@ dext installed (though maybe a different version number). Run
 `defaults read
 /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
 CFBundleVersion` to check the version: if `3.1.0` is shown, then the
-installed dext is compatibile with kmonad and you can move onto
+installed dext is compatible with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
 this may work too (but has not been tested).
 

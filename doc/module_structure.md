@@ -28,7 +28,7 @@ These all belong in App:
 - keyboard specific data declarations and operations
 - invocation parsing
 - configuration parsing
-- the entrypoint of KMonad
+- the entry point of KMonad
 
 Essentially, in App we have the `main` function. It then starts doing a variety
 of IO tasks to set up an environment in which to run our model. This environment
@@ -97,9 +97,9 @@ This module contains the following submodules:
 Note, however, that configurations should parse *on any OS*. This means that the
 configuration records for, for example, key-IO, should be defined on all
 platforms. To that extent, the `Common` module itself contains 3 submodules:
-- `Linux`: for code pertaining to Linux, but runable everywhere
-- `Mac`: for code pertaining to Mac, but runable everywhere
-- `Windows`: for code pertaining to Windows, but runable everywhere
+- `Linux`: for code pertaining to Linux, but runnable everywhere
+- `Mac`: for code pertaining to Mac, but runnable everywhere
+- `Windows`: for code pertaining to Windows, but runnable everywhere
 
 This might seem circumspect, and it does mean that the configuration-record is
 specified in a different module than the runtime-environment for various key-IO
