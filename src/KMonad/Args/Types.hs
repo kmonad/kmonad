@@ -16,11 +16,13 @@ module KMonad.Args.Types
 
     -- * $but
   , DefButton(..)
+  , ImplArnd(..)
 
     -- * $tls
   , DefSetting(..)
   , DefSettings
   , DefAlias
+  , DefLayerSetting(..)
   , DefLayer(..)
   , DefSrc(..)
   , KExpr(..)
@@ -33,6 +35,7 @@ module KMonad.Args.Types
   , AsKExpr(..)
   , AsDefSetting(..)
   , HasDefSrc(..)
+  , AsDefLayerSetting(..)
 ) where
 
 
@@ -74,6 +77,9 @@ data DefButton
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
   | KStepped [DefButton]                   -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
+  | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
+  | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's "alone"
+  | KAroundImplicit DefButton DefButton    -- ^ Wrap 1 button around another
   | KAroundNextTimeout Int DefButton DefButton
   | KTapMacro [DefButton] (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
@@ -93,6 +99,13 @@ data DefButton
 
 instance Plated DefButton
 
+-- | Possible values for implicit around
+data ImplArnd
+  = IADisabled
+  | IAAround
+  | IAAroundOnly
+  | IAAroundWhenAlone
+  deriving Show
 
 --------------------------------------------------------------------------------
 -- $cfg
@@ -132,11 +145,17 @@ makeClassy ''DefSrc
 -- | A mapping from names to button tokens
 type DefAlias = [(Text, DefButton)]
 
+data DefLayerSetting
+  = LSrcName Text
+  | LImplArnd ImplArnd
+  | LButton DefButton
+  deriving Show
+makeClassyPrisms ''DefLayerSetting
+
 -- | A layer of buttons
 data DefLayer = DefLayer
-  { _layerName         :: Text        -- ^ A unique name used to refer to this layer
-  , _associatedSrcName :: Maybe Text  -- ^ The source used by the layer
-  , _buttons           :: [DefButton] -- ^ A list of button tokens
+  { _layerName :: Text
+  , _layerSettings :: [DefLayerSetting]
   }
   deriving Show
 
@@ -168,6 +187,7 @@ data DefSetting
   | SFallThrough Bool
   | SAllowCmd    Bool
   | SCmpSeqDelay Int
+  | SImplArnd    ImplArnd
   deriving (Show)
 makeClassyPrisms ''DefSetting
 
@@ -180,6 +200,7 @@ instance Eq DefSetting where
   SCmpSeq{}      == SCmpSeq{}      = True
   SFallThrough{} == SFallThrough{} = True
   SAllowCmd{}    == SAllowCmd{}    = True
+  SImplArnd{}    == SImplArnd{}    = True
   _              == _              = False
 
 -- | A list of different 'DefSetting' values

@@ -17,7 +17,7 @@ module KMonad.Args.Cmd
 where
 
 import KMonad.Prelude hiding (try)
-import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP)
+import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP, implArndButtons)
 import KMonad.Args.TH (gitHash)
 import KMonad.Args.Types (DefSetting(..))
 import KMonad.Util
@@ -45,6 +45,7 @@ data Cmd = Cmd
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
   , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
   , _cmpSeq    :: Maybe DefSetting -- ^ Key to use for compose-key sequences
+  , _implArnd  :: Maybe DefSetting -- ^ How to handle implicit `around`s
   , _oToken    :: Maybe DefSetting -- ^ How to emit the output
   , _iToken    :: Maybe DefSetting -- ^ How to capture the input
   }
@@ -83,6 +84,7 @@ cmdP =
       <*> cmdAllowP
       <*> fallThrghP
       <*> cmpSeqP
+      <*> implArndP
       <*> oTokenP
       <*> iTokenP
 
@@ -137,6 +139,16 @@ cmpSeqP = optional $ SCmpSeq <$> option
   <> short 's'
   <> metavar "BUTTON"
   <> help "Which key to use to emit compose-key sequences"
+  )
+
+-- | How to handle implicit `around`s
+implArndP :: Parser (Maybe DefSetting)
+implArndP = optional $ SImplArnd <$> option
+  (maybeReader $ \x -> implArndButtons ^? each . filtered ((x ==) . unpack . view _1) . _2)
+  (  long "implicit-around"
+  <> long "ia"
+  <> metavar "AROUND"
+  <> help "How to translate implicit arounds (`A`, `S-a`)"
   )
 
 -- | Where to emit the output

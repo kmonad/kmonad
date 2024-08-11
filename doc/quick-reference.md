@@ -86,6 +86,12 @@ The following are all global config options that one can set in the
 + `cmp-seq-delay` (natural number): delay between each pressed key in a
   compose-key sequence.
 
++ `implicit-around` (around variant, defaults to `around-only`):
+  Specifies the variant of `around` to use in implicit around constructs
+  like `A` or `S-a`.
+  You can also specify `disabled`, which causes implicit arounds to
+  result in errors.
+
 ## Full Example
 
 Below is an example of a full `defcfg` block for a GNU/Linux system.
@@ -129,10 +135,10 @@ the macro the reactivation of the `alt` key, solving the problem.
 To make key-entry easier, kmonad already provides some syntax for
 Emacs-like specification of key chords. They are defined like this:
 
-  - `C-` : `(around lctl X)`
-  - `A-` : `(around lalt X)`
-  - `M-` : `(around lmet X)`
-  - `S-` : `(around lsft X)`
+  - `C-` : `(around-implicit lctl X)`
+  - `A-` : `(around-implicit lalt X)`
+  - `M-` : `(around-implicit lmet X)`
+  - `S-` : `(around-implicit lsft X)`
 
 Then `RC-`, `RA-`, `RM-`, and `RS-` behave exactly the same, except
 using the right-modifier.
@@ -140,7 +146,7 @@ using the right-modifier.
 The definition of a key chord then looks like this:
 
 ```clojure
-(defalias Ca C-a) ;; this is equivalent to (defalias Ca (around Ctl a))
+(defalias Ca C-a) ;; this is equivalent to (defalias Ca (around-implicit Ctl a))
 ```
 
 ## General Purpose Buttons
@@ -160,6 +166,41 @@ The definition of a key chord then looks like this:
   ```clojure
   (defalias ad (around alt del)) ;; this is like pressing Alt+Del
   ```
+
++ `around-only`: `around` but release the outer button as soon as others are pressed.
+
+    ```clojure
+    (defalias
+      A (around lsft a)
+      A' (around-only lsft a)
+    )
+    ```
+
+    `@A'` is simply an uppercase letter but with the following difference to the `@A`:
+
+    P@A Pb R@A Rb -> AB
+    P@A' Pb R@A' Rb -> Ab
+
++ `around-when-alone`: similar to `around-only` but when all other buttons have been released
+    the outer button is repressed.
+
+    ```clojure
+    (defalias
+        A'' (around-when-alone lsft a)
+    )
+    ```
+
+    P@A'' Tb Tc R@A'' -> Plsft Pa Rlsft Tb Tlsft Tc Plsft Ra Rlsft
+
++ `around-implicit`: the around variant used implicit
+
+    ```closure
+    (defalias
+        =A (around-implicit lsft a)
+    )
+    ```
+
+    `@=A` is the desugared form of `A`
 
 + `around-next`: perform the next button-press inside some context (like
   `layer-next` but more generalized)
@@ -183,24 +224,24 @@ The definition of a key chord then looks like this:
   ```clojure
   (around-next-timeout 500 sft XX)
   ```
-  
+
 + `sticky-key`: act like the key is held temporarily after just one
   press for the given amount of time (in ms).
 
   ```clojure
   (defalias slc (sticky-key 500 lctl))
   ```
-  
+
 + `stepped`: perform the next button in the circular sequence
   whenever it is pressed.
   ```clojure
   (stepped (press-only lctl) (release-only lctl))
   ```
-  
+
   This button:
   - presses control the first time it is tapped
   - releases control the second time it is tapped
-  
+
 
 + `pause`: pause for the given number of ms.
 
@@ -306,8 +347,8 @@ to be the most comfortable.
   ```clojure
   (defalias thr (tap-hold-next-release 1000 a sft))
   ```
-  
-+ `tap-hold-next` and `tap-hold-next-release` can take an optional 
+
++ `tap-hold-next` and `tap-hold-next-release` can take an optional
   `:timeout-button` keyword to specify a button other than the
   hold button which should be held when the timeout expires.
 
@@ -353,6 +394,9 @@ just collections of keys.
 
    To use a named source block add `:source <my-source-name>` after
    the layer name.
+
+   you can also overwrite the `implicit-around` setting by adding
+   `:implicit-around <setting>`.
 
   ```
   (deflayer qwerty

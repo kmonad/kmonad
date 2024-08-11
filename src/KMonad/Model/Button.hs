@@ -39,6 +39,8 @@ module KMonad.Model.Button
 
   -- * Button combinators
   -- $combinators
+  , aroundOnly
+  , aroundWhenAlone
   , aroundNext
   , aroundNextTimeout
   , aroundNextSingle
@@ -65,6 +67,7 @@ import KMonad.Model.Action
 import KMonad.Keyboard
 import KMonad.Util
 
+import qualified RIO.HashSet as S
 
 --------------------------------------------------------------------------------
 -- $but
@@ -190,6 +193,66 @@ around ::
 around outer inner = Button
   (Action (runAction (outer^.pressAction)   *> runAction (inner^.pressAction)))
   (Action (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction)))
+
+-- | A variant of `around`, which releases its outer button when another key
+-- is pressed.
+aroundOnly ::
+     Button -- ^ The outer 'Button'
+  -> Button -- ^ The inner 'Button'
+  -> Button -- ^ The resulting nested 'Button'
+aroundOnly outer inner = onPress $ do
+  runAction $ outer^.pressAction
+  runAction $ inner^.pressAction
+  go =<< matchMy Release
+ where
+  go :: KeyPred -> AnyK ()
+  go isMyRelease = hookF InputHook $ \e ->
+    if
+      | isMyRelease e -> do
+        runAction $ inner^.releaseAction
+        runAction $ outer^.releaseAction
+        pure Catch
+      -- Another key is pressed, so release the modifier immediately.
+      | isPress e -> do
+        runAction $ outer^.releaseAction
+        await isMyRelease $ \_ -> do
+          runAction (inner^.releaseAction)
+          pure Catch
+        pure NoCatch
+      | otherwise ->
+        go isMyRelease $> NoCatch
+
+-- | A variant of `around-only` that represses its outer button when all other
+-- keys after it have been released.
+aroundWhenAlone ::
+     Button -- ^ The outer 'Button'
+  -> Button -- ^ The inner 'Button'
+  -> Button -- ^ The resulting nested 'Button'
+aroundWhenAlone outer inner = onPress $ do
+  runAction $ outer^.pressAction
+  runAction $ inner^.pressAction
+  go S.empty =<< matchMy Release
+  pure ()
+ where
+  go :: HashSet Keycode -> KeyPred -> AnyK ()
+  go pressed isMyRelease = hookF InputHook $ \e ->
+    if
+      | isMyRelease e -> do
+        runAction $ inner^.releaseAction
+        when (null pressed) . runAction $ outer^.releaseAction
+        pure Catch
+      | isPress e -> do
+        let pressed' = S.insert (e^.keycode) pressed
+        when (null pressed) . runAction $ outer^.releaseAction
+        go pressed' isMyRelease
+        pure NoCatch
+      | otherwise -> do -- some release
+        let pressed' = S.delete (e^.keycode) pressed
+        let shouldPressOuter = S.member (e^.keycode) pressed && null pressed'
+        inject e
+        when shouldPressOuter . after 3 . runAction $ outer^.pressAction
+        await isRelease $ \_ -> go pressed' isMyRelease $> NoCatch
+        pure Catch
 
 -- | A 'Button' that, once pressed, will surround the next button with another.
 --
