@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed broken compose sequences (#823)
 - Fixed parse errors when using keys only available on darwin os (#828)
 - Fixed `around-next` wasn't parsable (#857)
+- Fixed most buttons which behave weird in nested tap situations (#873)
 
 ## 0.4.2 – 2023-10-07
 
