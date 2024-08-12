@@ -86,7 +86,7 @@
     is a thing. For more information on the `cmd-button' function, see the
     section on Command buttons below.
 
-  - implicit-around: `around`, `around-only` (default), `around-when-alone` or `disabled`
+  - implicit-around: `around` (default), `around-only`, `around-when-alone` or `disabled`
 
     An implicit around may be in `A` or `_` but also in modded buttons (`S-a`).
     This changes how implicit arounds are handled, for more details see `around`
