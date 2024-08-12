@@ -20,6 +20,7 @@ module KMonad.Model.Button
   , HasButton(..)
   , onPress
   , onRelease
+  , onTap
   , mkButton
   , around
   , tapOn
@@ -76,11 +77,15 @@ import qualified RIO.HashSet as S
 -- 'Button' is essentially a collection of 2 different actions, 1 to perform on
 -- 'Press' and another on 'Release'.
 
--- | A 'Button' consists of two 'MonadK' actions, one to take when a press is
+-- | A 'Button' consists of three 'MonadK' actions, one to take when a press is
 -- registered from the OS, and another when a release is registered.
+-- With a third when both should happen in sequence. This will only be used
+-- by other button such as `tap-macro`.
+-- Use 'mkButton' instead of this constructor.
 data Button = Button
   { _pressAction   :: !Action -- ^ Action to take when pressed
   , _releaseAction :: !Action -- ^ Action to take when released
+  , _tapAction     :: !Action -- ^ Action to take when tapped as a sub button
   }
 makeClassy ''Button
 
@@ -91,7 +96,14 @@ makeClassy ''Button
 -- therefore can only rely on functionality from 'MonadK'. I.e. the actions must
 -- be pure 'MonadK'.
 mkButton :: AnyK () -> AnyK () -> Button
-mkButton a b = Button (Action a) (Action b)
+mkButton a b = mkButton' a b $ a *> b
+
+-- | Create a 'Button' out of a press, release action and tap action
+--
+-- The non standard tap action is useful when inside other buttons
+-- like `tap-macro`
+mkButton' :: AnyK () -> AnyK () -> AnyK () -> Button
+mkButton' a b c = Button (Action a) (Action b) (Action c)
 
 -- | Create a new button with only a 'Press' action
 onPress :: AnyK () -> Button
@@ -100,6 +112,9 @@ onPress p = mkButton p $ pure ()
 onRelease :: AnyK () -> Button
 onRelease = mkButton (pure ())
 
+onTap :: AnyK () -> Button
+onTap = mkButton' (pure ()) (pure ())
+
 --------------------------------------------------------------------------------
 -- $running
 --
@@ -107,9 +122,7 @@ onRelease = mkButton (pure ())
 
 -- | Perform both the press and release of a button immediately
 tap :: MonadK m => Button -> m ()
-tap b = do
-  runAction $ b^.pressAction
-  runAction $ b^.releaseAction
+tap b = runAction $ b^.tapAction
 
 -- | Perform the press action of a Button and register its release callback.
 --
@@ -190,9 +203,9 @@ around ::
      Button -- ^ The outer 'Button'
   -> Button -- ^ The inner 'Button'
   -> Button -- ^ The resulting nested 'Button'
-around outer inner = Button
-  (Action (runAction (outer^.pressAction)   *> runAction (inner^.pressAction)))
-  (Action (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction)))
+around outer inner = mkButton
+  (runAction (outer^.pressAction)   *> runAction (inner^.pressAction))
+  (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction))
 
 -- | A variant of `around`, which releases its outer button when another key
 -- is pressed.
