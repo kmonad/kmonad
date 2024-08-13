@@ -299,7 +299,7 @@ keywordButtons =
   , ("tap-macro-release"
     , KTapMacroRelease <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
-  , ("pause"          , KPause . fromIntegral <$> numP)
+  , ("pause"          , KPause . fromIntegral <$> lexeme numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
   ]
   ++ map (\(nm,_,btn) -> (nm, btn <$> buttonP <*> buttonP)) implArndButtons
@@ -308,7 +308,7 @@ keywordButtons =
   timed = many ((,) <$> lexeme numP <*> lexeme buttonP)
 
 implArndButtons :: [(Text, ImplArnd, DefButton -> DefButton -> DefButton)]
-implArndButtons =
+implArndButtons = sortBy (flip compare `on` (T.length . view _1)) -- Prevents early return due to `around`
   [ ("around"           , IAAround         , KAround)
   , ("around-only"      , IAAroundOnly     , KAroundOnly)
   , ("around-when-alone", IAAroundWhenAlone, KAroundWhenAlone)
