@@ -33,7 +33,7 @@ jobs:
         run: |
           GHCVER=$(curl -L https://www.stackage.org/${{ matrix.resolver }}/ghc-major-version)
           echo "Got $GHCVER"
-          echo "::set-output name=ghc::$GHCVER"
+          echo "ghc=$GHCVER" >> $GITHUB_OUTPUT
         id: ghc-version
 
       - uses: haskell-actions/setup@v2
@@ -45,10 +45,10 @@ jobs:
 
       - name: Refresh caches once a month
         id: cache-date
-        # GHA writes caches on the first miss and then never updates them again;
+        # GHC writes caches on the first miss and then never updates them again;
         # force updating the cache at least once a month
         run: |
-          echo "::set-output name=date::$(date +%Y-%m)"
+          echo "date=$(date +%Y-%m)" >> $GITHUB_OUTPUT
 
       - name: Ensure STACK_ROOT exists on Windows
         if: runner.os == 'Windows'
