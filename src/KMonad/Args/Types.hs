@@ -105,7 +105,7 @@ data ImplArnd
   | IAAround
   | IAAroundOnly
   | IAAroundWhenAlone
-  deriving Show
+  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 -- $cfg
@@ -149,7 +149,7 @@ data DefLayerSetting
   = LSrcName Text
   | LImplArnd ImplArnd
   | LButton DefButton
-  deriving Show
+  deriving (Show, Eq)
 makeClassyPrisms ''DefLayerSetting
 
 -- | A layer of buttons
