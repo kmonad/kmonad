@@ -19,7 +19,7 @@ spec = describe "compose-sequences" $ traverse_ checkComposeSeq ssComposed
     let actualSeq = runParser buttonP "" c'
     let expectedSeq = runParser (KComposeSeq <$> some buttonP) "" expected
     let actualE2E = parseTokens $ "(deflayer <test> " <> c' <> " )"
-    let expectedE2E = first ParseError expectedSeq <&> \x -> [KDefLayer (DefLayer "<test>" Nothing [x])]
+    let expectedE2E = first ParseError expectedSeq <&> \x -> [KDefLayer (DefLayer "<test>" [LButton x])]
     it "Is compose sequence" $ actualSeq `shouldSatisfy` parsesAsValidComposeSeq
     it "Matches expected" $ actualSeq `shouldBe` expectedSeq
     it "Could parse in E2E" $ actualE2E `shouldBe` expectedE2E
