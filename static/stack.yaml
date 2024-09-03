@@ -1,2 +1,0 @@
-ghc-options:
-  $everything: -optl-pthread -optl-static -fPIC -fasm -split-sections
