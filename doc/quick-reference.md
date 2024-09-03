@@ -35,8 +35,8 @@ A block can take the following arguments:
 
 + `input`: define the input keyboard which the program will capture.
 
-+ `output`: define the output keyboard which kmonad will create, with
-  additional options to execute upon starting kmonad.
++ `output`: define the output keyboard which KMonad will create, with
+  additional options to execute upon starting KMonad.
 
 Here is how you would define the basic input and output settings on all
 supported systems:
@@ -132,7 +132,7 @@ the macro the reactivation of the `alt` key, solving the problem.
 
 ## Modded Buttons
 
-To make key-entry easier, kmonad already provides some syntax for
+To make key-entry easier, KMonad already provides some syntax for
 Emacs-like specification of key chords. They are defined like this:
 
   - `C-` : `(around-implicit lctl X)`
@@ -267,7 +267,7 @@ The definition of a key chord then looks like this:
 
 ## Tap buttons
 
-Tap buttons are an integral part of kmonad. Everyone has different
+Tap buttons are an integral part of KMonad. Everyone has different
 preferences—that's why there are so many! Particularly when using
 home-row modifiers, you will find some of the more crazy seeming buttons
 to be the most comfortable.

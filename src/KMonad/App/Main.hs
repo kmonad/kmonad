@@ -80,7 +80,7 @@ initAppEnv cfg = do
   -- Wait a bit for the user to release the 'Return' key with which they started KMonad
   threadDelay $ fromIntegral (cfg^.startDelay) * 1000
 
-  -- Acquire the keysource and keysink
+  -- Acquire the key source and key sink
   snk <- using $ cfg^.keySinkDev
   src <- using $ cfg^.keySourceDev
 

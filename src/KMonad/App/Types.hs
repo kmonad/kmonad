@@ -144,6 +144,6 @@ instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
     spawnCommand cmd = void $ createProcess_ "spawnCommand"
       (shell cmd){ -- We don't want the child process to inherit things like
                    -- our keyboard grab (this would, for example, make it
-                   -- impossible for a command to restart kmonad).
+                   -- impossible for a command to restart KMonad).
                    close_fds   = True
                  }

@@ -1,5 +1,5 @@
 [Unit]
-Description=kmonad keyboard config
+Description=KMonad keyboard config
 
 [Service]
 Restart=always

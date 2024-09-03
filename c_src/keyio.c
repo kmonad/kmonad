@@ -12,7 +12,7 @@ int ioctl_keyboard(int fd, int grab) {
   return ioctl(fd, EVIOCGRAB, grab);
 }
 
-// Acquire a filedescriptor as a uinput keyboard
+// Acquire a file descriptor as a uinput keyboard
 int acquire_uinput_keysink(int fd, char *name, int vendor, int product, int version) {
 
   // Designate fd as a keyboard of all keys

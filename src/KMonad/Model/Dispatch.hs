@@ -26,7 +26,7 @@ ever get lost.
 
 In the sequencing of components, the 'Dispatch' occurs first, which means that
 it reads directly from the KeySource. Any component after the 'Dispatch' need
-not worry about wether an event is being rerun or not, it simply treats all
+not worry about whether an event is being rerun or not, it simply treats all
 events as equal.
 
 -}

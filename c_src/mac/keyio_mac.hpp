@@ -216,7 +216,7 @@ void monitor_kb(char *product) {
  * and opens a pipe for this thread to send key event data to the main
  * thread.
  *
- * Loads a the karabiner kernel extension that will send key events
+ * Loads a karabiner kernel extension that will send key events
  * back to the OS.
  */
 extern "C" int grab_kb(char *product) {

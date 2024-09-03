@@ -21,14 +21,14 @@ If you want to get started with the latest, stable binary release, please check 
 Additionally, if you need any help or just want to say hi,
 you can join our [Matrix space](https://matrix.to/#/#Kmonad:matrix.org) or
 jump into our [IRC channel](https://web.libera.chat/#kmonad).
-There is also an unofficial [Discord server](https://discord.gg/3tFfWmnahN), and a [Kmonad Subreddit](https://www.reddit.com/r/Kmonad/).
+There is also an unofficial [Discord server](https://discord.gg/3tFfWmnahN), and a [KMonad Subreddit](https://www.reddit.com/r/Kmonad/).
 
 ## Features
 
 
 KMonad offers advanced customization features such as **layers**, **multi-tap**, **tap-hold**, and much more. These features are usually available at the hardware level on the QMK-firmware enabled keyboards. However, KMonad allows you to enjoy such features in virtually any keyboard by low-level system manipulations.
 
-For a good introduction to KMonad, have a look at [this Youtube video](https://www.youtube.com/watch?v=Dhj1eauljwU).
+For a good introduction to KMonad, have a look at [this YouTube video](https://www.youtube.com/watch?v=Dhj1eauljwU).
 
 
 

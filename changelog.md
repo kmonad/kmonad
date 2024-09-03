@@ -29,11 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ### Fixed
 
 - Fixed crash on non-US backslash under MacOS (#766)
-- Fixed broken keyboard due to circular event handeling under MacOS (#781)
+- Fixed broken keyboard due to circular event handling under MacOS (#781)
 - Fixed crash on unhandled buttons by ignoring them (#807)
 - Fixed parse errors relating to whitespace (#796, #875)
 - Fixed broken compose sequences (#823, #869)
-- Fixed parse errors when using keys only available on darwin os (#828)
+- Fixed parse errors when using keys only available on Darwin OS (#828)
 - Fixed `around-next` wasn't parsable (#857)
 
 ## 0.4.2 – 2023-10-07

@@ -102,7 +102,7 @@ mkLayerStack :: (Foldable t1, Foldable t2, CanKey k, CanKey l)
   => t1 (l, t2 (k, a)) -- ^ The /alist/ of /alists/ describing the mapping
   -> LayerStack l k a
 mkLayerStack nestMaps = let
-  -- Create a HashMap l (Layer k a) from the listlikes
+  -- Create a HashMap l (Layer k a) from the list-likes
   hms = M.fromList . map (over _2 mkLayer) $ toList nestMaps
 --   -- Create a HashMap (l, k) a from `hms`
   its = M.fromList $ hms ^@.. ifolded <.> (to unLayer . ifolded)

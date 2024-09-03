@@ -109,7 +109,7 @@
     setting this value to `5' or `10' and see if that helps.
 
   Secondly, let's go over how to specify the `input` and `output` fields of a
-  `defcfg` block. This differs between OS'es, and so do the capabilities of
+  `defcfg` block. This differs between OSes, and so do the capabilities of
   these interfaces.
 
 
@@ -450,7 +450,7 @@
   `around-implicit` is one of the above variants and is specified `defcfg` block.
 
   We have already seen other examples of modded buttons, \(, \), *, and +. There
-  are no Keycodes for these buttons in KMonad, but they are buttons. They simply
+  are no keycodes for these buttons in KMonad, but they are buttons. They simply
   evaluate to `(around-implicit lsft x)`. All shifted numbers have their
   corresponding characters, the same is true for all capitals,
   and < > : ~ " | { } \_ + and ?.
@@ -574,7 +574,7 @@
 
   `tap-macro` is a function that takes an arbitrary number of buttons and
   returns a new button. When this new button is pressed it rapidly taps all its
-  stored buttons in quick succesion except for its last button, which it only
+  stored buttons in quick succession except for its last button, which it only
   presses. This last button gets released when the `tap-macro` gets released.
 
   There are two ways to define a `tap-macro`, using the `tap-macro` function
@@ -692,10 +692,10 @@
     (layer-switch my-layer)
 
   This is where things start getting potentially dangerous (i.e. get KMonad into
-  an unusuable state until a restart has occured). It is perfectly possible to
+  an unusable state until a restart has occurred). It is perfectly possible to
   switch into a layer that you can never get out of. Or worse, you could
   theoretically have a layer full of only `XX`s and switch into that, rendering
-  your keyboard unuseable until you somehow manage to kill KMonad (without using
+  your keyboard unusable until you somehow manage to kill KMonad (without using
   your keyboard).
 
   However, when handled well, `layer-switch` is very useful, letting you switch
@@ -941,7 +941,7 @@
 #| --------------------------------------------------------------------------
                               Optional: Multi-tap
 
-  Besides the tap-hold style buttons there is another multi-use button (with.
+  Besides the tap-hold style buttons there is another multi-use button (with
   only 1 variant, at the moment). The `multi-tap`.
 
   A `multi-tap` codes for different buttons depending on how often it is tapped.
@@ -976,7 +976,7 @@
   still function as a normal key, but also as a leader key when used slowly.
 
   The variant `around-next-single` does the same thing as `around-next` except
-  it really only concernes the next event (press or release).
+  it really only concerns the next event (press or release).
   Consider the button `@ns` (see below) in the following scenario:
 
     P@ns Pa Tb Ra Tc -> A B c
@@ -1038,7 +1038,7 @@
   To get this to work on Linux you will need to set your compose-key with a tool
   like `setxkbmap', as well as tell KMonad that information. See the `defcfg'
   block at the top of this file for a working example. Note that you need to
-  wait ever so slightly for the keyboard to register with linux before the
+  wait ever so slightly for the keyboard to register with Linux before the
   command gets executed, that's why the `sleep 1`. Also, note that all the
   `/run/current-system' stuff is because the author uses NixOS. Just find a
   shell-command that will:
