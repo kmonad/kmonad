@@ -303,6 +303,14 @@ to be the most comfortable.
   (defalias mt  (multi-tap 300 a 300 b 300 c 300 d e))
   ```
 
++ `retap`: press another button if this one is repressed within a
+  certain time period
+  ```clojure
+  (defalias ssft (retap 200 sft (sticky-key 1000 sft)))
+  ```
+  `ssft` is like shift. When repressed within 200ms it acts as
+  a sticky-key (see `sticky-key`).
+
 + `tap-next`: combine 2 buttons, one for when the button is tapped and
   one for when it is held. The decision of what to execute is based upon
   whether the next button is the buttons own release or not.
