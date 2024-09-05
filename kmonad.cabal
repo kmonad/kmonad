@@ -162,15 +162,10 @@ executable kmonad
       -threaded
       -rtsopts
       -with-rtsopts=-N
-  main-is:
-      Main.hs
-  default-language:
-      Haskell2010
-  hs-source-dirs:
-      app
-  build-depends:
-      base >= 4.12 && < 5
-    , kmonad
+  main-is: kmonad.hs
+  default-extensions: NoImplicitPrelude
+  default-language: Haskell2010
+  build-depends: kmonad
 
 test-suite spec
   main-is: Spec.hs
