@@ -542,6 +542,17 @@
 (defalias
   ctl-lck (stepped (press-only lctl) (release-only lctl)))
 
+#| --------------------------------------------------------------------------
+                            Optional: retap buttons
+
+  `retap` is used to add a special behaviour when the corresponding button is
+  repressed within a certain timeout after it has been released.
+  You can use this to make a modifier sticky (see below)
+
+  -------------------------------------------------------------------------- |#
+
+(defalias
+  ssft (retap 200 sft (sticky-key 1000 sft)))
 
 ;; Now we define the 'tst' button as opening and closing a bunch of layers at
 ;; the same time. If you understand why this works, you're starting to grok

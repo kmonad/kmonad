@@ -301,6 +301,7 @@ keywordButtons =
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> lexeme numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)
+  , ("retap"          , KRetap       <$> lexeme numP <*> buttonP <*> buttonP)
   ]
   ++ map (\(nm,_,btn) -> (nm, btn <$> buttonP <*> buttonP)) implArndButtons
  where
