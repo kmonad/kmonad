@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## 0.4.3 – 2024-09-11
+
+### Added
+
 - Added `stepped`. It performs the next button from a circular sequence
   whenever it is pressed.
 - Implemented named source blocks.
