@@ -39,7 +39,7 @@ library
     -Wno-name-shadowing
     -Wno-unused-imports
   build-depends:
-      base
+      base >= 4.12 && < 5
     , cereal
     -- , hspec
     , lens
@@ -164,7 +164,7 @@ executable kmonad
   hs-source-dirs:
       app
   build-depends:
-      base
+      base >= 4.12 && < 5
     , kmonad
 
 test-suite spec
@@ -175,7 +175,7 @@ test-suite spec
   ghc-options:
       -Wall
   build-depends:
-      base
+      base >= 4.12 && < 5
     , kmonad
     , hspec
     , rio
