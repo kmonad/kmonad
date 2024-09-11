@@ -292,8 +292,8 @@ data Keycode
   | KeyBrightnessZero
   | KeyDisplayOff
   | KeyWimax
-  | Missing247
-  | Missing248
+  | KeyRfkill
+  | KeyMicmute
   | Missing249
   | Missing250
   | Missing251
@@ -407,6 +407,7 @@ aliases = Q.mkMultiMap
   , (KeyNextSong,         ["next"])
   , (KeyPlayPause,        ["pp"])
   , (KeyPreviousSong,     ["prev"])
+  , (KeyMicmute,          ["micm"])
   -- Darwin
   , (KeyLaunchpad,        ["lp"])
   , (KeyMissionCtrl,      ["mctl"])
