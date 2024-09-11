@@ -338,25 +338,33 @@ tapHold ms t h = onPress' t $ withinHeld ms (matchMy Release)
   (const $ tap t $> Catch) -- If we catch release before timeout
 
 -- | Create a 'Button' that performs a tap of 1 button if the next event is its
--- own release, or else switches to holding some other button if the next event
--- is a different keypress.
+-- own release, or else switches to holding some other button if another button
+-- is pressed before its own reale
 tapNext :: Button -> Button -> Button
-tapNext t h = onPress' t $ hookF InputHook $ \e -> do
-  p <- matchMy Release
-  if p e
-    then tap t   $> Catch
-    else press h $> NoCatch
+tapNext t h = onPress' t go
+ where
+  go :: AnyK ()
+  go = hookF InputHook $ \e -> do
+    p <- matchMy Release
+    if
+      | p e       -> tap t   $> Catch
+      | isPress e -> press h $> NoCatch
+      | otherwise -> go      $> NoCatch
 
 -- | Like 'tapNext', except that after some interval it switches anyways
 tapHoldNext :: Milliseconds -> Button -> Button -> Maybe Button -> Button
-tapHoldNext ms t h mtb = onPress $ within ms (pure $ const True) onTimeout $ \tr -> do
-  p <- matchMy Release
-  if p $ tr^.event
-    then tap t   $> Catch
-    else press h $> NoCatch
-  where
-    onTimeout :: MonadK m =>  m ()
-    onTimeout = press $ fromMaybe h mtb
+tapHoldNext ms t h mtb = onPress' t $ go ms
+ where
+  go :: MonadK m => Milliseconds -> m ()
+  go ms' = tHookF InputHook ms' onTimeout $ \r -> do
+    let e = r^.event
+    p <- matchMy Release
+    if
+      | p e       -> tap t   $> Catch
+      | isPress e -> press h $> NoCatch
+      | otherwise -> go (ms' - r^.elapsed) $> NoCatch
+  onTimeout :: MonadK m =>  m ()
+  onTimeout = press $ fromMaybe h mtb
 
 -- | Surround some future button with a before and after tap
 beforeAfterNext :: Button -> Button -> Button
