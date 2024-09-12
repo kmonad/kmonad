@@ -734,8 +734,6 @@ ssComposed = composeSeqs & (each . _1) %~ sanitize
     , ("_ '"      , '⍘'     , "U2358")
     , ("0 ~"      , '⍬'     , "U236c")
     , ("| ~"      , '⍭'     , "U236d")
-    , ("< _"      , '≤'     , "U2264")
-    , ("> _"      , '≥'     , "U2265")
 
     -- Sequences that should exist but do not work
     --, ("` spc"    , '`'     , "grave") -- recursive and incorrect. It's <dead_grave> <space> and <dead_grave> is not mapped in en_US

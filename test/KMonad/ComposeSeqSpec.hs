@@ -9,11 +9,20 @@ import KMonad.Prelude
 
 import Test.Hspec
 
+import qualified RIO.NonEmpty as N
 import qualified RIO.Text as T
 
 spec :: Spec
-spec = describe "compose-sequences" $ traverse_ checkComposeSeq ssComposed
+spec = describe "compose-sequences" $ do
+  traverse_ checkComposeSeq ssComposed
+  noDuplicates
  where
+  noDuplicates = describe "No duplicate compose sequence definitions" $ do
+    noDuplicates' _1 "Compose sequences"
+    noDuplicates' _2 "Characters"
+    noDuplicates' _3 "Character names"
+  noDuplicates' field desc = it desc $ duplicates (view field) ssComposed `shouldBe` []
+  duplicates field = filter (not . null . N.tail) . N.groupAllWith field
   checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
     let c' = T.singleton c
     let actualSeq = runParser buttonP "" c'
