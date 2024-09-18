@@ -8,7 +8,6 @@ import KMonad.Parsing
 
 import Control.Monad.Except
 import Control.Monad.State
-import Data.Char
 
 import qualified RIO.Seq  as Q
 import qualified RIO.Set  as S

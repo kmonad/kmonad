@@ -59,7 +59,6 @@ module KMonad.Model.Action
 where
 
 import KMonad.Keyboard
-import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $keyfun

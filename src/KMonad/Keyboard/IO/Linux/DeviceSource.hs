@@ -23,7 +23,6 @@ import Foreign.C.Types
 import System.Posix
 
 import KMonad.Keyboard.IO.Linux.Types
-import KMonad.Util
 
 import qualified Data.Serialize as B (decode)
 import qualified RIO.ByteString as B

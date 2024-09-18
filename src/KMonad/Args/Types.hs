@@ -41,7 +41,6 @@ module KMonad.Args.Types
 
 import KMonad.Model.Button
 import KMonad.Keyboard
-import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $but

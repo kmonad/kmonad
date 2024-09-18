@@ -5,3 +5,4 @@ module KMonad.Prelude
 where
 
 import KMonad.Prelude.Imports as X
+import KMonad.Util as X
