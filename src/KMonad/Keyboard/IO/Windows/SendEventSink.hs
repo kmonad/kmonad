@@ -23,7 +23,6 @@ import Foreign.Marshal
 import Foreign.Storable
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Windows.Types
 
 
