@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-dodgy-imports #-}
-
 module KMonad.Prelude.Imports
   ( module X )
 where
@@ -7,7 +5,6 @@ where
 import Control.Lens       as X
 import Control.Monad.Cont as X
 import Data.Acquire       as X
-import GHC.Conc           as X (orElse)
 import RIO.Text           as X (unlines, lines, unpack, pack)
 
 import RIO as X hiding
@@ -24,4 +21,5 @@ import RIO as X hiding
 
     -- Will import these when I need it
   , some, many
+  , seq
   )

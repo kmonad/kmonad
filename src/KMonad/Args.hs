@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-|
 Module      : KMonad.Args
 Description : How to parse arguments and config files into an AppCfg

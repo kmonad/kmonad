@@ -20,7 +20,6 @@ import Foreign.Ptr
 import Foreign.Storable
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Windows.Types
 
 --------------------------------------------------------------------------------
@@ -70,7 +69,7 @@ llClose (LLHook tid buf) = do
 -- | Get a new 'KeyEvent' from Windows
 --
 -- NOTE: This can throw an error if the event fails to convert.
-llRead :: HasLogFunc e => LLHook -> RIO e KeyEvent
+llRead :: LLHook -> RIO e KeyEvent
 llRead (LLHook{_buffer = buf}) = do
   we <- liftIO $ wait_key buf *> peek buf
   either throwIO pure $ fromWinKeyEvent we
