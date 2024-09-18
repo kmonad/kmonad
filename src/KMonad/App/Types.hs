@@ -14,7 +14,6 @@ import KMonad.Prelude
 import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Model.BEnv

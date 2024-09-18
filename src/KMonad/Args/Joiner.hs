@@ -31,7 +31,6 @@ import KMonad.Args.Types
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 
 #ifdef linux_HOST_OS
 import KMonad.Keyboard.IO.Linux.DeviceSource
@@ -86,15 +85,15 @@ instance Show JoinError where
     DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
     DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
     DuplicateSource   t   -> case t of
-      Just t  -> "Multiple sources of the same name: " <> T.unpack t
+      Just t' -> "Multiple sources of the same name: " <> T.unpack t'
       Nothing -> "Multiple default sources"
     DuplicateKeyInSource   t ks   -> case t of
-      Just t  -> "Keycodes appear multiple times in source `" <> T.unpack t <> "`:" <> ((' ' :) . show =<< ks)
+      Just t' -> "Keycodes appear multiple times in source `" <> T.unpack t' <> "`:" <> ((' ' :) . show =<< ks)
       Nothing -> "Keycodes appear multiple times in default source: " <> ((' ' :) . show =<< ks)
     MissingAlias      t   -> "Reference to non-existent alias: "     <> T.unpack t
     MissingLayer      t   -> "Reference to non-existent layer: "     <> T.unpack t
     MissingSource     t   -> case t of
-      Just t  -> "Reference to non-existent source: " <> T.unpack t
+      Just t' -> "Reference to non-existent source: " <> T.unpack t'
       Nothing -> "Reference to non-existent default source"
     MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
     DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t

@@ -10,7 +10,6 @@ import Foreign.Marshal
 import Foreign.Storable
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Mac.Types
 
 foreign import ccall "send_key"
@@ -39,7 +38,7 @@ skClose sk = do
 -- | Write an event to the pointer and prompt windows to inject it
 --
 -- NOTE: This can throw an error if event-conversion fails.
-skSend :: HasLogFunc e => EvBuf -> KeyEvent -> RIO e ()
+skSend :: EvBuf -> KeyEvent -> RIO e ()
 skSend sk e = either throwIO go $ toMacKeyEvent e
   where go e' = liftIO $ do
           poke (sk^.buffer) e'

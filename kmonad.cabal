@@ -36,8 +36,6 @@ library
       src
   ghc-options:
     -Wall
-    -Wno-name-shadowing
-    -Wno-unused-imports
   build-depends:
       base >= 4.12 && < 5
     , cereal
@@ -108,7 +106,6 @@ library
       KMonad.Parsing
       KMonad.Prelude
       KMonad.Prelude.Imports
-      KMonad.Prelude.Definitions
       KMonad.Util
       KMonad.Util.LayerStack
       KMonad.Util.MultiMap

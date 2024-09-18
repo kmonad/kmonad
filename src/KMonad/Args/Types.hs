@@ -43,7 +43,6 @@ import KMonad.Prelude
 
 import KMonad.Model.Button
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Util
 
 --------------------------------------------------------------------------------

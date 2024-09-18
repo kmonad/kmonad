@@ -544,14 +544,14 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
       --     sequence is cancelled like in 2C. We trigger a tap of the current
       --     button of the sequence.
       -- 3D. If we detect a release event, we also cancel the multi-tap sequence.
-      let doNext pred onTimeout next cancel ms = tHookF InputHook ms onTimeout $ \t -> do
+      let doNext pred onTimeout next doCancel ms' = tHookF InputHook ms' onTimeout $ \t -> do
             pr <- pred
-            if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
+            if | pr (t^.event)      -> next (ms' - t^.elapsed) $> Catch
                | isPress (t^.event) -> onTimeout              $> NoCatch
-               | otherwise          -> cancel (ms - t^.elapsed) $> NoCatch
-      let cancel = tap b *> hold False
+               | otherwise          -> doCancel (ms' - t^.elapsed) $> NoCatch
+      let doCancel = tap b *> hold False
       let doHold = press b *> hold False
-      let whileReleased = doNext (matchMy Press) cancel (\_ -> go bs') (const cancel)
+      let whileReleased = doNext (matchMy Press) doCancel (\_ -> go bs') (const doCancel)
       let whilePressed = doNext (matchMy Release) doHold whileReleased whilePressed
 
       whilePressed ms
