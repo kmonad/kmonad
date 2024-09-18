@@ -11,9 +11,6 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Char
 
-import RIO.Seq (Seq(..))
-
-import qualified RIO.List as L
 import qualified RIO.Seq  as Q
 import qualified RIO.Set  as S
 
@@ -42,11 +39,8 @@ data GestureError a
 
 -- | A lens into the i
 tag :: Lens' (Toggle a) a
-tag = lens get set
-  where get (On x)    = x
-        get (Off x)   = x
-        set (On _) x  = On x
-        set (Off _) x = Off x
+tag f (On  x) = On  <$> f x
+tag f (Off x) = Off <$> f x
 
 -- | A fold of all the unique elements in a gesture
 tags :: Ord a => Fold (Gesture a) a

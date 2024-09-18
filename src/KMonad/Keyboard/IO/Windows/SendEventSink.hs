@@ -23,7 +23,6 @@ import Foreign.Marshal
 import Foreign.Storable
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Windows.Types
 
 
@@ -73,7 +72,7 @@ stopRepeat = mapMOf_ (_Just._2) cancel
 -- | Write an event to the pointer and prompt windows to inject it
 --
 -- NOTE: This can throw an error if event-conversion fails.
-skSend :: HasLogFunc e => SKSink -> KeyEvent -> RIO e ()
+skSend :: SKSink -> KeyEvent -> RIO e ()
 skSend s e = do
 
   w <- fromEither $ toWinKeyEvent e          -- the event for windows
