@@ -15,7 +15,6 @@ import KMonad.Keyboard
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Model.BEnv
-import KMonad.Util
 
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
