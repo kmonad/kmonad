@@ -30,7 +30,6 @@ import Data.Time.Clock.System (getSystemTime)
 import Foreign.C.String
 import Foreign.C.Types
 import System.Posix     hiding (sync)
-import UnliftIO.Async   (async)
 import UnliftIO.Process (spawnCommand)
 
 import KMonad.Keyboard.IO.Linux.Types
