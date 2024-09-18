@@ -23,8 +23,6 @@ module KMonad.Keyboard.IO.Linux.UinputSink
   )
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock.System (getSystemTime)
 
 import Foreign.C.String

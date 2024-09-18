@@ -1,3 +1,5 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module KMonad.Prelude
   ( module X )
 where
