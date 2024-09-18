@@ -29,7 +29,7 @@ module KMonad.Util.MultiMap
   )
 where
 
-import KMonad.Prelude hiding (reverse)
+import KMonad.Prelude
 
 import qualified RIO.HashMap as M
 import qualified RIO.HashSet as S

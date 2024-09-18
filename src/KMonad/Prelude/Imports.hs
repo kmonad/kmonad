@@ -19,4 +19,8 @@ import RIO as X hiding
     -- Will import these when I need it
   , some, many
   , seq
+  , try, timeout
+
+    -- Use lenses instead
+  , reverse -- `view reversed` or `reversing`
   )

@@ -34,7 +34,7 @@ module KMonad.Args.Parser
   )
 where
 
-import KMonad.Prelude hiding (try, bool)
+import KMonad.Prelude
 
 import KMonad.Parsing
 import KMonad.Args.Types
@@ -122,8 +122,8 @@ statement :: Text -> Parser a -> Parser a
 statement s = paren . (symbol s *>)
 
 -- | Run a parser that parser a bool value
-bool :: Parser Bool
-bool = (symbol "true"  $> True)
+boolP :: Parser Bool
+boolP = (symbol "true"  $> True)
    <|> (symbol "false" $> False)
 
 -- | Parse a LISP-like keyword of the form @:keyword value@
@@ -372,8 +372,8 @@ settingP = let f s p = symbol s *> p in
     [ SIToken      <$> f "input"         itokenP
     , SOToken      <$> f "output"        otokenP
     , SCmpSeq      <$> f "cmp-seq"       buttonP
-    , SFallThrough <$> f "fallthrough"   bool
-    , SAllowCmd    <$> f "allow-cmd"     bool
+    , SFallThrough <$> f "fallthrough"   boolP
+    , SAllowCmd    <$> f "allow-cmd"     boolP
     , SCmpSeqDelay <$> f "cmp-seq-delay" numP
     , SKeySeqDelay <$> f "key-seq-delay" numP
     , SImplArnd    <$> f "implicit-around" implArndP
