@@ -28,7 +28,6 @@ import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
-import KMonad.Util
 
 import RIO.Partial (fromJust)
 
