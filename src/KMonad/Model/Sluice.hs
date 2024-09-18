@@ -85,8 +85,8 @@ unblock s = do
       logDebug $ "Unblocking input stream, " <>
         if null es
         then "no stored events"
-        else "rerunning:\n" <> (display . unlines . map textDisplay $ reverse es)
-      pure $ reverse es
+        else "rerunning:\n" <> (display . unlines . map textDisplay $ es^.reversed)
+      pure $ es^.reversed
     n -> do
       logDebug $ "Block level set to: " <> display n
       pure []
