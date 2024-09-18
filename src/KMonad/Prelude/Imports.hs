@@ -1,3 +1,5 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module KMonad.Prelude.Imports
   ( module X )
 where
@@ -26,4 +28,7 @@ import RIO as X hiding
 
     -- Use lenses instead
   , reverse -- `view reversed` or `reversing`
+
+    -- Breaks Paths_kmonad
+  , catchIO
   )
