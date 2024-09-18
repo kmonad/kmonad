@@ -41,7 +41,6 @@ import KMonad.Keyboard.ComposeSeq
 
 
 
-import Data.Char
 import RIO.List (sortBy, find)
 
 

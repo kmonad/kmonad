@@ -52,7 +52,6 @@ import qualified RIO.NonEmpty as N
 import RIO.Partial (fromJust)
 import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
-import qualified RIO.Text         as T
 
 --------------------------------------------------------------------------------
 -- $err
@@ -79,30 +78,30 @@ data JoinError
 
 instance Show JoinError where
   show e = case e of
-    DuplicateBlock    t   -> "Encountered duplicate block of type: " <> T.unpack t
-    MissingBlock      t   -> "Missing at least 1 block of type: "    <> T.unpack t
-    DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
-    DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
+    DuplicateBlock    t   -> "Encountered duplicate block of type: " <> unpack t
+    MissingBlock      t   -> "Missing at least 1 block of type: "    <> unpack t
+    DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> unpack t
+    DuplicateLayer    t   -> "Multiple layers of the same name: "    <> unpack t
     DuplicateSource   t   -> case t of
-      Just t' -> "Multiple sources of the same name: " <> T.unpack t'
+      Just t' -> "Multiple sources of the same name: " <> unpack t'
       Nothing -> "Multiple default sources"
     DuplicateKeyInSource   t ks   -> case t of
-      Just t' -> "Keycodes appear multiple times in source `" <> T.unpack t' <> "`:" <> ((' ' :) . show =<< ks)
+      Just t' -> "Keycodes appear multiple times in source `" <> unpack t' <> "`:" <> ((' ' :) . show =<< ks)
       Nothing -> "Keycodes appear multiple times in default source: " <> ((' ' :) . show =<< ks)
-    MissingAlias      t   -> "Reference to non-existent alias: "     <> T.unpack t
-    MissingLayer      t   -> "Reference to non-existent layer: "     <> T.unpack t
+    MissingAlias      t   -> "Reference to non-existent alias: "     <> unpack t
+    MissingLayer      t   -> "Reference to non-existent layer: "     <> unpack t
     MissingSource     t   -> case t of
-      Just t' -> "Reference to non-existent source: " <> T.unpack t'
+      Just t' -> "Reference to non-existent source: " <> unpack t'
       Nothing -> "Reference to non-existent default source"
-    MissingSetting    t   -> "Missing setting in 'defcfg': "         <> T.unpack t
-    DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> T.unpack t
-    DuplicateLayerSetting t s -> "Duplicate setting in 'deflayer '"  <> T.unpack t <> "': " <> T.unpack s
-    InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
+    MissingSetting    t   -> "Missing setting in 'defcfg': "         <> unpack t
+    DuplicateSetting  t   -> "Duplicate setting in 'defcfg': "       <> unpack t
+    DuplicateLayerSetting t s -> "Duplicate setting in 'deflayer '"  <> unpack t <> "': " <> unpack s
+    InvalidOS         t   -> "Not available under this OS: "         <> unpack t
     ImplArndDisabled      -> "Implicit around via `A` or `S-a` are disabled in your config"
     NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
     InvalidComposeKey     -> "Encountered invalid button as Compose key"
     LengthMismatch t l s  -> mconcat
-      [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
+      [ "Mismatch between length of 'defsrc' and deflayer <", unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
 
@@ -289,8 +288,8 @@ pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 -- | The Linux correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
 pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
-  where cfg = defUinputCfg { _keyboardName = T.unpack t
-                           , _postInit     = T.unpack <$> init }
+  where cfg = defUinputCfg { _keyboardName = unpack t
+                           , _postInit     = unpack <$> init }
 pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
@@ -316,7 +315,7 @@ pickOutput KKextSink           = throwError $ InvalidOS "KextSink"
 
 -- | The Mac correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput (KIOKitSource name) = pure $ runLF (iokitSource (T.unpack <$> name))
+pickInput (KIOKitSource name) = pure $ runLF (iokitSource (unpack <$> name))
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 
