@@ -11,7 +11,6 @@ import Foreign.Storable
 import Foreign.C.String
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Mac.Types
 
 --------------------------------------------------------------------------------

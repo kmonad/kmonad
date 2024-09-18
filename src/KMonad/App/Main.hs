@@ -148,7 +148,7 @@ pressKey c =
           awaitMy Release $ do
             runBEnv b Release >>= \case
               Nothing -> pure ()
-              Just a  -> runAction a
+              Just a' -> runAction a'
             pure Catch
 
 --------------------------------------------------------------------------------
