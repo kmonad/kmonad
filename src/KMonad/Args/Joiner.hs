@@ -24,7 +24,7 @@ module KMonad.Args.Joiner
   )
 where
 
-import KMonad.Prelude hiding (uncons)
+import KMonad.Prelude
 
 import KMonad.Args.Types
 
@@ -49,7 +49,8 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (headMaybe, intersperse, uncons, sort, group)
+import RIO.List (headMaybe, intersperse)
+import qualified RIO.NonEmpty as N
 import RIO.Partial (fromJust)
 import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
@@ -451,7 +452,7 @@ joinSources = foldM joiner mempty
      | otherwise            = pure $ M.insert n src sources
     where
      dups :: [Keycode]
-     dups = concatMap (take 1) . filter ((> 1) . length) . group . sort $ ks
+     dups = N.head <$> filter (not . null . N.tail) (N.groupAllWith id ks)
 
 --------------------------------------------------------------------------------
 -- $kmap
