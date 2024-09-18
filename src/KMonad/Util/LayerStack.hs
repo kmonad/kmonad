@@ -50,8 +50,6 @@ module KMonad.Util.LayerStack
 
 where
 
-import KMonad.Prelude
-
 import RIO.List (delete)
 
 import qualified RIO.HashMap as M

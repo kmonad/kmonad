@@ -63,7 +63,6 @@ library
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      NoImplicitPrelude
       OverloadedStrings
       RankNTypes
       TemplateHaskell
@@ -74,6 +73,8 @@ library
   autogen-modules:
       Paths_kmonad
 
+  other-modules:
+      Prelude
   exposed-modules:
       KMonad.App
       KMonad.App.Main
@@ -178,6 +179,7 @@ test-suite spec
     , hspec
     , rio
   other-modules:
+      Prelude
       KMonad.ButtonDocSpec
       KMonad.GestureSpec
       KMonad.ComposeSeqSpec
@@ -198,7 +200,6 @@ test-suite spec
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      NoImplicitPrelude
       OverloadedStrings
       RankNTypes
       TemplateHaskell
