@@ -81,7 +81,7 @@ decode64 :: B.ByteString -> Either String LinuxKeyEvent
 decode64 bs = linuxKeyEvent . fliptup <$> result
   where
     result :: Either String (Int32, Word16, Word16, Word64, Word64)
-    result = B.decode . B.reverse $ bs
+    result = B.decode $ bs^.reversed
 
     fliptup (a, b, c, d, e) = (e, d, c, b, a)
 
