@@ -16,8 +16,6 @@ module KMonad.App.Main
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Args
 import KMonad.App.Types
 import KMonad.Keyboard

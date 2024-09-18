@@ -23,8 +23,6 @@ module KMonad.Model.Hooks
   )
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock.System
 import Data.Unique
 
