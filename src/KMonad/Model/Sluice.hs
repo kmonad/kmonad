@@ -21,8 +21,6 @@ module KMonad.Model.Sluice
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Keyboard
 
 --------------------------------------------------------------------------------

@@ -22,8 +22,6 @@ module KMonad.Keyboard.IO.Windows.Types
 
 where
 
-import KMonad.Prelude
-
 import Foreign.Storable
 import KMonad.Keyboard
 
