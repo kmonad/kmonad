@@ -58,7 +58,7 @@ module KMonad.Model.Action
 
 where
 
-import KMonad.Prelude hiding (timeout)
+import KMonad.Prelude
 
 import KMonad.Keyboard
 import KMonad.Util
