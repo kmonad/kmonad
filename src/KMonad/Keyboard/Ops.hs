@@ -14,7 +14,6 @@ module KMonad.Keyboard.Ops
   )
 where
 
-import KMonad.Prelude
 import KMonad.Keyboard.Types
 import KMonad.Keyboard.Keycode
 

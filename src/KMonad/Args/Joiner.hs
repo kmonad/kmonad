@@ -24,8 +24,6 @@ module KMonad.Args.Joiner
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Args.Types
 
 import KMonad.Model.Action
