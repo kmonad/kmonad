@@ -9,8 +9,6 @@ module KMonad.App.Types
   )
 where
 
-import KMonad.Prelude
-
 import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
 import KMonad.Keyboard

@@ -4,7 +4,6 @@ module KMonad.Gesture
 
 where
 
-import KMonad.Prelude
 import KMonad.Parsing
 
 import Control.Monad.Except

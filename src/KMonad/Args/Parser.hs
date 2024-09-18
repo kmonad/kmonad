@@ -34,8 +34,6 @@ module KMonad.Args.Parser
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Parsing
 import KMonad.Args.Types
 import KMonad.Keyboard

@@ -16,8 +16,6 @@ module KMonad.Keyboard.IO.Windows.SendEventSink
   )
 where
 
-import KMonad.Prelude
-
 import Foreign.Ptr
 import Foreign.Marshal
 import Foreign.Storable

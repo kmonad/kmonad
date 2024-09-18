@@ -2,13 +2,10 @@ module KMonad.ButtonDocSpec (spec) where
 
 import KMonad.Args.Parser
 import KMonad.Args.Types
-import KMonad.Prelude
 
 import Data.Char (isSpace)
 import Data.Data
 import qualified RIO.Text as T
-
-import Test.Hspec
 
 spec :: Spec
 spec = do

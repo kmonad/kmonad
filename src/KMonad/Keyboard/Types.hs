@@ -11,7 +11,6 @@ module KMonad.Keyboard.Types
   )
 where
 
-import KMonad.Prelude
 import KMonad.Keyboard.Keycode
 
 import qualified KMonad.Util.LayerStack as Ls

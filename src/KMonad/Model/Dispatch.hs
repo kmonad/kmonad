@@ -41,7 +41,6 @@ module KMonad.Model.Dispatch
   )
 where
 
-import KMonad.Prelude
 import KMonad.Keyboard
 
 import RIO.Seq (Seq(..), (><))

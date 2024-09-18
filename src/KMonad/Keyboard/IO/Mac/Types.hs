@@ -8,8 +8,6 @@ module KMonad.Keyboard.IO.Mac.Types
 
 where
 
-import KMonad.Prelude
-
 import Foreign.Storable
 import KMonad.Keyboard
 

@@ -14,7 +14,6 @@ module KMonad.Args
   ( getCmd, loadConfig, Cmd, HasCmd(..))
 where
 
-import KMonad.Prelude
 import KMonad.App.Types
 import KMonad.Args.Cmd
 import KMonad.Args.Joiner

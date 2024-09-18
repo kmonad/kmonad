@@ -3,8 +3,6 @@ module KMonad.Keyboard.IO.Mac.KextSink
   )
 where
 
-import KMonad.Prelude
-
 import Foreign.Ptr
 import Foreign.Marshal
 import Foreign.Storable

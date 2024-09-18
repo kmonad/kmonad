@@ -63,8 +63,6 @@ module KMonad.Model.Button
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Model.Action
 import KMonad.Keyboard
 import KMonad.Util

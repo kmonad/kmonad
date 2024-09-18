@@ -22,8 +22,6 @@ module KMonad.Model.Keymap
 where
 
 
-import KMonad.Prelude
-
 import KMonad.Model.Action hiding (layerOp)
 import KMonad.Model.Button
 import KMonad.Keyboard
