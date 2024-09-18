@@ -31,7 +31,6 @@ import System.Posix     hiding (sync)
 import UnliftIO.Process (spawnCommand)
 
 import KMonad.Keyboard.IO.Linux.Types
-import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $err
