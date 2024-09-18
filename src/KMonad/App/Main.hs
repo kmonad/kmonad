@@ -19,7 +19,6 @@ where
 import KMonad.Args
 import KMonad.App.Types
 import KMonad.Keyboard
-import KMonad.Util
 import KMonad.Model
 
 

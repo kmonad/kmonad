@@ -65,7 +65,6 @@ where
 
 import KMonad.Model.Action
 import KMonad.Keyboard
-import KMonad.Util
 
 import qualified RIO.HashSet as S
 
