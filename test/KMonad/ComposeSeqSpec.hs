@@ -5,9 +5,6 @@ import KMonad.Args.Types
 import KMonad.Keyboard.ComposeSeq
 import KMonad.Keyboard.Keycode
 import KMonad.Parsing
-import KMonad.Prelude
-
-import Test.Hspec
 
 import qualified RIO.NonEmpty as N
 import qualified RIO.Text as T
