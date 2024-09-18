@@ -32,8 +32,6 @@ module KMonad.Util
 
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock
 import Data.Time.Clock.System
 

@@ -16,7 +16,6 @@ module KMonad.Args.Cmd
   )
 where
 
-import KMonad.Prelude
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP, implArndButtons)
 import KMonad.Args.TH (gitHash)
 import KMonad.Args.Types (DefSetting(..))

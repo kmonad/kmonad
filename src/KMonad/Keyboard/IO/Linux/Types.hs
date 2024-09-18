@@ -26,8 +26,6 @@ module KMonad.Keyboard.IO.Linux.Types
   )
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock.System
 import Foreign.C.Types (CInt)
 import RIO.Partial (toEnum)
