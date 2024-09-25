@@ -826,11 +826,11 @@
   So, again with the mini-language, we set foo to:
     (tap-hold 200 x lsft) ;; Like tap-next, but with a 200ms timeout
   Then:
-    Tesc            -> x
-    Tesc Ta         -> xa
-    Pesc 300 a      -> A (the moment you press a)
-    Pesc a 300      -> A (after 200 ms)
-    Pesc a 100 Resc -> xa (both happening immediately on Resc)
+    Tesc             -> x
+    Tesc Ta          -> xa
+    Pesc 300 Ta      -> A (the moment you press a)
+    Pesc Ta 300      -> A (after 200 ms)
+    Pesc Ta 100 Resc -> xa (both happening immediately on Resc)
 
   The `tap-hold-next` button is a combination of the previous 2. Essentially,
   think of it as a `tap-next` button, but it also switches to held after a
@@ -849,7 +849,7 @@
     (tap-hold-next 200 x lsft :timeout-button x)
   Then:
     Tesc           -> Tx
-    Pesc 100 a     -> A (the moment you press a)
+    Pesc 100 Ta    -> A (the moment you press a)
     Pesc 5000 Resc -> xxxxxxx (some number of auto-repeated x's)
 
   Note that KMonad does not itself auto-repeat the key. In this last example,
