@@ -1,11 +1,16 @@
+# syntax=docker/dockerfile:1.7-labs
 FROM lierdakil/alpine-haskell:9.4.8
 
 WORKDIR /usr/src/kmonad/
 RUN apk --no-cache add git
 RUN stack update
 
-COPY ./kmonad.cabal ./stack.yaml ./
-RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies --ghc-options="-fPIC"
-COPY ./ ./
-RUN sed -i '/executable kmonad/ a\  ld-options: -static' kmonad.cabal && \
-  stack --no-install-ghc --system-ghc --skip-ghc-check install --ghc-options="-j -fPIC"
+COPY stack.yaml kmonad.cabal ./
+# We edit the `stack.yaml` file instead of passing `--ghc-options`,
+# since we want to apply those options to all packages. Not just KMonad.
+RUN sed -i '/ghc-options/ a\  $everything: -fPIC -split-sections' stack.yaml
+RUN sed -i '/executable kmonad/ a\  ld-options: -static' kmonad.cabal
+RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies
+
+COPY --exclude=stack.yaml --exclude=kmonad.cabal ./ ./
+RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 install --ghc-options=-j
