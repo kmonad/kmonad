@@ -3,3 +3,4 @@ packages:
 - .
 extra-deps:
 pvp-bounds: both
+ghc-options:
