@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest
             , macos-latest
-            # , windows-latest
+            , windows-latest
             ]
         resolver:
           [ lts-20               # GHC 9.2
