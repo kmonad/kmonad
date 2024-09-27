@@ -56,28 +56,22 @@ iokitOpen m = do
       Nothing -> void $ grab_kb nullPtr
       Just s  -> do
         str <- newCString s
-        void $ grab_kb str
-        free str
+        grab_kb str *> free str
 
-    buf <- mallocBytes $ sizeOf (undefined :: MacKeyEvent)
-    pure $ EvBuf buf
+    EvBuf <$> malloc
 
 -- | Ask Mac to close the queue
 iokitClose :: HasLogFunc e => EvBuf -> RIO e ()
 iokitClose b = do
   logInfo "Closing IOKit devices"
-  liftIO $ do
-    _ <- release_kb
-    free $ b^.buffer
+  liftIO $ release_kb *> free (b^.buffer)
 
 -- | Get a new 'KeyEvent' from Mac
 --
 -- NOTE: This can throw an error if the event fails to convert.
 iokitRead :: HasLogFunc e => EvBuf -> RIO e KeyEvent
 iokitRead b = do
-  we <- liftIO $ do
-    _ <- wait_key $ b^.buffer
-    peek $ b^.buffer
+  we <- liftIO $ wait_key (b^.buffer) *> peek (b^.buffer)
   case fromMacKeyEvent we of
     Nothing -> iokitRead b
     Just e  -> either throwIO pure e
