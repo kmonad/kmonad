@@ -421,7 +421,7 @@ tapNextRelease t h = onPress' t $ do
 -- It does all of this while holding processing of other buttons, so time will
 -- get rolled back like a TapHold button.
 tapHoldNextRelease :: Milliseconds -> Button -> Button -> Maybe Button -> Button
-tapHoldNextRelease ms t h mtb = onPress $ do
+tapHoldNextRelease ms t h mtb = onPress' t $ do
   hold True
   go ms []
   where
