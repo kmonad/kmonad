@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Changed
 
+- `multi-tap` now holds when interrupted by another key while held. (#897)
+
 ### Fixed
 
 ## 0.4.3 – 2024-09-11
