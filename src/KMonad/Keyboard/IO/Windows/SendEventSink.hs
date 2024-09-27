@@ -37,7 +37,7 @@ foreign import ccall "sendKey" sendKey :: Ptr WinKeyEvent -> IO ()
 -- | The SKSink environment
 data SKSink = SKSink
   { _buffer :: MVar (Ptr WinKeyEvent) -- ^ The pointer we write events to
-  , _keyrep :: MVar (Maybe (Keycode, Async ()))
+  , _keyrep :: MVar (Maybe (Keycode, Async ())) -- ^ Keyrepeat data if pressent
   , _delay  :: Int -- ^ How long to wait before starting key repeat in ms
   , _rate   :: Int -- ^ How long to wait between key repeats in ms
   }
@@ -51,21 +51,24 @@ sendEventKeySink di = mkKeySink (skOpen (fromMaybe (300, 100) di)) skClose skSen
 skOpen :: HasLogFunc e => (Int, Int) -> RIO e SKSink
 skOpen (d, i) = do
   logInfo "Initializing Windows key sink"
-  bv <- liftIO $ mallocBytes (sizeOf (undefined :: WinKeyEvent))
-  bm <- newMVar bv
+  b <- newMVar =<< liftIO malloc
   r <- newMVar Nothing
-  pure $ SKSink bm r d i
+  pure $ SKSink b r d i
 
 -- | Close the 'SKSink' environment
 skClose :: HasLogFunc e => SKSink -> RIO e ()
 skClose s = do
   logInfo "Closing Windows key sink"
-  withMVar (s^.keyrep) $ \r -> maybe (pure ()) cancel (r^?_Just._2)
+  withMVar (s^.keyrep) stopRepeat
   withMVar (s^.buffer) (liftIO . free)
 
 -- | Send 1 key event to Windows
 emit :: MonadUnliftIO m => SKSink -> WinKeyEvent -> m ()
 emit s w = withMVar (s^.buffer) $ \b -> liftIO $ poke b w >> sendKey b
+
+-- | Stop repeating the key by cancelling the keyrepeat thread
+stopRepeat :: Maybe (Keycode, Async ()) -> RIO e ()
+stopRepeat = mapMOf_ (_Just._2) cancel
 
 -- | Write an event to the pointer and prompt windows to inject it
 --
@@ -73,7 +76,7 @@ emit s w = withMVar (s^.buffer) $ \b -> liftIO $ poke b w >> sendKey b
 skSend :: HasLogFunc e => SKSink -> KeyEvent -> RIO e ()
 skSend s e = do
 
-  w <- either throwIO pure $ toWinKeyEvent e -- the event for windows
+  w <- fromEither $ toWinKeyEvent e          -- the event for windows
   r <- takeMVar $ s^.keyrep                  -- the keyrep token
 
    -- Whether this keycode is currently active in key-repeat
@@ -81,7 +84,7 @@ skSend s e = do
 
   -- When we're going to emit a press we are not already repeating
   let handleNewPress = do
-        maybe (pure ()) cancel (r^?_Just._2)
+        stopRepeat r
         emit s w
         a <- async $ do
           threadDelay (1000 * s^.delay)
@@ -90,7 +93,7 @@ skSend s e = do
 
   -- When the event is a release
   let handleRelease = do
-        when beingRepped $ maybe (pure ()) cancel (r^?_Just._2)
+        when beingRepped $ stopRepeat r
         emit s w
         pure $ if beingRepped then Nothing else r
 
