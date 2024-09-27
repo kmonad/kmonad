@@ -13,16 +13,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest
-            , macos-latest
-            , windows-latest
-            ]
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
         resolver:
-          [ lts-20               # GHC 9.2
-          , lts-21               # GHC 9.4
-          , lts-22               # GHC 9.6
-          , nightly-2024-07-05   # GHC 9.8
-          ]
+          - lts-20               # GHC 9.2
+          - lts-21               # GHC 9.4
+          - lts-22               # GHC 9.6
+          - nightly-2024-07-05   # GHC 9.8
 
     steps:
       - name: Clone project
