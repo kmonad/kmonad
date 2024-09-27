@@ -14,6 +14,7 @@
 - [Mac](#mac)
     - [Q: How to use the special features printed on Apple function keys?](#q-how-to-use-the-special-features-printed-on-apple-function-keys)
 - [General](#general)
+    - [Q: What does `Ta`, `Pa` and `Ra` stand for?](#q-what-does-ta-pa-and-ra-stand-for)
     - [Q: Why doesn't the 'Print' keycode work for my print screen button?](#q-why-doesnt-the-print-keycode-work-for-my-print-screen-button)
     - [Q: Why can't I remap the Fn key on my laptop?](#q-why-cant-i-remap-the-fn-key-on-my-laptop)
     - [Q: Why do some key combination not work?](#q-why-do-some-key-combination-not-work)
@@ -198,6 +199,23 @@ keys. See [keymap/template/apple.kbd](../keymap/template/apple.kbd) for an
 example.
 
 ## General
+
+### Q: What does `Ta`, `Pa` and `Ra` stand for?
+
+A: Those are part of a mini-language from the tutorial:
+
+- `Px` signifies the press of the button (or keycode) `x`
+- `Rx` signifies the release of `x`
+- `Tx` signifies the sequential and near instantaneous press and release of `x`
+- `100` signifies 100ms passing without any action
+
+So for example when talking about buttons:
+
+- `Tesc Ta` is a tap of `Esc` and a press of `a`
+- `P@a Tb R@a` is the alias `@a` pressed around the button `b`
+
+This language is useful since "tap" is normally a synonym for "press"
+and this may lead to confusion in discussions and issues.
 
 ### Q: Why doesn't the 'Print' keycode work for my print screen button?
 
