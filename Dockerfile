@@ -4,8 +4,7 @@ WORKDIR /usr/src/kmonad/
 RUN apk --no-cache add git
 RUN stack update
 
-COPY ./kmonad.cabal ./stack.yaml ./
-RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies --ghc-options="-fPIC"
 COPY ./ ./
-RUN sed -i '/executable kmonad/ a\  ld-options: -static' kmonad.cabal && \
-  stack --no-install-ghc --system-ghc --skip-ghc-check install --ghc-options="-j -fPIC"
+RUN sed -i '/ghc-options/ a\  $everything: -fPIC -split-sections' stack.yaml
+RUN sed -i '/executable kmonad/ a\  ld-options: -static' kmonad.cabal
+RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 install --ghc-options=-j
