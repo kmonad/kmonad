@@ -45,6 +45,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , transformers
     , optparse-applicative
     , resourcet
     , rio

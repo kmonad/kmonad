@@ -65,7 +65,7 @@ getCmd = customExecParser (prefs showHelpOnEmpty) $
 
 -- | Equip a parser with version information about the program
 versioner :: Parser (a -> a)
-versioner = infoOption (showVersion version <> ", commit " <> $(gitHash))
+versioner = infoOption (showVersion version <> ", commit " <> fromMaybe "?" $(gitHash))
   (  long "version"
   <> short 'V'
   <> help "Show version"
