@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# OPTIONS_GHC -Wno-dodgy-imports #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.UinputSink
