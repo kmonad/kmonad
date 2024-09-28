@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module KMonad.Keyboard.Types
   (
     Switch(..)
