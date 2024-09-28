@@ -43,6 +43,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , transformers
     , optparse-applicative
     , resourcet
     , rio
@@ -71,7 +72,6 @@ library
       TupleSections
       TypeFamilies
   other-extensions:
-      BlockArguments
       CPP
       NoImplicitPrelude
       ScopedTypeVariables
