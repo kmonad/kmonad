@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP            #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.DeviceSource
 Description : Load and acquire a linux /dev/input device

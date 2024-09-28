@@ -56,6 +56,8 @@ library
       DeriveGeneric
       DeriveDataTypeable
       DeriveTraversable
+      DeriveAnyClass
+      DerivingStrategies
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
@@ -69,6 +71,10 @@ library
       TemplateHaskell
       TupleSections
       TypeFamilies
+  other-extensions:
+      CPP
+      NoImplicitPrelude
+      ScopedTypeVariables
 
   autogen-modules:
       Paths_kmonad

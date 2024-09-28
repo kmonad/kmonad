@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.Keycode
 Description : Description of all possible keycodes.
