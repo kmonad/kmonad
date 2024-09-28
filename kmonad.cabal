@@ -43,6 +43,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , transformers
     , optparse-applicative
     , resourcet
     , rio
@@ -72,7 +73,6 @@ library
       TypeFamilies
       ViewPatterns
   other-extensions:
-      BlockArguments
       CPP
       NoImplicitPrelude
       ScopedTypeVariables
