@@ -13,4 +13,5 @@ RUN sed -i '/executable kmonad/ a\  ld-options: -static' kmonad.cabal
 RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 build --only-dependencies
 
 COPY --exclude=stack.yaml --exclude=kmonad.cabal ./ ./
-RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 install --ghc-options=-j
+RUN stack --no-install-ghc --system-ghc --skip-ghc-check -j8 install --ghc-options=-j \
+	--local-bin-path=/output

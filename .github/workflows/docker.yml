@@ -7,15 +7,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux
+          - windows
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Clone project
+        uses: actions/checkout@v4
 
-      - run: docker build . -t kmonad-builder
+      - name: Build release
+        run: docker build -f ci/Dockerfile.${{ matrix.target }} . -t kmonad-builder
 
-      - run: docker run --rm -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+      - name: Save binary
+        run: |
+          mkdir output
+          docker run --rm -v ${PWD}/output:/host/ kmonad-builder bash -c 'cp -vp /output/* /host/'
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
         with:
-          name: kmonad-binary
-          path: kmonad
+          name: kmonad-${{ matrix.target }}
+          path: 'output/*'
