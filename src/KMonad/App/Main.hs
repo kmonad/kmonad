@@ -27,6 +27,7 @@ import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
 import qualified KMonad.Model.Keymap   as Km
+import KMonad.Model.Cfg
 
 -- FIXME: This should live somewhere else
 
@@ -43,20 +44,20 @@ import System.Posix.Signals (Handler(Ignore), installHandler, sigCHLD)
 --
 -- Get the invocation from the command-line, then do something with it.
 main :: IO ()
-main = getCmd >>= runCmd
+main = getCmdL >>= runCmdL
 
--- | Execute the provided 'Cmd'
+-- | Execute the provided 'CmdL'
 --
 -- 1. Construct the log-func
 -- 2. Parse the config-file
 -- 3. Maybe start KMonad
-runCmd :: Cmd -> IO ()
-runCmd c = do
+runCmdL :: CmdL -> IO ()
+runCmdL c = do
   hSetBuffering stdout LineBuffering
-  o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logLvl)
+  o <- logOptionsHandle stdout False <&> setLogMinLevel (c^.logging)
   withLogFunc o $ \f -> runRIO f $ do
-    cfg <- loadConfig c
-    unless (c^.dryRun) $ startApp cfg
+    acfg <- loadConfig c
+    unless (c^.dryRun) $ startApp acfg
 
 --------------------------------------------------------------------------------
 -- $init
@@ -69,17 +70,17 @@ runCmd c = do
 -- to simplify a bunch of nesting of calls. At no point do we make use of
 -- 'callCC' or other 'ContT' functionality.
 --
-initAppEnv :: HasLogFunc e => AppCfg -> ContT r (RIO e) AppEnv
-initAppEnv cfg = do
+initAppEnv :: HasLogFunc e => ACfg -> ContT r (RIO e) AppEnv
+initAppEnv acfg = do
   -- Get a reference to the logging function
   lgf <- view logFuncL
 
   -- Wait a bit for the user to release the 'Return' key with which they started KMonad
-  threadDelay $ fromIntegral (cfg^.startDelay) * 1000
+  threadDelay $ acfg^.startDelay.to unMS * 1000
 
   -- Acquire the key source and key sink
-  snk <- using $ cfg^.keySinkDev
-  src <- using $ cfg^.keySourceDev
+  snk <- using $ acfg^.sink
+  src <- using $ acfg^.source
 
   -- Initialize the pull-chain components
   dsp <- Dp.mkDispatch $ awaitKey src
@@ -87,7 +88,7 @@ initAppEnv cfg = do
   slc <- Sl.mkSluice   $ Hs.pull  ihk
 
   -- Initialize the button environments in the keymap
-  phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
+  phl <- Km.mkKeymap (acfg^.fstLayer) (acfg^.keymap)
 
   -- Initialize output components
   otv <- lift newEmptyTMVarIO
@@ -98,19 +99,23 @@ initAppEnv cfg = do
     e <- atomically . takeTMVar $ otv
     emitKey snk e
     -- If delay is specified, wait for it
-    for_ (cfg^.keyOutDelay) $ threadDelay . (*1000) . fromIntegral
+    for_ (acfg^.keySeqDelay) $ threadDelay . (*1000) . unMS
   -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
-    { _keAppCfg  = cfg
-    , _keLogFunc = lgf
-    , _keySink   = snk
-    , _keySource = src
+    { _ecfg = ECfg
+      { _source = src
+      , _sink = snk
+      , _logging = lgf
+      , _keymap = phl
 
-    , _dispatch  = dsp
+      , _allowCmd = acfg^.allowCmd
+      , _fallThrough = acfg^.fallThrough
+      }
+
+    , _dispatch = dsp
     , _inHooks   = ihk
     , _sluice    = slc
 
-    , _keymap    = phl
     , _outHooks  = ohk
     , _outVar    = otv
     }
@@ -123,7 +128,7 @@ initAppEnv cfg = do
 -- FIXME: this needs to live somewhere else
 
 -- | Trigger the button-action press currently registered to 'Keycode'
-pressKey :: (HasAppEnv e, HasLogFunc e, HasAppCfg e) => Keycode -> RIO e ()
+pressKey :: (HasAppEnv e, HasLogFunc e, HasCfg e 'Env) => Keycode -> RIO e ()
 pressKey c =
   view keymap >>= flip Km.lookupKey c >>= \case
 
@@ -166,7 +171,7 @@ loop = forever $ view sluice >>= Sl.pull >>= \case
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
-startApp :: HasLogFunc e => AppCfg -> RIO e ()
+startApp :: HasLogFunc e => ACfg -> RIO e ()
 startApp c = do
 #ifdef linux_HOST_OS
   -- Ignore SIGCHLD to avoid zombie processes.

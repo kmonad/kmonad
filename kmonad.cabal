@@ -52,12 +52,14 @@ library
     , template-haskell
   default-extensions:
       ConstraintKinds
+      DataKinds
       DeriveFunctor
       DeriveGeneric
       DeriveDataTypeable
       DeriveTraversable
       DeriveAnyClass
       DerivingStrategies
+      DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
@@ -67,14 +69,19 @@ library
       MultiWayIf
       NamedFieldPuns
       OverloadedStrings
+      PatternSynonyms
       RankNTypes
+      StandaloneDeriving
       TemplateHaskell
       TupleSections
       TypeFamilies
+      ViewPatterns
   other-extensions:
       CPP
       NoImplicitPrelude
+      NoFieldSelectors
       ScopedTypeVariables
+      UndecidableInstances
 
   autogen-modules:
       Paths_kmonad
@@ -95,10 +102,12 @@ library
       KMonad.Model.Action
       KMonad.Model.BEnv
       KMonad.Model.Button
+      KMonad.Model.Cfg
       KMonad.Model.Dispatch
       KMonad.Model.Hooks
       KMonad.Model.Keymap
       KMonad.Model.Sluice
+      KMonad.Model.TH
       KMonad.Gesture
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq

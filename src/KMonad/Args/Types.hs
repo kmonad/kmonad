@@ -11,18 +11,13 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 -}
 module KMonad.Args.Types
   (
-    -- * $cfg
-    CfgToken(..)
-
     -- * $but
-  , DefButton(..)
+    DefButton(..)
   , ImplArnd(..)
 
     -- * $tls
-  , DefSetting(..)
-  , DefSettings
   , DefAlias
-  , DefLayerSetting(..)
+  , DefLayerSettings(..)
   , DefLayer(..)
   , DefSrc(..)
   , KExpr(..)
@@ -33,13 +28,11 @@ module KMonad.Args.Types
 
     -- * $lenses
   , AsKExpr(..)
-  , AsDefSetting(..)
   , HasDefSrc(..)
-  , AsDefLayerSetting(..)
+  , HasDefLayerSettings(..)
 ) where
 
 
-import KMonad.Model.Button
 import KMonad.Keyboard
 
 --------------------------------------------------------------------------------
@@ -106,27 +99,6 @@ data ImplArnd
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
--- $cfg
---
--- The Cfg token that can be extracted from a config-text without ever entering
--- IO. This will then directly be translated to a DaemonCfg
---
-
--- | The 'CfgToken' contains all the data needed to construct an
--- 'KMonad.App.AppCfg'.
-data CfgToken = CfgToken
-  { _src   :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag                          -- ^ Name of initial layer
-  , _flt   :: Bool                              -- ^ How to deal with unhandled events
-  , _allow :: Bool                              -- ^ Whether to allow shell commands
-  , _ksd   :: Maybe Int                         -- ^ Output delay between keys
-  }
-makeClassy ''CfgToken
-
-
---------------------------------------------------------------------------------
 -- $tls
 --
 -- A collection of all the different top-level statements possible in a config
@@ -144,17 +116,23 @@ makeClassy ''DefSrc
 -- | A mapping from names to button tokens
 type DefAlias = [(Text, DefButton)]
 
-data DefLayerSetting
-  = LSrcName Text
-  | LImplArnd ImplArnd
-  | LButton DefButton
+data DefLayerSettings = DefLayerSettings
+  { _lSrcName  :: [Text]
+  , _lImplArnd :: [ImplArnd]
+  , _lButtons  :: [DefButton]
+  }
   deriving (Show, Eq)
-makeClassyPrisms ''DefLayerSetting
+makeClassy ''DefLayerSettings
+instance Semigroup DefLayerSettings where
+  DefLayerSettings sn ia bs <> DefLayerSettings sn' ia' bs' =
+    DefLayerSettings (sn ++ sn') (ia ++ ia') (bs ++ bs')
+instance Monoid DefLayerSettings where
+  mempty = DefLayerSettings [] [] []
 
 -- | A layer of buttons
 data DefLayer = DefLayer
   { _layerName :: Text
-  , _layerSettings :: [DefLayerSetting]
+  , _layerSettings :: DefLayerSettings
   }
   deriving (Show, Eq)
 
@@ -169,57 +147,25 @@ data IToken
   = KDeviceSource FilePath
   | KLowLevelHookSource
   | KIOKitSource (Maybe Text)
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
   | KSendEventSink (Maybe (Int, Int))
   | KKextSink
-  deriving (Show)
-
--- | All possible single settings
-data DefSetting
-  = SIToken      IToken
-  | SOToken      OToken
-  | SCmpSeq      DefButton
-  | SFallThrough Bool
-  | SAllowCmd    Bool
-  | SCmpSeqDelay Int
-  | SKeySeqDelay Int
-  | SImplArnd    ImplArnd
-  deriving (Show)
-makeClassyPrisms ''DefSetting
-
--- | 'Eq' instance for a 'DefSetting'. Because every one of these options may be
--- given at most once, we only need to check the outermost constructor in order
--- to test for equality
-instance Eq DefSetting where
-  SIToken{}      == SIToken{}      = True
-  SOToken{}      == SOToken{}      = True
-  SCmpSeq{}      == SCmpSeq{}      = True
-  SFallThrough{} == SFallThrough{} = True
-  SAllowCmd{}    == SAllowCmd{}    = True
-  SImplArnd{}    == SImplArnd{}    = True
-  SCmpSeqDelay{} == SCmpSeqDelay{} = True
-  SKeySeqDelay{} == SKeySeqDelay{} = True
-  _              == _              = False
-
--- | A list of different 'DefSetting' values
-type DefSettings = [DefSetting]
+  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 -- $tkn
 
 -- | Any statement in a config-file must parse to a 'KExpr'
 data KExpr
-  = KDefCfg   DefSettings
-  | KDefSrc   DefSrc
+  = KDefSrc   DefSrc
   | KDefLayer DefLayer
   | KDefAlias DefAlias
   deriving (Show, Eq)
 makeClassyPrisms ''KExpr
-
 
 --------------------------------------------------------------------------------
 -- $act
