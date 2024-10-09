@@ -28,6 +28,7 @@ import KMonad.Args.Types
 
 import KMonad.Model.Action
 import KMonad.Model.Button
+import KMonad.Model.Cfg
 import KMonad.Keyboard
 
 #ifdef linux_HOST_OS
@@ -73,8 +74,9 @@ data JoinError
   | InvalidOS        Text
   | ImplArndDisabled
   | NestedTrans
-  | InvalidComposeKey
+  | InvalidComposeKey JoinError
   | LengthMismatch   Text Int Int
+  | CmpSeqDisabled
 
 instance Show JoinError where
   show e = case e of
@@ -99,27 +101,61 @@ instance Show JoinError where
     InvalidOS         t   -> "Not available under this OS: "         <> unpack t
     ImplArndDisabled      -> "Implicit around via `A` or `S-a` are disabled in your config"
     NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
-    InvalidComposeKey     -> "Encountered invalid button as Compose key"
+    InvalidComposeKey err -> "Encountered invalid button as Compose key: " <> show err
     LengthMismatch t l s  -> mconcat
       [ "Mismatch between length of 'defsrc' and deflayer <", unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
+    CmpSeqDisabled -> "Compose sequences are disabled in this context"
 
 
 instance Exception JoinError
 
--- | Joining Config
-data JCfg = JCfg
-  { _cmpKey  :: Button  -- ^ How to prefix compose-sequences
-  , _implArnd :: ImplArnd -- ^ How to handle implicit `around`s
-  , _kes     :: [KExpr] -- ^ The source expresions we operate on
-  }
-makeLenses ''JCfg
+getDelay :: (Num a, Eq a) => a -> [a] -> Maybe a
+getDelay def = nodelay . fromMaybe def . preview _head
+ where
+  nodelay 0 = Nothing
+  nodelay x = Just x
 
-defJCfg :: [KExpr] ->JCfg
-defJCfg = JCfg
-  (emitB KeyRightAlt)
-  IAAround
+-- | Join an entire 'CfgToken' from the current list of 'KExpr'.
+joinConfig :: PCfg -> Either JoinError TCfg
+joinConfig PCfg{_source       = []       } = throwError $ MissingSetting   "input"
+joinConfig PCfg{_source       = _ : _ : _} = throwError $ DuplicateSetting "input"
+joinConfig PCfg{_sink         = []       } = throwError $ MissingSetting   "output"
+joinConfig PCfg{_sink         = _ : _ : _} = throwError $ DuplicateSetting "output"
+joinConfig PCfg{_cmpKey       = _ : _ : _} = throwError $ DuplicateSetting "cmp-seq"
+joinConfig PCfg{_cmpSeqDelay  = _ : _ : _} = throwError $ DuplicateSetting "cmp-seq-delay"
+joinConfig PCfg{_fallThrough  = _ : _ : _} = throwError $ DuplicateSetting "fallthrough"
+joinConfig PCfg{_allowCmd     = _ : _ : _} = throwError $ DuplicateSetting "allow-cmd"
+joinConfig PCfg{_keySeqDelay  = _ : _ : _} = throwError $ DuplicateSetting "key-seq-delay"
+joinConfig PCfg{_implArnd     = _ : _ : _} = throwError $ DuplicateSetting "implicit-around"
+joinConfig
+  PCfg
+    { _source = [i]
+    , _sink = [o]
+    , _cmpKey = fromMaybe (KEmit KeyRightAlt) . preview _head -> ck
+    , _cmpSeqDelay = getDelay 0 -> csd
+    , _keymap = ks
+    , _fallThrough = fromMaybe False . preview _head -> ft
+    , _allowCmd = fromMaybe False . preview _head -> ac
+    , _keySeqDelay = getDelay 1 -> ksd
+    , _implArnd = fromMaybe IAAround . preview _head -> ia
+    } = (`runJ` JCfg Nothing csd ks ia) $ do
+
+    let ck' = maybe (throwError NestedTrans) pure =<< joinButton [] mempty ck
+    ck'' <- either (throwError . InvalidComposeKey) (pure . Just) =<< asks (runJ ck')
+
+    local (set cmpKey ck'') $ do
+      i' <- pickInput i
+      o' <- pickOutput o
+
+      -- Extract the other blocks and join them into a keymap
+      let als = extract _KDefAlias ks
+      let lys = extract _KDefLayer ks
+      let srcs = extract _KDefSrc ks
+      (km, fl) <- joinKeymap srcs als lys
+
+      pure $ TCfg i' o' km fl ft ac ksd
 
 -- | Monad in which we join, just Except over Reader
 newtype J a = J { unJ :: ExceptT JoinError (Reader JCfg) a }
@@ -132,163 +168,35 @@ runJ j = runReader (runExceptT $ unJ j)
 --------------------------------------------------------------------------------
 -- $full
 
--- | Turn a list of KExpr into a CfgToken, throwing errors when encountered.
---
--- NOTE: We start joinConfig with the default JCfg, but joinConfig might locally
--- override settings by things it reads from the config itself.
-joinConfigIO :: HasLogFunc e => [KExpr] -> RIO e CfgToken
-joinConfigIO es = case runJ joinConfig $ defJCfg es of
-  Left  e -> throwM e
-  Right c -> pure c
+-- | Like 'joinConfig' but throw the encountered error.
+joinConfigIO :: HasLogFunc e => PCfg -> RIO e TCfg
+joinConfigIO (joinConfig -> Left  e) = throwM e
+joinConfigIO (joinConfig -> Right c) = pure c
 
 -- | Extract anything matching a particular prism from a list
 extract :: Prism' a b -> [a] -> [b]
 extract p = mapMaybe (preview p)
 
-data SingletonError
-  = None
-  | Duplicate
-
--- | Take the head of a list, or else throw the appropriate error
-onlyOne :: [a] -> Either SingletonError a
-onlyOne xs = case uncons xs of
-  Just (x, []) -> Right x
-  Just _       -> Left Duplicate
-  Nothing      -> Left None
-
--- | Take the one and only block matching the prism from the expressions
-oneBlock :: Text -> Prism' KExpr a -> J a
-oneBlock t l = (view kes <&> (extract l >>> onlyOne)) >>= \case
-  Right x        -> pure x
-  Left None      -> throwError $ MissingBlock t
-  Left Duplicate -> throwError $ DuplicateBlock t
-
--- | Update the JCfg and then run the entire joining process
-joinConfig :: J CfgToken
-joinConfig = getOverride >>= \cfg -> local (const cfg) joinConfig'
-
--- | Join an entire 'CfgToken' from the current list of 'KExpr'.
-joinConfig' :: J CfgToken
-joinConfig' = do
-
-  es <- view kes
-
-  -- Extract the IO settings
-  i  <- getI
-  o  <- getO
-  ft <- getFT
-  al <- getAllow
-  ksd <- getKeySeqDelay
-
-  -- Extract the other blocks and join them into a keymap
-  let als = extract _KDefAlias es
-  let lys = extract _KDefLayer es
-  let srcs = extract _KDefSrc es
-  (km, fl) <- joinKeymap srcs als lys
-
-  pure $ CfgToken
-    { _snk   = o
-    , _src   = i
-    , _km    = km
-    , _fstL  = fl
-    , _flt   = ft
-    , _allow = al
-    , _ksd   = ksd
-    }
-
 --------------------------------------------------------------------------------
 -- $settings
---
--- TODO: This needs to be seriously refactored: all this code duplication is a
--- sign that something is amiss.
-
--- | Return a JCfg with all settings from defcfg applied to the env's JCfg
-getOverride :: J JCfg
-getOverride = do
-  -- FIXME: duplicates don't throw errors
-  env <- ask
-  cfg <- oneBlock "defcfg" _KDefCfg
-  let getB = joinButton [] M.empty
-  let go e v = case v of
-        SCmpSeq b  -> getB b >>= maybe (throwError InvalidComposeKey)
-                                       (\b' -> pure $ set cmpKey b' e)
-        SImplArnd ia -> pure $ set implArnd ia e
-        _ -> pure e
-  foldM go env cfg
 
 -- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
-runLF :: HasLogFunc lf => RIO lf a -> lf -> IO a
-runLF = flip runRIO
-
--- | Extract the KeySource-loader from the 'KExpr's
-getI :: J (LogFunc -> IO (Acquire KeySource))
-getI = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SIToken $ cfg of
-    Right i          -> pickInput i
-    Left  None       -> throwError $ MissingSetting "input"
-    Left  Duplicate  -> throwError $ DuplicateSetting "input"
-
--- | Extract the KeySource-loader from a 'KExpr's
-getO :: J (LogFunc -> IO (Acquire KeySink))
-getO = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SOToken $ cfg of
-    Right o         -> pickOutput o
-    Left  None      -> throwError $ MissingSetting "input"
-    Left  Duplicate -> throwError $ DuplicateSetting "input"
-
--- | Extract the fallthrough setting
-getFT :: J Bool
-getFT = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SFallThrough $ cfg of
-    Right b        -> pure b
-    Left None      -> pure False
-    Left Duplicate -> throwError $ DuplicateSetting "fallthrough"
-
--- | Extract the allow-cmd setting
-getAllow :: J Bool
-getAllow = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SAllowCmd $ cfg of
-    Right b        -> pure b
-    Left None      -> pure False
-    Left Duplicate -> throwError $ DuplicateSetting "allow-cmd"
-
--- | Extract the cmp-seq-delay setting
-getCmpSeqDelay :: J (Maybe Int)
-getCmpSeqDelay = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SCmpSeqDelay $ cfg of
-    Right 0        -> pure Nothing
-    Right b        -> pure (Just b)
-    Left None      -> pure Nothing
-    Left Duplicate -> throwError $ DuplicateSetting "cmp-seq-delay"
-
--- | Extract the key-seq-delay setting
-getKeySeqDelay :: J (Maybe Int)
-getKeySeqDelay = do
-  cfg <- oneBlock "defcfg" _KDefCfg
-  case onlyOne . extract _SKeySeqDelay $ cfg of
-    Right 0        -> pure Nothing
-    Right b        -> pure (Just b)
-    Left None      -> pure (Just 1)
-    Left Duplicate -> throwError $ DuplicateSetting "key-seq-delay"
+lfToJ :: HasLogFunc lf => RIO lf a -> J (lf -> IO a)
+lfToJ = pure . flip runRIO
 
 #ifdef linux_HOST_OS
 
 -- | The Linux correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput (KDeviceSource f)   = pure $ runLF (deviceSource64 f)
+pickInput (KDeviceSource f)   = lfToJ (deviceSource64 f)
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Linux correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
-pickOutput (KUinputSink t init) = pure $ runLF (uinputSink cfg)
-  where cfg = defUinputCfg { _keyboardName = unpack t
-                           , _postInit     = unpack <$> init }
+pickOutput (KUinputSink t init) = lfToJ (uinputSink cfg')
+  where cfg' = defUinputCfg { _keyboardName = unpack t
+                            , _postInit     = unpack <$> init }
 pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
@@ -298,13 +206,13 @@ pickOutput KKextSink            = throwError $ InvalidOS "KextSink"
 
 -- | The Windows correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput KLowLevelHookSource = pure $ runLF llHook
+pickInput KLowLevelHookSource = lfToJ llHook
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
 pickInput (KIOKitSource _)    = throwError $ InvalidOS "IOKitSource"
 
 -- | The Windows correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
-pickOutput (KSendEventSink di) = pure $ runLF (sendEventKeySink di)
+pickOutput (KSendEventSink di) = lfToJ (sendEventKeySink di)
 pickOutput (KUinputSink _ _)   = throwError $ InvalidOS "UinputSink"
 pickOutput KKextSink           = throwError $ InvalidOS "KextSink"
 
@@ -314,13 +222,13 @@ pickOutput KKextSink           = throwError $ InvalidOS "KextSink"
 
 -- | The Mac correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
-pickInput (KIOKitSource name) = pure $ runLF (iokitSource (unpack <$> name))
+pickInput (KIOKitSource name) = lfToJ (iokitSource (unpack <$> name))
 pickInput (KDeviceSource _)   = throwError $ InvalidOS "DeviceSource"
 pickInput KLowLevelHookSource = throwError $ InvalidOS "LowLevelHookSource"
 
 -- | The Mac correspondence between OToken and actual code
 pickOutput :: OToken -> J (LogFunc -> IO (Acquire KeySink))
-pickOutput KKextSink            = pure $ runLF kextSink
+pickOutput KKextSink            = lfToJ kextSink
 pickOutput (KUinputSink _ _)    = throwError $ InvalidOS "UinputSink"
 pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 
@@ -396,8 +304,10 @@ joinButton ns als =
       else throwError $ MissingLayer t
 
     -- Various compound buttons
-    KComposeSeq bs     -> do csd <- getCmpSeqDelay
-                             c   <- view cmpKey
+    KComposeSeq bs     -> do csd <- view cmpSeqDelay
+                             c   <- view cmpKey >>= \case
+                               Just c  -> pure c
+                               Nothing -> throwError CmpSeqDisabled
                              csd' <- for csd $ go . KPause . fi
                              jst $ tapMacro . (c:) . maybe id (:) csd' <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
@@ -474,10 +384,12 @@ joinLayer ::
   -> Sources                       -- ^ Mapping of names to source layer
   -> DefLayer                      -- ^ The layer token to join
   -> J (Text, [(Keycode, Button)]) -- ^ The resulting tuple
-joinLayer als ns srcs l@(DefLayer n settings) = do
-  let bs = settings ^.. each . _LButton
-  assocSrc <- getAssocSrc l
-  implAround <- getImplAround l
+joinLayer _ _ _ (DefLayer n DefLayerSettings{_lSrcName  = _ : _ : _}) = throwError $ DuplicateLayerSetting n "source"
+joinLayer _ _ _ (DefLayer n DefLayerSettings{_lImplArnd = _ : _ : _}) = throwError $ DuplicateLayerSetting n "implicit-around"
+joinLayer als ns srcs (DefLayer n settings) = do
+  let bs = settings^.lButtons
+  let assocSrc = settings^?lSrcName._head
+  let implAround = settings^?lImplArnd._head
 
   src <- case M.lookup assocSrc srcs of
     Just src -> pure $ src^.keycodes
@@ -492,18 +404,6 @@ joinLayer als ns srcs l@(DefLayer n settings) = do
         Just b' -> pure $ (kc, b') : acc
   maybe id (local . set implArnd) implAround $
     (n,) <$> foldM f [] (zip src bs)
-
-getAssocSrc :: DefLayer -> J (Maybe Text)
-getAssocSrc (DefLayer n settings) = case onlyOne (settings ^.. each . _LSrcName) of
-  Right x        -> pure $ Just x
-  Left None      -> pure Nothing
-  Left Duplicate -> throwError $ DuplicateLayerSetting n "source"
-
-getImplAround :: DefLayer -> J (Maybe ImplArnd)
-getImplAround (DefLayer n settings) = case onlyOne (settings ^.. each . _LImplArnd) of
-  Right x        -> pure $ Just x
-  Left None      -> pure Nothing
-  Left Duplicate -> throwError $ DuplicateLayerSetting n "implicit-around"
 
 --------------------------------------------------------------------------------
 -- $test

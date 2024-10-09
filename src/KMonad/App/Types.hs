@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
 module KMonad.App.Types
-  ( AppCfg(..)
-  , AppEnv(..)
+  ( AppEnv(..)
   , KEnv(..)
-  , HasAppCfg(..)
+  , HasCfg(..)
   , HasAppEnv(..)
   , HasKEnv(..)
   )
@@ -13,8 +13,8 @@ import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
 import KMonad.Keyboard
 import KMonad.Model.Action
-import KMonad.Model.Button
 import KMonad.Model.BEnv
+import KMonad.Model.Cfg
 
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
@@ -22,9 +22,9 @@ import qualified KMonad.Model.Sluice   as Sl
 import qualified KMonad.Model.Keymap   as Km
 
 --------------------------------------------------------------------------------
--- $appcfg
+-- $appenv
 --
--- The 'AppCfg' and 'AppEnv' records store the configuration and runtime
+-- The 'ACfg' and 'AppEnv' records store the configuration and runtime
 -- environment of KMonad's app-loop respectively. This contains nearly all of
 -- the components required to run KMonad.
 --
@@ -39,28 +39,12 @@ import qualified KMonad.Model.Keymap   as Km
 
 -- | Record of all the configuration options required to run KMonad's core App
 -- loop.
-data AppCfg = AppCfg
-  { _keySinkDev   :: Acquire KeySink   -- ^ How to open a 'KeySink'
-  , _keySourceDev :: Acquire KeySource -- ^ How to open a 'KeySource'
-  , _keymapCfg    :: LMap Button       -- ^ The map defining the 'Button' layout
-  , _firstLayer   :: LayerTag          -- ^ Active layer when KMonad starts
-  , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
-  , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
-  , _startDelay   :: Milliseconds      -- ^ How long to wait before acquiring the input keyboard
-  , _keyOutDelay  :: Maybe Milliseconds -- ^ How long to wait after each key event outputted
-  }
-makeClassy ''AppCfg
 
 
 -- | Environment of a running KMonad app-loop
 data AppEnv = AppEnv
   { -- Stored copy of cfg
-    _keAppCfg   :: AppCfg
-
-    -- General IO
-  , _keLogFunc  :: LogFunc
-  , _keySink    :: KeySink
-  , _keySource  :: KeySource
+    _ecfg   :: ECfg
 
     -- Pull chain
   , _dispatch   :: Dp.Dispatch
@@ -68,37 +52,36 @@ data AppEnv = AppEnv
   , _sluice     :: Sl.Sluice
 
     -- Other components
-  , _keymap     :: Km.Keymap
   , _outHooks   :: Hs.Hooks
   , _outVar     :: TMVar KeyEvent
   }
 makeClassy ''AppEnv
 
-instance HasLogFunc AppEnv where logFuncL = keLogFunc
-instance HasAppCfg  AppEnv where appCfg   = keAppCfg
+instance HasLogFunc AppEnv  where logFuncL = ecfg . logging
+instance HasCfg AppEnv 'Env where cfg      = ecfg
 
 --------------------------------------------------------------------------------
 -- $kenv
 --
 
--- | The complete environment capable of satisfying 'MonadK'
+-- | The complete environment capable of satisfying 'MonadK' for a single key
 data KEnv = KEnv
   { _kAppEnv :: AppEnv -- ^ The app environment containing all the components
   , _kBEnv   :: BEnv   -- ^ The environment describing the currently active button
   }
 makeClassy ''KEnv
 
-instance HasAppCfg  KEnv where appCfg       = kAppEnv.appCfg
-instance HasAppEnv  KEnv where appEnv       = kAppEnv
-instance HasBEnv    KEnv where bEnv         = kBEnv
-instance HasLogFunc KEnv where logFuncL     = kAppEnv.logFuncL
+instance HasCfg KEnv 'Env where cfg       = kAppEnv.cfg
+instance HasAppEnv   KEnv where appEnv    = kAppEnv
+instance HasBEnv     KEnv where bEnv      = kBEnv
+instance HasLogFunc  KEnv where logFuncL  = kAppEnv.logFuncL
 
 -- | Hook up all the components to the different 'MonadK' functionalities
 instance MonadK (RIO KEnv) where
   -- Binding is found in the stored 'BEnv'
   myBinding = view (bEnv.binding)
 
-instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
+instance (HasAppEnv e, HasCfg e 'Env, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
   emit e = view outVar >>= atomically . flip putTMVar e
   -- emit e = view keySink >>= flip emitKey e
