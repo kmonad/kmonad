@@ -10,15 +10,16 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Args.Cmd
-  ( Cmd(..)
-  , HasCmd(..)
-  , getCmd
+  ( CmdL(..)
+  , HasCmdL(..)
+  , getCmdL
   )
 where
 
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP, implArndButtons)
 import KMonad.Args.TH (gitHash)
-import KMonad.Args.Types (DefSetting(..))
+import KMonad.Args.Types
+import KMonad.Model.Cfg
 import Paths_kmonad (version)
 
 import qualified KMonad.Parsing as M  -- [M]egaparsec functionality
@@ -32,30 +33,19 @@ import Options.Applicative
 --
 -- The different things KMonad can be instructed to do.
 
--- | Record describing the instruction to KMonad
-data Cmd = Cmd
-  { _cfgFile   :: FilePath     -- ^ Which file to read the config from
+-- | Record describing the instruction to KMonad on the command line.
+data CmdL = CmdL
+  { _ccfg :: CCfg         -- ^ Non command line specific options
   , _dryRun    :: Bool         -- ^ Flag to indicate we are only test-parsing
-  , _logLvl    :: LogLevel     -- ^ Level of logging to use
-  , _strtDel   :: Milliseconds -- ^ How long to wait before acquiring the input keyboard
-
-    -- All 'KDefCfg' options of a 'KExpr'
-  , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
-  , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
-  , _cmpSeq    :: Maybe DefSetting -- ^ Key to use for compose-key sequences
-  , _cmpSeqDelay :: Maybe DefSetting -- ^ Specify compose sequence key delays
-  , _keySeqDelay :: Maybe DefSetting -- ^ Specify key event output delays
-  , _implArnd  :: Maybe DefSetting -- ^ How to handle implicit `around`s
-  , _oToken    :: Maybe DefSetting -- ^ How to emit the output
-  , _iToken    :: Maybe DefSetting -- ^ How to capture the input
   }
-  deriving Show
-makeClassy ''Cmd
+makeClassy ''CmdL
+instance HasCfg CmdL 'Cmd where
+  cfg f x@CmdL{_ccfg = c} = f c <&> \c' -> x{_ccfg = c'}
 
 -- | Parse 'Cmd' from the evocation of this program
-getCmd :: IO Cmd
-getCmd = customExecParser (prefs showHelpOnEmpty) $
-  info (cmdP <**> versioner <**> helper)
+getCmdL :: IO CmdL
+getCmdL = customExecParser (prefs showHelpOnEmpty) $
+  info (cmdLP <**> versioner <**> helper)
     (  fullDesc
     <> progDesc "Start KMonad"
     <> header   "kmonad - an onion of buttons."
@@ -75,20 +65,22 @@ versioner = infoOption (showVersion version <> ", commit " <> fromMaybe "?" $(gi
 -- The different command-line parsers
 
 -- | Parse the full command
-cmdP :: Parser Cmd
-cmdP =
-  Cmd <$> fileP
-      <*> dryrunP
-      <*> levelP
-      <*> startDelayP
-      <*> cmdAllowP
-      <*> fallThrghP
-      <*> cmpSeqP
-      <*> cmpSeqDelayP
-      <*> keySeqDelayP
-      <*> implArndP
-      <*> oTokenP
-      <*> iTokenP
+cmdLP :: Parser CmdL
+cmdLP = CmdL <$> ccfgP <*> dryrunP
+ccfgP :: Parser CCfg
+ccfgP =
+  CCfg
+    <$> iTokenP
+    <*> oTokenP
+    <*> levelP
+    <*> cmpSeqP
+    <*> cmpSeqDelayP
+    <*> fileP
+    <*> fallThrghP
+    <*> allowCmdP
+    <*> startDelayP
+    <*> keySeqDelayP
+    <*> implArndP
 
 -- | Parse a filename that points us at the config-file
 fileP :: Parser FilePath
@@ -117,25 +109,37 @@ levelP = option f
     f = maybeReader $ flip lookup [ ("debug", LevelDebug), ("warn", LevelWarn)
                                   , ("info",  LevelInfo),  ("error", LevelError) ]
 
--- | Allow the execution of arbitrary shell-commands
-cmdAllowP :: Parser DefSetting
-cmdAllowP = SAllowCmd <$> switch
-  (  long "allow-cmd"
-  <> short 'c'
-  <> help "Whether to allow the execution of arbitrary shell-commands"
-  )
+allowCmdP :: Parser (Maybe Bool)
+allowCmdP =
+  flag' (Just True)
+    (  long "allow-cmd"
+    <> short 'c'
+    <> help "Force allow execution of arbitrary shell-commands"
+    )
+  <|> flag' (Just False)
+    (  long "no-allow-cmd"
+    <> help "Force disallow execution of shell-commands"
+    )
+  <|> pure Nothing
 
 -- | Re-emit unhandled events
-fallThrghP :: Parser DefSetting
-fallThrghP = SFallThrough <$> switch
-  (  long "fallthrough"
-  <> short 'f'
-  <> help "Whether to simply re-emit unhandled events"
-  )
+fallThrghP :: Parser (Maybe Bool)
+fallThrghP =
+  flag' (Just True)
+    (  long "fallthrough"
+    <> short 'f'
+    <> help "Force enable fallthrough option to re-emit unhandled events"
+    )
+  <|> flag' (Just False)
+    (  long "no-fallthrough"
+    <> help "Force disable fallthrough option. Unhandled events will be discarded."
+    )
+  <|> pure Nothing
+
 
 -- | Key to use for compose-key sequences
-cmpSeqP :: Parser (Maybe DefSetting)
-cmpSeqP = optional $ SCmpSeq <$> option
+cmpSeqP :: Parser (Maybe DefButton)
+cmpSeqP = optional $ option
   (tokenParser keywordButtons <|> megaReadM (M.choice noKeywordButtons))
   (  long "cmp-seq"
   <> short 's'
@@ -144,24 +148,24 @@ cmpSeqP = optional $ SCmpSeq <$> option
   )
 
 -- | Specify compose sequence key delays.
-cmpSeqDelayP :: Parser (Maybe DefSetting)
-cmpSeqDelayP = optional $ SCmpSeqDelay <$> option (fromIntegral <$> megaReadM numP)
+cmpSeqDelayP :: Parser (Maybe Int)
+cmpSeqDelayP = optional $ option (megaReadM numP)
   (  long  "cmp-seq-delay"
   <> metavar "TIME"
   <> help  "How many ms to wait between each key of a compose sequence"
   )
 
 -- | Specify key event output delays.
-keySeqDelayP :: Parser (Maybe DefSetting)
-keySeqDelayP = optional $ SKeySeqDelay <$> option (fromIntegral <$> megaReadM numP)
+keySeqDelayP :: Parser (Maybe Int)
+keySeqDelayP = optional $ option (megaReadM numP)
   (  long  "key-seq-delay"
   <> metavar "TIME"
   <> help  "How many ms to wait between each key event outputted"
   )
 
 -- | How to handle implicit `around`s
-implArndP :: Parser (Maybe DefSetting)
-implArndP = optional $ SImplArnd <$> option
+implArndP :: Parser (Maybe ImplArnd)
+implArndP = optional $ option
   (maybeReader $ \x -> implArndButtons ^? each . filtered ((x ==) . unpack . view _1) . _2)
   (  long "implicit-around"
   <> long "ia"
@@ -170,8 +174,8 @@ implArndP = optional $ SImplArnd <$> option
   )
 
 -- | Where to emit the output
-oTokenP :: Parser (Maybe DefSetting)
-oTokenP = optional $ SOToken <$> option (tokenParser otokens)
+oTokenP :: Parser (Maybe OToken)
+oTokenP = optional $ option (tokenParser otokens)
   (  long "output"
   <> short 'o'
   <> metavar "OTOKEN"
@@ -179,8 +183,8 @@ oTokenP = optional $ SOToken <$> option (tokenParser otokens)
   )
 
 -- | How to capture the keyboard input
-iTokenP :: Parser (Maybe DefSetting)
-iTokenP = optional $ SIToken <$> option (tokenParser itokens)
+iTokenP :: Parser (Maybe IToken)
+iTokenP = optional $ option (tokenParser itokens)
   (  long "input"
   <> short 'i'
   <> metavar "ITOKEN"
