@@ -35,10 +35,8 @@ module KMonad.Args.Parser
 where
 
 import KMonad.Parsing
-import KMonad.Args.Types
 import KMonad.Keyboard
-import KMonad.Keyboard.ComposeSeq
-import KMonad.Model.Cfg
+import KMonad.Model
 
 
 

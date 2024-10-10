@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
-module KMonad.App.Types
+module KMonad.Model.App
   ( AppEnv(..)
   , KEnv(..)
   , HasCfg(..)
@@ -12,9 +12,9 @@ where
 import UnliftIO.Process (CreateProcess(close_fds), createProcess_, shell)
 
 import KMonad.Keyboard
-import KMonad.Model.Action
-import KMonad.Model.BEnv
 import KMonad.Model.Cfg
+import KMonad.Model.BEnv
+import KMonad.Model.Action
 
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
