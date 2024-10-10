@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Changed
 
+- Modified `tap-next` and `tap-hold-next` to decide without considering
+  button releases (#884)
+
 ### Fixed
 
 - Fixed `tapMacro` and `tapMacroRelease` behaviour which was slightly broken in #873 (#906)

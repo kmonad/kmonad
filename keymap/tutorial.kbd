@@ -801,9 +801,9 @@
 
   The `tap-next` button takes 2 buttons, one for tapping, one for holding, and
   combines them into a single button. When pressed, if the next event is its own
-  release, we tap the 'tapping' button. In all other cases we first press the
-  'holding' button then we handle the event. Then when the `tap-next` gets
-  released, we release the 'holding' button.
+  release, we tap the 'tapping' button. If another button is pressed after this one
+  we first press the 'holding' button then we handle the event.
+  Then when the `tap-next` gets released, we release the 'holding' button.
 
   So, using our mini-language, we set foo to:
     (tap-next x lsft)
