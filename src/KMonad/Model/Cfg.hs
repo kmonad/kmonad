@@ -3,10 +3,10 @@
 -- which we want to fully export
 module KMonad.Model.Cfg where
 
-import KMonad.Args.Types
 import KMonad.Keyboard
 import KMonad.Model.Button
 import KMonad.Model.Keymap
+import KMonad.Model.Parsing
 import KMonad.Model.TH
 
 data Stage

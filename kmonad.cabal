@@ -90,22 +90,21 @@ library
       Prelude
   exposed-modules:
       KMonad.App
-      KMonad.App.Main
-      KMonad.App.Types
       KMonad.Args
       KMonad.Args.Cmd
       KMonad.Args.Parser
       KMonad.Args.Joiner
       KMonad.Args.TH
-      KMonad.Args.Types
       KMonad.Model
       KMonad.Model.Action
+      KMonad.Model.App
       KMonad.Model.BEnv
       KMonad.Model.Button
       KMonad.Model.Cfg
       KMonad.Model.Dispatch
       KMonad.Model.Hooks
       KMonad.Model.Keymap
+      KMonad.Model.Parsing
       KMonad.Model.Sluice
       KMonad.Model.TH
       KMonad.Gesture
