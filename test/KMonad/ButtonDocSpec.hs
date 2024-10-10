@@ -1,8 +1,7 @@
 module KMonad.ButtonDocSpec (spec) where
 
-import KMonad.Model.Cfg
 import KMonad.Args.Parser
-import KMonad.Args.Types
+import KMonad.Model
 
 import Data.Data
 import qualified RIO.Text as T

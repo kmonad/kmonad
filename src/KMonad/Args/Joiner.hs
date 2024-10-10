@@ -24,11 +24,7 @@ module KMonad.Args.Joiner
   )
 where
 
-import KMonad.Args.Types
-
-import KMonad.Model.Action
-import KMonad.Model.Button
-import KMonad.Model.Cfg
+import KMonad.Model
 import KMonad.Keyboard
 
 #ifdef linux_HOST_OS

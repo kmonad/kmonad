@@ -13,8 +13,7 @@ module KMonad.Args.TH (gitHash) where
 
 import Control.Monad.Trans.Maybe
 
-import Language.Haskell.TH (Exp, Q)
-import Language.Haskell.TH.Syntax (runIO)
+import Language.Haskell.TH (Exp, Q, runIO)
 import UnliftIO.Directory (findExecutable)
 import UnliftIO.Process (readProcessWithExitCode)
 
