@@ -1,10 +1,8 @@
 module KMonad.ComposeSeqSpec (spec) where
 
 import KMonad.Args.Parser
-import KMonad.Args.Types
-import KMonad.Model.Cfg
-import KMonad.Keyboard.ComposeSeq
-import KMonad.Keyboard.Keycode
+import KMonad.Model
+import KMonad.Keyboard
 import KMonad.Parsing
 
 import qualified RIO.NonEmpty as N
