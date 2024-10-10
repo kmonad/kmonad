@@ -62,17 +62,17 @@ data DefButton
   | KAroundNext DefButton                  -- ^ Surround a future button
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
-  | KStepped [DefButton]                   -- ^ Do different things, one-by-one
+  | KStepped (NonEmpty DefButton)          -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
   | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's "alone"
   | KAroundImplicit DefButton DefButton    -- ^ Wrap 1 button around another
   | KAroundNextTimeout Int DefButton DefButton
-  | KTapMacro [DefButton] (Maybe Int)
+  | KTapMacro (NonEmpty DefButton) (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
-  | KTapMacroRelease [DefButton] (Maybe Int)
+  | KTapMacroRelease (NonEmpty DefButton) (Maybe Int)
     -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
-  | KComposeSeq [DefButton]                -- ^ Compose-key sequence
+  | KComposeSeq (NonEmpty DefButton)       -- ^ Compose-key sequence
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer

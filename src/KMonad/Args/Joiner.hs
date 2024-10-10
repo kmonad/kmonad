@@ -44,9 +44,7 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (headMaybe, intersperse)
-import qualified RIO.NonEmpty as N
-import RIO.Partial (fromJust)
+import qualified RIO.NonEmpty as NE (cons, intersperse)
 import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
 
@@ -268,7 +266,7 @@ joinButton ns als =
       go     = unnest . joinButton ns als
       jst    = fmap Just
       fi     = fromIntegral
-      isps l = traverse go . maybe l ((`intersperse` l) . KPause . fi)
+      isps l = traverse go . maybe l ((`NE.intersperse` l) . KPause . fi)
   in \case
     -- Variable dereference
     KRef t -> case M.lookup t als of
@@ -305,7 +303,7 @@ joinButton ns als =
                                Just c  -> pure c
                                Nothing -> throwError CmpSeqDisabled
                              csd' <- for csd $ go . KPause . fi
-                             jst $ tapMacro . (c:) . maybe id (:) csd' <$> isps bs csd
+                             jst $ tapMacro . NE.cons c . maybe id NE.cons csd' <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
     KBeforeAfterNext b a -> jst $ beforeAfterNext <$> go b <*> go a
     KTapMacroRelease bs mbD ->
@@ -354,7 +352,7 @@ joinSources = foldM joiner mempty
      | otherwise            = pure $ M.insert n src sources
     where
      dups :: [Keycode]
-     dups = N.head <$> filter (not . null . N.tail) (N.groupAllWith id ks)
+     dups = head <$> filter (not . null . tail) (groupAllWith id ks)
 
 --------------------------------------------------------------------------------
 -- $kmap
@@ -362,16 +360,16 @@ joinSources = foldM joiner mempty
 -- | Join the defsrc, defalias, and deflayer layers into a Keymap of buttons and
 -- the name signifying the initial layer to load.
 joinKeymap :: [DefSrc] -> [DefAlias] -> [DefLayer] -> J (LMap Button, LayerTag)
-joinKeymap []   _   _   = throwError $ MissingBlock "defsrc"
-joinKeymap _    _   []  = throwError $ MissingBlock "deflayer"
-joinKeymap srcs als lys = do
+joinKeymap []   _   _          = throwError $ MissingBlock "defsrc"
+joinKeymap _    _   []         = throwError $ MissingBlock "deflayer"
+joinKeymap srcs als lys@(l1:_) = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
   nms   <- foldM f [] $ map _layerName lys     -- Extract all names
   als'  <- joinAliases nms als                 -- Join aliases into 1 hashmap
   srcs' <- joinSources  srcs                   -- Join all sources into 1 hashmap
   lys'  <- mapM (joinLayer als' nms srcs') lys -- Join all layers
   -- Return the layerstack and the name of the first layer
-  pure (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
+  pure (L.mkLayerStack lys', _layerName l1)
 
 -- | Check and join 1 deflayer.
 joinLayer ::

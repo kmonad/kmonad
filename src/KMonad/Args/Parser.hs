@@ -226,11 +226,11 @@ pauseP = KPause . fromIntegral <$> (char 'P' *> numP)
 -- | #()-syntax tap-macro
 rmTapMacroP :: Parser DefButton
 rmTapMacroP =
-  char '#' *> paren (KTapMacro <$> some buttonP
+  char '#' *> paren (KTapMacro <$> some1 buttonP
                                <*> optional (keywordP "delay" numP))
 
 -- | Compose-key sequence
-composeSeqP :: Parser [DefButton]
+composeSeqP :: Parser (NonEmpty DefButton)
 composeSeqP = do
   -- Lookup 1 character in the compose-seq list
   c <- anySingle <?> "special character"
@@ -239,19 +239,19 @@ composeSeqP = do
          Just b  -> pure $ b^._1
 
   -- If matching, parse a button-sequence from the stored text
-  case runParser (some buttonP) "" s of
+  case runParser (some1 buttonP) "" s of
     -- Parse error never reaches the user. They simply get a message about an unexpected character.
     Left  _ -> fail "Could not parse compose sequence"
     Right b -> pure b
 
 -- | Parse a dead-key sequence as a `+` followed by some symbol
-deadkeySeqP :: Parser [DefButton]
+deadkeySeqP :: Parser (NonEmpty DefButton)
 deadkeySeqP = do
   _ <- prefix (char '+')
   c <- satisfy (`elem` ("~'^`\"," :: String))
   case runParser buttonP "" (T.singleton c) of
     Left  _ -> fail "Could not parse deadkey sequence"
-    Right b -> pure [b]
+    Right b -> pure $ b :| []
 
 -- | Parse any button
 buttonP :: Parser DefButton
@@ -267,7 +267,7 @@ keywordButtons =
   , ("press-only"     , KPressOnly   <$> keycodeP)
   , ("release-only"   , KReleaseOnly <$> keycodeP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
-  , ("stepped"        , KStepped     <$> some buttonP)
+  , ("stepped"        , KStepped     <$> some1 buttonP)
   , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-hold-next"
     , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
@@ -296,9 +296,9 @@ keywordButtons =
   , ("before-after-next", KBeforeAfterNext <$> buttonP <*> buttonP)
   , ("around-next-timeout", KAroundNextTimeout <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-macro"
-    , KTapMacro <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+    , KTapMacro <$> lexeme (some1 buttonP) <*> optional (keywordP "delay" numP))
   , ("tap-macro-release"
-    , KTapMacroRelease <$> lexeme (some buttonP) <*> optional (keywordP "delay" numP))
+    , KTapMacroRelease <$> lexeme (some1 buttonP) <*> optional (keywordP "delay" numP))
   , ("cmd-button"     , KCommand     <$> lexeme textP <*> optional (lexeme textP))
   , ("pause"          , KPause . fromIntegral <$> lexeme numP)
   , ("sticky-key"     , KStickyKey   <$> lexeme numP <*> buttonP)

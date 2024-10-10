@@ -50,6 +50,8 @@ library
     , time
     , unliftio
     , template-haskell
+  if !impl(ghc >= 9.6)
+    build-depends: foldable1-classes-compat == 0.1
   default-extensions:
       ConstraintKinds
       DataKinds

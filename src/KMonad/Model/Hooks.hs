@@ -29,8 +29,6 @@ import Data.Unique
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
 
-import RIO.Partial (fromJust)
-
 import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
@@ -131,7 +129,7 @@ cancelHook hs tag = do
       logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
     Just e' -> do
       logDebug $ "Cancelling hook: " <> display (hashUnique tag)
-      liftIO $ e' ^. hTimeout . to fromJust . action
+      liftIO $ e' ^. hTimeout . _Just . action
 
 
 --------------------------------------------------------------------------------
