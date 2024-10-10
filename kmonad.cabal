@@ -38,6 +38,7 @@ library
     -Wall
   build-depends:
       base >= 4.12 && < 5
+    , foldable1-classes-compat ==0.1
     , cereal
     -- , hspec
     , lens

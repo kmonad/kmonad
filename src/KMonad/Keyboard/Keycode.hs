@@ -25,7 +25,6 @@ where
 import qualified KMonad.Util.MultiMap     as Q
 import qualified RIO.HashSet       as S
 import qualified RIO.Text          as T
-import qualified RIO.Text.Partial  as T (head)
 
 --------------------------------------------------------------------------------
 -- $typ
@@ -823,7 +822,7 @@ instance Display Keycode where
     where cmpName a b =
             -- Prefer the shortest, and if equal, lowercased version
             case compare (T.length a) (T.length b) of
-              EQ -> compare (T.head b) (T.head a)
+              EQ -> compare (b^?_head) (a^?_head)
               o  -> o
 
 --------------------------------------------------------------------------------
