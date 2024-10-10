@@ -41,7 +41,7 @@ int exit_sink() {
 int init_sink() {
     kern_return_t kr;
     connect = IO_OBJECT_NULL;
-    service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceNameMatching(pqrs::karabiner_virtual_hid_device::get_virtual_hid_root_name()));
+    service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceNameMatching(pqrs::karabiner_virtual_hid_device::get_virtual_hid_root_name()));
     if (!service) {
         print_iokit_error("IOServiceGetMatchingService");
         return 1;
