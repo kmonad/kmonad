@@ -18,8 +18,7 @@ where
 
 import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP, implArndButtons)
 import KMonad.Args.TH (gitHash)
-import KMonad.Args.Types
-import KMonad.Model.Cfg
+import KMonad.Model
 import Paths_kmonad (version)
 
 import qualified KMonad.Parsing as M  -- [M]egaparsec functionality
