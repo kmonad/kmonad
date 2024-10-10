@@ -1,7 +1,5 @@
 module KMonad.Model.TH (mkStages) where
 
-import qualified RIO.NonEmpty as N
-
 import Language.Haskell.TH
 
 -- | Generate alias for the different stages of `Cfg`.
@@ -16,8 +14,8 @@ mkStages cfgN = do
     KindedTV _ _ xT -> pure xT
   TyConI (DataD [] _ [] _ stageCs _) <- reify stagesN
   stageNs <- for stageCs $ \case NormalC n [] -> pure n; _ -> fail "Invalid stage constructor"
-  stageNs' <- for stageNs $ \n -> maybe (fail "Constructor without name") (pure . (,n)) . N.nonEmpty $ nameBase n
-  let aliases = N.groupAllWith (N.head . fst) stageNs' >>= \case
+  stageNs' <- for stageNs $ \n -> maybe (fail "Constructor without name") (pure . (,n)) . nonEmpty $ nameBase n
+  let aliases = groupAllWith (head . fst) stageNs' >>= \case
        (prefix :| _, con) :| [] -> [([prefix], con)]
        nonUniqs -> first toList <$> toList nonUniqs
   let vts = vbts <&> \(nameBase -> name, _, type') -> (mkName name, type')

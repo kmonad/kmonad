@@ -555,23 +555,18 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
 
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.
-tapMacro :: [Button] -> Button
-tapMacro bs = mkButton' (go False bs) (pure ()) (go True bs)
+tapMacro :: NonEmpty Button -> Button
+tapMacro bs = mkButton' (foldrMap1 press go bs) (pure ()) (foldrMap1 tap go bs)
   where
-    go _ []      = pure ()
-    go False [b]     = press b
-    go True [b] = tap b
-    go forceTap (b:rst) = tap b >> go forceTap rst
+    go b = (tap b >>)
 
 -- | Create a 'Button' that performs a series of taps on press,
 -- except for the last Button, which is tapped on release.
-tapMacroRelease :: [Button] -> Button
-tapMacroRelease bs = mkButton' (go False bs) (pure ()) (go True bs)
+tapMacroRelease :: NonEmpty Button -> Button
+tapMacroRelease bs = mkButton' (foldrMap1 tapOnRelease go bs) (pure ()) (foldrMap1 tap go bs)
   where
-    go _ []      = pure ()
-    go False [b]     = awaitMy Release $ tap b >> pure Catch
-    go True [b] = tap b
-    go forceTap (b:rst) = tap b >> go forceTap rst
+    go b = (tap b >>)
+    tapOnRelease b     = awaitMy Release $ tap b >> pure Catch
 
 -- | Switch to a layer for a period of time, then automatically switch back
 layerDelay :: Milliseconds -> LayerTag -> Button
@@ -621,11 +616,10 @@ stickyKey ms b = onPress go
 --
 -- I.e: first it acts as the first button, then as the second, then as the
 -- third, and when finished rotates back to being the first button.
-steppedButton :: [Button] -> Button
+steppedButton :: NonEmpty Button -> Button
 steppedButton bs = onPress $ go bs
   where
-    go [] = undefined
-    go [b] = press b
-    go (b:bs') = do
+    go (b:|[])     = press b
+    go (b:|b':bs') = do
       press b
-      awaitMy Press $ go bs' $> Catch
+      awaitMy Press $ go (b' :| bs') $> Catch
