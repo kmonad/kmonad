@@ -34,16 +34,12 @@ module KMonad.Args.Parser
   )
 where
 
-import KMonad.Prelude hiding (try, bool)
-
 import KMonad.Parsing
-import KMonad.Args.Types
 import KMonad.Keyboard
-import KMonad.Keyboard.ComposeSeq
+import KMonad.Model
 
 
 
-import Data.Char
 import RIO.List (sortBy, find)
 
 
@@ -56,13 +52,13 @@ import qualified Text.Megaparsec.Char.Lexer as L
 -- $run
 
 -- | Try to parse a list of 'KExpr' from 'Text'
-parseTokens :: Text -> Either ParseError [KExpr]
+parseTokens :: Text -> Either ParseError PCfg
 parseTokens t = case runParser configP "" t  of
   Left  e -> Left $ ParseError e
   Right x -> Right x
 
 -- | Load a set of tokens from file, throw an error on parse-fail
-loadTokens :: FilePath -> RIO e [KExpr]
+loadTokens :: FilePath -> RIO e PCfg
 loadTokens pth = (readFileUtf8 pth <&> parseTokens) >>= \case
   Left e   -> throwM e
   Right xs -> pure xs
@@ -122,8 +118,8 @@ statement :: Text -> Parser a -> Parser a
 statement s = paren . (symbol s *>)
 
 -- | Run a parser that parser a bool value
-bool :: Parser Bool
-bool = (symbol "true"  $> True)
+boolP :: Parser Bool
+boolP = (symbol "true"  $> True)
    <|> (symbol "false" $> False)
 
 -- | Parse a LISP-like keyword of the form @:keyword value@
@@ -161,21 +157,23 @@ derefP = prefix (char '@') *> word
 -- Parsers built up from the basic KExpr's
 
 -- | Consume an entire file of expressions and comments
-configP :: Parser [KExpr]
-configP = sc *> exprsP <* eof
+configP :: Parser PCfg
+configP = sc *> lexeme exprsP <* eof
 
 -- | Parse 0 or more KExpr's
-exprsP :: Parser [KExpr]
-exprsP = lexeme . many $ lexeme exprP
+exprsP :: Parser PCfg
+exprsP = fold <$> many (lexeme exprP)
 
 -- | Parse 1 KExpr
-exprP :: Parser KExpr
+exprP :: Parser PCfg
 exprP = paren . choice $
-  [ try (symbol "defcfg")   *> (KDefCfg   <$> defcfgP)
-  , try (symbol "defsrc")   *> (KDefSrc   <$> defsrcP)
-  , try (symbol "deflayer") *> (KDefLayer <$> deflayerP)
-  , try (symbol "defalias") *> (KDefAlias <$> defaliasP)
+  [ try (symbol "defcfg")   *> defcfgP
+  , try (symbol "defsrc")   *> (f KDefSrc   <$> defsrcP)
+  , try (symbol "deflayer") *> (f KDefLayer <$> deflayerP)
+  , try (symbol "defalias") *> (f KDefAlias <$> defaliasP)
   ]
+ where
+  f c x = mempty & keymap .~ [c x]
 
 --------------------------------------------------------------------------------
 -- $but
@@ -269,7 +267,7 @@ keywordButtons =
   , ("press-only"     , KPressOnly   <$> keycodeP)
   , ("release-only"   , KReleaseOnly <$> keycodeP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
-  , ("stepped"        , KStepped     <$> some buttonP)
+  , ("stepped"        , KStepped     <$> some1 buttonP)
   , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-hold-next"
     , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
@@ -359,21 +357,21 @@ implArndP = lexeme . choice $
   : map (\(s, v, _) -> try $ v <$ symbol s) implArndButtons
 
 -- | Parse the DefCfg token
-defcfgP :: Parser DefSettings
-defcfgP = some (lexeme settingP)
+defcfgP :: Parser PCfg
+defcfgP = fold <$> some settingP
 
 -- | All possible configuration options that can be passed in the defcfg block
-settingP :: Parser DefSetting
-settingP = let f s p = symbol s *> p in
-  (lexeme . choice . map try $
-    [ SIToken      <$> f "input"         itokenP
-    , SOToken      <$> f "output"        otokenP
-    , SCmpSeq      <$> f "cmp-seq"       buttonP
-    , SFallThrough <$> f "fallthrough"   bool
-    , SAllowCmd    <$> f "allow-cmd"     bool
-    , SCmpSeqDelay <$> f "cmp-seq-delay" numP
-    , SImplArnd    <$> f "implicit-around" implArndP
-    ])
+settingP :: Parser PCfg
+settingP = let f l s p = symbol s *> p <&> \v -> mempty & l .~ [v] in
+  lexeme . choice . map try $
+    [ f source       "input"            itokenP
+    , f sink         "output"           otokenP
+    , f cmpKey       "cmp-seq"          buttonP
+    , f fallThrough  "fallthrough"      boolP
+    , f allowCmd     "allow-cmd"        boolP
+    , f cmpSeqDelay  "cmp-seq-delay"    numP
+    , f implArnd     "implicit-around"  implArndP
+    ]
 
 --------------------------------------------------------------------------------
 -- $defalias
@@ -395,12 +393,12 @@ defsrcP =
 -- $deflayer
 
 deflayerP :: Parser DefLayer
-deflayerP = DefLayer <$> lexeme word <*> many (lexeme layerSettingP)
+deflayerP = DefLayer <$> lexeme word <*> lexeme (fold <$> many layerSettingP)
 
-layerSettingP :: Parser DefLayerSetting
-layerSettingP =
+layerSettingP :: Parser DefLayerSettings
+layerSettingP = let f l p = p <&> \v -> mempty & l .~ [v] in
   lexeme . choice . map try $
-    [ LSrcName <$> keywordP "source" word
-    , LImplArnd <$> keywordP "implicit-around" implArndP
-    , LButton <$> buttonP
+    [ f lSrcName  $ keywordP "source" word
+    , f lImplArnd $ keywordP "implicit-around" implArndP
+    , f lButtons    buttonP
     ]

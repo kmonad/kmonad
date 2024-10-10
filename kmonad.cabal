@@ -36,8 +36,10 @@ library
       src
   ghc-options:
     -Wall
-    -Wno-name-shadowing
-    -Wno-unused-imports
+    -Wcompat
+    -Widentities
+    -Wpartial-fields
+    -Wredundant-constraints
   build-depends:
       base >= 4.12 && < 5
     , cereal
@@ -45,6 +47,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , transformers
     , optparse-applicative
     , resourcet
     , rio
@@ -53,10 +56,14 @@ library
     , template-haskell
   default-extensions:
       ConstraintKinds
+      DataKinds
       DeriveFunctor
       DeriveGeneric
       DeriveDataTypeable
       DeriveTraversable
+      DeriveAnyClass
+      DerivingStrategies
+      DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
@@ -65,34 +72,45 @@ library
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      NoImplicitPrelude
       OverloadedStrings
+      PatternSynonyms
       RankNTypes
+      StandaloneDeriving
       TemplateHaskell
       TupleSections
       TypeFamilies
+      ViewPatterns
+  other-extensions:
+      CPP
+      NoImplicitPrelude
+      NoFieldSelectors
+      ScopedTypeVariables
+      UndecidableInstances
 
   autogen-modules:
       Paths_kmonad
 
+  other-modules:
+      Prelude
   exposed-modules:
       KMonad.App
-      KMonad.App.Main
-      KMonad.App.Types
       KMonad.Args
       KMonad.Args.Cmd
       KMonad.Args.Parser
       KMonad.Args.Joiner
       KMonad.Args.TH
-      KMonad.Args.Types
       KMonad.Model
       KMonad.Model.Action
+      KMonad.Model.App
       KMonad.Model.BEnv
       KMonad.Model.Button
+      KMonad.Model.Cfg
       KMonad.Model.Dispatch
       KMonad.Model.Hooks
       KMonad.Model.Keymap
+      KMonad.Model.Parsing
       KMonad.Model.Sluice
+      KMonad.Model.TH
       KMonad.Gesture
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq
@@ -103,7 +121,6 @@ library
       KMonad.Parsing
       KMonad.Prelude
       KMonad.Prelude.Imports
-      KMonad.Prelude.Definitions
       KMonad.Util
       KMonad.Util.LayerStack
       KMonad.Util.MultiMap
@@ -157,15 +174,10 @@ executable kmonad
       -threaded
       -rtsopts
       -with-rtsopts=-N
-  main-is:
-      Main.hs
-  default-language:
-      Haskell2010
-  hs-source-dirs:
-      app
-  build-depends:
-      base >= 4.12 && < 5
-    , kmonad
+  main-is: kmonad.hs
+  default-extensions: NoImplicitPrelude
+  default-language: Haskell2010
+  build-depends: kmonad
 
 test-suite spec
   main-is: Spec.hs
@@ -174,12 +186,17 @@ test-suite spec
       test
   ghc-options:
       -Wall
+      -Wcompat
+      -Widentities
+      -Wpartial-fields
+      -Wredundant-constraints
   build-depends:
       base >= 4.12 && < 5
     , kmonad
     , hspec
     , rio
   other-modules:
+      Prelude
       KMonad.ButtonDocSpec
       KMonad.GestureSpec
       KMonad.ComposeSeqSpec
@@ -200,7 +217,6 @@ test-suite spec
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      NoImplicitPrelude
       OverloadedStrings
       RankNTypes
       TemplateHaskell
