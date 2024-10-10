@@ -60,7 +60,7 @@ data DefButton
   | KAroundNext DefButton                  -- ^ Surround a future button
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
-  | KStepped [DefButton]                   -- ^ Do different things, one-by-one
+  | KStepped (NonEmpty DefButton)          -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
   | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's "alone"

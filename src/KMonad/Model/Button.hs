@@ -585,11 +585,10 @@ stickyKey ms b = onPress go
 --
 -- I.e: first it acts as the first button, then as the second, then as the
 -- third, and when finished rotates back to being the first button.
-steppedButton :: [Button] -> Button
+steppedButton :: NonEmpty Button -> Button
 steppedButton bs = onPress $ go bs
   where
-    go [] = undefined
-    go [b] = press b
-    go (b:bs') = do
+    go (b:|[])     = press b
+    go (b:|b':bs') = do
       press b
-      awaitMy Press $ go bs' $> Catch
+      awaitMy Press $ go (b' :| bs') $> Catch
