@@ -499,7 +499,7 @@ multiTap l bs = onPress' tap' $ go bs
       -- 2B. If we do detect the release of the key that triggered this action,
       --     we must now keep waiting to detect another press.
       -- 2C. If we detect another (unrelated) press event we cancel the
-      --     remaining of the multi-tap sequence and trigger a tap on the
+      --     remaining of the multi-tap sequence and trigger a hold on the
       --     current button of the sequence.
       -- 3A. After 2B, if we do not detect a press before the interval is up,
       --     we know a tap occurred, so we tap the current button and we are
@@ -513,7 +513,7 @@ multiTap l bs = onPress' tap' $ go bs
       let doNext pred onTimeout next ms = tHookF InputHook ms onTimeout $ \t -> do
             pr <- pred
             if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
-               | isPress (t^.event) -> tap b                  $> NoCatch
+               | isPress (t^.event) -> onTimeout              $> NoCatch
                | otherwise          -> pure NoCatch
       doNext (matchMy Release)
              (press b)

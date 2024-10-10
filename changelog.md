@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Changed
 
+- `multi-tap` now holds when interrupted by another key while held. (#897)
+
 ### Fixed
 
 - Fixed `tapMacro` and `tapMacroRelease` behaviour which was slightly broken in #873 (#906)
