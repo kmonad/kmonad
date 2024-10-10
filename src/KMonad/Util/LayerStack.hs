@@ -129,7 +129,7 @@ inLayer l c = folding $ \m -> m ^? items . ix (l, c)
 -- If the 'Layer' does not exist, return a 'LayerStackError'. If the 'Layer' is
 -- already on the stack, bring it to the front.
 --
-pushLayer :: (CanKey l, CanKey k)
+pushLayer :: CanKey l
   => l
   -> LayerStack l k a
   -> Either (LayerStackError l) (LayerStack l k a)
@@ -143,7 +143,7 @@ pushLayer n keymap = if n `elem` keymap^.maps
 -- | Remove a layer from the stack. If the layer index does not exist on the
 -- stack, return a 'LayerNotOnStack', if the layer index does not exist at all
 -- in the 'LayerStack', return a 'LayerDoesNotExist'.
-popLayer :: (CanKey l, CanKey k)
+popLayer :: CanKey l
   => l
   -> LayerStack l k a
   -> Either (LayerStackError l) (LayerStack l k a)

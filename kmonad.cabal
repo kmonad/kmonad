@@ -36,6 +36,10 @@ library
       src
   ghc-options:
     -Wall
+    -Wcompat
+    -Widentities
+    -Wpartial-fields
+    -Wredundant-constraints
   build-depends:
       base >= 4.12 && < 5
     , cereal
@@ -190,6 +194,10 @@ test-suite spec
       test
   ghc-options:
       -Wall
+      -Wcompat
+      -Widentities
+      -Wpartial-fields
+      -Wredundant-constraints
   build-depends:
       base >= 4.12 && < 5
     , kmonad
