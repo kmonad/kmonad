@@ -13,7 +13,7 @@ spec = describe "compose-sequences" $ traverse_ checkComposeSeq ssComposed
   checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
     let c' = T.singleton c
     let actualSeq = runParser buttonP "" c'
-    let expectedSeq = runParser (KComposeSeq <$> some buttonP) "" expected
+    let expectedSeq = runParser (KComposeSeq <$> some1 buttonP) "" expected
     let actualE2E = parseTokens $ "(deflayer <test> " <> c' <> " )"
     let expectedE2E = first ParseError expectedSeq
          <&> \x -> mempty & keymap .~ [KDefLayer . DefLayer "<test>" $ DefLayerSettings [] [] [x]]
