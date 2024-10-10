@@ -13,11 +13,10 @@ module KMonad.Args
   ( getCmdL, loadConfig, CmdL, HasCmdL(..))
 where
 
-import KMonad.App.Types
 import KMonad.Args.Cmd
 import KMonad.Args.Joiner
 import KMonad.Args.Parser
-import KMonad.Model.Cfg
+import KMonad.Model
 
 --------------------------------------------------------------------------------
 --

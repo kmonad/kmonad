@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Args.Types
+Module      : KMonad.Model.Parsing
 Description : The basic types of configuration parsing.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Args.Types
+module KMonad.Model.Parsing
   (
     -- * $but
     DefButton(..)
@@ -32,16 +32,12 @@ module KMonad.Args.Types
   , HasDefLayerSettings(..)
 ) where
 
-
 import KMonad.Keyboard
 
 --------------------------------------------------------------------------------
 -- $but
 --
 -- Tokens representing different types of buttons
-
--- FIXME: This is really broken: why are there 2 lists of 'DefButton's? There is
--- one here, and one in Parser/Types.hs
 
 -- | Button ADT
 data DefButton
@@ -166,6 +162,3 @@ data KExpr
   | KDefAlias DefAlias
   deriving (Show, Eq)
 makeClassyPrisms ''KExpr
-
---------------------------------------------------------------------------------
--- $act
