@@ -163,7 +163,7 @@ runJ j = runReader (runExceptT $ unJ j)
 -- $full
 
 -- | Like 'joinConfig' but throw the encountered error.
-joinConfigIO :: HasLogFunc e => PCfg -> RIO e TCfg
+joinConfigIO :: PCfg -> RIO e TCfg
 joinConfigIO (joinConfig -> Left  e) = throwM e
 joinConfigIO (joinConfig -> Right c) = pure c
 
@@ -175,7 +175,7 @@ extract p = mapMaybe (preview p)
 -- $settings
 
 -- | Turn a 'HasLogFunc'-only RIO into a function from LogFunc to IO
-lfToJ :: HasLogFunc lf => RIO lf a -> J (lf -> IO a)
+lfToJ :: RIO lf a -> J (lf -> IO a)
 lfToJ = pure . flip runRIO
 
 #ifdef linux_HOST_OS

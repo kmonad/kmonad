@@ -75,9 +75,9 @@ fromSingletons = mkMultiMap . map (over _2 (:[])) . toList
 -- $ops
 
 -- | A fold over all the (k, v) pairs in a 'MultiMap'
-itemed :: (CanMM k v) => Fold (MultiMap k v) (k, v)
+itemed :: Fold (MultiMap k v) (k, v)
 itemed = folding $ \m -> m ^@.. unMM . ifolded <. folded
 
 -- | Reverse a MultiMap. Note: this is not necessarily a lossless conversion.
-reverse :: (CanMM k v, CanMM v k) => MultiMap k v -> MultiMap v k
+reverse :: CanMM v k => MultiMap k v -> MultiMap v k
 reverse m = mkMultiMap $ m ^.. itemed . swapped . to (over _2 (:[]))

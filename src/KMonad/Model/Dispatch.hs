@@ -109,5 +109,5 @@ pull d = do
         pure e
 
 -- | Add a list of elements to be rerun.
-rerun :: (HasLogFunc e) => Dispatch -> [KeyEvent] -> RIO e ()
+rerun :: Dispatch -> [KeyEvent] -> RIO e ()
 rerun d es = atomically $ modifyTVar (d^.rerunBuf) (>< Seq.fromList es)

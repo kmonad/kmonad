@@ -166,7 +166,7 @@ usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
-usWrite :: HasLogFunc e => UinputSink -> KeyEvent -> RIO e ()
+usWrite :: UinputSink -> KeyEvent -> RIO e ()
 usWrite u e = withMVar (u^.st) $ \fd -> do
   now <- liftIO getSystemTime
   send_event u fd . toLinuxKeyEvent e $ now
