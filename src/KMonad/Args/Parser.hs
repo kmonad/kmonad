@@ -267,7 +267,7 @@ keywordButtons =
   , ("press-only"     , KPressOnly   <$> keycodeP)
   , ("release-only"   , KReleaseOnly <$> keycodeP)
   , ("multi-tap"      , KMultiTap    <$> timed       <*> buttonP)
-  , ("stepped"        , KStepped     <$> some buttonP)
+  , ("stepped"        , KStepped     <$> some1 buttonP)
   , ("tap-hold"       , KTapHold     <$> lexeme numP <*> buttonP <*> buttonP)
   , ("tap-hold-next"
     , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
