@@ -523,7 +523,7 @@ multiTap l bs = onPress' tap' $ go bs
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.
 tapMacro :: [Button] -> Button
-tapMacro bs = mkButton' (go True bs) (pure ()) (go False bs)
+tapMacro bs = mkButton' (go False bs) (pure ()) (go True bs)
   where
     go _ []      = pure ()
     go False [b]     = press b
@@ -533,7 +533,7 @@ tapMacro bs = mkButton' (go True bs) (pure ()) (go False bs)
 -- | Create a 'Button' that performs a series of taps on press,
 -- except for the last Button, which is tapped on release.
 tapMacroRelease :: [Button] -> Button
-tapMacroRelease bs = mkButton' (go True bs) (pure ()) (go False bs)
+tapMacroRelease bs = mkButton' (go False bs) (pure ()) (go True bs)
   where
     go _ []      = pure ()
     go False [b]     = awaitMy Release $ tap b >> pure Catch
