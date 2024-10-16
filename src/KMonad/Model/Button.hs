@@ -62,11 +62,8 @@ module KMonad.Model.Button
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Model.Action
 import KMonad.Keyboard
-import KMonad.Util
 
 import qualified RIO.HashSet as S
 
@@ -510,7 +507,7 @@ multiTap l bs = onPress' tap' $ go bs
       -- 3C. If we detect any other (unrelated) press event, then the multi-tap
       --     sequence is cancelled like in 2C. We trigger a tap of the current
       --     button of the sequence.
-      let doNext pred onTimeout next ms = tHookF InputHook ms onTimeout $ \t -> do
+      let doNext pred onTimeout next ms' = tHookF InputHook ms' onTimeout $ \t -> do
             pr <- pred
             if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
                | isPress (t^.event) -> tap b                  $> NoCatch
@@ -588,11 +585,10 @@ stickyKey ms b = onPress go
 --
 -- I.e: first it acts as the first button, then as the second, then as the
 -- third, and when finished rotates back to being the first button.
-steppedButton :: [Button] -> Button
+steppedButton :: NonEmpty Button -> Button
 steppedButton bs = onPress $ go bs
   where
-    go [] = undefined
-    go [b] = press b
-    go (b:bs') = do
+    go (b:|[])     = press b
+    go (b:|b':bs') = do
       press b
-      awaitMy Press $ go bs' $> Catch
+      awaitMy Press $ go (b' :| bs') $> Catch
