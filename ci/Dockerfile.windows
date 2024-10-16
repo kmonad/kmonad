@@ -27,7 +27,7 @@ ENV WINEPATH=Z:\\haskell\\bin
 RUN wine cabal.exe update
 
 WORKDIR /usr/src/kmonad
-COPY ./ ./
+COPY stack.yaml kmonad.cabal ./
 # We use cabal instead of stack, since stack has many problems under wine.
 RUN sed -n \
 	-e '$a \packages: .' \
@@ -37,4 +37,7 @@ RUN sed -n \
 	-e 's|resolver:\s\+\(\S\+\)|import: https://www.stackage.org/\1/cabal.config|p' \
 	stack.yaml > cabal.project
 
+RUN wine /haskell/cabal.exe build -j8 --only-dependencies
+
+COPY ./ ./
 RUN wine /haskell/cabal.exe install -j8 --install-method=copy --installdir='Z:/output'
