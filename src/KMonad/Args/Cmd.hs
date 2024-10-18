@@ -16,7 +16,7 @@ module KMonad.Args.Cmd
   )
 where
 
-import KMonad.Args.Parser (itokens, keywordButtons, noKeywordButtons, otokens, symbol, numP, implArndButtons)
+import qualified KMonad.Args.Parser as P
 import KMonad.Args.TH (gitHash)
 import KMonad.Model
 import Paths_kmonad (version)
@@ -138,8 +138,7 @@ fallThrghP =
 
 -- | Key to use for compose-key sequences
 cmpSeqP :: Parser (Maybe DefButton)
-cmpSeqP = optional $ option
-  (tokenParser keywordButtons <|> megaReadM (M.choice noKeywordButtons))
+cmpSeqP = optional $ option (megaReadM $ P.buttonP' True)
   (  long "cmp-seq"
   <> short 's'
   <> metavar "BUTTON"
@@ -148,7 +147,7 @@ cmpSeqP = optional $ option
 
 -- | Specify compose sequence key delays.
 cmpSeqDelayP :: Parser (Maybe Int)
-cmpSeqDelayP = optional $ option (megaReadM numP)
+cmpSeqDelayP = optional $ option (megaReadM P.numP)
   (  long  "cmp-seq-delay"
   <> metavar "TIME"
   <> help  "How many ms to wait between each key of a compose sequence"
@@ -156,7 +155,7 @@ cmpSeqDelayP = optional $ option (megaReadM numP)
 
 -- | Specify key event output delays.
 keySeqDelayP :: Parser (Maybe Int)
-keySeqDelayP = optional $ option (megaReadM numP)
+keySeqDelayP = optional $ option (megaReadM P.numP)
   (  long  "key-seq-delay"
   <> metavar "TIME"
   <> help  "How many ms to wait between each key event outputted"
@@ -164,8 +163,7 @@ keySeqDelayP = optional $ option (megaReadM numP)
 
 -- | How to handle implicit `around`s
 implArndP :: Parser (Maybe ImplArnd)
-implArndP = optional $ option
-  (maybeReader $ \x -> implArndButtons ^? each . filtered ((x ==) . unpack . view _1) . _2)
+implArndP = optional $ option (megaReadM P.implArndP)
   (  long "implicit-around"
   <> long "ia"
   <> metavar "AROUND"
@@ -174,7 +172,7 @@ implArndP = optional $ option
 
 -- | Where to emit the output
 oTokenP :: Parser (Maybe OToken)
-oTokenP = optional $ option (tokenParser otokens)
+oTokenP = optional $ option (mkTokenP P.otokens)
   (  long "output"
   <> short 'o'
   <> metavar "OTOKEN"
@@ -183,7 +181,7 @@ oTokenP = optional $ option (tokenParser otokens)
 
 -- | How to capture the keyboard input
 iTokenP :: Parser (Maybe IToken)
-iTokenP = optional $ option (tokenParser itokens)
+iTokenP = optional $ option (mkTokenP P.itokens)
   (  long "input"
   <> short 'i'
   <> metavar "ITOKEN"
@@ -192,7 +190,7 @@ iTokenP = optional $ option (tokenParser itokens)
 
 -- | Parse a flag that disables auto-releasing the release of enter
 startDelayP :: Parser Milliseconds
-startDelayP = option (fromIntegral <$> megaReadM numP)
+startDelayP = option (fromIntegral <$> megaReadM P.numP)
   (  long  "start-delay"
   <> short 'w'
   <> value 300
@@ -202,8 +200,8 @@ startDelayP = option (fromIntegral <$> megaReadM numP)
 
 -- | Transform a bunch of tokens of the form @(Keyword, Parser)@ into an
 -- optparse-applicative parser
-tokenParser :: [(Text, M.Parser a)] -> ReadM a
-tokenParser = megaReadM . M.choice . map (M.try . uncurry ((*>) . symbol))
+mkTokenP :: [(Text, M.Parser a)] -> ReadM a
+mkTokenP = megaReadM . P.mkTokenP' True
 
 -- | Megaparsec <--> optparse-applicative interface
 megaReadM :: M.Parser a -> ReadM a
