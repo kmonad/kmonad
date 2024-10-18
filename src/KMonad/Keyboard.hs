@@ -15,7 +15,8 @@ module KMonad.Keyboard
   )
 where
 
-import KMonad.Keyboard.IO      as X
-import KMonad.Keyboard.Keycode as X
-import KMonad.Keyboard.Ops     as X
-import KMonad.Keyboard.Types   as X
+import KMonad.Keyboard.IO          as X
+import KMonad.Keyboard.Keycode     as X
+import KMonad.Keyboard.Ops         as X
+import KMonad.Keyboard.Types       as X
+import KMonad.Keyboard.ComposeSeq  as X

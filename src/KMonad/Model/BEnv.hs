@@ -22,8 +22,6 @@ module KMonad.Model.BEnv
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Model.Action
 import KMonad.Model.Button
 import KMonad.Keyboard
