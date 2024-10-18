@@ -80,6 +80,7 @@ library
       StandaloneDeriving
       TemplateHaskell
       TupleSections
+      TypeApplications
       TypeFamilies
       ViewPatterns
   other-extensions:
