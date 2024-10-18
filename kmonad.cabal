@@ -71,6 +71,7 @@ library
       RankNTypes
       TemplateHaskell
       TupleSections
+      TypeApplications
       TypeFamilies
 
   autogen-modules:
