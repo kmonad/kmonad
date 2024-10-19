@@ -283,22 +283,18 @@ and install `stack`
   $ brew install haskell-stack
 ```
 
-Then build kmonad with `stack`. If you are building against the kext, run:
+Then build kmonad with `stack` and install it to `~/.local/bin/`
+(which you may want to ensure is on your `PATH`).
+If you are building against the kext, run:
 
 ``` console
-  $ stack build --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+  $ stack install --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
 
 If you are building against the dext, run
 
 ``` console
-  $ stack build --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
-```
-
-Finally, run the following to place the executable `kmonad` in `~/.local/bin/` (which you may want to ensure is on your `PATH`)
-
-``` console
-  $ stack install
+  $ stack install --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
 ```
 
 #### Giving kmonad additional permissions
