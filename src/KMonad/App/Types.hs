@@ -51,7 +51,7 @@ data AppCfg = AppCfg
   , _fallThrough  :: Bool              -- ^ Whether uncaught events should be emitted or not
   , _allowCmd     :: Bool              -- ^ Whether shell-commands are allowed
   , _startDelay   :: Milliseconds      -- ^ How long to wait before acquiring the input keyboard
-  , _keySeqDelay  :: Maybe Milliseconds -- ^ How long to wait after each key event outputted
+  , _keyOutDelay  :: Maybe Milliseconds -- ^ How long to wait after each key event outputted
   }
 makeClassy ''AppCfg
 

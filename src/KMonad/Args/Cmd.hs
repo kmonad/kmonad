@@ -45,6 +45,8 @@ data Cmd = Cmd
   , _cmdAllow  :: DefSetting       -- ^ Allow execution of arbitrary shell-commands?
   , _fallThrgh :: DefSetting       -- ^ Re-emit unhandled events?
   , _cmpSeq    :: Maybe DefSetting -- ^ Key to use for compose-key sequences
+  , _cmpSeqDelay :: Maybe DefSetting -- ^ Specify compose sequence key delays
+  , _keySeqDelay :: Maybe DefSetting -- ^ Specify key event output delays
   , _implArnd  :: Maybe DefSetting -- ^ How to handle implicit `around`s
   , _oToken    :: Maybe DefSetting -- ^ How to emit the output
   , _iToken    :: Maybe DefSetting -- ^ How to capture the input
@@ -84,6 +86,8 @@ cmdP =
       <*> cmdAllowP
       <*> fallThrghP
       <*> cmpSeqP
+      <*> cmpSeqDelayP
+      <*> keySeqDelayP
       <*> implArndP
       <*> oTokenP
       <*> iTokenP
@@ -141,6 +145,22 @@ cmpSeqP = optional $ SCmpSeq <$> option
   <> help "Which key to use to emit compose-key sequences"
   )
 
+-- | Specify compose sequence key delays.
+cmpSeqDelayP :: Parser (Maybe DefSetting)
+cmpSeqDelayP = optional $ SCmpSeqDelay <$> option (fromIntegral <$> megaReadM numP)
+  (  long  "cmp-seq-delay"
+  <> metavar "TIME"
+  <> help  "How many ms to wait between each key of a compose sequence"
+  )
+
+-- | Specify key event output delays.
+keySeqDelayP :: Parser (Maybe DefSetting)
+keySeqDelayP = optional $ SKeySeqDelay <$> option (fromIntegral <$> megaReadM numP)
+  (  long  "key-seq-delay"
+  <> metavar "TIME"
+  <> help  "How many ms to wait between each key event outputted"
+  )
+
 -- | How to handle implicit `around`s
 implArndP :: Parser (Maybe DefSetting)
 implArndP = optional $ SImplArnd <$> option
@@ -175,6 +195,7 @@ startDelayP = option (fromIntegral <$> megaReadM numP)
   (  long  "start-delay"
   <> short 'w'
   <> value 300
+  <> metavar "TIME"
   <> showDefaultWith (show . unMS )
   <> help  "How many ms to wait before grabbing the input keyboard (time to release enter if launching from terminal)")
 
