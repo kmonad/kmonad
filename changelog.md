@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ### Fixed
 
 - Fixed `tapMacro` and `tapMacroRelease` behaviour which was slightly broken in #873 (#906)
+- Fixed keycode translation problem on windows (#894)
 
 ## 0.4.3 – 2024-09-11
 
