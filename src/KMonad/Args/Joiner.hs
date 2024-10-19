@@ -182,6 +182,7 @@ joinConfig' = do
   o  <- getO
   ft <- getFT
   al <- getAllow
+  ksd <- getKeySeqDelay
 
   -- Extract the other blocks and join them into a keymap
   let als = extract _KDefAlias es
@@ -196,6 +197,7 @@ joinConfig' = do
     , _fstL  = fl
     , _flt   = ft
     , _allow = al
+    , _ksd   = ksd
     }
 
 --------------------------------------------------------------------------------
@@ -266,6 +268,15 @@ getCmpSeqDelay = do
     Right b        -> pure (Just b)
     Left None      -> pure Nothing
     Left Duplicate -> throwError $ DuplicateSetting "cmp-seq-delay"
+
+-- | Extract the key-seq-delay setting
+getKeySeqDelay :: J (Maybe Int)
+getKeySeqDelay = do
+  cfg <- oneBlock "defcfg" _KDefCfg
+  case onlyOne . extract _SKeySeqDelay $ cfg of
+    Right b        -> pure (Just b)
+    Left None      -> pure Nothing
+    Left Duplicate -> throwError $ DuplicateSetting "key-seq-delay"
 
 #ifdef linux_HOST_OS
 

@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   If you previously used the buttons `missing247` and `missing248`, please update to the new names.
 - Added more MacOS keys (#936)
 - Added keycodes above 255. If you are on linux you can use them now. (#935)
+- Added `key-seq-delay`, a more general version of `cmp-seq-delay`, which enforces a minimum delay
+  after each key event. (#908)
 
 ### Changed
 
