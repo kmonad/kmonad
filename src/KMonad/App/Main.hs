@@ -101,7 +101,7 @@ initAppEnv cfg = do
     e <- atomically . takeTMVar $ otv
     emitKey snk e
     -- If delay is specified, wait for it
-    maybe (pure ()) (threadDelay . (*1000) . fromIntegral) $ cfg^.keySeqDelay
+    maybe (pure ()) (threadDelay . (*1000) . fromIntegral) $ cfg^.keyOutDelay
   -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
     { _keAppCfg  = cfg
