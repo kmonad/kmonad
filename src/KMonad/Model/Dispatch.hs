@@ -66,15 +66,15 @@ data Dispatch = Dispatch
 makeLenses ''Dispatch
 
 -- | Create a new 'Dispatch' environment
-mkDispatch' :: MonadUnliftIO m => m KeyEvent -> TMVar Unique -> m Dispatch
-mkDispatch' s itr = withRunInIO $ \u -> do
+mkDispatch' :: MonadUnliftIO m => TMVar Unique -> m KeyEvent -> m Dispatch
+mkDispatch' itr s = withRunInIO $ \u -> do
   rpc <- newEmptyTMVarIO
   rrb <- newTVarIO Seq.empty
   pure $ Dispatch (u s) rpc rrb itr
 
 -- | Create a new 'Dispatch' environment in a 'ContT' environment
-mkDispatch :: MonadUnliftIO m => m KeyEvent -> TMVar Unique -> ContT r m Dispatch
-mkDispatch s itr = lift (mkDispatch' s itr)
+mkDispatch :: MonadUnliftIO m => TMVar Unique -> m KeyEvent -> ContT r m Dispatch
+mkDispatch itr s = lift $ mkDispatch' itr s
 
 --------------------------------------------------------------------------------
 -- $op
@@ -82,9 +82,10 @@ mkDispatch s itr = lift (mkDispatch' s itr)
 -- The supported 'Dispatch' operations.
 
 -- | Return the next event, this will return either (in order of precedence):
--- 1. The next item to be rerun
--- 2. A new item read from the OS
--- 3. Pausing until either 1. or 2. triggers
+-- 1. A timer event
+-- 2. The next item to be rerun
+-- 3. A new item read from the OS
+-- 4. Pausing until any of the above happens
 pull :: (HasLogFunc e) => Dispatch -> RIO e WrappedEvent
 pull d = do
   -- Check for an unfinished read attempt started previously. If it exists,
