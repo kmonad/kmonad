@@ -99,7 +99,7 @@ makeClassy ''Trigger
 data HookLocation
   = InputHookPrio   -- ^ Install the hook immediately after receiving a 'KeyEvent'
                     -- and before the sluice
-  | InputHook       -- ^ Installthe hook after the sluice
+  | InputHook       -- ^ Install the hook after the sluice
   | OutputHook      -- ^ Install the hook just before emitting a 'KeyEvent'
   deriving (Eq, Show)
 
@@ -124,11 +124,11 @@ makeClassy ''Hook
 -- This is used to carry enough information to allow re-running an event if it
 -- was held in the sluice.
 --
--- TODO: Should this live here? 
+-- TODO: Should this live here?
 data WrappedEvent =
   WrappedKeyEvent {
     _catch   :: Catch
-  , _keyEvent :: KeyEvent 
+  , _keyEvent :: KeyEvent
   } |
   WrappedTag {
     _tag :: Unique
