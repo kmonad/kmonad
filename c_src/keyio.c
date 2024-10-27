@@ -21,6 +21,8 @@ int acquire_uinput_keysink(int fd, char *name, int vendor, int product, int vers
   for (i=0; i < 256; i++) {
     ioctl(fd, UI_SET_KEYBIT, i);
   }
+  // Enable key repeat for output keyboard
+  ioctl(fd, UI_SET_EVBIT, EV_REP);
 
   // Set the vendor details
   struct uinput_setup usetup;
