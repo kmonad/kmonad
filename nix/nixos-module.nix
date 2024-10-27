@@ -134,6 +134,9 @@ let
     };
 in
 {
+  # Don't conflict with existing module in nixpkgs.
+  disabledModules = [ "services/hardware/kmonad.nix" ];
+
   options.services.kmonad = {
     enable = lib.mkEnableOption "KMonad: An advanced keyboard manager.";
 
