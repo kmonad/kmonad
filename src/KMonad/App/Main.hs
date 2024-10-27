@@ -85,19 +85,19 @@ initAppEnv cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the pull-chain components
-  itr <- atomically $ newEmptyTMVar
-  dsp <- Dp.mkDispatch (awaitKey src) itr
-  ihkPrio <- Hs.mkHooks (Dp.pull dsp) itr
-  slc <- Sl.mkSluice $ Hs.pull ihkPrio
-  ihk <- Hs.mkHooks (Sl.pull slc) itr
+  itr     <- newEmptyTMVarIO
+  dsp     <- Dp.mkDispatch itr $ awaitKey src
+  ihkPrio <- Hs.mkHooks    itr $ Dp.pull dsp
+  slc     <- Sl.mkSluice       $ Hs.pull ihkPrio
+  ihk     <- Hs.mkHooks    itr $ Sl.pull slc
 
   -- Initialize the button environments in the keymap
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   -- Initialize output components
   otv <- lift newEmptyTMVarIO
-  otr <- atomically $ newEmptyTMVar
-  ohk <- Hs.mkHooks ((atomically . takeTMVar) otv >>= pure . (WrappedKeyEvent NoCatch)) otr
+  otr <- lift newEmptyTMVarIO
+  ohk <- Hs.mkHooks otr $ WrappedKeyEvent NoCatch <$> (atomically . takeTMVar) otv
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do

@@ -72,14 +72,14 @@ data Hooks = Hooks
 makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
-mkHooks' :: MonadUnliftIO m => m WrappedEvent -> TMVar Unique -> m Hooks
-mkHooks' s itr = withRunInIO $ \u -> do
+mkHooks' :: MonadUnliftIO m => TMVar Unique -> m WrappedEvent -> m Hooks
+mkHooks' itr s = withRunInIO $ \u -> do
   hks <- newTVarIO M.empty
   pure $ Hooks (u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m WrappedEvent -> TMVar Unique -> ContT r m Hooks
-mkHooks s itr = lift (mkHooks' s itr)
+mkHooks :: MonadUnliftIO m => TMVar Unique -> m WrappedEvent -> ContT r m Hooks
+mkHooks itr s = lift $ mkHooks' itr s
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
 ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
@@ -150,7 +150,7 @@ runEntry t e v = liftIO $ do
   (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
-runHooks :: (HasLogFunc e)
+runHooks :: HasLogFunc e
   => Hooks
   -> KeyEvent
   -> RIO e Catch
@@ -178,12 +178,12 @@ step :: (HasLogFunc e)
   -> RIO e (Maybe WrappedEvent) -- ^ An action that returns perhaps the next event
 step h = do
   liftIO (h^.eventSrc) >>= \case
-    WrappedTag t -> cancelHook h t >>= \case  -- We caught a cancellation
-      False -> pure $ Just $ WrappedTag t
-      True -> pure Nothing
+    WrappedTag t -> cancelHook h t <&> \case  -- We caught a cancellation
+      False -> Just $ WrappedTag t
+      True  -> Nothing
     WrappedKeyEvent c e -> do -- We caught a real event
       cNew <- runHooks h e
-      pure $ Just $ WrappedKeyEvent (cNew <> c) e
+      pure . Just $ WrappedKeyEvent (cNew <> c) e
 
 -- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
 pull :: HasLogFunc e
