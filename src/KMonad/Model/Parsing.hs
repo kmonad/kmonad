@@ -82,7 +82,7 @@ data DefButton
   | KBeforeAfterNext DefButton DefButton   -- ^ Surround a future button in a before and after tap
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
-  deriving (Show, Eq, Typeable, Data)
+  deriving (Show, Eq, Data)
 
 instance Plated DefButton
 
