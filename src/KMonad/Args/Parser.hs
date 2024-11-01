@@ -275,9 +275,10 @@ keywordButtons =
     , KTapHoldNext <$> lexeme numP <*> buttonP <*> buttonP
                    <*> optional (keywordP "timeout-button" buttonP))
   , ("tap-next-release"
-    , KTapNextRelease <$> buttonP <*> buttonP)
+    , KTapNextRelease <$> optional (keywordP "grace" numP) <*> buttonP <*> buttonP)
   , ("tap-hold-next-release"
-    , KTapHoldNextRelease <$> lexeme numP <*> buttonP <*> buttonP
+    , KTapHoldNextRelease <$> lexeme numP <*> optional (keywordP "grace" numP)
+                          <*> buttonP <*> buttonP
                           <*> optional (keywordP "timeout-button" buttonP))
   , ("tap-next-press"
     , KTapNextPress <$> buttonP <*> buttonP)
