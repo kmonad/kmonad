@@ -277,8 +277,8 @@ keywordButtons =
   , (,) "stepped"                  $ KStepped               <$> buttonsP
   , (,) "tap-hold"                 $ KTapHold               <$> numP     <*> buttonP <*> buttonP
   , (,) "tap-hold-next"            $ KTapHoldNext           <$> numP     <*> buttonP <*> buttonP <*> timeoutP
-  , (,) "tap-next-release"         $ KTapNextRelease        <$> buttonP  <*> buttonP
-  , (,) "tap-hold-next-release"    $ KTapHoldNextRelease    <$> numP     <*> buttonP <*> buttonP <*> timeoutP
+  , (,) "tap-next-release"         $ KTapNextRelease        <$> graceP   <*> buttonP <*> buttonP
+  , (,) "tap-hold-next-release"    $ KTapHoldNextRelease    <$> numP     <*> graceP  <*> buttonP <*> buttonP <*> timeoutP
   , (,) "tap-next-press"           $ KTapNextPress          <$> buttonP  <*> buttonP
   , (,) "tap-hold-next-press"      $ KTapHoldNextPress      <$> numP     <*> buttonP <*> buttonP <*> timeoutP
   , (,) "tap-next"                 $ KTapNext               <$> buttonP  <*> buttonP
@@ -307,6 +307,7 @@ keywordButtons =
   kPause = KPause . fromIntegral
   buttonsP = some buttonP
   timeoutP = optarg'P "timeout-button" buttonP
+  graceP = optarg'P "grace" numP
   delayP   = optarg'P "delay" numP
 
 implArndButtons :: [(Text, ImplArnd, DefButton -> DefButton -> DefButton)]

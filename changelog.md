@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 - `XX` may be used in `defsrc` as a placeholder button.
   Buttons binded to it will never trigger. (#992)
+- Added `:grace` to `tap-next-release` and `tap-hold-next-release`,
+  which could improve your shifting experience. (#916)
 
 ### Changed
 
