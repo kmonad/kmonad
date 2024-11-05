@@ -17,10 +17,10 @@
 
       # List of supported compilers:
       supportedCompilers = [
-        "ghc8107"
-        "ghc902"
-        "ghc922"
+        "ghc928"
         "ghc948"
+        "ghc965"
+        "ghc983"
       ];
 
       # Function to generate a set based on supported systems:
