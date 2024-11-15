@@ -124,6 +124,8 @@
   NOTE: Any valid path to a device-file will work, but it is recommended to use
   the 'by-id' directory, since these names will not change if you replug the
   device.
+  If the '/dev/input' directory does for any reason not exists (i.e. maybe in the
+  initramfs) it could be due to the 'evdev' kernel module not being loaded.
 
   We deal with output by creating a 'uinput' device. This requires that the
   'uinput' kernel module is loaded. The easiest way to ensure this is by calling
