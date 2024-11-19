@@ -69,6 +69,7 @@ import KMonad.Keyboard
 import KMonad.Util
 
 import qualified RIO.HashSet as S
+import qualified RIO.HashMap as M
 
 --------------------------------------------------------------------------------
 -- $but
@@ -368,50 +369,66 @@ beforeAfterNext b a = onPress $ do
       pure NoCatch
     pure NoCatch
 
+tapNextRelease' :: Maybe Milliseconds -> Milliseconds -> Button -> Button -> Maybe Button -> Button
+tapNextRelease' Nothing _ _ _ (Just _) = error "tap-next-release: timeout-button without timeout"
+tapNextRelease' ms g t h mtb = onPress' t $ do
+  hold True
+  go ms mempty
+ where
+  go :: MonadK m => Maybe Milliseconds -> HashSet Keycode -> m ()
+  go ms' ks = register InputHook . Hook (onTimeout <$> ms') $ \r -> do
+    p <- matchMy Release
+    let e = r^.event
+    let isRel = isRelease e
+
+    let ms'' = ms' <&> subtract (r^.elapsed)
+
+    if
+      -- If the next event is my own release, wait for key releases.
+      | p e -> doGrace g ks $> Catch
+      -- If the next event is another release that was pressed after me we hold
+      | isRel && (e^.keycode `elem` ks) -> doHold e
+      -- If the next event is a press, store and recurse
+      | not isRel -> go ms'' (S.insert (e^.keycode) ks) $> NoCatch
+      -- If the next event is a release of some button pressed before me, recurse
+      | otherwise -> go ms'' ks $> NoCatch
+
+  doGrace :: MonadK m => Milliseconds -> HashSet Keycode -> m ()
+  doGrace g' ks
+    | null ks = doTap
+    | otherwise = tHookF InputHook g' doTap $ \r -> do
+        let e = r^.event
+        let g'' = g' - r^.elapsed
+
+        if e^.keycode `elem` ks
+          then doHold e <* (inject . mkKeyEvent Release =<< myBinding)
+          else doGrace g'' (S.delete (e^.keycode) ks) $> NoCatch
+
+  doTap :: MonadK m => m ()
+  doTap = tap t *> hold False
+
+  doHold :: MonadK m => KeyEvent -> m Catch
+  doHold e = press h *> hold False *> inject e $> Catch
+
+  onTimeout :: MonadK m => Milliseconds -> Timeout m
+  onTimeout ms' = Timeout ms' $ press (fromMaybe h mtb) *> hold False
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
 -- 1. It is the release of this button: We are tapping
+--    after checking key releases for an additional grace period
 -- 2. It is of some other button that was pressed *before* this one, ignore.
 -- 3. It is of some other button that was pressed *after* this one, we hold.
 --
 -- It does all of this while holding processing of other buttons, so time will
 -- get rolled back like a TapHold button.
-tapNextRelease :: Button -> Button -> Button
-tapNextRelease t h = onPress' t $ do
-  hold True
-  go []
-  where
-    go :: MonadK m => [Keycode] ->  m ()
-    go ks = hookF InputHook $ \e -> do
-      p <- matchMy Release
-      let isRel = isRelease e
-      if
-        -- If the next event is my own release: we act as if we were tapped
-        | p e -> doTap
-        -- If the next event is the release of some button that was held after me
-        -- we act as if we were held
-        | isRel && (e^.keycode `elem` ks) -> doHold e
-        -- Else, if it is a press, store the keycode and wait again
-        | not isRel                       -> go ((e^.keycode):ks) $> NoCatch
-        -- Else, if it is a release of some button held before me, just ignore
-        | otherwise                       -> go ks $> NoCatch
-
-    -- Behave like a tap is simple: tap the button `t` and release processing
-    doTap :: MonadK m => m Catch
-    doTap = tap t *> hold False $> Catch
-
-    -- Behave like a hold is not simple: first we release the processing hold,
-    -- then we catch the release of ButtonX that triggered this action, and then
-    -- we rethrow this release.
-    doHold :: MonadK m => KeyEvent -> m Catch
-    doHold e = press h *> hold False *> inject e $> Catch
-
-
+tapNextRelease :: Milliseconds -> Button -> Button -> Button
+tapNextRelease g t h = tapNextRelease' Nothing g t h Nothing
 
 -- | Create a tap-hold style button that makes its decision based on the next
 -- detected release in the following manner:
 -- 1. It is the release of this button: We are tapping
+--    after checking key releases for an additional grace period
 -- 2. It is of some other button that was pressed *before* this one, ignore.
 -- 3. It is of some other button that was pressed *after* this one, we hold.
 --
@@ -420,35 +437,8 @@ tapNextRelease t h = onPress' t $ do
 --
 -- It does all of this while holding processing of other buttons, so time will
 -- get rolled back like a TapHold button.
-tapHoldNextRelease :: Milliseconds -> Button -> Button -> Maybe Button -> Button
-tapHoldNextRelease ms t h mtb = onPress' t $ do
-  hold True
-  go ms []
-  where
-
-    go :: MonadK m => Milliseconds -> [Keycode] ->  m ()
-    go ms' ks = tHookF InputHook ms' onTimeout $ \r -> do
-      p <- matchMy Release
-      let e = r^.event
-      let isRel = isRelease e
-      if
-        -- If the next event is my own release: act like tapped
-        | p e -> onRelSelf
-        -- If the next event is another release that was pressed after me
-        | isRel && (e^.keycode `elem` ks) -> onRelOther e
-        -- If the next event is a press, store and recurse
-        | not isRel -> go (ms' - r^.elapsed) (e^.keycode : ks) $> NoCatch
-        -- If the next event is a release of some button pressed before me, recurse
-        | otherwise -> go (ms' - r^.elapsed) ks $> NoCatch
-
-    onTimeout :: MonadK m =>  m ()
-    onTimeout = press (fromMaybe h mtb) *> hold False
-
-    onRelSelf :: MonadK m => m Catch
-    onRelSelf = tap t *> hold False $> Catch
-
-    onRelOther :: MonadK m => KeyEvent -> m Catch
-    onRelOther e = press h *> hold False *> inject e $> Catch
+tapHoldNextRelease :: Milliseconds -> Milliseconds -> Button -> Button -> Maybe Button -> Button
+tapHoldNextRelease = tapNextRelease' . Just
 
 -- | Create a button just like tap-release, but also trigger a hold on presses:
 -- 1. It is the release of this button: We are tapping
