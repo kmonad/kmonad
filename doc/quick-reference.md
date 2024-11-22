@@ -307,7 +307,7 @@ to be the most comfortable.
 
 + `tap-next`: combine 2 buttons, one for when the button is tapped and
   one for when it is held. The decision of what to execute is based upon
-  whether the next button is the buttons own release or not.
+  whether the next event (keypress or release) is the buttons own release or not.
 
   ```clojure
   (defalias tan (tap-next a sft))
