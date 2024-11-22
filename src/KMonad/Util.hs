@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-|
 Module      : KMonad.Util
 Description : Various bits and bobs that I don't know where to put
@@ -32,7 +33,7 @@ module KMonad.Util
 
 where
 
-import KMonad.Prelude
+import KMonad.Prelude.Imports
 
 import Data.Time.Clock
 import Data.Time.Clock.System
@@ -43,7 +44,8 @@ import Data.Time.Clock.System
 
 -- | Newtype wrapper around 'Int' to add type safety to our time values
 newtype Milliseconds = Milliseconds { unMS :: Int }
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display, Typeable, Data)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
+  deriving newtype (Num, Real, Enum, Integral, Display)
 
 -- | Calculate how much time has elapsed between 2 time points
 tDiff :: ()
