@@ -192,6 +192,7 @@ install either the kext or dext based on your macOS version (Catalina
 users can choose either one).
 
 #### Installing the kext
+> macOS Catalina or prior
 
 You can either build the kext from source or you can install it as a
 binary that is signed by its maintainer. Building from source is
@@ -221,6 +222,7 @@ for instructions. Otherwise, to install the kext as a signed binary, run:
 ```
 
 #### Installing the dext
+> macOS Catalina or later
 
 You can either build the dext from source or you can install it as a
 binary that is signed by its maintainer. Building from source is only
@@ -284,14 +286,14 @@ and install `stack`
 ```
 
 Then build kmonad with `stack` and install it to `~/.local/bin/`
-(which you may want to ensure is on your `PATH`).
-If you are building against the kext, run:
+(which you may want to ensure is on your `PATH`).<br/>
+If you are building against `kext`, run:
 
 ``` console
   $ stack install --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
 
-If you are building against the dext, run
+If you are building against `dext`, run:
 
 ``` console
   $ stack install --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
