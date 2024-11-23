@@ -192,6 +192,7 @@ install either the kext or dext based on your macOS version (Catalina
 users can choose either one).
 
 #### Installing the kext
+> macOS Catalina or prior
 
 You can either build the kext from source or you can install it as a
 binary that is signed by its maintainer. Building from source is
@@ -221,6 +222,7 @@ for instructions. Otherwise, to install the kext as a signed binary, run:
 ```
 
 #### Installing the dext
+> macOS Catalina or later
 
 You can either build the dext from source or you can install it as a
 binary that is signed by its maintainer. Building from source is only
