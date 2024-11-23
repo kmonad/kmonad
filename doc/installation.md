@@ -284,14 +284,14 @@ and install `stack`
 ```
 
 Then build kmonad with `stack` and install it to `~/.local/bin/`
-(which you may want to ensure is on your `PATH`).
-If you are building against the kext, run:
+(which you may want to ensure is on your `PATH`).<br/>
+If you are building against `kext`, run:
 
 ``` console
   $ stack install --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
 ```
 
-If you are building against the dext, run
+If you are building against `dext`, run:
 
 ``` console
   $ stack install --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
