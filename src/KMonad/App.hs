@@ -141,16 +141,14 @@ pressKey c =
 
     -- If the keycode does occur in our keymap
     Just b  -> runBEnv b Press >>= \case
-      Nothing -> pure ()  -- If the previous action on this key was *not* a release
+      Nothing -> pass  -- If the previous action on this key was *not* a release
       Just a  -> do
         -- Execute the press and register the release
         app <- view appEnv
         runRIO (KEnv app b) $ do
           runAction a
           awaitMy Release $ do
-            runBEnv b Release >>= \case
-              Nothing -> pure ()
-              Just a' -> runAction a'
+            runBEnv b Release >>= maybe pass runAction
             pure Catch
 
 --------------------------------------------------------------------------------
@@ -166,7 +164,7 @@ pressKey c =
 loop :: RIO AppEnv ()
 loop = forever $ view sluice >>= Sl.pull >>= \case
   e | e^.switch == Press -> pressKey $ e^.keycode
-  _                      -> pure ()
+  _                      -> pass
 
 -- | Run KMonad using the provided configuration
 startApp :: HasLogFunc e => ACfg -> RIO e ()

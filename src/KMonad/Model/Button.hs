@@ -35,7 +35,7 @@ module KMonad.Model.Button
   , layerSwitch
   , layerAdd
   , layerRem
-  , pass
+  , pass'
   , cmdButton
 
   -- * Button combinators
@@ -105,17 +105,17 @@ mkButton' a b c = Button (Action a) (Action b) (Action c)
 
 -- | Create a new button with only a 'Press' action
 onPress :: AnyK () -> Button
-onPress p = mkButton p $ pure ()
+onPress p = mkButton p pass
 
 onRelease :: AnyK () -> Button
-onRelease = mkButton (pure ())
+onRelease = mkButton pass
 
 onTap :: AnyK () -> Button
-onTap = mkButton' (pure ()) (pure ())
+onTap = mkButton' pass pass
 
 -- | Like 'onPress' but with an alternative button to use for tapping
 onPress' :: Button -> AnyK () -> Button
-onPress' (Button{_tapAction = Action t}) p = mkButton' p (pure ()) t
+onPress' (Button{_tapAction = Action t}) p = mkButton' p pass t
 
 --------------------------------------------------------------------------------
 -- $running
@@ -171,7 +171,7 @@ layerToggle :: LayerTag -> Button
 layerToggle t = mkButton'
   (layerOp $ PushLayer t)
   (layerOp $ PopLayer  t)
-  (pure ())
+  pass
 
 -- | Create a button that switches the base-layer on a press
 layerSwitch :: LayerTag -> Button
@@ -186,13 +186,13 @@ layerRem :: LayerTag -> Button
 layerRem t = onPress (layerOp $ PopLayer t)
 
 -- | Create a button that does nothing (but captures the input)
-pass :: Button
-pass = onPress $ pure ()
+pass' :: Button
+pass' = onPress pass
 
 -- | Create a button that executes a shell command on press and possibly on
 -- release
 cmdButton :: Text -> Maybe Text -> Button
-cmdButton pr mbR = mkButton (shellCmd pr) (maybe (pure ()) shellCmd mbR)
+cmdButton pr mbR = mkButton (shellCmd pr) (for_ mbR shellCmd)
 
 --------------------------------------------------------------------------------
 -- $combinators
@@ -248,7 +248,6 @@ aroundWhenAlone outer inner = onPress' (around outer inner) $ do
   runAction $ outer^.pressAction
   runAction $ inner^.pressAction
   go S.empty =<< matchMy Release
-  pure ()
  where
   go :: HashSet Keycode -> KeyPred -> AnyK ()
   go pressed isMyRelease = hookF InputHook $ \e ->
@@ -556,14 +555,14 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.
 tapMacro :: NonEmpty Button -> Button
-tapMacro bs = mkButton' (foldrMap1 press go bs) (pure ()) (foldrMap1 tap go bs)
+tapMacro bs = mkButton' (foldrMap1 press go bs) pass (foldrMap1 tap go bs)
   where
     go b = (tap b >>)
 
 -- | Create a 'Button' that performs a series of taps on press,
 -- except for the last Button, which is tapped on release.
 tapMacroRelease :: NonEmpty Button -> Button
-tapMacroRelease bs = mkButton' (foldrMap1 tapOnRelease go bs) (pure ()) (foldrMap1 tap go bs)
+tapMacroRelease bs = mkButton' (foldrMap1 tapOnRelease go bs) pass (foldrMap1 tap go bs)
   where
     go b = (tap b >>)
     tapOnRelease b     = awaitMy Release $ tap b >> pure Catch
@@ -606,7 +605,7 @@ stickyKey ms b = onPress go
   doTap =
     within ms
            (pure isPress)  -- presses definitely happen after us
-           (pure ())
+           pass
            (\t -> runAction (b^.pressAction)
                *> inject (t^.event)
                *> after 3 (runAction $ b^.releaseAction)
