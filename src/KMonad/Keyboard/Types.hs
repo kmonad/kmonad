@@ -32,7 +32,12 @@ data Switch
 data KeyEvent = KeyEvent
   { _switch  :: Switch  -- ^ Whether the 'KeyEvent' was a 'Press' or 'Release'
   , _keycode :: Keycode -- ^ The 'Keycode' mapped to this 'KeyEvent'
-  } deriving (Eq, Show, Generic, Hashable)
+  } deriving
+    ( Eq, Show, Generic, Hashable
+    , -- | An 'Ord' instance, where Press > Release,
+      -- and otherwise we 'Ord' on the 'Keycode'
+      Ord
+    )
 makeClassy ''KeyEvent
 
 -- | Create a new 'KeyEvent' from a 'Switch' and a 'Keycode'
@@ -42,14 +47,6 @@ mkKeyEvent = KeyEvent
 -- | A 'Display' instance for 'KeyEvent's that prints them out nicely.
 instance Display KeyEvent where
   textDisplay a = tshow (a^.switch) <> " " <> textDisplay (a^.keycode)
-
--- | An 'Ord' instance, where Press > Release, and otherwise we 'Ord' on the
--- 'Keycode'
-instance Ord KeyEvent where
-  a `compare` b = case (a^.switch) `compare` (b^.switch) of
-    EQ -> (a^.keycode) `compare` (b^.keycode)
-    x  -> x
-
 
 -- | Predicate on KeyEvent's
 type KeyPred = KeyEvent -> Bool

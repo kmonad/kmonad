@@ -46,17 +46,13 @@ makeClassy ''Keymap
 
 -- | Create a 'Keymap' from a 'Keymap' of uninitialized 'Button's and a
 -- tag indicating which layer should start as the base.
-mkKeymap' :: MonadUnliftIO m
+mkKeymap :: MonadUnliftIO m
   => LayerTag    -- ^ The initial base layer
   -> LMap Button -- ^ The keymap of 'Button's
-  -> m Keymap
-mkKeymap' n m = do
+  -> ContT r m Keymap
+mkKeymap n m = lift $ do
   envs <- m & Ls.items . itraversed %%@~ \(_, c) b -> initBEnv b c
   Keymap <$> newIORef envs <*> newIORef n
-
--- | Create a 'Keymap' but do so in the context of a 'ContT' monad to ease nesting.
-mkKeymap :: MonadUnliftIO m => LayerTag -> LMap Button -> ContT r m Keymap
-mkKeymap n = lift . mkKeymap' n
 
 
 --------------------------------------------------------------------------------
