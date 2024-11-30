@@ -23,6 +23,8 @@ module KMonad.Util
   , onErr
   , using
   , logRethrow
+  , pass
+  , required
 
     -- * Some helpers to launch background process
   , withLaunch
@@ -90,6 +92,17 @@ logRethrow :: HasLogFunc e
 logRethrow t e = do
   logError $ display t <> ": " <> display e
   throwIO e
+
+-- | Simply do nothing, usefull to reduce parenthesis
+-- for 'IO' one could use 'mempty' instead, though
+-- we also want to use it with 'AnyK', for which
+-- we sadly cannot define an instance since it's an alias
+-- around 'forall m. MonadK m => m a'.
+pass :: Applicative f => f ()
+pass = pure ()
+
+required :: MonadError e m => e -> Maybe a -> m a
+required e = maybe (throwError e) pure
 
 -- | Launch a process that repeats an action indefinitely. If an error ever
 -- occurs, print it and rethrow it. Ensure the process is cleaned up upon error
