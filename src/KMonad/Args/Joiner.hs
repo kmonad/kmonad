@@ -42,8 +42,6 @@ import KMonad.Keyboard.IO.Mac.IOKitSource
 import KMonad.Keyboard.IO.Mac.KextSink
 #endif
 
-import Control.Monad.Except
-
 import qualified RIO.NonEmpty as NE (cons, intersperse)
 import qualified KMonad.Util.LayerStack  as L
 import qualified RIO.HashMap      as M
@@ -136,7 +134,7 @@ joinConfig
     , _implArnd = fromMaybe IAAround . preview _head -> ia
     } = (`runJ` JCfg Nothing csd ks ia) $ do
 
-    let ck' = maybe (throwError NestedTrans) pure =<< joinButton [] mempty ck
+    let ck' = joinButton' [] mempty ck
     ck'' <- either (throwError . InvalidComposeKey) (pure . Just) =<< asks (runJ ck')
 
     local (set cmpKey ck'') $ do
@@ -239,17 +237,12 @@ type LNames  = [Text]
 -- Aliases can refer back to buttons that occured before.
 joinAliases :: LNames -> [DefAlias] -> J Aliases
 joinAliases ns als = foldM f M.empty $ concat als
-  where f mp (t, b) = if t `M.member` mp
-          then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> unnest (joinButton ns mp b)
+  where f mp (t, b) = mp & at t
+         %%~ bool (throwError $ DuplicateAlias t) (Just <$> joinButton' ns mp b)
+           . null
 
 --------------------------------------------------------------------------------
 -- $but
-
--- | Turn 'Nothing's (caused by joining a KTrans) into the appropriate error.
--- KTrans buttons may only occur in 'DefLayer' definitions.
-unnest :: J (Maybe Button) -> J Button
-unnest = (maybe (throwError NestedTrans) pure =<<)
 
 fromImplArnd :: DefButton -> DefButton -> ImplArnd -> J DefButton
 fromImplArnd _ _ IADisabled        = throwError ImplArndDisabled
@@ -257,51 +250,41 @@ fromImplArnd o i IAAround          = pure $ KAround o i
 fromImplArnd o i IAAroundOnly      = pure $ KAroundOnly o i
 fromImplArnd o i IAAroundWhenAlone = pure $ KAroundWhenAlone o i
 
+joinButton' :: LNames -> Aliases -> DefButton -> J Button
+joinButton' ns als = required NestedTrans <=< joinButton ns als
+
 -- | Turn a button token into an actual KMonad `Button` value
 joinButton :: LNames -> Aliases -> DefButton -> J (Maybe Button)
 joinButton ns als =
 
   -- Define some utility functions
   let ret    = pure . Just
-      go     = unnest . joinButton ns als
+      go     = joinButton' ns als
       jst    = fmap Just
       fi     = fromIntegral
       isps l = traverse go . maybe l ((`NE.intersperse` l) . KPause . fi)
+      lyr t f = if t `elem` ns
+        then ret $ f t
+        else throwError $ MissingLayer t
   in \case
     -- Variable dereference
-    KRef t -> case M.lookup t als of
-      Nothing -> throwError $ MissingAlias t
-      Just b  -> ret b
+    KRef t -> jst . required (MissingAlias t) $ M.lookup t als
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
     KPressOnly c -> ret $ pressOnly c
     KReleaseOnly c -> ret $ releaseOnly c
     KCommand pr mbR -> ret $ cmdButton pr mbR
-    KLayerToggle t -> if t `elem` ns
-      then ret $ layerToggle t
-      else throwError $ MissingLayer t
-    KLayerSwitch t -> if t `elem` ns
-      then ret $ layerSwitch t
-      else throwError $ MissingLayer t
-    KLayerAdd t -> if t `elem` ns
-      then ret $ layerAdd t
-      else throwError $ MissingLayer t
-    KLayerRem t -> if t `elem` ns
-      then ret $ layerRem t
-      else throwError $ MissingLayer t
-    KLayerDelay s t -> if t `elem` ns
-      then ret $ layerDelay (fi s) t
-      else throwError $ MissingLayer t
-    KLayerNext t -> if t `elem` ns
-      then ret $ layerNext t
-      else throwError $ MissingLayer t
+    KLayerToggle t -> lyr t layerToggle
+    KLayerSwitch t -> lyr t layerSwitch
+    KLayerAdd t -> lyr t layerAdd
+    KLayerRem t -> lyr t layerRem
+    KLayerDelay s t -> lyr t $ layerDelay (fi s)
+    KLayerNext t -> lyr t layerNext
 
     -- Various compound buttons
     KComposeSeq bs     -> do csd <- view cmpSeqDelay
-                             c   <- view cmpKey >>= \case
-                               Just c  -> pure c
-                               Nothing -> throwError CmpSeqDisabled
+                             c   <- view cmpKey >>= required CmpSeqDisabled
                              csd' <- for csd $ go . KPause . fi
                              jst $ tapMacro . NE.cons c . maybe id NE.cons csd' <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
@@ -333,7 +316,7 @@ joinButton ns als =
 
     -- Non-action buttons
     KTrans -> pure Nothing
-    KBlock -> ret pass
+    KBlock -> ret pass'
 
 
 --------------------------------------------------------------------------------

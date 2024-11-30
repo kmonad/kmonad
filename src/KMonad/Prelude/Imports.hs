@@ -6,6 +6,7 @@ where
 
 import Control.Lens       as X
 import Control.Monad.Cont as X
+import Control.Monad.Except as X
 import Data.Acquire       as X
 import RIO.Char           as X
 import RIO.Text           as X (unlines, lines, unpack, pack)
