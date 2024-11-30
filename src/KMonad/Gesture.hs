@@ -6,7 +6,6 @@ where
 
 import KMonad.Parsing
 
-import Control.Monad.Except
 import Control.Monad.State
 
 import qualified RIO.Seq  as Q
