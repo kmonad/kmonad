@@ -146,7 +146,7 @@ usOpen c = do
     defaultFileFlags
   logInfo "Registering Uinput device"
   acquire_uinput_keysink fd c `onErr` UinputRegistrationError (c ^. keyboardName)
-  flip (maybe $ pure ()) (c^.postInit) $ \cmd -> do
+  for_ (c^.postInit) $ \cmd -> do
     logInfo $ "Running UinputSink command: " <> displayShow cmd
     void . async . spawnCommand $ cmd
   UinputSink c <$> newMVar fd
