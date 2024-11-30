@@ -817,13 +817,12 @@ data Keycode
 
 
 instance Display Keycode where
-  textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
-    $ minimumByOf (_Just . folded) cmpName (keyNames ^. at c)
-    where cmpName a b =
-            -- Prefer the shortest, and if equal, lowercased version
-            case compare (T.length a) (T.length b) of
-              EQ -> compare (b^?_head) (a^?_head)
-              o  -> o
+  textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c) $
+    minimumByOf
+      (ix c . folded)
+      -- Prefer the shortest, and if equal, lowercased version
+      (compare `on` T.length &&& previews _head isUpper)
+      keyNames
 
 --------------------------------------------------------------------------------
 -- $sets
