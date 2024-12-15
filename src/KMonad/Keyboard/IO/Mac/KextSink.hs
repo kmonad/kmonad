@@ -3,14 +3,11 @@ module KMonad.Keyboard.IO.Mac.KextSink
   )
 where
 
-import KMonad.Prelude
-
 import Foreign.Ptr
 import Foreign.Marshal
 import Foreign.Storable
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
 import KMonad.Keyboard.IO.Mac.Types
 
 foreign import ccall "send_key"
@@ -28,7 +25,7 @@ kextSink = mkKeySink skOpen skClose skSend
 skOpen :: HasLogFunc e => RIO e EvBuf
 skOpen = do
   logInfo "Initializing Mac key sink"
-  liftIO $ EvBuf <$> mallocBytes (sizeOf (undefined :: MacKeyEvent))
+  liftIO $ EvBuf <$> malloc
 
 -- | Close the 'EvBuf' environment
 skClose :: HasLogFunc e => EvBuf -> RIO e ()
@@ -39,7 +36,7 @@ skClose sk = do
 -- | Write an event to the pointer and prompt windows to inject it
 --
 -- NOTE: This can throw an error if event-conversion fails.
-skSend :: HasLogFunc e => EvBuf -> KeyEvent -> RIO e ()
+skSend :: EvBuf -> KeyEvent -> RIO e ()
 skSend sk e = either throwIO go $ toMacKeyEvent e
   where go e' = liftIO $ do
           poke (sk^.buffer) e'
