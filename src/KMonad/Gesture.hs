@@ -4,17 +4,10 @@ module KMonad.Gesture
 
 where
 
-import KMonad.Prelude hiding (try)
 import KMonad.Parsing
 
-import Control.Monad.Except
 import Control.Monad.State
-import Data.Char
 
-import RIO.List.Partial (head)
-import RIO.Seq (Seq(..))
-
-import qualified RIO.List as L
 import qualified RIO.Seq  as Q
 import qualified RIO.Set  as S
 
@@ -43,11 +36,8 @@ data GestureError a
 
 -- | A lens into the i
 tag :: Lens' (Toggle a) a
-tag = lens get set
-  where get (On x)    = x
-        get (Off x)   = x
-        set (On _) x  = On x
-        set (Off _) x = Off x
+tag f (On  x) = On  <$> f x
+tag f (Off x) = Off <$> f x
 
 -- | A fold of all the unique elements in a gesture
 tags :: Ord a => Fold (Gesture a) a
@@ -67,8 +57,8 @@ around x g@(Gesture seq)
 fromList :: Ord a => [Toggle a] -> Either (GestureError a) (Gesture a)
 fromList as = case (`runState` S.empty) . runExceptT . foldM f Q.empty $ as of
   (Left e, _) -> Left e
-  (Right g, s) | S.null s -> Right $ Gesture g
-               | otherwise -> Left $ OnWithoutOff (head . S.elems $ s)
+  (Right _, S.lookupMin -> Just toggle) -> Left $ OnWithoutOff toggle
+  (Right g, _) -> Right $ Gesture g
   where
     f s x = do
       pressed <- get
