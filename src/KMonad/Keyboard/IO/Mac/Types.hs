@@ -13,6 +13,7 @@ import Foreign.Storable
 import KMonad.Keyboard
 
 import qualified RIO.HashMap as M
+import RIO.List (sortOn)
 
 
 ----------------------------------------------------------------------------
@@ -83,7 +84,8 @@ fromMacKeycode = flip M.lookup kcMap
 -- | Lookup the correspondig 'MacKeycode' for this 'Keycode'
 toMacKeycode :: Keycode -> Maybe MacKeycode
 toMacKeycode = flip M.lookup revMap
-  where revMap = M.fromList $ M.toList kcMap ^.. folded . swapped
+  -- We sort the reversed list, since some keycodes are duplicates (e.g.: KeyBackslash) and the later takes precedence
+  where revMap = M.fromList . sortOn (Down . snd) $ M.toList kcMap ^.. folded . swapped
 
 -- | Convert a 'KeyEvent' to a 'MacKeyEvent'
 --
