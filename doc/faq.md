@@ -224,7 +224,7 @@ A: Those are part of a mini-language from the tutorial:
 
 So for example when talking about buttons:
 
-- `Tesc Ta` is a tap of `Esc` and a press of `a`
+- `Tesc Pa` is a tap of `Esc` and a press of `a`
 - `P@a Tb R@a` is the alias `@a` pressed around the button `b`
 
 This language is useful since "tap" is normally a synonym for "press"
