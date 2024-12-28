@@ -8,6 +8,7 @@ let
     options = {
       name = lib.mkOption {
         type = lib.types.str;
+        default = name;
         example = "laptop-internal";
         description = "Keyboard name.";
       };
@@ -29,16 +30,16 @@ let
           Since KMonad runs as an unprivileged user, it may sometimes
           need extra permissions in order to read the keyboard device
           file.  If your keyboard's device file isn't in the input
-          group you'll need to list its group in this option.
+          group, you'll need to list its group in this option.
         '';
       };
 
       defcfg = {
         enable = lib.mkEnableOption ''
-          Automatically generate the defcfg block.
+          automatic generation of the defcfg block.
 
-          When this is option is set to true the config option for
-          this keyboard should not include a defcfg block.
+          When this is option is set to true, the config option for
+          this keyboard should not include a defcfg block
         '';
 
         compose = {
@@ -49,25 +50,21 @@ let
           };
 
           delay = lib.mkOption {
-            type = lib.types.int;
+            type = lib.types.ints.unsigned;
             default = 5;
             description = "The delay (in milliseconds) between compose key sequences.";
           };
         };
 
-        fallthrough = lib.mkEnableOption "Reemit unhandled key events.";
+        fallthrough = lib.mkEnableOption "reemitting unhandled key events";
 
-        allowCommands = lib.mkEnableOption "Allow keys to run shell commands.";
+        allowCommands = lib.mkEnableOption "keys to run shell commands";
       };
 
       config = lib.mkOption {
         type = lib.types.lines;
         description = "Keyboard configuration.";
       };
-    };
-
-    config = {
-      name = lib.mkDefault name;
     };
   };
 
@@ -77,18 +74,17 @@ let
       (defcfg
         input  (device-file "${keyboard.device}")
         output (uinput-sink "kmonad-${keyboard.name}")
-    '' +
-    lib.optionalString (keyboard.defcfg.compose.key != null) ''
-      cmp-seq ${keyboard.defcfg.compose.key}
-      cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
-    '' + ''
+        ${lib.optionalString (keyboard.defcfg.compose.key != null) ''
+          cmp-seq ${keyboard.defcfg.compose.key}
+          cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
+        ''}
         fallthrough ${lib.boolToString keyboard.defcfg.fallthrough}
         allow-cmd ${lib.boolToString keyboard.defcfg.allowCommands}
       )
     '';
     in
     pkgs.writeTextFile {
-      name = "kmonad-${keyboard.name}.cfg";
+      name = "kmonad-${keyboard.name}.kbd";
       text = lib.optionalString keyboard.defcfg.enable (defcfg + "\n") + keyboard.config;
       checkPhase = "${cfg.package}/bin/kmonad -d $out";
     };
@@ -138,13 +134,11 @@ in
   disabledModules = [ "services/hardware/kmonad.nix" ];
 
   options.services.kmonad = {
-    enable = lib.mkEnableOption "KMonad: An advanced keyboard manager.";
+    enable = lib.mkEnableOption "KMonad: an advanced keyboard manager";
 
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.kmonad;
+    package = lib.mkPackageOption pkgs "KMonad" {
+      default = "kmonad";
       example = "pkgs.haskellPackages.kmonad";
-      description = "The KMonad package to use.";
     };
 
     keyboards = lib.mkOption {
@@ -168,7 +162,7 @@ in
     users.groups.kmonad = { };
 
     users.users.kmonad = {
-      description = "KMonad system user.";
+      description = "KMonad system user";
       group = "kmonad";
       isSystemUser = true;
     };
