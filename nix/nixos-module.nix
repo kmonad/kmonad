@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
+  cfg-boot = config.boot.initrd.services.kmonad;
   cfg = config.services.kmonad;
 
   # Per-keyboard options:
@@ -103,7 +104,7 @@ let
   };
 
   # Build a systemd service that starts KMonad:
-  mkService = keyboard:
+  mkService = in-initrd: keyboard:
     let
       cmd = [
         "${cfg.package}/bin/kmonad"
@@ -124,16 +125,29 @@ let
         description = "KMonad for ${keyboard.device}";
         script = lib.escapeShellArgs cmd;
         serviceConfig.Restart = "always";
-        serviceConfig.User = "kmonad";
-        serviceConfig.SupplementaryGroups = groups;
+        serviceConfig.User = if in-initrd then null else "kmonad";
+        serviceConfig.SupplementaryGroups = if in-initrd then null else groups;
         serviceConfig.Nice = -20;
       };
     };
+
+  paths = builtins.listToAttrs (map mkPath (builtins.attrValues cfg.keyboards));
+  services = in-initrd: builtins.listToAttrs (map (mkService in-initrd) (builtins.attrValues cfg.keyboards));
 in
 {
   # Don't conflict with existing module in nixpkgs.
   disabledModules = [ "services/hardware/kmonad.nix" ];
 
+  options.boot.initrd.services.kmonad.enable = lib.mkEnableOption "KMonad" // {
+    description = ''
+      *This will only be used when systemd is used in stage 1.*
+
+      Whether to enable KMonad: an advanced keyboard manager.
+
+      This requires `services.kmonad.enable` to be set.
+      All other config options are also taken from `services.kmonad`.
+    '';
+  };
   options.services.kmonad = {
     enable = lib.mkEnableOption "KMonad: an advanced keyboard manager";
 
@@ -156,26 +170,52 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ cfg.package ];
+  config = lib.mkMerge [
+    (lib.mkIf cfg.enable {
+      environment.systemPackages = [ cfg.package ];
 
-    users.groups.uinput = { };
-    users.groups.kmonad = { };
+      users.groups.uinput = { };
+      users.groups.kmonad = { };
 
-    users.users.kmonad = {
-      description = "KMonad system user";
-      group = "kmonad";
-      isSystemUser = true;
-    };
+      users.users.kmonad = {
+        description = "KMonad system user";
+        group = "kmonad";
+        isSystemUser = true;
+      };
 
-    hardware.uinput.enable = true;
+      hardware.uinput.enable = true;
 
-    systemd.paths =
-      builtins.listToAttrs
-        (map mkPath (builtins.attrValues cfg.keyboards));
+      systemd.paths = paths;
+      systemd.services = services false;
+    })
+    (lib.mkIf cfg-boot.enable {
+      boot.initrd = {
+        systemd.storePaths = [ cfg.package ];
 
-    systemd.services =
-      builtins.listToAttrs
-        (map mkService (builtins.attrValues cfg.keyboards));
-  };
+        # Does not work, since `users.groups.uinput` does not specify a `gid`
+        # and this field isn't optional.
+        #systemd.groups.uinput = { };
+        #systemd.groups.kmonad = { };
+
+        # Same for users with `uid`.
+        #systemd.users.kmonad.group = "kmonad";
+        #services.udev.rules = ''
+        #  # KMonad user access to /dev/uinput
+        #  KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+        #'';
+
+        systemd.paths = paths;
+        systemd.services = services true;
+
+        availableKernelModules = [ "evdev" "uinput" ];
+      };
+    })
+    { assertions = [
+        {
+          assertion = cfg-boot.enable -> cfg.enable;
+          message = "To enable KMonad in the initrd, it must be enabled globally";
+        }
+      ];
+    }
+  ];
 }
