@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 - Added names for the keys `rfkill` and `micmute` (#883).
   If you previously used the buttons `missing247` and `missing248`, please update to the new names.
+- Added `:grace` to `tap-next-release` and `tap-hold-next-release`, which could improve your shifting experience. (#916)
 
 ### Changed
 
