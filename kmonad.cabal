@@ -183,6 +183,7 @@ test-suite spec
       KMonad.ButtonDocSpec
       KMonad.GestureSpec
       KMonad.ComposeSeqSpec
+      KMonad.KeycodeSpec
   default-language:
       Haskell2010
   build-tool-depends: hspec-discover:hspec-discover == 2.*
