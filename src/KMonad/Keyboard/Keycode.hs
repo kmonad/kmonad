@@ -452,12 +452,12 @@ data Keycode
   | KeyFirst
   | KeyLast
   | KeyAb
-  | KeyNext
+  | KeyNextTask -- Should be `KeyNext` but conflicts with alias for `KeyNextSong`. So we take the HID Name
   | KeyRestart
   | KeySlow
   | KeyShuffle
   | KeyBreak
-  | KeyPrevious
+  | KeyPreviousTask -- See `KeyNextTask`
   | KeyDigits
   | KeyTeen
   | KeyTwen
@@ -954,7 +954,7 @@ aliases = Q.mkMultiMap
   , (KeyBackslash,        ["nonuspound"])
   , (KeyCompose,          ["app", "application"])
   , (KeyOpen,             ["exec", "execute"])
-  , (KeyFront,            ["sel", "select"])
+  --, (KeyFront,            ["sel", "select"]) -- conflict with KeySelect
   , (KeyRo,               ["i1", "int1", "international1"])
   , (KeyKatakanaHiragana, ["i2", "int2", "international2"])
   , (KeyYen,              ["i3", "int3", "international3"])
@@ -978,7 +978,7 @@ aliases = Q.mkMultiMap
   , (KeyCalc,             ["calculator"])
   , (KeyFile,             ["localmachinebrowser"])
   , (KeyWww,              ["internetbrowser"])
-  , (KeyCoffee,           ["termlock", "screensaver"])
+  , (KeyCoffee,           ["termlock"]) -- conflict with KeyScreenSaver: "screensaver"
   , (KeyHelp,             ["helpcenter"])
   , (KeyMedia,            ["imagebrowser"])
   , (KeySound,            ["audiobrowser"])
