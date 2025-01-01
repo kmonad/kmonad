@@ -114,10 +114,13 @@ fromMacKeyEvent (MacKeyEvent (s, (p, u)))
 --------------------------------------------------------------------------------
 -- $kc
 
--- | Mac does not use the same keycodes as Linux, so we need to translate.
+-- | Mac mostly uses the HID names instead. Since Linux doesn't we need to translate.
 --
--- See https://github.com/apple-opensource/IOHIDFamily/blob/master/IOHIDFamily/IOHIDUsageTables.h
--- See https://source.android.com/docs/core/interaction/input/keyboard-devices
+-- For Mac keycodes see https://github.com/apple-opensource/IOHIDFamily/blob/master/IOHIDFamily/IOHIDUsageTables.h
+--
+-- For HID to Linux mappings:
+-- - See the source code where it's defined at https://github.com/torvalds/linux/blob/master/drivers/hid/hid-input.c
+-- - See the table provided by the android docs at https://source.android.com/docs/core/interaction/input/keyboard-devices
 kcMap :: M.HashMap MacKeycode Keycode
 kcMap = M.fromList
   [ ((0x7,0x4), KeyA)
