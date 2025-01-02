@@ -9,13 +9,6 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module Main
-  ( -- * The entry-point to KMonad
-    main
-  )
-where
+module Main (module KMonad) where
 
-import qualified KMonad.App as KMonad (main)
-
-main :: IO ()
-main = KMonad.main
+import KMonad.App as KMonad (main)

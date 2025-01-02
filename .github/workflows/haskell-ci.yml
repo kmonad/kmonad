@@ -97,7 +97,6 @@ jobs:
             --fast --no-terminal \
             --resolver=${{ matrix.resolver }} --system-ghc \
             --flag kmonad:dext \
-            --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
 
       - name: Build and test (macOS, kext)
         shell: bash
@@ -106,4 +105,4 @@ jobs:
           stack test \
             --fast --no-terminal \
             --resolver=${{ matrix.resolver }} --system-ghc \
-            --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+            --flag kmonad:kext
