@@ -4,6 +4,7 @@
 - [Linux](#linux)
     - [Q: How do I get Uinput permissions?](#q-how-do-i-get-uinput-permissions)
     - [Q: How do I know which event-file corresponds to my keyboard?](#q-how-do-i-know-which-event-file-corresponds-to-my-keyboard)
+        - [Q: `/dev/input` does not exist?](#q-dev-input-does-not-exist)
     - [Q: How do I emit Hyper_L?](#q-how-do-i-emit-hyper_l)
     - [Q: How does Unicode entry work?](#q-how-does-unicode-entry-work)
     - [Q: How do I use the same layout definition for different keyboards?](#q-how-do-i-use-the-same-layout-definition-for-different-keyboards)
@@ -67,6 +68,11 @@ A: By far the best solution is to use the keyboard devices listed
 under `/dev/input/by-id`. In some case, you could also try
 `/dev/input/by-path`. If you can't figure out which file just by
 the filenames, the `evtest` program is very helpful.
+
+#### Q: `/dev/input` does not exist?
+
+A: This may be due to the kernel module `evdev` not being loaded.
+Try to run `sudo modprobe evdev`.
 
 ### Q: How do I emit Hyper_L?
 
