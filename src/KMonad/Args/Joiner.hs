@@ -400,7 +400,8 @@ joinButton ns als =
     -- Various compound buttons
     KComposeSeq bs     -> do csd <- getCmpSeqDelay
                              c   <- view cmpKey
-                             jst $ tapMacro . (c:) <$> isps bs csd
+                             csd' <- for csd $ go . KPause . fi
+                             jst $ tapMacro . (c:) . maybe id (:) csd' <$> isps bs csd
     KTapMacro bs mbD   -> jst $ tapMacro           <$> isps bs mbD
     KBeforeAfterNext b a -> jst $ beforeAfterNext <$> go b <*> go a
     KTapMacroRelease bs mbD ->
