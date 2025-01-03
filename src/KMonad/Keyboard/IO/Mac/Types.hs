@@ -3,6 +3,7 @@ module KMonad.Keyboard.IO.Mac.Types
   , MacKeyEvent
   , toMacKeyEvent
   , fromMacKeyEvent
+  , kcMapRaw
   )
 
 where
@@ -122,7 +123,10 @@ fromMacKeyEvent (MacKeyEvent (s, (p, u)))
 -- - See the source code where it's defined at https://github.com/torvalds/linux/blob/master/drivers/hid/hid-input.c
 -- - See the table provided by the android docs at https://source.android.com/docs/core/interaction/input/keyboard-devices
 kcMap :: M.HashMap MacKeycode Keycode
-kcMap = M.fromList
+kcMap = M.fromList kcMapRaw
+
+kcMapRaw :: [(MacKeycode, Keycode)]
+kcMapRaw =
   [ ((0x7,0x4), KeyA)
   , ((0x7,0x5), KeyB)
   , ((0x7,0x6), KeyC)
