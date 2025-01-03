@@ -106,7 +106,7 @@ sync (MkSystemTime s ns) = LinuxKeyEvent (fi s, fi ns, 0, 0, 0)
 -- | Translate a 'LinuxKeyEvent' to a KMonad 'KeyEvent'
 fromLinuxKeyEvent :: LinuxKeyEvent -> Maybe KeyEvent
 fromLinuxKeyEvent (LinuxKeyEvent (_, _, typ, c, val))
-  | c > 255 = Nothing
+  | c >= 0x2ff = Nothing
   | typ == 1 && val == 0 = Just . mkRelease $ kc
   | typ == 1 && val == 1 = Just . mkPress   $ kc
   | otherwise = Nothing

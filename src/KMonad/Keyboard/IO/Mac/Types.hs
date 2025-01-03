@@ -3,6 +3,7 @@ module KMonad.Keyboard.IO.Mac.Types
   , MacKeyEvent
   , toMacKeyEvent
   , fromMacKeyEvent
+  , kcMapRaw
   )
 
 where
@@ -122,7 +123,10 @@ fromMacKeyEvent (MacKeyEvent (s, (p, u)))
 -- - See the source code where it's defined at https://github.com/torvalds/linux/blob/master/drivers/hid/hid-input.c
 -- - See the table provided by the android docs at https://source.android.com/docs/core/interaction/input/keyboard-devices
 kcMap :: M.HashMap MacKeycode Keycode
-kcMap = M.fromList
+kcMap = M.fromList kcMapRaw
+
+kcMapRaw :: [(MacKeycode, Keycode)]
+kcMapRaw =
   [ ((0x7,0x4), KeyA)
   , ((0x7,0x5), KeyB)
   , ((0x7,0x6), KeyC)
@@ -297,8 +301,42 @@ kcMap = M.fromList
   , ((0xC,0x34), KeySleep)
   , ((0xC,0x40), KeyMenu)
   , ((0xC,0x45), KeyRight)
+  , ((0xC,0x61), KeySubtitle)
+  , ((0xC,0x69), KeyRed)
+  , ((0xC,0x6A), KeyGreen)
+  , ((0xC,0x6B), KeyBlue)
+  , ((0xC,0x6C), KeyYellow)
+  , ((0xC,0x83), KeyLast)
+  -- , ((0xC,0x84), Key???) -- Enter Channel
+  -- , ((0xC,0x85), Key???) -- Order Movie
+  , ((0xC,0x88), KeyPc)
+  , ((0xC,0x89), KeyTv)
+  , ((0xC,0x8A), KeyWww)
+  , ((0xC,0x8B), KeyDvd)
+  , ((0xC,0x8C), KeyPhone)
+  , ((0xC,0x8D), KeyProgram)
+  , ((0xC,0x8E), KeyVideoPhone)
+  , ((0xC,0x8F), KeyGames)
+  , ((0xC,0x90), KeyMemo)
+  , ((0xC,0x91), KeyCd)
+  , ((0xC,0x92), KeyVcr)
+  , ((0xC,0x93), KeyTuner)
   , ((0xC,0x94), KeyExit)
   , ((0xC,0x95), KeyHelp)
+  , ((0xC,0x96), KeyTape)
+  , ((0xC,0x97), KeyTv2)
+  , ((0xC,0x98), KeySat)
+  -- , ((0xC,0x99), Key???) -- Media Select Security
+  , ((0xC,0x9A), KeyPvr)
+  -- , ((0xC,0x9B), Key???) -- MediaSelectCall
+  , ((0xC,0x9C), KeyChannelUp)
+  , ((0xC,0x9D), KeyChannelDown)
+  -- , ((0xC,0x9E), Key???) -- Media Select SAP (MacOS: Media)
+  , ((0xC,0xA0), KeyVcr2)
+  -- , ((0xC,0xA1), Key???) -- Once
+  -- , ((0xC,0xA2), Key???) -- Daily
+  -- , ((0xC,0xA3), Key???) -- Weekly
+  -- , ((0xC,0xA4), Key???) -- Monthly
   , ((0xC,0xB0), KeyPlay)
   , ((0xC,0xB1), KeyPause)
   , ((0xC,0xB2), KeyRecord)
@@ -308,7 +346,28 @@ kcMap = M.fromList
   , ((0xC,0xB6), KeyPreviousSong)
   , ((0xC,0xB7), KeyStopCd)
   , ((0xC,0xB8), KeyEjectCd)
+  -- , ((0xC,0xB9), Key???) -- Random Play
+  -- , ((0xC,0xBA), Key???) -- Select Disc
+  -- , ((0xC,0xBB), Key???) -- Enter Disc
+  , ((0xC,0xBC), KeyMediaRepeat)
+  -- , ((0xC,0xBD), Key???) -- MacOS: Tracking
+  -- , ((0xC,0xBE), Key???) -- Track Normal
+  -- , ((0xC,0xBF), Key???) -- MacOS: SlowTraciking
+  -- , ((0xC,0xC0), Key???) -- Frame Forward
+  -- , ((0xC,0xC1), Key???) -- Frame Back
+  -- , ((0xC,0xC2), Key???) -- Mark
+  -- , ((0xC,0xC3), Key???) -- Clear Mark
+  -- , ((0xC,0xC4), Key???) -- Repeat From Mark
+  -- , ((0xC,0xC5), Key???) -- Return To Mark
+  -- , ((0xC,0xC6), Key???) -- Search Mark Forward
+  -- , ((0xC,0xC7), Key???) -- Search Mark Backwards
+  -- , ((0xC,0xC8), Key???) -- Counter Reset
+  -- , ((0xC,0xC9), Key???) -- Show Counter
+  -- , ((0xC,0xCA), Key???) -- Tracking Increment
+  -- , ((0xC,0xCB), Key???) -- Tracking Decrement
+  -- , ((0xC,0xCC), Key???) -- Stop / Eject
   , ((0xC,0xCD), KeyPlayPause)
+  -- , ((0xC,0xCE), Key???) -- Play / Skip
   , ((0xC,0xCF), KeyDictation) -- No HID
   -- , ((0xC,0xE0), Key???) -- MacOS: Volume (linear control)
   -- , ((0xC,0xE1), Key???) -- MacOS: Balance (linear control)
@@ -316,6 +375,9 @@ kcMap = M.fromList
   -- , ((0xC,0xE3), Key???) -- MacOS: Bass (linear control)
   -- , ((0xC,0xE4), Key???) -- MacOS: Treble (linear control)
   , ((0xC,0xE5), KeyBassBoost)
+  -- , ((0xC,0xE6), Key???) -- Surround Mode
+  -- , ((0xC,0xE7), Key???) -- Loudness
+  -- , ((0xC,0xE8), Key???) -- MPX
   , ((0xC,0xE9), KeyVolumeUp) -- VolumeIncrement
   , ((0xC,0xEA), KeyVolumeDown) -- VolumentDecrement
   -- , ((0xC,0x100), KeyFanEnable)
@@ -362,7 +424,17 @@ kcMap = M.fromList
   -- , ((0xC,0x181), KeyALLaunchButtonConfigurationTool)
   , ((0xC,0x182), KeyBookmarks) -- KeyALProgrammableButtonConfiguration
   , ((0xC,0x183), KeyConfig) -- KeyALConsumerControlConfiguration
+  , ((0xC,0x184), KeyWordProcessor)
+  , ((0xC,0x185), KeyEditor)
+  , ((0xC,0x186), KeySpreadSheet)
+  , ((0xC,0x187), KeyGraphicsEditor)
+  , ((0xC,0x188), KeyPresentation)
+  , ((0xC,0x189), KeyDatabase)
   , ((0xC,0x18A), KeyMail)
+  , ((0xC,0x18B), KeyNews)
+  , ((0xC,0x18C), KeyVoicemail)
+  , ((0xC,0x18D), KeyAddressBook)
+  , ((0xC,0x18E), KeyCalendar)
   -- , ((0xC,0x18F), KeyALTaskOrProjectManager)
   -- , ((0xC,0x190), KeyALLogOrJournalOrTimecard)
   , ((0xC,0x191), KeyFinance)
@@ -375,6 +447,9 @@ kcMap = M.fromList
   -- , ((0xC,0x198), KeyALNetworkConference)
   , ((0xC,0x199), KeyChat)
   -- , ((0xC,0x19A), KeyALTelephonyOrDialer)
+  -- , ((0xC,0x19B), KeyALLogon)
+  , ((0xC,0x19C), KeyLogoff)
+  -- , ((0xC,0x19D), KeyALLogonOrLogoff)
   , ((0xC,0x19E), KeyCoffee)
   -- , ((0xC,0x19F), KeyALControlPanel)
   -- , ((0xC,0x1A0), KeyALCommandLineProcessorOrRun)
@@ -388,6 +463,7 @@ kcMap = M.fromList
   -- , ((0xC,0x1A8), KeyALThesaurus)
   -- , ((0xC,0x1A9), KeyALDictionary)
   -- , ((0xC,0x1AA), KeyALDesktop)
+  , ((0xC,0x1AB), KeySpellCheck)
   -- , ((0xC,0x1AC), KeyALGrammerCheck)
   -- , ((0xC,0x1AD), KeyALWirelessStatus)
   -- , ((0xC,0x1AE), KeyALKeyboardLayout)
@@ -404,6 +480,8 @@ kcMap = M.fromList
   -- , ((0xC,0x1B9), KeyALDigitalRightsManager)
   -- , ((0xC,0x1BA), KeyALDigitalWallet)
   -- 0x1BB Reserved
+  , ((0xC,0x1BC), KeyMessenger)
+  , ((0xC,0x1BD), KeyInfo)
   -- , ((0xC,0x1BE), KeyALOEMHelp)
   -- , ((0xC,0x1BF), KeyALOnlineCommunity)
   -- , ((0xC,0x1C0), KeyALEntertainmentContentBrowser)
@@ -437,6 +515,7 @@ kcMap = M.fromList
   , ((0xC,0x21F), KeyFind)
   -- , ((0xC,0x220), KeyACFindandReplace)
   , ((0xC,0x221), KeySearch)
+  , ((0xC,0x222), KeyGoTo)
   , ((0xC,0x223), KeyHomepage)
   , ((0xC,0x224), KeyBack)
   , ((0xC,0x225), KeyForward)
@@ -447,6 +526,9 @@ kcMap = M.fromList
   , ((0xC,0x22A), KeyBookmarks)
   -- , ((0xC,0x22B), KeyACHistory)
   -- , ((0xC,0x22C), KeyACSubscriptions)
+  , ((0xC,0x22D), KeyZoomIn)
+  , ((0xC,0x22E), KeyZoomOut)
+  , ((0xC,0x22F), KeyZoomReset)
   -- , ((0xC,0x230), KeyACFullScreenView)
   -- , ((0xC,0x231), KeyACNormalView)
   -- , ((0xC,0x232), KeyACViewToggle)

@@ -18,7 +18,7 @@ int acquire_uinput_keysink(int fd, char *name, int vendor, int product, int vers
   // Designate fd as a keyboard of all keys
   ioctl(fd, UI_SET_EVBIT, EV_KEY);
   int i;
-  for (i=0; i < 256; i++) {
+  for (i=0; i < 0x2ff; i++) {
     ioctl(fd, UI_SET_KEYBIT, i);
   }
   // Enable key repeat for output keyboard
