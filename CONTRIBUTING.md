@@ -51,7 +51,25 @@ request:
 - A brief summary of how your commits fit together to achieve this (if
   necessary).
 
-Please also remember to update the `CHANGELOG.md` file, as well as any other
-documentation that your pull request touches upon.  For example, when
-implementing a new feature, you should update the `tutorial.kbd` file
-accordingly.
+Please also remember to update any documentation that your pull request touches
+upon.  For example, when implementing a new feature, you should update the
+`tutorial.kbd` file accordingly.
+
+### Add a Changelog entry
+
+Please also remember to add the changelog entry.
+To reduce merge conflicts, we use `git-interpret-trailers`.
+Simply add a trailer with either `Added`, `Changed`, `Fixed` or `Breaking`.
+
+A full commit message may then look like the following:
+
+```gitcommit
+Added `key-seq-delay`
+
+Some applications drop key events if they happen to fast,
+with this option we can specify a delay between each key event send.
+
+Added: Added `key-seq-delay` option to `defcfg`.
+  If you have problems with missing key events in some apps,
+  consider adding `key-seq-delay 5` to your `defcfg`
+```
