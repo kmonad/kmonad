@@ -17,6 +17,7 @@ module KMonad.Keyboard.IO.Windows.Types
   , mkWinKeyEvent
   , toWinKeyEvent
   , fromWinKeyEvent
+  , winCodeKeyCodeMapping
   )
 
 where
@@ -163,8 +164,8 @@ winCodeKeyCodeMapping =
   , (0x13, KeyPause)
   , (0x14, KeyCapsLock)
   , (0x15, KeyKatakana)
-  , (0x15, KeyHangeul)
   , (0x15, KeyKatakanaHiragana)
+  , (0x15, KeyHangeul)
   -- , (0x16, ???)            -- Defined as VK_IME_ON
   -- , (0x17, ???)            -- Defined as VK_JUNJA
   -- , (0x18, ???)            -- Defined as VK_FINAL

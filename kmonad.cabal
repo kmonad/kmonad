@@ -97,6 +97,10 @@ library
       KMonad.Keyboard
       KMonad.Keyboard.ComposeSeq
       KMonad.Keyboard.IO
+      -- We always export them, so we can test them
+      KMonad.Keyboard.IO.Linux.Types
+      KMonad.Keyboard.IO.Mac.Types
+      KMonad.Keyboard.IO.Windows.Types
       KMonad.Keyboard.Keycode
       KMonad.Keyboard.Ops
       KMonad.Keyboard.Types
@@ -112,7 +116,6 @@ library
   if os(linux)
     exposed-modules:
       KMonad.Keyboard.IO.Linux.DeviceSource
-      KMonad.Keyboard.IO.Linux.Types
       KMonad.Keyboard.IO.Linux.UinputSink
     c-sources:
       c_src/keyio.c
@@ -123,7 +126,6 @@ library
     exposed-modules:
       KMonad.Keyboard.IO.Windows.LowLevelHookSource
       KMonad.Keyboard.IO.Windows.SendEventSink
-      KMonad.Keyboard.IO.Windows.Types
     c-sources:
       c_src/keyio_win.c
     build-depends:
@@ -133,7 +135,6 @@ library
     exposed-modules:
       KMonad.Keyboard.IO.Mac.IOKitSource
       KMonad.Keyboard.IO.Mac.KextSink
-      KMonad.Keyboard.IO.Mac.Types
     if flag(kext)
       cxx-sources:
         c_src/mac/kext.cpp
