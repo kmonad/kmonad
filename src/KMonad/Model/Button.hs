@@ -58,6 +58,7 @@ module KMonad.Model.Button
   , tapMacro
   , tapMacroRelease
   , steppedButton
+  , retap
   , stickyKey
   )
 where
@@ -583,6 +584,13 @@ stickyKey ms b = onPress go
                *> inject (t^.event)
                *> after 3 (runAction $ b^.releaseAction)
                $> Catch)
+
+-- | Press another button if this one is repressed within a certain time period
+retap :: Milliseconds -> Button -> Button -> Button
+retap ms t rt =
+  mkButton (runAction $ t^.pressAction) $ do
+    runAction $ t^.releaseAction
+    within ms (matchMy Press) (pure ()) . const $ press rt $> Catch
 
 -- | Create a button that functions as a different button everything it is pushed
 --
