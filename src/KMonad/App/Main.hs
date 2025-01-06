@@ -85,16 +85,19 @@ initAppEnv cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the pull-chain components
-  dsp <- Dp.mkDispatch $ awaitKey src
-  ihk <- Hs.mkHooks    $ Dp.pull  dsp
-  slc <- Sl.mkSluice   $ Hs.pull  ihk
+  itr     <- newEmptyTMVarIO
+  dsp     <- Dp.mkDispatch itr $ awaitKey src
+  ihkPrio <- Hs.mkHooks    itr $ Dp.pull dsp
+  slc     <- Sl.mkSluice       $ Hs.pull ihkPrio
+  ihk     <- Hs.mkHooks    itr $ Sl.pull slc
 
   -- Initialize the button environments in the keymap
   phl <- Km.mkKeymap (cfg^.firstLayer) (cfg^.keymapCfg)
 
   -- Initialize output components
   otv <- lift newEmptyTMVarIO
-  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
+  otr <- lift newEmptyTMVarIO
+  ohk <- Hs.mkHooks otr $ WrappedKeyEvent NoCatch <$> (atomically . takeTMVar) otv
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
@@ -108,8 +111,9 @@ initAppEnv cfg = do
     , _keySource = src
 
     , _dispatch  = dsp
-    , _inHooks   = ihk
+    , _inHooksPrio = ihkPrio
     , _sluice    = slc
+    , _inHooks   = ihk
 
     , _keymap    = phl
     , _outHooks  = ohk
@@ -162,8 +166,8 @@ pressKey c =
 -- 1. Pull from the pull-chain until an unhandled event reaches us.
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
-loop = forever $ view sluice >>= Sl.pull >>= \case
-  e | e^.switch == Press -> pressKey $ e^.keycode
+loop = forever $ view inHooks >>= Hs.pull >>= \case
+  WrappedKeyEvent c e | c == NoCatch && e^.switch == Press -> pressKey $ e^.keycode
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
