@@ -2,15 +2,12 @@ module KMonad.KeycodeSpec (spec) where
 
 import KMonad.Keyboard.Keycode
 import KMonad.Util.MultiMap as Q
-import KMonad.Prelude
 import RIO.List (sort)
 
 import qualified KMonad.Keyboard.IO.Mac.Types as Mac (kcMapRaw)
 import qualified KMonad.Keyboard.IO.Windows.Types as Win (winCodeKeyCodeMapping)
 
 import qualified RIO.NonEmpty as N
-
-import Test.Hspec
 
 spec :: Spec
 spec = do

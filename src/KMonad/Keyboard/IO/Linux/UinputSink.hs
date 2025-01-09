@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# OPTIONS_GHC -Wno-dodgy-imports #-}
 {-|
 Module      : KMonad.Keyboard.IO.Linux.UinputSink
@@ -23,18 +22,14 @@ module KMonad.Keyboard.IO.Linux.UinputSink
   )
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock.System (getSystemTime)
 
 import Foreign.C.String
 import Foreign.C.Types
 import System.Posix     hiding (sync)
-import UnliftIO.Async   (async)
 import UnliftIO.Process (spawnCommand)
 
 import KMonad.Keyboard.IO.Linux.Types
-import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $err
@@ -151,7 +146,7 @@ usOpen c = do
     defaultFileFlags
   logInfo "Registering Uinput device"
   acquire_uinput_keysink fd c `onErr` UinputRegistrationError (c ^. keyboardName)
-  flip (maybe $ pure ()) (c^.postInit) $ \cmd -> do
+  for_ (c^.postInit) $ \cmd -> do
     logInfo $ "Running UinputSink command: " <> displayShow cmd
     void . async . spawnCommand $ cmd
   UinputSink c <$> newMVar fd
@@ -171,7 +166,7 @@ usClose snk = withMVar (snk^.st) $ \h -> finally (release h) (close h)
 
 -- | Write a keyboard event to the sink and sync the driver state. Using an MVar
 -- ensures that we can never have 2 threads try to write at the same time.
-usWrite :: HasLogFunc e => UinputSink -> KeyEvent -> RIO e ()
+usWrite :: UinputSink -> KeyEvent -> RIO e ()
 usWrite u e = withMVar (u^.st) $ \fd -> do
   now <- liftIO getSystemTime
   send_event u fd . toLinuxKeyEvent e $ now
