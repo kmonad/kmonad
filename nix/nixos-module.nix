@@ -167,10 +167,7 @@ in
       isSystemUser = true;
     };
 
-    services.udev.extraRules = ''
-      # KMonad user access to /dev/uinput
-      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
-    '';
+    hardware.uinput.enable = true;
 
     systemd.paths =
       builtins.listToAttrs
