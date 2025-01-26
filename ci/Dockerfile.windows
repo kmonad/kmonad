@@ -1,0 +1,50 @@
+# Copyright (c) Joschua Kesper, 2024
+
+FROM debian:12
+
+WORKDIR /haskell
+
+#RUN dpkg --add-architecture i386
+RUN apt-get update
+RUN apt-get install --no-install-recommends --assume-yes \
+  ca-certificates unzip xz-utils \
+  wine winbind
+
+ADD https://downloads.haskell.org/~cabal/cabal-install-3.12.1.0/cabal-install-3.12.1.0-x86_64-windows.zip cabal.zip
+ADD https://downloads.haskell.org/~ghc/9.6.6/ghc-9.6.6-x86_64-unknown-mingw32.tar.xz ghc.tar.xz
+ADD https://curl.se/windows/latest.cgi?p=win64-mingw.zip curl.zip
+
+# Wine provides an outdated powershell, which breaks cabal (See https://github.com/haskell/cabal/issues/4747).
+# We decide to install `curl` instead of using `http`.
+RUN unzip cabal.zip cabal.exe
+# We strip the prefix containing the ghc version to be more generic
+RUN tar -xJf ghc.tar.xz --strip-components=1
+# Same for curl.
+RUN unzip -j curl.zip curl-*/bin/curl.exe -d bin
+ENV WINEPATH=Z:\\haskell\\bin
+
+#ENV WINEDEBUG=-all
+RUN wine cabal.exe update
+
+WORKDIR /usr/src/kmonad
+COPY stack.yaml kmonad.cabal ./
+
+# ===== NOTE ON CABAL USAGE =====
+# We don't use stack, since MSYS2 is broken under wine.
+# Therefore we get cabal to use stackage
+
+# ===== NOTE ON BINARY SIZE =====
+# `--split-sections` does not seem to do anything,
+# but stripping does do a lot.
+RUN sed -n \
+	-e '$a \packages: .' \
+	-e '$a \executable-stripping: true' \
+	-e '$a \package *' \
+	-e '$a \  split-sections: true' \
+	-e 's|resolver:\s\+\(\S\+\)|import: https://www.stackage.org/\1/cabal.config|p' \
+	stack.yaml > cabal.project
+
+RUN wine /haskell/cabal.exe build -j8 --only-dependencies
+
+COPY ./ ./
+RUN wine /haskell/cabal.exe install -j8 --install-method=copy --installdir='Z:/output'
