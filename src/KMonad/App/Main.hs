@@ -100,6 +100,8 @@ initAppEnv cfg = do
   launch_ "emitter_proc" $ do
     e <- atomically . takeTMVar $ otv
     emitKey snk e
+    -- If delay is specified, wait for it
+    for_ (cfg^.keyOutDelay) $ threadDelay . (*1000) . fromIntegral
   -- emit e = view keySink >>= flip emitKey e
   pure $ AppEnv
     { _keAppCfg  = cfg

@@ -108,6 +108,13 @@
     too rapidly; if you experience any problems in this direction, you can try
     setting this value to `5' or `10' and see if that helps.
 
+  - `key-seq-delay': NUMBER (in milliseconds)
+
+    This sets a delay between each outputted key event globally. Similarly to
+    `cmp-seq-delay` this may solve troubles caused by keys being ignored when
+    pressed to rapidly. You probably shouldn't specify both `cmp-seq-delay` and
+    `key-seq-delay`.
+
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OSes, and so do the capabilities of
   these interfaces.
@@ -188,6 +195,7 @@
     "sleep 1 && setxkbmap -option compose:ralt")
   cmp-seq ralt    ;; Set the compose key to `RightAlt'
   cmp-seq-delay 5 ;; 5ms delay between each compose-key sequence press
+  key-seq-delay 5 ;; 5ms delay between each outputted key event
 
   ;; For Windows
   ;; input  (low-level-hook)
