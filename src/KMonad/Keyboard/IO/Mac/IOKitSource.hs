@@ -80,4 +80,12 @@ iokitRead b = do
     peek $ b^.buffer
   case fromMacKeyEvent we of
     Nothing -> iokitRead b
-    Just e  -> either throwIO pure e
+    Just (Left e)
+      | (`all` e) $ \case
+        NoMacKeycodeFrom _ -> True
+        _ -> False
+      -> do
+        for_ e (logDebug . displayShow)
+        iokitRead b
+      | otherwise -> throwIO e
+    Just (Right k)  -> pure k
