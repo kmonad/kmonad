@@ -420,6 +420,9 @@ install the extension, and activate the extension.
 ```
 
 Note: If activation failed (e.g. because a newer version is already installed), replace `activate` in the above command with `forceActivate` and try again.
+If it still doesn't work you need to
+[temporarly disable System Integrity Protection](https://developer.apple.com/documentation/security/disabling-and-enabling-system-integrity-protection)
+for installation.
 
 
 #### Installing kmonad
