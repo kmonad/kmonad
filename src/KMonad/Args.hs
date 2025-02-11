@@ -46,6 +46,7 @@ loadConfig cmd = do
     , _fallThrough  = _flt     cgt
     , _allowCmd     = _allow   cgt
     , _startDelay   = _strtDel cmd
+    , _keyOutDelay  = fromIntegral <$> _ksd cgt
     }
 
 
@@ -60,7 +61,7 @@ joinCLI cmd = traverse._KDefCfg %~ insertCliOption cliList
   cliList :: DefSettings
   cliList = catMaybes $
        map flagToMaybe [cmd^.cmdAllow, cmd^.fallThrgh]
-    <> [cmd^.iToken, cmd^.oToken, cmd^.cmpSeq, cmd^.implArnd]
+    <> [cmd^.iToken, cmd^.oToken, cmd^.cmpSeq, cmd^.cmpSeqDelay, cmd^.keySeqDelay, cmd^.implArnd]
 
   -- | Convert command line flags to a 'Maybe' type, where the non-presence, as
   -- well as the default value of a flag will be interpreted as @Nothing@

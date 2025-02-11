@@ -123,6 +123,7 @@ data CfgToken = CfgToken
   , _fstL  :: LayerTag                          -- ^ Name of initial layer
   , _flt   :: Bool                              -- ^ How to deal with unhandled events
   , _allow :: Bool                              -- ^ Whether to allow shell commands
+  , _ksd   :: Maybe Int                         -- ^ Output delay between keys
   }
 makeClassy ''CfgToken
 
@@ -187,6 +188,7 @@ data DefSetting
   | SFallThrough Bool
   | SAllowCmd    Bool
   | SCmpSeqDelay Int
+  | SKeySeqDelay Int
   | SImplArnd    ImplArnd
   deriving (Show)
 makeClassyPrisms ''DefSetting
@@ -201,6 +203,8 @@ instance Eq DefSetting where
   SFallThrough{} == SFallThrough{} = True
   SAllowCmd{}    == SAllowCmd{}    = True
   SImplArnd{}    == SImplArnd{}    = True
+  SCmpSeqDelay{} == SCmpSeqDelay{} = True
+  SKeySeqDelay{} == SKeySeqDelay{} = True
   _              == _              = False
 
 -- | A list of different 'DefSetting' values
