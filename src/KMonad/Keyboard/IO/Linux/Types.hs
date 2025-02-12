@@ -23,19 +23,14 @@ module KMonad.Keyboard.IO.Linux.Types
 
     -- * Reexport common modules
   , module KMonad.Keyboard
-  , module KMonad.Keyboard.IO
   )
 where
-
-import KMonad.Prelude
 
 import Data.Time.Clock.System
 import Foreign.C.Types (CInt)
 import RIO.Partial (toEnum)
 
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
-import KMonad.Util
 
 
 --------------------------------------------------------------------------------

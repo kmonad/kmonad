@@ -23,16 +23,11 @@ module KMonad.Model.Hooks
   )
 where
 
-import KMonad.Prelude
-
 import Data.Time.Clock.System
 import Data.Unique
 
 import KMonad.Model.Action hiding (register)
 import KMonad.Keyboard
-import KMonad.Util
-
-import RIO.Partial (fromJust)
 
 import qualified RIO.HashMap as M
 
@@ -73,10 +68,8 @@ makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
 mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
-mkHooks' s = withRunInIO $ \u -> do
-  itr <- newEmptyTMVarIO
-  hks <- newTVarIO M.empty
-  pure $ Hooks (u s) itr hks
+mkHooks' s = withRunInIO $ \u ->
+  Hooks (u s) <$> newEmptyTMVarIO <*> newTVarIO M.empty
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
 mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
@@ -84,13 +77,7 @@ mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
 ioHook :: MonadUnliftIO m => Hook m -> m (Hook IO)
-ioHook h = withRunInIO $ \u -> do
-
-  t <- case _hTimeout h of
-    Nothing -> pure Nothing
-    Just t' -> pure . Just $ Timeout (t'^.delay) (u (_action t'))
-  let f e = u $ _keyH h e
-  pure $ Hook t f
+ioHook (Hook t f) = withRunInIO $ \u -> pure $ Hook (t & _Just.action %~ u) (u . f)
 
 
 --------------------------------------------------------------------------------
@@ -124,17 +111,13 @@ cancelHook :: (HasLogFunc e)
   -> Unique
   -> RIO e ()
 cancelHook hs tag = do
-  e <- atomically $ do
-    m <- readTVar $ hs^.hooks
-    let v = M.lookup tag m
-    when (isJust v) $ modifyTVar (hs^.hooks) (M.delete tag)
-    pure v
+  e <- atomically $ stateTVar (hs^.hooks) $ at tag <<.~ Nothing
   case e of
     Nothing ->
       logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
     Just e' -> do
       logDebug $ "Cancelling hook: " <> display (hashUnique tag)
-      liftIO $ e' ^. hTimeout . to fromJust . action
+      liftIO $ e' ^. hTimeout . _Just . action
 
 
 --------------------------------------------------------------------------------
