@@ -45,7 +45,7 @@ let
 
         compose = {
           key = lib.mkOption {
-            type = lib.types.nullOr lib.types.str;
+            type = lib.types.str;
             default = "ralt";
             description = "The (optional) compose key to use.";
           };
@@ -83,10 +83,8 @@ let
       (defcfg
         input  (device-file "${keyboard.device}")
         output (uinput-sink "kmonad-${keyboard.name}")
-        ${lib.optionalString (keyboard.defcfg.compose.key != null) ''
-          cmp-seq ${keyboard.defcfg.compose.key}
-          cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
-        ''}
+        cmp-seq ${keyboard.defcfg.compose.key}
+        cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
         key-seq-delay ${toString keyboard.defcfg.keySeqDelay}
         fallthrough ${lib.boolToString keyboard.defcfg.fallthrough}
         allow-cmd ${lib.boolToString keyboard.defcfg.allowCommands}
