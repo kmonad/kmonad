@@ -83,10 +83,10 @@ The following are all global config options that one can set in the
 + `cmp-seq` (key, defaults to `RightAlt`): compose key for Unicode input
   (X11 specific).
 
-+ `cmp-seq-delay` (natural number): delay between each pressed key in a
++ `cmp-seq-delay` (natural number, defaults to `0`): delay between each pressed key in a
   compose-key sequence.
 
-+ `key-seq-delay` (natural number): delay between each outputted key event.
++ `key-seq-delay` (natural number, defaults to `5`): delay between each outputted key event.
 
 + `implicit-around` (around variant, defaults to `around`):
   Specifies the variant of `around` to use in implicit around constructs

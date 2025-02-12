@@ -101,14 +101,14 @@
     as a workaround to also make this work on windows, see the section on
     Compose-key sequences below.
 
-  - `cmp-seq-delay': NUMBER (in milliseconds)
+  - `cmp-seq-delay': NUMBER, defaults to `0` (in milliseconds)
 
     This sets a delay between each pressed key in a compose-key sequence.  Some
     environments may have troubles recognizing the key sequence if it's pressed
     too rapidly; if you experience any problems in this direction, you can try
     setting this value to `5' or `10' and see if that helps.
 
-  - `key-seq-delay': NUMBER (in milliseconds)
+  - `key-seq-delay': NUMBER, defaults to `5` (in milliseconds)
 
     This sets a delay between each outputted key event globally. Similarly to
     `cmp-seq-delay` this may solve troubles caused by keys being ignored when
