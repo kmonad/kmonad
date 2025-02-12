@@ -41,14 +41,14 @@ RUN sed -n \
 	-e '$a \executable-stripping: true' \
 	-e '$a \package *' \
 	-e '$a \  split-sections: true' \
+	-e '$a \  ghc-options: -j' \
 	-e 's|resolver:\s\+\(\S\+\)|import: https://www.stackage.org/\1/cabal.config|p' \
 	stack.yaml > cabal.project
 
-# This sometimes errors with:
+# We don't run cabal in parallel, since this sometimes triggers some race Conditions
+# in among other things `ghc-pkg` and leads to helpful error messages like:
 # > <...> <some-function-to-do-with-handles>: invalid argument (Invalid argument)
-# The probabilities seems to very quite a bit depending on the system
-# and what it does.
-RUN wine /haskell/cabal.exe build -j8 --only-dependencies
+RUN wine /haskell/cabal.exe build --only-dependencies 
 
 COPY ./ ./
-RUN wine /haskell/cabal.exe install -j8 --install-method=copy --installdir='Z:/output'
+RUN wine /haskell/cabal.exe install --install-method=copy --installdir='Z:/output'
