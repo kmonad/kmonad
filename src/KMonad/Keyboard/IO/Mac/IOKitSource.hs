@@ -80,4 +80,7 @@ iokitRead b = do
     peek $ b^.buffer
   case fromMacKeyEvent we of
     Nothing -> iokitRead b
-    Just e  -> either throwIO pure e
+    Just (Left e) -> do
+      for_ e (logDebug . displayShow)
+      iokitRead b
+    Just (Right k)  -> pure k
