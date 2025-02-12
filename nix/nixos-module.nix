@@ -58,6 +58,13 @@ let
           };
         };
 
+        keySeqDelay = lib.mkOption {
+          type = lib.types.ints.unsigned;
+          default = 5;
+          example = 0;
+          description = "The delay (in milliseconds) between each key outputted event.";
+        };
+
         fallthrough = lib.mkEnableOption "reemitting unhandled key events";
 
         allowCommands = lib.mkEnableOption "keys to run shell commands";
@@ -80,6 +87,7 @@ let
           cmp-seq ${keyboard.defcfg.compose.key}
           cmp-seq-delay ${toString keyboard.defcfg.compose.delay}
         ''}
+        key-seq-delay ${toString keyboard.defcfg.keySeqDelay}
         fallthrough ${lib.boolToString keyboard.defcfg.fallthrough}
         allow-cmd ${lib.boolToString keyboard.defcfg.allowCommands}
       )

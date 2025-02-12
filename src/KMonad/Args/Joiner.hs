@@ -265,6 +265,7 @@ getCmpSeqDelay :: J (Maybe Int)
 getCmpSeqDelay = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SCmpSeqDelay $ cfg of
+    Right 0        -> pure Nothing
     Right b        -> pure (Just b)
     Left None      -> pure Nothing
     Left Duplicate -> throwError $ DuplicateSetting "cmp-seq-delay"
@@ -274,8 +275,9 @@ getKeySeqDelay :: J (Maybe Int)
 getKeySeqDelay = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SKeySeqDelay $ cfg of
+    Right 0        -> pure Nothing
     Right b        -> pure (Just b)
-    Left None      -> pure Nothing
+    Left None      -> pure (Just 5)
     Left Duplicate -> throwError $ DuplicateSetting "key-seq-delay"
 
 #ifdef linux_HOST_OS
