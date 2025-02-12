@@ -44,6 +44,10 @@ RUN sed -n \
 	-e 's|resolver:\s\+\(\S\+\)|import: https://www.stackage.org/\1/cabal.config|p' \
 	stack.yaml > cabal.project
 
+# This sometimes errors with:
+# > <...> <some-function-to-do-with-handles>: invalid argument (Invalid argument)
+# The probabilities seems to very quite a bit depending on the system
+# and what it does.
 RUN wine /haskell/cabal.exe build -j8 --only-dependencies
 
 COPY ./ ./
