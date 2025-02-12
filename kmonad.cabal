@@ -140,11 +140,16 @@ library
         c_src/mac/kext.cpp
       cxx-options:
         -std=c++14
+      include-dirs:
+        c_src/mac/Karabiner-VirtualHIDDevice/dist/include
     if flag(dext)
       cxx-sources:
         c_src/mac/dext.cpp
       cxx-options:
         -std=c++2a
+      include-dirs:
+        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit
+        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
     extra-libraries:
       c++
     build-depends:

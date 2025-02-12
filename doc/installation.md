@@ -448,14 +448,14 @@ If you are building against the kext, run:
 
 ``` console
   $ cd kmonad/
-  $ stack install --flag kmonad:kext --extra-include-dirs=c_src/mac/Karabiner-VirtualHIDDevice/dist/include
+  $ stack install --flag kmonad:kext
 ```
 
 If you are building against the dext, run
 
 ``` console
   $ cd kmonad/
-  $ stack install --flag kmonad:dext --extra-include-dirs=c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit:c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Client/vendor/include
+  $ stack install --flag kmonad:dext
 ```
 
 #### Giving kmonad additional permissions
