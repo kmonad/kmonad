@@ -415,6 +415,8 @@ joinButton ns als =
     KTapHoldNextRelease ms t h mtb
       -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h <*> traverse go mtb
     KTapNextPress t h  -> jst $ tapNextPress       <$> go t <*> go h
+    KTapHoldNextPress ms t h mtb
+      -> jst $ tapHoldNextPress (fi ms) <$> go t <*> go h <*> traverse go mtb
     KAroundOnly o i    -> jst $ aroundOnly         <$> go o <*> go i
     KAroundWhenAlone o i -> jst $ aroundWhenAlone  <$> go o <*> go i
     KAroundImplicit o i  -> joinButton ns als =<< fromImplArnd o i =<< view implArnd
