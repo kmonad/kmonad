@@ -65,7 +65,7 @@ pkgs.nixosTest {
 
           defcfg = {
             enable = true;
-            compose.key = null;
+            compose.key = "ralt";
             fallthrough = true;
           };
         };
