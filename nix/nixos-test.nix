@@ -80,11 +80,11 @@ pkgs.nixosTest {
           ${name}.wait_until_succeeds("pgrep kmonad")
 
       with subtest("Log In"):
-          ${name}.wait_until_tty_matches(1, "login: ")
+          ${name}.wait_until_tty_matches("1", "login: ")
           ${name}.send_chars("jdoe\n")
-          ${name}.wait_until_tty_matches(1, "Password: ")
+          ${name}.wait_until_tty_matches("1", "Password: ")
           ${name}.send_chars("password\n")
-          ${name}.wait_until_tty_matches(1, "$")
+          ${name}.wait_until_tty_matches("1", "$")
 
       with subtest("Test Tutorial Numbers Layer"):
           ${name}.send_chars("echo ")
