@@ -1,0 +1,25 @@
+name: Nix Flake CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Clone project
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v27
+      with:
+        # NixCPP url-parsing is currently broken.
+        install_url: https://releases.nixos.org/nix/nix-2.24.12/install
+
+    - name: Build flake
+      run: nix build --print-build-logs nix
+
+    - name: Check flake
+      run: nix flake check 'git+file:.?dir=nix'
