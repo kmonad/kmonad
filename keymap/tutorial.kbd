@@ -909,13 +909,18 @@
     Pesc Pa Resc Ra -> A (because a is pressed before esc is released)
     Pesc Ta Resc    -> A (a is pressed before esc is released here as well)
 
+  It also has a hold variant named `tap-hold-next-press` (notice a trend?).
+  It works just like `tap-next-press` except that after the timeout it will
+  jump into holding-mode. The holding button for the timeout case can be swapped
+  out just like `tap-hold-next` via a `:timeout-button ...` as the last argument.
+
   These increasingly stranger buttons are, I think, coming from the stubborn
   drive of some of my more eccentric (and I mean that in the most positive way)
   users to make typing with modifiers on the home-row more comfortable.
   Especially layouts that encourage a lot of rolling motions are nicer to use
   with the `release` style buttons.
 
-  The `tap-hold-next-release` (notice a trend?) is just like `tap-next-release`,
+  The `tap-hold-next-release` is just like `tap-next-release`,
   but it comes with an additional timeout that, just like `tap-hold-next` will
   jump into holding-mode after a timeout.
 
@@ -932,6 +937,7 @@
   thn (tap-hold-next 400 x lsft)
   tnr (tap-next-release x lsft)
   tnp (tap-next-press x lsft)
+  thp (tap-hold-next-press 2000 x lsft)
   tnh (tap-hold-next-release 2000 x lsft)
 
   ;; Used it the colemak layer
@@ -943,7 +949,7 @@
   @mt  _    _    _    _    _    _    _    _    _    _    _    @rem _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
   @thn _    _    _    _    _    _    _    _    _    _    _    _
-  @xtn _    _    _    _    _    _    _    _    _    _    @xth
+  @xtn @thp _    _    _    _    _    _    _    _    _    @xth
   @tnr @tnp _              _              _    _    _    @tnh
 )
 
