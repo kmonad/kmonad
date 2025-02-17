@@ -139,7 +139,7 @@ pressKey c =
       ft <- view fallThrough
       when ft $ do
           emit $ mkPress c
-          await (isReleaseOf c) $ \_ -> do
+          await InputHook (isReleaseOf c) $ \_ -> do
             emit $ mkRelease c
             pure Catch
 
@@ -151,7 +151,7 @@ pressKey c =
         app <- view appEnv
         runRIO (KEnv app b) $ do
           runAction a
-          awaitMy Release $ do
+          awaitMy InputHook Release $ do
             runBEnv b Release >>= \case
               Nothing -> pure ()
               Just a  -> runAction a
