@@ -234,14 +234,14 @@ matchMy :: MonadK m => Switch -> m KeyPred
 matchMy s = (==) <$> my s
 
 -- | Wait for an event to match a predicate and then execute an action
-await :: MonadKIO m => KeyPred -> (KeyEvent -> m Catch) -> m ()
-await p a = hookF InputHook $ \e -> if p e
+await :: MonadKIO m => HookLocation -> KeyPred -> (KeyEvent -> m Catch) -> m ()
+await l p a = hookF l $ \e -> if p e
   then a e
-  else await p a $> NoCatch
+  else await l p a $> NoCatch
 
 -- | Execute an action on the detection of the Switch of the active button.
-awaitMy :: MonadK m => Switch -> m Catch -> m ()
-awaitMy s a = matchMy s >>= flip await (const a)
+awaitMy :: MonadK m => HookLocation -> Switch -> m Catch -> m ()
+awaitMy l s a = matchMy s >>= flip (await l) (const a)
 
 -- | Try to call a function on a succesful match of a predicate within a certain
 -- time period. On a timeout, perform an action.
