@@ -342,8 +342,16 @@ to be the most comfortable.
   (defalias tnp (tap-next-press a sft))
   ```
 
++ `tap-hold-next-press`: like `tap-next-press` but with an
+  additional timeout. This is just like `tap-hold-next`, but with
+  `tap-next` swapped out for `tap-next-press`.
+
+  ```clojure
+  (defalias thp (tap-hold-next-press 1000 a sft))
+  ```
+
 + `tap-hold-next-release`: like `tap-next-release` but with an
-  additional timeout. This is just like `tap-next-release`, but with
+  additional timeout. This is just like `tap-hold-next`, but with
   `tap-next` swapped out for `tap-next-release`.
 
   ```clojure

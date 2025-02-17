@@ -55,6 +55,7 @@ module KMonad.Model.Button
   , tapNextRelease
   , tapHoldNextRelease
   , tapNextPress
+  , tapHoldNextPress
   , tapMacro
   , tapMacroRelease
   , steppedButton
@@ -477,6 +478,37 @@ tapNextPress t h = onPress' t go
     -- we rethrow this event after holding.
     doHold :: MonadK m => KeyEvent -> m Catch
     doHold e = press h *> inject e $> Catch
+
+-- | This button is to 'tap-next-press' what 'tap-hold-next' is to 'tap-next'
+tapHoldNextPress :: Milliseconds -> Button -> Button -> Maybe Button -> Button
+tapHoldNextPress ms t h mtb = onPress' t $ do
+  hold True
+  go ms
+  where
+    go :: MonadK m => Milliseconds -> m ()
+    go ms' = tHookF InputHook ms' onTimeout $ \r -> do
+      p <- matchMy Release
+      let e = r^.event
+      if
+        -- If the next event is my own release: we act as if we were tapped
+        | p e -> doTap
+        -- If the next event is a press: we act as if we were held
+        | isPress e -> doHold e
+        -- Else, if it is a release of some other button, just ignore
+        | otherwise -> go (ms' - r^.elapsed) $> NoCatch
+
+    onTimeout :: MonadK m =>  m ()
+    onTimeout = press (fromMaybe h mtb) *> hold False
+
+    -- Behave like a tap
+    doTap :: MonadK m => m Catch
+    doTap = tap t *> hold False $> Catch
+
+    -- Behave like a hold:
+    -- We catch the event of ButtonX that triggered this action, and then
+    -- we rethrow this event after holding.
+    doHold :: MonadK m => KeyEvent -> m Catch
+    doHold e = press h *> hold False *> inject e $> Catch
 
 -- | Create a 'Button' that contains a number of delays and 'Button's. As long
 -- as the next press is registered before the timeout, the multiTap descends
