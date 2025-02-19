@@ -103,17 +103,20 @@
 
   - `cmp-seq-delay': NUMBER, defaults to `0` (in milliseconds)
 
-    This sets a delay between each pressed key in a compose-key sequence.  Some
-    environments may have troubles recognizing the key sequence if it's pressed
-    too rapidly; if you experience any problems in this direction, you can try
-    setting this value to `5' or `10' and see if that helps.
+    This sets a delay between each pressed key in a compose-key sequence.
+    This is mostly not needed, as `key-seq-delay` already implies a small delay.
+    If you still have issues, with some environments failing to recognize
+    the key sequence due to its speed, you may want to increase this value
+    to `5` or `10` and see if that helps. Alternatively, take a look at
+    the `key-seq-delay` option for a more general approach.
 
   - `key-seq-delay': NUMBER, defaults to `1` (in milliseconds)
 
-    This sets a delay between each outputted key event globally. Similarly to
-    `cmp-seq-delay` this may solve troubles caused by keys being ignored when
-    pressed to rapidly. You probably shouldn't specify both `cmp-seq-delay` and
-    `key-seq-delay`.
+    This sets a delay after each outputted key event globally. Similarly to
+    `cmp-seq-delay` this may fix problems with keys being ignored when pressed
+    too rapidly. You probably won't need to specify both `cmp-seq-delay` and
+    `key-seq-delay`. Be careful with this option, as larger values are easily
+    noticeable in `tap-macro`s.
 
   Secondly, let's go over how to specify the `input` and `output` fields of a
   `defcfg` block. This differs between OSes, and so do the capabilities of

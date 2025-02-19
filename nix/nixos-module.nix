@@ -62,7 +62,7 @@ let
           type = lib.types.ints.unsigned;
           default = 1;
           example = 0;
-          description = "The delay (in milliseconds) between each key outputted event.";
+          description = "The delay (in milliseconds) after each key outputted event.";
         };
 
         fallthrough = lib.mkEnableOption "reemitting unhandled key events";

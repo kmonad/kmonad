@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 - `multi-tap` now holds when interrupted by another key while held. (#897)
 - `key-seq-delay` defaults to 1ms (#975).
+  If this slowdown in e.g. `tap-macro`s bothers you, you may want to set it to 0.
+  If you used `cmp-seq-delay`, you probably no longer have to,
+  as `key-seq-delay` effectivly already implies a `cmp-seq-delay`.
 
 ### Fixed
 
