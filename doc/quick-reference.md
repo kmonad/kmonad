@@ -86,7 +86,9 @@ The following are all global config options that one can set in the
 + `cmp-seq-delay` (natural number, defaults to `0`): delay between each pressed key in a
   compose-key sequence.
 
-+ `key-seq-delay` (natural number, defaults to `5`): delay between each outputted key event.
++ `key-seq-delay` (natural number, defaults to `1`): delay after each outputted key event.
+  Since it's more general then `cmp-seq-delay`, it implies a minimum `cmp-seq-delay`.
+  Be careful with this option as larger values are easily noticable in `tap-macro`s.
 
 + `implicit-around` (around variant, defaults to `around`):
   Specifies the variant of `around` to use in implicit around constructs
