@@ -533,6 +533,7 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
       -- 2C. If we detect another (unrelated) press event we cancel the
       --     remaining of the multi-tap sequence and trigger a hold on the
       --     current button of the sequence.
+      -- 2D. If we detect a release, we ignore it, and recurse.
       -- 3A. After 2B, if we do not detect a press before the interval is up,
       --     we know a tap occurred, so we tap the current button and we are
       --     done.
@@ -546,7 +547,7 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
             pr <- pred
             if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
                | isPress (t^.event) -> onTimeout              $> NoCatch
-               | otherwise          -> hold False             $> NoCatch
+               | otherwise          -> doNext pred onTimeout next (ms - t^.elapsed) $> NoCatch
       doNext (matchMy Release)
              (press b *> hold False)
              (doNext (matchMy Press) (tap b *> hold False) (\_ -> go bs'))
