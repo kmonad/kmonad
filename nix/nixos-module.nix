@@ -60,7 +60,7 @@ let
 
         keySeqDelay = lib.mkOption {
           type = lib.types.ints.unsigned;
-          default = 5;
+          default = 1;
           example = 0;
           description = "The delay (in milliseconds) between each key outputted event.";
         };

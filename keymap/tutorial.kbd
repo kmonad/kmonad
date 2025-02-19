@@ -108,7 +108,7 @@
     too rapidly; if you experience any problems in this direction, you can try
     setting this value to `5' or `10' and see if that helps.
 
-  - `key-seq-delay': NUMBER, defaults to `5` (in milliseconds)
+  - `key-seq-delay': NUMBER, defaults to `1` (in milliseconds)
 
     This sets a delay between each outputted key event globally. Similarly to
     `cmp-seq-delay` this may solve troubles caused by keys being ignored when

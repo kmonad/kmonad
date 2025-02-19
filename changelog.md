@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ### Changed
 
 - `multi-tap` now holds when interrupted by another key while held. (#897)
+- `key-seq-delay` defaults to 1ms (#975).
 
 ### Fixed
 

@@ -277,7 +277,7 @@ getKeySeqDelay = do
   case onlyOne . extract _SKeySeqDelay $ cfg of
     Right 0        -> pure Nothing
     Right b        -> pure (Just b)
-    Left None      -> pure (Just 5)
+    Left None      -> pure (Just 1)
     Left Duplicate -> throwError $ DuplicateSetting "key-seq-delay"
 
 #ifdef linux_HOST_OS
