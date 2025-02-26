@@ -543,15 +543,18 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
       -- 3C. If we detect any other (unrelated) press event, then the multi-tap
       --     sequence is cancelled like in 2C. We trigger a tap of the current
       --     button of the sequence.
-      let doNext pred onTimeout next ms = tHookF InputHook ms onTimeout $ \t -> do
+      -- 3D. If we detect a release event, we also cancel the multi-tap sequence.
+      let doNext pred onTimeout next cancel ms = tHookF InputHook ms onTimeout $ \t -> do
             pr <- pred
             if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
                | isPress (t^.event) -> onTimeout              $> NoCatch
-               | otherwise          -> doNext pred onTimeout next (ms - t^.elapsed) $> NoCatch
-      doNext (matchMy Release)
-             (press b *> hold False)
-             (doNext (matchMy Press) (tap b *> hold False) (\_ -> go bs'))
-             ms
+               | otherwise          -> cancel (ms - t^.elapsed) $> NoCatch
+      let cancel = tap b *> hold False
+      let doHold = press b *> hold False
+      let whileReleased = doNext (matchMy Press) cancel (\_ -> go bs') (const cancel)
+      let whilePressed = doNext (matchMy Release) doHold whileReleased whilePressed
+
+      whilePressed ms
 
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.

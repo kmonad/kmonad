@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed `tapMacro` and `tapMacroRelease` behaviour which was slightly broken in #873 (#906)
 - Fixed keycode translation problem on windows (#894)
 - Fixed keyrepeat not working in tty on linux (#913)
-- Fixed `multi-tap` not holding (#958)
+- Fixed `multi-tap` not holding (#958, #976)
 - Fixed `multi-tap` cancelling on release of other keys (#974)
 
 ## 0.4.3 – 2024-09-11
