@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-|
 Module      : KMonad.Util
 Description : Various bits and bobs that I don't know where to put
@@ -22,6 +23,8 @@ module KMonad.Util
   , onErr
   , using
   , logRethrow
+  , pass
+  , required
 
     -- * Some helpers to launch background process
   , withLaunch
@@ -32,7 +35,7 @@ module KMonad.Util
 
 where
 
-import KMonad.Prelude
+import KMonad.Prelude.Imports
 
 import Data.Time.Clock
 import Data.Time.Clock.System
@@ -43,7 +46,8 @@ import Data.Time.Clock.System
 
 -- | Newtype wrapper around 'Int' to add type safety to our time values
 newtype Milliseconds = Milliseconds { unMS :: Int }
-  deriving (Eq, Ord, Num, Real, Enum, Integral, Show, Read, Generic, Display, Typeable, Data)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
+  deriving newtype (Num, Real, Enum, Integral, Display)
 
 -- | Calculate how much time has elapsed between 2 time points
 tDiff :: ()
@@ -88,6 +92,17 @@ logRethrow :: HasLogFunc e
 logRethrow t e = do
   logError $ display t <> ": " <> display e
   throwIO e
+
+-- | Simply do nothing, usefull to reduce parenthesis
+-- for 'IO' one could use 'mempty' instead, though
+-- we also want to use it with 'AnyK', for which
+-- we sadly cannot define an instance since it's an alias
+-- around 'forall m. MonadK m => m a'.
+pass :: Applicative f => f ()
+pass = pure ()
+
+required :: MonadError e m => e -> Maybe a -> m a
+required e = maybe (throwError e) pure
 
 -- | Launch a process that repeats an action indefinitely. If an error ever
 -- occurs, print it and rethrow it. Ensure the process is cleaned up upon error

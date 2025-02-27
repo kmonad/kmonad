@@ -19,7 +19,6 @@ module KMonad.Keyboard.ComposeSeq
   )
 where
 
-import KMonad.Prelude
 import RIO.Text.Partial (replace)
 
 --------------------------------------------------------------------------------
