@@ -16,6 +16,7 @@
     - [Q: How to use the special features printed on Apple function keys?](#q-how-to-use-the-special-features-printed-on-apple-function-keys)
 - [General](#general)
     - [Q: Why can't I remap certain (non US) buttons?](#q-why-cant-i-remap-certain-non-us-buttons)
+    - [Q: Why don't shifted symbols work (sometimes)?](#q-why-dont-shifted-symbols-work-sometimes)
     - [Q: What does `Ta`, `Pa` and `Ra` stand for?](#q-what-does-ta-pa-and-ra-stand-for)
     - [Q: Why doesn't the 'Print' keycode work for my print screen button?](#q-why-doesnt-the-print-keycode-work-for-my-print-screen-button)
     - [Q: Why can't I remap the Fn key on my laptop?](#q-why-cant-i-remap-the-fn-key-on-my-laptop)
@@ -218,6 +219,14 @@ you would specify the letter that would be there in qwerty (`[`).
 This is of course also true for buttons which are in a different place.
 On the german layout the `+` is reached without shift, while on US qwerty it's
 on `S-=`. This means it's also not a valid keycode to specify in your `defsrc`.
+
+### Q: Why don't shifted symbols work (sometimes)?
+
+A: In some environments, applications cannot process key events that are too fast.
+If you notice this with `tap-macro` or shifted symbols (like `A`) you
+may want to increase the value for `key-seq-delay` in `defcfg` to
+something like `5`ms.
+Here is the [original bug report](https://github.com/kmonad/kmonad/issues/820).
 
 ### Q: What does `Ta`, `Pa` and `Ra` stand for?
 
