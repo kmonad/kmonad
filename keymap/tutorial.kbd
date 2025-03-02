@@ -616,6 +616,14 @@
 
     (tap-macro K P5 M P5 o P5 n P5 a P5 d)
 
+  Alternatively, you could use the more general approach and change the
+  value for `key-seq-delay` in `defcfg`. Also notice that the values
+  don't add up: due to the difference in where the delay is applied, the
+  maximum takes effect. (`key-seq-delay` works on outputted events, and
+  `:delay` is while handling the button) If you use really long
+  `tap-macro`s (like storing your email), you may experiment with a
+  delay of `0` to have a more "paste-like" experience.
+
   The `tap-macro-release` is like `tap-macro`, except that it
   waits to press the last button when the `tap-macro-release`
   gets released.  It might be useful when combined with a
