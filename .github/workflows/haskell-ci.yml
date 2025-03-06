@@ -21,7 +21,8 @@ jobs:
           - lts-20               # GHC 9.2
           - lts-21               # GHC 9.4
           - lts-22               # GHC 9.6
-          - nightly-2024-07-05   # GHC 9.8
+          - lts-23               # GHC 9.8
+          - nightly-2025-03-06   # GHC 9.10
 
     steps:
       - name: Clone project
