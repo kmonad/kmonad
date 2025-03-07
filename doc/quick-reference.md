@@ -355,9 +355,11 @@ to be the most comfortable.
 + `tap-hold-next-release`: like `tap-next-release` but with an
   additional timeout. This is just like `tap-hold-next`, but with
   `tap-next` swapped out for `tap-next-release`.
+  `:grace` keyword to specify a time in milliseconds the release of
+  the button may come before the release triggering a hold.
 
   ```clojure
-  (defalias thr (tap-hold-next-release 1000 a sft))
+  (defalias thr (tap-hold-next-release 1000 :grace 100 a sft))
   ```
 
 + `tap-hold-next` and `tap-hold-next-release` can take an optional
