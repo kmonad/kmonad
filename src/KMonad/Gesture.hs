@@ -11,7 +11,6 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Char
 
-import RIO.List.Partial (head)
 import RIO.Seq (Seq(..))
 
 import qualified RIO.List as L
@@ -67,8 +66,9 @@ around x g@(Gesture seq)
 fromList :: Ord a => [Toggle a] -> Either (GestureError a) (Gesture a)
 fromList as = case (`runState` S.empty) . runExceptT . foldM f Q.empty $ as of
   (Left e, _) -> Left e
-  (Right g, s) | S.null s -> Right $ Gesture g
-               | otherwise -> Left $ OnWithoutOff (head . S.elems $ s)
+  (Right g, s) -> case S.lookupMin s of
+    Just toggle -> Left $ OnWithoutOff toggle
+    Nothing     -> Right $ Gesture g
   where
     f s x = do
       pressed <- get

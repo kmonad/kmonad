@@ -6,20 +6,26 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Nix Flake CI - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
     steps:
 
-    - name: Clone project
-      uses: actions/checkout@v4
+      - name: Clone project
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    - name: Install Nix
-      uses: cachix/install-nix-action@v27
-      with:
-        # NixCPP url-parsing is currently broken.
-        install_url: https://releases.nixos.org/nix/nix-2.24.12/install
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
 
-    - name: Build flake
-      run: nix build --print-build-logs nix
+      - name: Build flake
+        run: nix build --print-build-logs 'git+file:///${{ github.workspace }}?dir=nix&submodules=1'
 
-    - name: Check flake
-      run: nix flake check 'git+file:.?dir=nix'
+      - name: Check flake
+        run: nix flake check 'git+file:///${{ github.workspace }}?dir=nix&submodules=1'
