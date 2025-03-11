@@ -66,6 +66,7 @@ library
       DeriveTraversable
       DeriveAnyClass
       DerivingStrategies
+      DerivingVia
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
@@ -196,7 +197,7 @@ test-suite spec
   hs-source-dirs:
       test
   build-depends:
-      base >= 4.12 && < 5
+      base >= 4.17 && < 5
     , kmonad
     , hspec
     , rio

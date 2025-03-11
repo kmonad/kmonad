@@ -113,9 +113,6 @@ mkStages ''Cfg
 
 deriving instance Show PCfg
 deriving instance Eq PCfg
-
-instance Semigroup PCfg where
-  PCfg is os cks csds km fts acs ksds ias <> PCfg is' os' cks' csds' km' fts' acs' ksds' ias' =
-    PCfg (is ++ is') (os ++ os') (cks ++ cks') (csds ++ csds') (km ++ km') (fts ++ fts') (acs ++ acs') (ksds ++ ksds') (ias ++ ias')
-
-instance Monoid PCfg where mempty = PCfg [] [] [] [] [] [] [] [] []
+deriving instance Generic PCfg
+deriving via (Generically PCfg) instance Semigroup PCfg
+deriving via (Generically PCfg) instance Monoid PCfg

@@ -4,6 +4,7 @@ module KMonad.Prelude.Imports
   ( module X )
 where
 
+import GHC.Generics       as X (Generically(..))
 import Control.Lens       as X
 import Control.Monad.Cont as X
 import Control.Monad.Except as X
