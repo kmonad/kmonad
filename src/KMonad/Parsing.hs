@@ -16,8 +16,6 @@ module KMonad.Parsing
 
 where
 
-import KMonad.Prelude
-
 import Text.Megaparsec hiding (ParseError)
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as X

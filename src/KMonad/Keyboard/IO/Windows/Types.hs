@@ -22,16 +22,13 @@ module KMonad.Keyboard.IO.Windows.Types
 
 where
 
-import KMonad.Prelude
-
 import Foreign.Storable
 import KMonad.Keyboard
 
 import Data.Tuple (swap)
 import qualified RIO.HashMap as M
 import qualified RIO.NonEmpty as NE (groupAllWith)
--- TODO: use `Data.Foldable1` instead when `base` >= 4.18.0.0
-import qualified Data.Foldable as NE (minimumBy, maximumBy)
+import qualified Data.Foldable1 as NE (minimumBy, maximumBy)
 
 ----------------------------------------------------------------------------
 -- $err

@@ -15,7 +15,4 @@ module Main
   )
 where
 
-import qualified KMonad.App as KMonad (main)
-
-main :: IO ()
-main = KMonad.main
+import KMonad.App (main)
