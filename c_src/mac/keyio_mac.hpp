@@ -88,7 +88,7 @@ void open_matching_devices(char *product, io_iterator_t iter) {
         CFStringRef cfcurr = (CFStringRef)IORegistryEntryCreateCFProperty(curr, CFSTR(kIOHIDProductKey), kCFAllocatorDefault, kIOHIDOptionsTypeNone);
         if(cfcurr == NULL) {
             print_iokit_error("IORegistryEntryCreateCFProperty");
-            continue;
+            cfcurr = CFStringCreateWithCString (NULL, "Unknown External Keyboard", kCFStringEncodingUTF8);
         }
 
         // any device named "Karabiner ..." should be ignored
