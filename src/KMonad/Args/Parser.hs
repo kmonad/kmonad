@@ -237,26 +237,26 @@ rmTapMacroP =
 
 -- | Compose-key sequence
 composeSeqP :: Parser [DefButton]
-composeSeqP = terminated $ do
+composeSeqP = do
   -- Lookup 1 character in the compose-seq list
-  c <- anySingle <?> "special character"
-  s <- case find (\(_, c', _) -> c' == c) ssComposed of
-         Nothing -> fail "Unrecognized compose-char"
-         Just b  -> pure $ b^._1
+  s <- terminated $ do
+    c <- anySingle <?> "special character"
+    case find (\(_, c', _) -> c' == c) ssComposed of
+      Nothing -> fail "Unrecognized compose-char"
+      Just b  -> pure $ b^._1
 
   -- If matching, parse a button-sequence from the stored text
-  case runParser (some buttonP) "" s of
-    -- Parse error never reaches the user. They simply get a message about an unexpected character.
-    Left  _ -> fail "Could not parse compose sequence"
+  case runParser (some buttonP <* eof) "" s of
+    Left  _ -> fail $ "Internal error: Could not parse compose sequence `" <> unpack s <> "`"
     Right b -> pure b
 
 -- | Parse a dead-key sequence as a `+` followed by some symbol
 deadkeySeqP :: Parser [DefButton]
-deadkeySeqP = terminated $ do
-  _ <- char '+'
-  c <- satisfy (`elem` ("~'^`\"," :: String))
+deadkeySeqP = do
+  c <- terminated $ char '+' *> satisfy (`elem` ("~'^`\"," :: String))
+
   case runParser buttonP "" (T.singleton c) of
-    Left  _ -> fail "Could not parse deadkey sequence"
+    Left  _ -> fail $ "Internal error: Could not parse deadkey sequence `" <> [c] <> "`"
     Right b -> pure [b]
 
 -- | Parse any button

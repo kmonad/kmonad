@@ -26,7 +26,7 @@ spec = describe "compose-sequences" $ do
   checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
     let c' = T.singleton c
     let actualSeq = runParser buttonP "" c'
-    let expectedSeq = runParser (KComposeSeq <$> some buttonP) "" expected
+    let expectedSeq = runParser (KComposeSeq <$> some buttonP <* eof) "" expected
     let actualE2E = parseTokens $ "(deflayer <test> " <> c' <> " )"
     let expectedE2E = first ParseError expectedSeq <&> \x -> [KDefLayer (DefLayer "<test>" [LButton x])]
     it "Is compose sequence" $ actualSeq `shouldSatisfy` parsesAsValidComposeSeq
