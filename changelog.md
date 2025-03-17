@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed keyrepeat not working in tty on linux (#913)
 - Fixed `multi-tap` not holding (#958, #976)
 - Fixed `multi-tap` cancelling on release of other keys (#974)
+- Fixed problems with tap-next-release and similar (see #256) (#524, #914)
 
 ## 0.4.3 – 2024-09-11
 
