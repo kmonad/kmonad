@@ -28,6 +28,7 @@ import KMonad.Util
 
 import qualified Data.Serialize as B (decode)
 import qualified RIO.ByteString as B
+import RIO.Directory (canonicalizePath)
 
 --------------------------------------------------------------------------------
 -- $err
@@ -132,7 +133,8 @@ lsOpen :: (HasLogFunc e)
   -> FilePath      -- ^ The path to the device file
   -> RIO e DeviceFile
 lsOpen pr pt = do
-  h  <- liftIO $ openFd pt
+  pt' <- canonicalizePath pt -- Needed if using `/dev/input/by-path` symlinks.
+  h  <- liftIO $ openFd pt'
     ReadOnly
 #if !MIN_VERSION_unix(2,8,0)
     Nothing
