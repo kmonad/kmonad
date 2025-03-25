@@ -224,7 +224,7 @@ aroundOnly outer inner = onPress' (around outer inner) $ do
   runAction $ inner^.pressAction
   go =<< matchMy Release
  where
-  go :: KeyPred -> AnyK ()
+  go :: MonadK m => KeyPred -> m ()
   go isMyRelease = hookF InputHook $ \e ->
     if
       | isMyRelease e -> do
@@ -251,25 +251,24 @@ aroundWhenAlone outer inner = onPress' (around outer inner) $ do
   runAction $ outer^.pressAction
   runAction $ inner^.pressAction
   go S.empty =<< matchMy Release
-  pure ()
  where
-  go :: HashSet Keycode -> KeyPred -> AnyK ()
+  go :: MonadK m => HashSet Keycode -> KeyPred -> m ()
   go pressed isMyRelease = hookF InputHook $ \e ->
     if
       | isMyRelease e -> do
         runAction $ inner^.releaseAction
-        when (null pressed) . runAction $ outer^.releaseAction
+        when (null pressed) $ runAction $ outer^.releaseAction
         pure Catch
       | isPress e -> do
         let pressed' = S.insert (e^.keycode) pressed
-        when (null pressed) . runAction $ outer^.releaseAction
+        when (null pressed) $ runAction $ outer^.releaseAction
         go pressed' isMyRelease
         pure NoCatch
       | otherwise -> do -- some release
         let pressed' = S.delete (e^.keycode) pressed
         let shouldPressOuter = S.member (e^.keycode) pressed && null pressed'
         inject e
-        when shouldPressOuter . after 3 . runAction $ outer^.pressAction
+        when shouldPressOuter . after 3 $ runAction $ outer^.pressAction
         await isRelease $ \_ -> go pressed' isMyRelease $> NoCatch
         pure Catch
 
@@ -521,7 +520,7 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
       []           -> l
       ((_, b) : _) -> b
 
-    go :: [(Milliseconds, Button)] -> AnyK ()
+    go :: MonadK m => [(Milliseconds, Button)] -> m ()
     go []            = press l *> hold False
     go ((ms, b):bs') = do
       -- This is a bit complicated. What we do is:
