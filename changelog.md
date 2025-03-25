@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Added `key-seq-delay`, a more general version of `cmp-seq-delay`, which enforces a minimum delay
   after each key event. (#908)
 - Added `tap-hold-next-press` which is like `tap-next-press` but with an additional timeout. (#971)
+- Set unknown keyboard names to "Unknown External Keyboard" on Macos. (#980)
 
 ### Changed
 
