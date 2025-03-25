@@ -10,9 +10,9 @@
         - [GNU Guix](#gnu-guix)
         - [Void Linux](#void-linux)
         - [NixOS](#nixos)
-            - [The Derivation](#the-derivation)
+            - [nixpkgs](#nixpkgs)
+            - [flake.nix](#flakenix)
             - [Configuration.nix](#configurationnix)
-            - [The NixOS module](#the-nixos-module)
     - [Compilation](#compilation)
         - [Using `stack`](#using-stack)
         - [Using `nix`](#using-nix)
@@ -111,11 +111,18 @@ You can install `kmonad` via `xbps-install`:
 
 ### NixOS
 
-The following instructions show how to install and configure KMonad in NixOS with flakes enabled.
-There is a NixOS module included in this repository that can be used
-instead of a manual configuration.
+#### nixpkgs
+
+`kmonad` is packaged in `nixpkgs`.
+If you want to use the version provided there,
+you don't need to setup the flake and can just continue
+with the [configuration](#configurationnix) below.
 
 #### flake.nix
+
+The following instructions show how to install KMonad in NixOS with flakes enabled.
+There is a NixOS module included in this repository that can be used
+instead of a manual configuration.
 
 1. Add KMonad as an input:
 
