@@ -46,8 +46,8 @@ NOTE: These packages might be out of date.
 
 ### Arch Linux
 
-Kmonad is available on Arch as
-[`kmonad`](https://archlinux.org/packages/extra/x86_64/kmonad/).
+KMonad is available on Arch as
+[`kmonad`](https://archlinux.org/packages/extra/x86_64/kmonad/)
 in the `extra` repo.
 
 ### GNU Guix
