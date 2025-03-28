@@ -1,14 +1,10 @@
 module KMonad.ButtonDocSpec (spec) where
 
 import KMonad.Args.Parser
-import KMonad.Args.Types
-import KMonad.Prelude
+import KMonad.Model
 
-import Data.Char (isSpace)
 import Data.Data
 import qualified RIO.Text as T
-
-import Test.Hspec
 
 spec :: Spec
 spec = do
@@ -42,27 +38,27 @@ docsExistForEveryButtons =
 tutorialMentionsEveryButton :: Spec
 tutorialMentionsEveryButton =
   describe "button-usage" $
-    sequence_ . traverse checkButtonUsed buttonConstrs =<< runIO getTutorial
+    sequence_ . for buttonConstrs checkButtonUsed . view keymap =<< runIO getTutorial
  where
   checkButtonUsed btn cnt =
     it ("Buttontype `" <> showConstr btn <> "` appears outside of comments")
       . unless (containsButton btn cnt)
       $ expectationFailure ("Buttontype `" <> showConstr btn <> "` is never used")
   containsButton btn = any . anyButton $ (== btn) . toConstr
-  anyButton f (KDefLayer DefLayer{_layerSettings = lyrBtns}) = anyOf (each . _LButton) (anySubButton f) lyrBtns
+  anyButton f (KDefLayer DefLayer{_layerSettings = settings}) = anyOf (lButtons.each) (anySubButton f) settings
   anyButton f (KDefAlias als) = any (anySubButton f . snd) als
   anyButton _ _ = False
   anySubButton f x = f x || anyOf plate f x
   buttonConstrs = dataTypeConstrs $ dataTypeOf (undefined :: DefButton)
 
-getTutorial :: IO [KExpr]
+getTutorial :: IO PCfg
 getTutorial =
   either cannotParseTutorial pure . parseTokens
     =<< readFileUtf8 tutorialPath
  where
   cannotParseTutorial err =
     fail ("Could not parse `" <> tutorialPath <> "`:\n" <> show err)
-      $> []
+      $> mempty
 
 quickReferencePath :: FilePath
 quickReferencePath = "doc/quick-reference.md"

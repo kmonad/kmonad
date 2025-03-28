@@ -1,5 +1,5 @@
 {-|
-Module      : KMonad.Args.Types
+Module      : KMonad.Model.Parsing
 Description : The basic types of configuration parsing.
 Copyright   : (c) David Janssen, 2019
 License     : MIT
@@ -9,20 +9,15 @@ Stability   : experimental
 Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
-module KMonad.Args.Types
+module KMonad.Model.Parsing
   (
-    -- * $cfg
-    CfgToken(..)
-
     -- * $but
-  , DefButton(..)
+    DefButton(..)
   , ImplArnd(..)
 
     -- * $tls
-  , DefSetting(..)
-  , DefSettings
   , DefAlias
-  , DefLayerSetting(..)
+  , DefLayerSettings(..)
   , DefLayer(..)
   , DefSrc(..)
   , KExpr(..)
@@ -33,26 +28,16 @@ module KMonad.Args.Types
 
     -- * $lenses
   , AsKExpr(..)
-  , AsDefSetting(..)
   , HasDefSrc(..)
-  , AsDefLayerSetting(..)
+  , HasDefLayerSettings(..)
 ) where
 
-
-import KMonad.Prelude
-
-import KMonad.Model.Button
 import KMonad.Keyboard
-import KMonad.Keyboard.IO
-import KMonad.Util
 
 --------------------------------------------------------------------------------
 -- $but
 --
 -- Tokens representing different types of buttons
-
--- FIXME: This is really broken: why are there 2 lists of 'DefButton's? There is
--- one here, and one in Parser/Types.hs
 
 -- | Button ADT
 data DefButton
@@ -77,17 +62,17 @@ data DefButton
   | KAroundNext DefButton                  -- ^ Surround a future button
   | KAroundNextSingle DefButton            -- ^ Surround a future button
   | KMultiTap [(Int, DefButton)] DefButton -- ^ Do things depending on tap-count
-  | KStepped [DefButton]                   -- ^ Do different things, one-by-one
+  | KStepped (NonEmpty DefButton)          -- ^ Do different things, one-by-one
   | KAround DefButton DefButton            -- ^ Wrap 1 button around another
   | KAroundOnly DefButton DefButton        -- ^ Wrap 1 button only around another
   | KAroundWhenAlone DefButton DefButton   -- ^ Wrap 1 button around another when it's "alone"
   | KAroundImplicit DefButton DefButton    -- ^ Wrap 1 button around another
   | KAroundNextTimeout Int DefButton DefButton
-  | KTapMacro [DefButton] (Maybe Int)
+  | KTapMacro (NonEmpty DefButton) (Maybe Int)
     -- ^ Sequence of buttons to tap, possible delay between each press
-  | KTapMacroRelease [DefButton] (Maybe Int)
+  | KTapMacroRelease (NonEmpty DefButton) (Maybe Int)
     -- ^ Sequence of buttons to tap, tap last on release, possible delay between each press
-  | KComposeSeq [DefButton]                -- ^ Compose-key sequence
+  | KComposeSeq (NonEmpty DefButton)       -- ^ Compose-key sequence
   | KPause Milliseconds                    -- ^ Pause for a period of time
   | KLayerDelay Int LayerTag               -- ^ Switch to a layer for a period of time
   | KLayerNext LayerTag                    -- ^ Perform next button in different layer
@@ -97,7 +82,7 @@ data DefButton
   | KBeforeAfterNext DefButton DefButton   -- ^ Surround a future button in a before and after tap
   | KTrans                                 -- ^ Transparent button that does nothing
   | KBlock                                 -- ^ Button that catches event
-  deriving (Show, Eq, Typeable, Data)
+  deriving (Show, Eq, Data)
 
 instance Plated DefButton
 
@@ -108,27 +93,6 @@ data ImplArnd
   | IAAroundOnly
   | IAAroundWhenAlone
   deriving (Show, Eq)
-
---------------------------------------------------------------------------------
--- $cfg
---
--- The Cfg token that can be extracted from a config-text without ever entering
--- IO. This will then directly be translated to a DaemonCfg
---
-
--- | The 'CfgToken' contains all the data needed to construct an
--- 'KMonad.App.AppCfg'.
-data CfgToken = CfgToken
-  { _src   :: LogFunc -> IO (Acquire KeySource) -- ^ How to grab the source keyboard
-  , _snk   :: LogFunc -> IO (Acquire KeySink)   -- ^ How to construct the out keybboard
-  , _km    :: LMap Button                       -- ^ An 'LMap' of 'Button' actions
-  , _fstL  :: LayerTag                          -- ^ Name of initial layer
-  , _flt   :: Bool                              -- ^ How to deal with unhandled events
-  , _allow :: Bool                              -- ^ Whether to allow shell commands
-  , _ksd   :: Maybe Int                         -- ^ Output delay between keys
-  }
-makeClassy ''CfgToken
-
 
 --------------------------------------------------------------------------------
 -- $tls
@@ -148,17 +112,23 @@ makeClassy ''DefSrc
 -- | A mapping from names to button tokens
 type DefAlias = [(Text, DefButton)]
 
-data DefLayerSetting
-  = LSrcName Text
-  | LImplArnd ImplArnd
-  | LButton DefButton
+data DefLayerSettings = DefLayerSettings
+  { _lSrcName  :: [Text]
+  , _lImplArnd :: [ImplArnd]
+  , _lButtons  :: [DefButton]
+  }
   deriving (Show, Eq)
-makeClassyPrisms ''DefLayerSetting
+makeClassy ''DefLayerSettings
+instance Semigroup DefLayerSettings where
+  DefLayerSettings sn ia bs <> DefLayerSettings sn' ia' bs' =
+    DefLayerSettings (sn ++ sn') (ia ++ ia') (bs ++ bs')
+instance Monoid DefLayerSettings where
+  mempty = DefLayerSettings [] [] []
 
 -- | A layer of buttons
 data DefLayer = DefLayer
   { _layerName :: Text
-  , _layerSettings :: [DefLayerSetting]
+  , _layerSettings :: DefLayerSettings
   }
   deriving (Show, Eq)
 
@@ -173,57 +143,22 @@ data IToken
   = KDeviceSource FilePath
   | KLowLevelHookSource
   | KIOKitSource (Maybe Text)
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- | All different output-tokens KMonad can take
 data OToken
   = KUinputSink Text (Maybe Text)
   | KSendEventSink (Maybe (Int, Int))
   | KKextSink
-  deriving (Show)
-
--- | All possible single settings
-data DefSetting
-  = SIToken      IToken
-  | SOToken      OToken
-  | SCmpSeq      DefButton
-  | SFallThrough Bool
-  | SAllowCmd    Bool
-  | SCmpSeqDelay Int
-  | SKeySeqDelay Int
-  | SImplArnd    ImplArnd
-  deriving (Show)
-makeClassyPrisms ''DefSetting
-
--- | 'Eq' instance for a 'DefSetting'. Because every one of these options may be
--- given at most once, we only need to check the outermost constructor in order
--- to test for equality
-instance Eq DefSetting where
-  SIToken{}      == SIToken{}      = True
-  SOToken{}      == SOToken{}      = True
-  SCmpSeq{}      == SCmpSeq{}      = True
-  SFallThrough{} == SFallThrough{} = True
-  SAllowCmd{}    == SAllowCmd{}    = True
-  SImplArnd{}    == SImplArnd{}    = True
-  SCmpSeqDelay{} == SCmpSeqDelay{} = True
-  SKeySeqDelay{} == SKeySeqDelay{} = True
-  _              == _              = False
-
--- | A list of different 'DefSetting' values
-type DefSettings = [DefSetting]
+  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 -- $tkn
 
 -- | Any statement in a config-file must parse to a 'KExpr'
 data KExpr
-  = KDefCfg   DefSettings
-  | KDefSrc   DefSrc
+  = KDefSrc   DefSrc
   | KDefLayer DefLayer
   | KDefAlias DefAlias
   deriving (Show, Eq)
 makeClassyPrisms ''KExpr
-
-
---------------------------------------------------------------------------------
--- $act

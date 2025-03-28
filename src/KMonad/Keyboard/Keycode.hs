@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.Keycode
 Description : Description of all possible keycodes.
@@ -23,12 +22,9 @@ module KMonad.Keyboard.Keycode
   )
 where
 
-import KMonad.Prelude
-
 import qualified KMonad.Util.MultiMap     as Q
 import qualified RIO.HashSet       as S
 import qualified RIO.Text          as T
-import qualified RIO.Text.Partial  as T (head)
 
 --------------------------------------------------------------------------------
 -- $typ
@@ -817,17 +813,16 @@ data Keycode
   | KeyMissionCtrl
   | KeySpotlight
   | KeyDictation
-  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable, Typeable, Data)
+  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable, Data)
 
 
 instance Display Keycode where
-  textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
-    $ minimumByOf (_Just . folded) cmpName (keyNames ^. at c)
-    where cmpName a b =
-            -- Prefer the shortest, and if equal, lowercased version
-            case compare (T.length a) (T.length b) of
-              EQ -> compare (T.head b) (T.head a)
-              o  -> o
+  textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c) $
+    minimumByOf
+      (ix c . folded)
+      -- Prefer the shortest, and if equal, lowercased version
+      (compare `on` T.length &&& previews _head isUpper)
+      keyNames
 
 --------------------------------------------------------------------------------
 -- $sets

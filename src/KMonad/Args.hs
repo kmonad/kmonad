@@ -10,74 +10,62 @@ Portability : non-portable (MPTC with FD, FFI to Linux-only c-code)
 
 -}
 module KMonad.Args
-  ( getCmd, loadConfig, Cmd, HasCmd(..))
+  ( getCmdL, loadConfig, CmdL, HasCmdL(..))
 where
 
-import KMonad.Prelude
-import KMonad.App.Types
 import KMonad.Args.Cmd
 import KMonad.Args.Joiner
 import KMonad.Args.Parser
-import KMonad.Args.Types
+import KMonad.Model
 
 --------------------------------------------------------------------------------
 --
 
--- | Parse a configuration file into a 'AppCfg' record
-loadConfig :: HasLogFunc e => Cmd -> RIO e AppCfg
-loadConfig cmd = do
+-- | Parse a configuration file into a 'ACfg' record
+loadConfig :: HasLogFunc e => CmdL -> RIO e ACfg
+loadConfig cmdl = do
 
-  tks <- loadTokens (cmd^.cfgFile)      -- This can throw a ParseError
-  cgt <- joinConfigIO (joinCLI cmd tks) -- This can throw a JoinError
+  tks <- loadTokens (cmdl^.keymap)               -- This can throw a ParseError
+  tcfg <- joinConfigIO (joinCLI (cmdl^.cfg) tks) -- This can throw a JoinError
 
   -- Try loading the sink and src
   lf  <- view logFuncL
-  snk <- liftIO . _snk cgt $ lf
-  src <- liftIO . _src cgt $ lf
-
-  -- Emit the release of <Enter> if requested
+  snk <- liftIO $ tcfg^.sink   $ lf
+  src <- liftIO $ tcfg^.source $ lf
 
   -- Assemble the AppCfg record
-  pure $ AppCfg
-    { _keySinkDev   = snk
-    , _keySourceDev = src
-    , _keymapCfg    = _km      cgt
-    , _firstLayer   = _fstL    cgt
-    , _fallThrough  = _flt     cgt
-    , _allowCmd     = _allow   cgt
-    , _startDelay   = _strtDel cmd
-    , _keyOutDelay  = fromIntegral <$> _ksd cgt
+  pure $ ACfg
+    { _sink   = snk
+    , _source = src
+    , _keymap    = tcfg^.keymap
+    , _fstLayer   = tcfg^.fstLayer
+    , _fallThrough  = tcfg^.fallThrough
+    , _allowCmd     = tcfg^.allowCmd
+    , _startDelay   = cmdl^.startDelay
+    , _keySeqDelay  = fromIntegral <$> tcfg^.keySeqDelay
     }
 
 
 -- | Join the options given from the command line with the one read from the
 -- configuration file.
--- This does not yet throw any kind of exception, as we are simply inserting the
--- given options into every 'KDefCfg' block that we see.
-joinCLI :: Cmd -> [KExpr] -> [KExpr]
-joinCLI cmd = traverse._KDefCfg %~ insertCliOption cliList
+-- This does not yet throw any kind of exception, as we are simply overwriting an option
+-- but don't fix duplication issues.
+-- They will be handled while joining.
+joinCLI :: CCfg -> PCfg -> PCfg
+joinCLI (CCfg i o _ ck csd _ ft ac _ ksd ia) pcfg =
+  pcfg
+    & source      %~ overwriteOption i
+    & sink        %~ overwriteOption o
+    & cmpKey      %~ overwriteOption ck
+    & cmpSeqDelay %~ overwriteOption csd
+    & fallThrough %~ overwriteOption ft
+    & allowCmd    %~ overwriteOption ac
+    & keySeqDelay %~ overwriteOption ksd
+    & implArnd    %~ overwriteOption ia
  where
-  -- | All options and flags that were given on the command line.
-  cliList :: DefSettings
-  cliList = catMaybes $
-       map flagToMaybe [cmd^.cmdAllow, cmd^.fallThrgh]
-    <> [cmd^.iToken, cmd^.oToken, cmd^.cmpSeq, cmd^.cmpSeqDelay, cmd^.keySeqDelay, cmd^.implArnd]
-
-  -- | Convert command line flags to a 'Maybe' type, where the non-presence, as
-  -- well as the default value of a flag will be interpreted as @Nothing@
-  flagToMaybe :: DefSetting -> Maybe DefSetting
-  flagToMaybe = \case
-    SAllowCmd    b -> if b then Just (SAllowCmd    b) else Nothing
-    SFallThrough b -> if b then Just (SFallThrough b) else Nothing
-    _              -> Nothing
-
-  -- | Insert all command line options, potentially overwriting already existing
-  -- options that were given in the configuration file. This is a paramorphism
-  insertCliOption :: DefSettings -> DefSettings -> DefSettings
-  insertCliOption cliSettings cfgSettings =
-    foldr (\s cfgs ->
-             if   s `elem` cfgs
-             then map (\x -> if s == x then s else x) cfgs
-             else s : cfgs)
-          cfgSettings
-          cliSettings
+  -- | Overwrite an option but don't fix duplication issues, since they will be handled later.
+  -- Though we do allow adding a missing option, which is weird when it is a required option.
+  overwriteOption :: Maybe a -> [a] -> [a]
+  overwriteOption Nothing vs = vs
+  overwriteOption (Just _) vs@(_ : _ : _) = vs
+  overwriteOption (Just v) _ = [v]

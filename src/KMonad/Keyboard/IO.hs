@@ -23,10 +23,7 @@ module KMonad.Keyboard.IO
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Keyboard.Types
-import KMonad.Util
 
 import qualified RIO.Text as T
 

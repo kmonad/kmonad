@@ -35,7 +35,7 @@ module KMonad.Model.Button
   , layerSwitch
   , layerAdd
   , layerRem
-  , pass
+  , pass'
   , cmdButton
 
   -- * Button combinators
@@ -63,11 +63,8 @@ module KMonad.Model.Button
   )
 where
 
-import KMonad.Prelude
-
 import KMonad.Model.Action
 import KMonad.Keyboard
-import KMonad.Util
 
 import qualified RIO.HashSet as S
 
@@ -108,17 +105,17 @@ mkButton' a b c = Button (Action a) (Action b) (Action c)
 
 -- | Create a new button with only a 'Press' action
 onPress :: AnyK () -> Button
-onPress p = mkButton p $ pure ()
+onPress p = mkButton p pass
 
 onRelease :: AnyK () -> Button
-onRelease = mkButton (pure ())
+onRelease = mkButton pass
 
 onTap :: AnyK () -> Button
-onTap = mkButton' (pure ()) (pure ())
+onTap = mkButton' pass pass
 
 -- | Like 'onPress' but with an alternative button to use for tapping
 onPress' :: Button -> AnyK () -> Button
-onPress' (Button{_tapAction = Action t}) p = mkButton' p (pure ()) t
+onPress' (Button{_tapAction = Action t}) p = mkButton' p pass t
 
 --------------------------------------------------------------------------------
 -- $running
@@ -174,7 +171,7 @@ layerToggle :: LayerTag -> Button
 layerToggle t = mkButton'
   (layerOp $ PushLayer t)
   (layerOp $ PopLayer  t)
-  (pure ())
+  pass
 
 -- | Create a button that switches the base-layer on a press
 layerSwitch :: LayerTag -> Button
@@ -189,13 +186,13 @@ layerRem :: LayerTag -> Button
 layerRem t = onPress (layerOp $ PopLayer t)
 
 -- | Create a button that does nothing (but captures the input)
-pass :: Button
-pass = onPress $ pure ()
+pass' :: Button
+pass' = onPress pass
 
 -- | Create a button that executes a shell command on press and possibly on
 -- release
 cmdButton :: Text -> Maybe Text -> Button
-cmdButton pr mbR = mkButton (shellCmd pr) (maybe (pure ()) shellCmd mbR)
+cmdButton pr mbR = mkButton (shellCmd pr) (for_ mbR shellCmd)
 
 --------------------------------------------------------------------------------
 -- $combinators
@@ -543,37 +540,32 @@ multiTap l bs = onPress' tap' $ hold True *> go bs
       --     sequence is cancelled like in 2C. We trigger a tap of the current
       --     button of the sequence.
       -- 3D. If we detect a release event, we also cancel the multi-tap sequence.
-      let doNext pred onTimeout next cancel ms = tHookF InputHook ms onTimeout $ \t -> do
+      let doNext pred onTimeout next doCancel ms' = tHookF InputHook ms' onTimeout $ \t -> do
             pr <- pred
-            if | pr (t^.event)      -> next (ms - t^.elapsed) $> Catch
+            if | pr (t^.event)      -> next (ms' - t^.elapsed) $> Catch
                | isPress (t^.event) -> onTimeout              $> NoCatch
-               | otherwise          -> cancel (ms - t^.elapsed) $> NoCatch
-      let cancel = tap b *> hold False
+               | otherwise          -> doCancel (ms' - t^.elapsed) $> NoCatch
+      let doCancel = tap b *> hold False
       let doHold = press b *> hold False
-      let whileReleased = doNext (matchMy Press) cancel (\_ -> go bs') (const cancel)
+      let whileReleased = doNext (matchMy Press) doCancel (\_ -> go bs') (const doCancel)
       let whilePressed = doNext (matchMy Release) doHold whileReleased whilePressed
 
       whilePressed ms
 
 -- | Create a 'Button' that performs a series of taps on press. Note that the
 -- last button is only released when the tapMacro itself is released.
-tapMacro :: [Button] -> Button
-tapMacro bs = mkButton' (go False bs) (pure ()) (go True bs)
+tapMacro :: NonEmpty Button -> Button
+tapMacro bs = mkButton' (foldrMap1 press go bs) pass (foldrMap1 tap go bs)
   where
-    go _ []      = pure ()
-    go False [b]     = press b
-    go True [b] = tap b
-    go forceTap (b:rst) = tap b >> go forceTap rst
+    go b = (tap b >>)
 
 -- | Create a 'Button' that performs a series of taps on press,
 -- except for the last Button, which is tapped on release.
-tapMacroRelease :: [Button] -> Button
-tapMacroRelease bs = mkButton' (go False bs) (pure ()) (go True bs)
+tapMacroRelease :: NonEmpty Button -> Button
+tapMacroRelease bs = mkButton' (foldrMap1 tapOnRelease go bs) pass (foldrMap1 tap go bs)
   where
-    go _ []      = pure ()
-    go False [b]     = awaitMy Release $ tap b >> pure Catch
-    go True [b] = tap b
-    go forceTap (b:rst) = tap b >> go forceTap rst
+    go b = (tap b >>)
+    tapOnRelease b     = awaitMy Release $ tap b >> pure Catch
 
 -- | Switch to a layer for a period of time, then automatically switch back
 layerDelay :: Milliseconds -> LayerTag -> Button
@@ -613,7 +605,7 @@ stickyKey ms b = onPress go
   doTap =
     within ms
            (pure isPress)  -- presses definitely happen after us
-           (pure ())
+           pass
            (\t -> runAction (b^.pressAction)
                *> inject (t^.event)
                *> after 3 (runAction $ b^.releaseAction)
@@ -623,11 +615,10 @@ stickyKey ms b = onPress go
 --
 -- I.e: first it acts as the first button, then as the second, then as the
 -- third, and when finished rotates back to being the first button.
-steppedButton :: [Button] -> Button
+steppedButton :: NonEmpty Button -> Button
 steppedButton bs = onPress $ go bs
   where
-    go [] = undefined
-    go [b] = press b
-    go (b:bs') = do
+    go (b:|[])     = press b
+    go (b:|b':bs') = do
       press b
-      awaitMy Press $ go bs' $> Catch
+      awaitMy Press $ go (b' :| bs') $> Catch

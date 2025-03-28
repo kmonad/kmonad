@@ -1,13 +1,9 @@
 module KMonad.ComposeSeqSpec (spec) where
 
 import KMonad.Args.Parser
-import KMonad.Args.Types
-import KMonad.Keyboard.ComposeSeq
-import KMonad.Keyboard.Keycode
+import KMonad.Model
+import KMonad.Keyboard
 import KMonad.Parsing
-import KMonad.Prelude
-
-import Test.Hspec
 
 import qualified RIO.NonEmpty as N
 import qualified RIO.Text as T
@@ -26,9 +22,10 @@ spec = describe "compose-sequences" $ do
   checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
     let c' = T.singleton c
     let actualSeq = runParser buttonP "" c'
-    let expectedSeq = runParser (KComposeSeq <$> some buttonP) "" expected
+    let expectedSeq = runParser (KComposeSeq <$> some1 buttonP) "" expected
     let actualE2E = parseTokens $ "(deflayer <test> " <> c' <> " )"
-    let expectedE2E = first ParseError expectedSeq <&> \x -> [KDefLayer (DefLayer "<test>" [LButton x])]
+    let expectedE2E = first ParseError expectedSeq
+         <&> \x -> mempty & keymap .~ [KDefLayer . DefLayer "<test>" $ DefLayerSettings [] [] [x]]
     it "Is compose sequence" $ actualSeq `shouldSatisfy` parsesAsValidComposeSeq
     it "Matches expected" $ actualSeq `shouldBe` expectedSeq
     it "Could parse in E2E" $ actualE2E `shouldBe` expectedE2E

@@ -11,8 +11,6 @@ Portability : non-portable (TH)
 -}
 module KMonad.Args.TH (gitHash) where
 
-import KMonad.Prelude
-
 import Control.Monad.Trans.Maybe
 import Language.Haskell.TH (Exp, Q, runIO)
 import UnliftIO.Directory (findExecutable)

@@ -48,8 +48,9 @@
                          Necessary: the `defcfg` block
 
   There are a few bits of information that are required to be present in a
-  KMonad configuration file. One of these is the existence of exactly 1 `defcfg`
-  statement. This statement is used to customize various configuration settings.
+  KMonad configuration file. One of these is the existence a `defcfg` statement.
+  Multiple will get merged into a single one and then checked (This may change in the future).
+  A `defcfg` statement is used to customize various configuration settings.
   Many of these settings have default values, but a minimal definition must
   include at least an 'input' field and an 'output' field. These describe how
   KMonad captures its inputs and how it emits its outputs.
