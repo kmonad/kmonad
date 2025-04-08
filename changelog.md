@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ### Fixed
 
 - Fixed excessive backtracking in the parser leading to unreadable errors (#985)
+- Fixed the `c_src/mac/list-keyboards.c` on Apple SDK < 12.0 (#987)
 
 ## 0.4.4 – 2025-04-11
 
