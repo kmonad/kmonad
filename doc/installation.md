@@ -338,8 +338,8 @@ Simply run these commands in Windows PowerShell:
 
 KMonad supports macOS 10.12 to 10.15 (Sierra, High Sierra, Mojave, and
 Catalina) and macOS 11.0 (Big Sur). When using driverkit-based extension
-v2.1.0 and later, KMonad also supports macOS 13.0 (Ventura) and 14.0
-(Sonoma).
+v5.0.0 and later, KMonad also supports macOS 13.0 (Ventura), 14.0
+(Sonoma) and 15.0 (Sequoia).
 
 Note: Under macOS, `kmonad` uses one of two "system extensions" to
 post modified key events to the OS. For macOS Catalina and prior, we
@@ -396,7 +396,7 @@ Therefore, if you use Karabiner-Elements, you may already have the
 dext installed (though maybe a different version number). Run
 `defaults read
 /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/Info.plist
-CFBundleVersion` to check the version: if `3.1.0` is shown, then the
+CFBundleVersion` to check the version: if `5.0.0` is shown, then the
 installed dext is compatible with kmonad and you can move onto
 [installing kmonad](#installing-kmonad). If another version is listed,
 this may work too (but has not been tested).
@@ -419,7 +419,7 @@ install the extension, and activate the extension.
 
 ```console
   $ cd kmonad/
-  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-3.1.0.pkg
+  $ open c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/dist/Karabiner-DriverKit-VirtualHIDDevice-5.0.0.pkg
 ```
 
 ```console
@@ -431,6 +431,17 @@ If it still doesn't work you need to
 [temporarly disable System Integrity Protection](https://developer.apple.com/documentation/security/disabling-and-enabling-system-integrity-protection)
 for installation.
 
+##### Starting the dext daemon
+
+Starting with version 4.0.0, the dext installation no longer manages the daemon for the Karabiner-DriverKit-VirtualHIDDevice. Users are now required to start the daemon manually:
+
+```console
+  $ sudo '/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'
+```
+
+A [Launch Agent Property List (plist file)](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/blob/v5.0.0/files/LaunchDaemons/org.pqrs.service.daemon.Karabiner-VirtualHIDDevice-Daemon.plist)
+is provided in the Karabiner-DriverKit-VirtualHIDDevice repository,
+which can be used to start the daemon automatically at login.
 
 #### Installing kmonad
 
