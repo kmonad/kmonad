@@ -9,10 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 ### Added
 
 ### Changed
+
 - Update Karabiner-DriverKit to 5.0.0 (#937)
   You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 
 ### Fixed
+
+- Fixed excessive backtracking in the parser leading to unreadable errors (#985)
 
 ## 0.4.4 – 2025-04-11
 
