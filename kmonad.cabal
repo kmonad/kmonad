@@ -16,7 +16,7 @@ description:
   overlays, tap-mod buttons, multi-tap buttons, leader-key style buttons, and
   keyboard macros. Functionality heavily inspired by the QMK-firmware.
 
-extra-source-files:
+extra-doc-files:
     changelog.md
     doc/quick-reference.md
     keymap/tutorial.kbd
