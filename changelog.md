@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## 0.4.4 – 2025-04-11
+
+### Added
+
 - Added names for the keys `rfkill` and `micmute` (#883).
   If you previously used the buttons `missing247` and `missing248`, please update to the new names.
 - Added more MacOS keys (#936)
