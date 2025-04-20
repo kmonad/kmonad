@@ -21,6 +21,7 @@ module KMonad.Util
     -- * Random utility helpers that have no better home
   , onErr
   , using
+  , duplicatesWith
   , logRethrow
 
     -- * Some helpers to launch background process
@@ -36,6 +37,8 @@ import KMonad.Prelude
 
 import Data.Time.Clock
 import Data.Time.Clock.System
+
+import qualified RIO.NonEmpty as NE
 
 --------------------------------------------------------------------------------
 -- $time
@@ -74,6 +77,10 @@ onErr a err = a >>= \ret -> when (ret == -1) $ throwIO err
 -- | Embed the action of using an 'Acquire' in a continuation monad
 using :: Acquire a -> ContT r (RIO e) a
 using dat = ContT (\next -> with dat $ \a -> next a)
+
+-- | Get a list duplicates with the selected field identical
+duplicatesWith :: Ord b => (a -> b) -> [a] -> [NonEmpty a]
+duplicatesWith f = filter (not . null . NE.tail) . NE.groupAllWith f
 
 
 -- | Log an error message and then rethrow the error

@@ -250,6 +250,10 @@
   quite nicely (although wider columns will allow for more informative aliases,
   see below).
 
+  Instead of keycodes directly you can also use an alias (see `defalias`).
+  The syntax for aliases is the same as described in `deflayer`. Keep in mind
+  that only keycodes work. Any other button will be reported as an error.
+
   Most keycodes should be obvious. If you are unsure, check
   './src/KMonad/Keyboard/Keycode.hs'. Every Keycode has a name corresponding to
   its Keycode name, but all lower-case and with the 'Key' prefix removed. There
@@ -278,6 +282,8 @@
   kp1  kp2 kp3 kprt
   kp0    kp.
 )
+
+(defsrc :name with-aliases @foo)
 
 
 #| --------------------------------------------------------------------------
