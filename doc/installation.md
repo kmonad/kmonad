@@ -269,7 +269,7 @@ build it.
 Just do this from the `Dockerfile` directory:
 ``` shell
 # Build the Docker image which will contain the binary.
-docker build -t kmonad-builder .
+docker build -t kmonad-builder -f ci/Dockerfile.linux .
 
 # Spin up an ephemeral Docker container from the built image, to just copy the
 # built binary to the host's current directory bind-mounted inside the
