@@ -50,9 +50,10 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (headMaybe, intersperse, uncons, sort, group)
+import RIO.List (headMaybe, intersperse, uncons, sort, group, find)
 import RIO.Partial (fromJust)
 import qualified KMonad.Util.LayerStack  as L
+import qualified RIO.NonEmpty     as NE
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
 
@@ -64,6 +65,7 @@ data JoinError
   = DuplicateBlock   Text
   | MissingBlock     Text
   | DuplicateAlias   Text
+  | CyclicAlias      Text
   | DuplicateLayer   Text
   | DuplicateSource  (Maybe Text)
   | DuplicateKeyInSource (Maybe Text) [Keycode]
@@ -84,6 +86,7 @@ instance Show JoinError where
     DuplicateBlock    t   -> "Encountered duplicate block of type: " <> T.unpack t
     MissingBlock      t   -> "Missing at least 1 block of type: "    <> T.unpack t
     DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
+    CyclicAlias       t   -> "Aliases references itself in a loop: " <> T.unpack t
     DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
     DuplicateSource   t   -> case t of
       Just t  -> "Multiple sources of the same name: " <> T.unpack t
@@ -333,17 +336,26 @@ pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 --------------------------------------------------------------------------------
 -- $als
 
-type Aliases = M.HashMap Text Button
+type Aliases = M.HashMap Text DefButton
 type LNames  = [Text]
 
 -- | Build up a hashmap of text to button mappings
 --
--- Aliases can refer back to buttons that occured before.
-joinAliases :: LNames -> [DefAlias] -> J Aliases
-joinAliases ns als = foldM f M.empty $ concat als
-  where f mp (t, b) = if t `M.member` mp
-          then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> unnest (joinButton ns mp b)
+-- Aliases can refer back to other aliases.
+joinAliases :: [DefAlias] -> J Aliases
+joinAliases als = do
+  let als' = concat als
+  case find (not . null . NE.tail) $ NE.groupAllWith fst als' of
+    Nothing -> pure ()
+    Just ((t, _) :| _) -> throwError $ DuplicateAlias t
+
+  M.traverseWithKey =<< go $ M.fromList als'
+ where
+  go mp t (KRef t') = case (compare t t', M.lookup t' mp) of
+      (EQ, _) -> throwError $ CyclicAlias t
+      (_, Nothing) -> throwError $ MissingAlias t'
+      (_, Just b) -> go mp t b
+  go _ _ b = pure b
 
 --------------------------------------------------------------------------------
 -- $but
@@ -373,7 +385,7 @@ joinButton ns als =
     -- Variable dereference
     KRef t -> case M.lookup t als of
       Nothing -> throwError $ MissingAlias t
-      Just b  -> ret b
+      Just b  -> joinButton ns als b
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
@@ -465,7 +477,7 @@ joinKeymap _    _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap srcs als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
   nms   <- foldM f [] $ map _layerName lys     -- Extract all names
-  als'  <- joinAliases nms als                 -- Join aliases into 1 hashmap
+  als'  <- joinAliases als                     -- Join aliases into 1 hashmap
   srcs' <- joinSources  srcs                   -- Join all sources into 1 hashmap
   lys'  <- mapM (joinLayer als' nms srcs') lys -- Join all layers
   -- Return the layerstack and the name of the first layer

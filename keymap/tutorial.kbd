@@ -289,9 +289,8 @@
   these buttons, to keep the actual `deflayer` statements orderly.
 
   A `defalias` can contain any number of aliases, and it can refer backwards or
-  forwards to layers without issue. The only sequencing that needs to be kept in
-  mind is that a `defalias` cannot refer forward to another `defalias` that is
-  not yet defined.
+  forwards to layers or other aliases without issue. Thoug you may not create
+  cyclic aliases.
 
   Here we define a few aliases, but we will define more later. Notice that we
   try to only use 3 letter names for aliases. If that is not enough to be clear,
@@ -303,6 +302,8 @@
 (defalias
   num  (layer-toggle numbers) ;; Bind num to a button that switches to a layer
   kil  C-A-del                ;; Bind kil to a button that Ctrl-Alt-deletes
+  foo @bar                    ;; An alias with a forward reference to another alias
+  bar a
 )
 
 
