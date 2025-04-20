@@ -457,7 +457,7 @@ joinButton ns als =
 --------------------------------------------------------------------------------
 -- $src
 
-type Sources = M.HashMap (Maybe Text) [Keycode]
+type Sources = M.HashMap (Maybe Text) [Maybe Keycode]
 
 -- | Build up a hashmap of text to source mappings.
 joinSources :: Aliases -> [DefSrc] -> J Sources
@@ -468,11 +468,12 @@ joinSources als = foldM joiner mempty
      | n `M.member` sources = throwError $ DuplicateSource n
      | otherwise            = do
         ks' <- for ks $ withDerefAlias als joinKeycode
-        let dups = NE.head <$> duplicatesWith id ks'
+        let dups = NE.head <$> duplicatesWith id (toList =<< ks')
         unless (null dups) $ throwError $ DuplicateKeyInSource n dups
         pure $ M.insert n ks' sources
     where
-     joinKeycode (KEmit k) = pure k
+     joinKeycode (KEmit k) = pure $ Just k
+     joinKeycode KBlock    = pure Nothing
      joinKeycode b         = throwError $ NotAKeycode b
 
 --------------------------------------------------------------------------------
@@ -512,9 +513,11 @@ joinLayer als ns srcs l@(DefLayer n settings) = do
     throwError $ LengthMismatch n (length bs) (length src)
 
   -- Join each button and add it (filtering out KTrans)
-  let f acc (kc, b) = joinButton ns als b >>= \case
-        Nothing -> pure acc
-        Just b' -> pure $ (kc, b') : acc
+  let
+    f acc (Nothing, b) = joinButton ns als b $> acc
+    f acc (Just kc, b) = joinButton ns als b >>= \case
+      Nothing -> pure acc
+      Just b' -> pure $ (kc, b') : acc
   maybe id (local . set implArnd) implAround $
     (n,) <$> foldM f [] (zip src bs)
 

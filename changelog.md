@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Added
 
+- `XX` may be used in `defsrc` as a placeholder button.
+  Buttons binded to it will never trigger. (#992)
+
 ### Changed
 
 - Update Karabiner-DriverKit to 5.0.0 (#937)
