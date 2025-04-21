@@ -23,6 +23,7 @@
     - [Q: Why do some key combination not work?](#q-why-do-some-key-combination-not-work)
     - [Q: When I run KMonad I get error `Not available under this OS`](#q-when-i-run-kmonad-i-get-error-not-available-under-this-os)
     - [Q: Where can I find a list of keycodes which can be used in KMonad?](#q-where-can-i-find-a-list-of-keycodes-which-can-be-used-in-kmonad)
+    - [Q: How do I provide the input and output from the command line?](#q-how-do-i-provide-the-input-and-output-from-the-command-line)
 
 <!-- markdown-toc end -->
 
@@ -292,3 +293,29 @@ TL;DR: Make sure the options in `defcfg` are for your operating system.
 ### Q: Where can I find a list of keycodes which can be used in KMonad?
 
 A: List of keycodes can be found [here.](https://github.com/kmonad/kmonad/blob/master/src/KMonad/Keyboard/Keycode.hs)
+
+### Q: How do I provide the input and output from the command line?
+
+A: The input / output can be assigned via the `--input` / `--output`
+(or the short style `-i` / `-o`) options to override the value in the `.kbd`
+config file. These options take exactly the same assignment as the `input` /
+`output` statement in the `defcfg` block. For example, if we have this line
+in our `.kbd` config file:
+
+```clojure
+  input  (device-file "/dev/input/by-id/my-kbd")
+```
+We may instead call KMonad using:
+
+```bash
+kmonad --input 'device-file "/dev/input/by-id/my-kbd"' my-kbd.kbd
+```
+
+Notice that single quotes are used to pack the `device-file` and the path into
+one string, and also note that the path needs to be wrapped with double quotes.
+If your shell does not support single quotes, you can also escape the double
+quotes.
+
+```bash
+kmonad --input "device-file \"/dev/input/by-id/my-kbd\"" my-kbd.kbd
+```
