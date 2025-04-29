@@ -6,10 +6,10 @@ import KMonad.Keyboard.ComposeSeq
 import KMonad.Keyboard.Keycode
 import KMonad.Parsing
 import KMonad.Prelude
+import KMonad.Util
 
 import Test.Hspec
 
-import qualified RIO.NonEmpty as N
 import qualified RIO.Text as T
 
 spec :: Spec
@@ -21,8 +21,7 @@ spec = describe "compose-sequences" $ do
     noDuplicates' _1 "Compose sequences"
     noDuplicates' _2 "Characters"
     noDuplicates' _3 "Character names"
-  noDuplicates' field desc = it desc $ duplicates (view field) ssComposed `shouldBe` []
-  duplicates field = filter (not . null . N.tail) . N.groupAllWith field
+  noDuplicates' field desc = it desc $ duplicatesWith (view field) ssComposed `shouldBe` []
   checkComposeSeq (expected, c, name) = describe ("Compose sequence for " <> unpack name) $ do
     let c' = T.singleton c
     let actualSeq = runParser buttonP "" c'

@@ -250,6 +250,19 @@
   quite nicely (although wider columns will allow for more informative aliases,
   see below).
 
+  You can also insert a placeholder button using `XX`. This is almost the same
+  as extra white space but you still need to bind a button to it. Said button is
+  never used. This is occasionally useful if you have buttons which don't emit a
+  keycode or have the same keycode multiple times on the same keyboard. In such
+  cases large chunks of whitespace may be more confusing then a placeholder
+  button. If you further want to specify which button this placeholder refers
+  to, you can use an alias (see below).
+
+  Instead of keycodes directly you can also use an alias (see `defalias`).
+  The syntax for aliases is the same as described in `deflayer`. Keep in mind
+  that buttons, which won't work if you place them in `defsrc` directly, will
+  also not work if you use them via an alias.
+
   Most keycodes should be obvious. If you are unsure, check
   './src/KMonad/Keyboard/Keycode.hs'. Every Keycode has a name corresponding to
   its Keycode name, but all lower-case and with the 'Key' prefix removed. There
@@ -279,6 +292,8 @@
   kp0    kp.
 )
 
+(defsrc :name with-aliases @foo @power)
+
 
 #| --------------------------------------------------------------------------
                         Optional : `defalias` statements
@@ -289,9 +304,8 @@
   these buttons, to keep the actual `deflayer` statements orderly.
 
   A `defalias` can contain any number of aliases, and it can refer backwards or
-  forwards to layers without issue. The only sequencing that needs to be kept in
-  mind is that a `defalias` cannot refer forward to another `defalias` that is
-  not yet defined.
+  forwards to layers or other aliases without issue. Thoug you may not create
+  cyclic aliases.
 
   Here we define a few aliases, but we will define more later. Notice that we
   try to only use 3 letter names for aliases. If that is not enough to be clear,
@@ -303,6 +317,9 @@
 (defalias
   num  (layer-toggle numbers) ;; Bind num to a button that switches to a layer
   kil  C-A-del                ;; Bind kil to a button that Ctrl-Alt-deletes
+  power XX                    ;; Placeholder for power button of keyboard
+  foo @bar                    ;; An alias with a forward reference to another alias
+  bar a
 )
 
 

@@ -139,8 +139,8 @@ makeClassy ''CfgToken
 -- | A list of keycodes describing the ordering used by all other layers
 -- | which is associated with a name.
 data DefSrc = DefSrc
-  { _srcName  :: Maybe Text -- ^ A unique name used to refer to this layer.
-  , _keycodes :: [Keycode]  -- ^ Layer settings containing also the buttons.
+  { _srcName  :: Maybe Text   -- ^ A unique name used to refer to this layer.
+  , _keycodes :: [DefButton]  -- ^ Layer settings containing also the buttons.
   }
   deriving (Show, Eq)
 makeClassy ''DefSrc

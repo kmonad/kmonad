@@ -394,7 +394,7 @@ defsrcP :: Parser DefSrc
 defsrcP =
   DefSrc
     <$> optarg'P "name" word
-    <*> many keycodeP
+    <*> many buttonP
 
 --------------------------------------------------------------------------------
 -- $deflayer

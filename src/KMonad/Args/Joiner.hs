@@ -25,6 +25,7 @@ module KMonad.Args.Joiner
 where
 
 import KMonad.Prelude hiding (uncons)
+import KMonad.Util
 
 import KMonad.Args.Types
 
@@ -50,9 +51,10 @@ import KMonad.Keyboard.IO.Mac.KextSink
 
 import Control.Monad.Except
 
-import RIO.List (headMaybe, intersperse, uncons, sort, group)
+import RIO.List (headMaybe, intersperse, uncons, sort, group, find)
 import RIO.Partial (fromJust)
 import qualified KMonad.Util.LayerStack  as L
+import qualified RIO.NonEmpty     as NE
 import qualified RIO.HashMap      as M
 import qualified RIO.Text         as T
 
@@ -64,6 +66,7 @@ data JoinError
   = DuplicateBlock   Text
   | MissingBlock     Text
   | DuplicateAlias   Text
+  | CyclicAlias      Text
   | DuplicateLayer   Text
   | DuplicateSource  (Maybe Text)
   | DuplicateKeyInSource (Maybe Text) [Keycode]
@@ -78,12 +81,14 @@ data JoinError
   | NestedTrans
   | InvalidComposeKey
   | LengthMismatch   Text Int Int
+  | NotAKeycode      DefButton
 
 instance Show JoinError where
   show e = case e of
     DuplicateBlock    t   -> "Encountered duplicate block of type: " <> T.unpack t
     MissingBlock      t   -> "Missing at least 1 block of type: "    <> T.unpack t
     DuplicateAlias    t   -> "Multiple aliases of the same name: "   <> T.unpack t
+    CyclicAlias       t   -> "Aliases references itself in a loop: " <> T.unpack t
     DuplicateLayer    t   -> "Multiple layers of the same name: "    <> T.unpack t
     DuplicateSource   t   -> case t of
       Just t  -> "Multiple sources of the same name: " <> T.unpack t
@@ -107,6 +112,7 @@ instance Show JoinError where
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
       , "Source length: ", show s, "\n"
       , "Layer length: ", show l ]
+    NotAKeycode       b   -> "Encountered non keycode button in 'defsrc': " <> show b
 
 
 instance Exception JoinError
@@ -333,17 +339,31 @@ pickOutput (KSendEventSink _)   = throwError $ InvalidOS "SendEventSink"
 --------------------------------------------------------------------------------
 -- $als
 
-type Aliases = M.HashMap Text Button
+type Aliases = M.HashMap Text DefButton
 type LNames  = [Text]
 
 -- | Build up a hashmap of text to button mappings
 --
--- Aliases can refer back to buttons that occured before.
-joinAliases :: LNames -> [DefAlias] -> J Aliases
-joinAliases ns als = foldM f M.empty $ concat als
-  where f mp (t, b) = if t `M.member` mp
-          then throwError $ DuplicateAlias t
-          else flip (M.insert t) mp <$> unnest (joinButton ns mp b)
+-- Aliases can refer back to other aliases.
+joinAliases :: [DefAlias] -> J Aliases
+joinAliases als = do
+  let als' = concat als
+  case find (not . null . NE.tail) $ NE.groupAllWith fst als' of
+    Nothing -> pure ()
+    Just ((t, _) :| _) -> throwError $ DuplicateAlias t
+
+  M.traverseWithKey =<< go $ M.fromList als'
+ where
+  go mp t b@(KRef t')
+    | t == t' = throwError $ CyclicAlias t
+    | otherwise = withDerefAlias mp (go mp t) b
+  go _ _ b = pure b
+
+withDerefAlias :: Aliases -> (DefButton -> J a) -> DefButton -> J a
+withDerefAlias als f (KRef t) = case M.lookup t als of
+  Just b -> f b
+  Nothing -> throwError $ MissingAlias t
+withDerefAlias _ f b = f b
 
 --------------------------------------------------------------------------------
 -- $but
@@ -371,9 +391,7 @@ joinButton ns als =
       isps l = traverse go . maybe l ((`intersperse` l) . KPause . fi)
   in \case
     -- Variable dereference
-    KRef t -> case M.lookup t als of
-      Nothing -> throwError $ MissingAlias t
-      Just b  -> ret b
+    b@(KRef _) -> withDerefAlias als (joinButton ns als) b
 
     -- Various simple buttons
     KEmit c -> ret $ emitB c
@@ -439,20 +457,24 @@ joinButton ns als =
 --------------------------------------------------------------------------------
 -- $src
 
-type Sources = M.HashMap (Maybe Text) DefSrc
+type Sources = M.HashMap (Maybe Text) [Maybe Keycode]
 
 -- | Build up a hashmap of text to source mappings.
-joinSources :: [DefSrc] -> J Sources
-joinSources = foldM joiner mempty
+joinSources :: Aliases -> [DefSrc] -> J Sources
+joinSources als = foldM joiner mempty
   where
    joiner :: Sources -> DefSrc -> J Sources
-   joiner sources src@DefSrc{ _srcName = n, _keycodes = ks }
+   joiner sources DefSrc{ _srcName = n, _keycodes = ks }
      | n `M.member` sources = throwError $ DuplicateSource n
-     | not (null dups)      = throwError $ DuplicateKeyInSource n dups
-     | otherwise            = pure $ M.insert n src sources
+     | otherwise            = do
+        ks' <- for ks $ withDerefAlias als joinKeycode
+        let dups = NE.head <$> duplicatesWith id (toList =<< ks')
+        unless (null dups) $ throwError $ DuplicateKeyInSource n dups
+        pure $ M.insert n ks' sources
     where
-     dups :: [Keycode]
-     dups = concatMap (take 1) . filter ((> 1) . length) . group . sort $ ks
+     joinKeycode (KEmit k) = pure $ Just k
+     joinKeycode KBlock    = pure Nothing
+     joinKeycode b         = throwError $ NotAKeycode b
 
 --------------------------------------------------------------------------------
 -- $kmap
@@ -465,8 +487,8 @@ joinKeymap _    _   []  = throwError $ MissingBlock "deflayer"
 joinKeymap srcs als lys = do
   let f acc x = if x `elem` acc then throwError $ DuplicateLayer x else pure (x:acc)
   nms   <- foldM f [] $ map _layerName lys     -- Extract all names
-  als'  <- joinAliases nms als                 -- Join aliases into 1 hashmap
-  srcs' <- joinSources  srcs                   -- Join all sources into 1 hashmap
+  als'  <- joinAliases als                     -- Join aliases into 1 hashmap
+  srcs' <- joinSources als' srcs               -- Join all sources into 1 hashmap
   lys'  <- mapM (joinLayer als' nms srcs') lys -- Join all layers
   -- Return the layerstack and the name of the first layer
   pure (L.mkLayerStack lys', _layerName . fromJust . headMaybe $ lys)
@@ -484,16 +506,18 @@ joinLayer als ns srcs l@(DefLayer n settings) = do
   implAround <- getImplAround l
 
   src <- case M.lookup assocSrc srcs of
-    Just src -> pure $ src^.keycodes
+    Just src -> pure src
     Nothing  -> throwError $ MissingSource assocSrc
   -- Ensure length-match between src and buttons
   when (length bs /= length src) $
     throwError $ LengthMismatch n (length bs) (length src)
 
   -- Join each button and add it (filtering out KTrans)
-  let f acc (kc, b) = joinButton ns als b >>= \case
-        Nothing -> pure acc
-        Just b' -> pure $ (kc, b') : acc
+  let
+    f acc (Nothing, b) = joinButton ns als b $> acc
+    f acc (Just kc, b) = joinButton ns als b >>= \case
+      Nothing -> pure acc
+      Just b' -> pure $ (kc, b') : acc
   maybe id (local . set implArnd) implAround $
     (n,) <$> foldM f [] (zip src bs)
 
