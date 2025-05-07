@@ -274,7 +274,8 @@ docker build -t kmonad-builder -f ci/Dockerfile.linux .
 # Spin up an ephemeral Docker container from the built image, to just copy the
 # built binary to the host's current directory bind-mounted inside the
 # container at /host/.
-docker run --rm -it -v ${PWD}:/host/ kmonad-builder bash -c 'cp -vp /root/.local/bin/kmonad /host/'
+mkdir output
+docker run --rm -v ${PWD}/output:/host/ kmonad-builder bash -c 'cp -vp /output/* /host/'
 
 # Clean up build image, since it is no longer needed.
 docker rmi kmonad-builder
