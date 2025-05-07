@@ -734,7 +734,7 @@
   switch into a layer that you can never get out of. Or worse, you could
   theoretically have a layer full of only `XX`s and switch into that, rendering
   your keyboard unusable until you somehow manage to kill KMonad (without using
-  your keyboard).
+  this keyboard).
 
   However, when handled well, `layer-switch` is very useful, letting you switch
   between 'modes' for your keyboard. I have a tiny keyboard with a weird keymap,
