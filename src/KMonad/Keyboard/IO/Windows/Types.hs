@@ -29,9 +29,7 @@ import KMonad.Keyboard
 
 import Data.Tuple (swap)
 import qualified RIO.HashMap as M
-import qualified RIO.NonEmpty as NE (groupAllWith)
--- TODO: use `Data.Foldable1` instead when `base` >= 4.18.0.0
-import qualified Data.Foldable as NE (minimumBy, maximumBy)
+import qualified RIO.NonEmpty as NE (groupAllWith, head, last)
 
 ----------------------------------------------------------------------------
 -- $err
@@ -128,7 +126,7 @@ fromWinKeyEvent (WinKeyEvent (s, c)) = case fromWinKeycode c of
 -- FIXME: There are loads of missing correspondences, mostly for rare-keys. How
 -- do these line up? Ideally this mapping would be total.
 winCodeToKeyCode :: M.HashMap WinKeycode Keycode
-winCodeToKeyCode = M.fromList $ NE.minimumBy (compare `on` snd) <$> NE.groupAllWith fst winCodeKeyCodeMapping
+winCodeToKeyCode = M.fromList $ NE.head <$> NE.groupAllWith fst winCodeKeyCodeMapping
 
 -- | Translate a KMonad KeyCode to the corresponding Windows virtual-key code
 --
@@ -136,7 +134,7 @@ winCodeToKeyCode = M.fromList $ NE.minimumBy (compare `on` snd) <$> NE.groupAllW
 -- there will be duplicates where more than one virtual-key code produces the
 -- same KMonad KeyCode. See https://github.com/kmonad/kmonad/issues/326
 keyCodeToWinCode :: M.HashMap Keycode WinKeycode
-keyCodeToWinCode = M.fromList $ swap . NE.maximumBy (compare `on` fst) <$> NE.groupAllWith snd winCodeKeyCodeMapping
+keyCodeToWinCode = M.fromList $ swap . NE.last <$> NE.groupAllWith snd winCodeKeyCodeMapping
 
 -- | A table of which virtual-key code from Windows
 -- correspond to which KMonad KeyCode.
