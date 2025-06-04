@@ -156,9 +156,9 @@ winCodeKeyCodeMapping =
   , (0x0C, KeyDelete)      -- Defined as VK_CLEAR
   , (0x0D, KeyEnter)
   , (0x0D, KeyKpEnter)
-  , (0x10, KeyLeftShift)   -- No 'sidedness'??
-  , (0x11, KeyLeftCtrl)    -- No 'sidedness'??
-  , (0x12, KeyLeftAlt)     -- No 'sidedness'??
+  , (0x10, Missing254)     -- Shift without sidedness. Only press event no release event, so we ignore it. (see #530)
+  , (0x11, Missing254)     -- Ctrl without sidedness. Only press event no release event, so we ignore it. (see #530)
+  , (0x12, Missing254)     -- Alt without sidedness. Only press event no release event, so we ignore it. (see #530)
   , (0x13, KeyPause)
   , (0x14, KeyCapsLock)
   , (0x15, KeyKatakana)
@@ -342,4 +342,5 @@ winCodeKeyCodeMapping =
   -- , (0xFC, ???)             -- Defined as VK_NONAME
   -- , (0xFD, ???)             -- Defined as VK_PA1
   -- , (0xFE, KeyDelete)       -- Defined as VK_OEM_CLEAR
+  , (0x00, Missing254)         -- HACK: We use `Missing254` to ignore keypresses
   ]
