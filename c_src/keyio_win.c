@@ -84,12 +84,17 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
 }
 
 // Read an event from the pipe and write it to the provided pointer
-void wait_key(struct KeyEvent* e)
+DWORD wait_key(struct KeyEvent* e, DWORD* dwRead)
 {
-  DWORD dwRead;
-  ReadFile(readPipe, e, sizeof(e), &dwRead, NULL);
-  //printf("receiving: %d\n", e->keycode);
-  return;
+  bool ok = ReadFile(readPipe, e, sizeof(e), dwRead, NULL);
+  return ok ? 0 : GetLastError();
+}
+
+// Initialize the pipe used to communicate between the low-level-hook and the haskell API
+void init_pipe()
+{
+  // Create the pipe, error on failure
+  if ( !CreatePipe(&readPipe, &writePipe, NULL, 0) ) last_error();
 }
 
 // Insert the keyboard hook and start the monitoring process
@@ -98,9 +103,6 @@ void grab_kb()
   // Insert the hook, error on failure
   hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, keyHandler, NULL, 0);
   if (hookHandle == NULL) last_error();
-
-  // Create the pipe, error on failure
-  if ( !CreatePipe(&readPipe, &writePipe, NULL, 0) ) last_error();
 
   // This *never* triggers, but if not included the program doesn't run..?
   MSG msg;
