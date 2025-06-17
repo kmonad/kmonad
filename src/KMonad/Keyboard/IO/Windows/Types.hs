@@ -27,6 +27,8 @@ import KMonad.Prelude
 import Foreign.Storable
 import KMonad.Keyboard
 
+import Numeric (showHex)
+
 import Data.Tuple (swap)
 import qualified RIO.HashMap as M
 import qualified RIO.NonEmpty as NE (groupAllWith)
@@ -40,12 +42,19 @@ import qualified Data.Foldable as NE (minimumBy, maximumBy)
 data WinError
   = NoWinKeycodeTo   Keycode    -- ^ Error translating to 'WinKeycode'
   | NoWinKeycodeFrom WinKeycode -- ^ Error translating from 'WinKeycode'
+  | UnexpetedNumberOfBytesRead Word32 -- ^ Bug in 'keyio_win.c'. We only write 'sizeof (undefined :: KeyEvent)'
+  | WinErrorWhileReadingPipe Word32 -- ^ 'ReadFile' in 'keyio_win.c' exited with failure
 
 instance Exception WinError
 instance Show WinError where
   show e = case e of
     NoWinKeycodeTo   c -> "Cannot translate to windows keycode: "   <> show c
     NoWinKeycodeFrom i -> "Cannot translate from windows keycode: " <> show i
+    UnexpetedNumberOfBytesRead read ->
+      "Unexpeted bytes read from low-level hook. Read "
+      <> show read <> " bytes should be exactly "
+      <> show (sizeOf (undefined :: WinKeyEvent)) <> " bytes."
+    WinErrorWhileReadingPipe e -> "Could not read from low-level hook. Read aborted with error: 0x" ++ showHex e ""
 
 --------------------------------------------------------------------------------
 -- $typ
