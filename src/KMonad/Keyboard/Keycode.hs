@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-|
 Module      : KMonad.Keyboard.Keycode
 Description : Description of all possible keycodes.
@@ -29,6 +28,8 @@ import qualified KMonad.Util.MultiMap     as Q
 import qualified RIO.HashSet       as S
 import qualified RIO.Text          as T
 import qualified RIO.Text.Partial  as T (head)
+
+import Data.Hashable (Hashable(..))
 
 --------------------------------------------------------------------------------
 -- $typ
@@ -817,8 +818,13 @@ data Keycode
   | KeyMissionCtrl
   | KeySpotlight
   | KeyDictation
-  deriving (Eq, Show, Bounded, Enum, Ord, Generic, Hashable, Typeable, Data)
+  deriving (Eq, Show, Bounded, Enum, Ord, Typeable, Data)
 
+-- We manually define the Hashable instance, since we would need a `Generic`
+-- instance instead. Deriving `Generic` causes a significant increase in compile
+-- time. See https://gitlab.haskell.org/ghc/ghc/-/issues/5642
+instance Hashable Keycode where
+  hashWithSalt s = hashWithSalt s . fromEnum
 
 instance Display Keycode where
   textDisplay c = (\t -> "<" <> t <> ">") . fromMaybe (tshow c)
