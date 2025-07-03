@@ -209,9 +209,12 @@ around ::
      Button -- ^ The outer 'Button'
   -> Button -- ^ The inner 'Button'
   -> Button -- ^ The resulting nested 'Button'
-around outer inner = mkButton
+around outer inner = mkButton'
   (runAction (outer^.pressAction)   *> runAction (inner^.pressAction))
   (runAction (inner^.releaseAction) *> runAction (outer^.releaseAction))
+  $ runAction (outer^.pressAction)
+  *> runAction (inner^.tapAction)
+  *> runAction (outer^.releaseAction)
 
 -- | A variant of `around`, which releases its outer button when another key
 -- is pressed.
