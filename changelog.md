@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed excessive backtracking in the parser leading to unreadable errors (#985)
 - Fixed the `c_src/mac/list-keyboards.c` on Apple SDK < 12.0 (#987)
 - Fixed random crash on startup on windows. (#1005)
+- Fixed problems with tap-next-release and similar (see #256) (#524, #914)
 
 ## 0.4.4 – 2025-04-11
 
