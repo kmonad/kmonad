@@ -952,6 +952,16 @@
   but it comes with an additional timeout that, just like `tap-hold-next` will
   jump into holding-mode after a timeout.
 
+  When pressing a modifier and a button it is common to release them together,
+  though when releasing two keys at the same time the order, which matters
+  for `tap-next-release`, is abitrary.
+  To fix this, use the `:grace` keyword.
+  The next parameter then specifies the time the release of this button
+  may come before the release of another to still signal a hold.
+
+    Pa Pb Ra Rb
+          -----    time which is compared to the grace time
+
   I honestly think that `tap-hold-next-release`, although it seems the most
   complicated, probably is the most comfortable to use. But I've put all of them
   in a testing layer down below, so give them a go and see what is nice.
@@ -967,6 +977,8 @@
   tnp (tap-next-press x lsft)
   thp (tap-hold-next-press 2000 x lsft)
   tnh (tap-hold-next-release 2000 x lsft)
+  tol (tap-next-release :grace 20 x lsft)
+  tho (tap-hold-next-release 2000 :grace 20 x lsft)
 
   ;; Used it the colemak layer
   xcp (tap-hold-next 400 esc ctl)

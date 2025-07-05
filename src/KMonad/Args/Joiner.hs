@@ -431,9 +431,9 @@ joinButton ns als =
     KTapHold s t h     -> jst $ tapHold (fi s)     <$> go t <*> go h
     KTapHoldNext s t h mtb
       -> jst $ tapHoldNext (fi s) <$> go t <*> go h <*> traverse go mtb
-    KTapNextRelease t h -> jst $ tapNextRelease    <$> go t <*> go h
-    KTapHoldNextRelease ms t h mtb
-      -> jst $ tapHoldNextRelease (fi ms) <$> go t <*> go h <*> traverse go mtb
+    KTapNextRelease g t h -> jst $ tapNextRelease (maybe 0 fi g) <$> go t <*> go h
+    KTapHoldNextRelease ms g t h mtb
+      -> jst $ tapHoldNextRelease (fi ms) (maybe 0 fi g) <$> go t <*> go h <*> traverse go mtb
     KTapNextPress t h  -> jst $ tapNextPress       <$> go t <*> go h
     KTapHoldNextPress ms t h mtb
       -> jst $ tapHoldNextPress (fi ms) <$> go t <*> go h <*> traverse go mtb
