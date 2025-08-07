@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 - Aliases can now refer to later aliases instead of just earlier ones. (#992)
 - Aliases can now be used in `defsrc` if they are a keycode (#992)
+- Failure to grab or release the keyboard are now accompanied with the os error on Linux (#1017)
 
 ### Fixed
 

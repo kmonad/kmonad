@@ -21,7 +21,9 @@ where
 
 import KMonad.Prelude
 import Foreign.C.Types
+import Foreign.C.Error
 import System.Posix
+import System.IO.Error
 
 import KMonad.Keyboard.IO.Linux.Types
 import KMonad.Util
@@ -33,14 +35,14 @@ import qualified RIO.ByteString as B
 -- $err
 
 data DeviceSourceError
-  = IOCtlGrabError    FilePath
-  | IOCtlReleaseError FilePath
+  = IOCtlGrabError    IOError
+  | IOCtlReleaseError IOError
   | KeyIODecodeError  String
   deriving Exception
 
 instance Show DeviceSourceError where
-  show (IOCtlGrabError pth)    = "Could not perform IOCTL grab on: "    <> pth
-  show (IOCtlReleaseError pth) = "Could not perform IOCTL release on: " <> pth
+  show (IOCtlGrabError e)      = show e
+  show (IOCtlReleaseError e)   = show e
   show (KeyIODecodeError msg)  = "KeyEvent decode failed with msg: "    <> msg
 
 makeClassyPrisms ''DeviceSourceError
@@ -48,15 +50,19 @@ makeClassyPrisms ''DeviceSourceError
 --------------------------------------------------------------------------------
 -- $ffi
 foreign import ccall "ioctl_keyboard"
-  c_ioctl_keyboard :: CInt -> CInt -> IO CInt
+  c_ioctl_keyboard :: Fd -> CInt -> IO CInt
 
 -- | Perform an IOCTL operation on an open keyboard handle
 ioctl_keyboard :: MonadIO m
-  => Fd      -- ^ Descriptor to open keyboard file (like /dev/input/eventXX)
-  -> Bool    -- ^ True to grab, False to ungrab
-  -> m Int   -- ^ Return the exit code
-ioctl_keyboard (Fd h) b = fromIntegral <$>
-  liftIO (c_ioctl_keyboard h (if b then 1 else 0))
+  => Fd        -- ^ Descriptor to open keyboard file (like /dev/input/eventXX)
+  -> FilePath  -- ^ FilePath to keyboard for error reporting
+  -> Bool      -- ^ True to grab, False to ungrab
+  -> m ()      -- ^ Return the exit code
+ioctl_keyboard h pt g = liftIO $ do
+  throwErrnoPathIfMinus1_
+    ("Could not perform IOCTL " ++ if g then "grab" else "release")
+    pt
+    (c_ioctl_keyboard h $ if g then 1 else 0)
 
 
 --------------------------------------------------------------------------------
@@ -140,7 +146,7 @@ lsOpen pr pt = do
     defaultFileFlags
   hd <- liftIO $ fdToHandle h
   logInfo "Initiating ioctl grab"
-  ioctl_keyboard h True `onErr` IOCtlGrabError pt
+  ioctl_keyboard h pt True `catch` (throwIO . IOCtlGrabError)
   return $ DeviceFile (DeviceSourceCfg pt pr) h hd
 
 -- | Release the ioctl grab and close the device file. This can throw an
@@ -149,7 +155,7 @@ lsOpen pr pt = do
 lsClose :: (HasLogFunc e) => DeviceFile -> RIO e ()
 lsClose src = do
   logInfo "Releasing ioctl grab"
-  ioctl_keyboard (src^.fd) False `onErr` IOCtlReleaseError (src^.pth)
+  ioctl_keyboard (src^.fd) (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
   liftIO . closeFd $ src^.fd
 
 -- | Read a bytestring from an open filehandle and return a parsed event. This
