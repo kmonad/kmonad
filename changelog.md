@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed the `c_src/mac/list-keyboards.c` on Apple SDK < 12.0 (#987)
 - Fixed random crash on startup on windows. (#1005)
 - Fixed nested `implicit-around`s in `tap-macro`s are inconsistent. (#1012)
+- Fixed `sticky-key` as tap in `tap-hold` style buttons. (#1014)
 
 ## 0.4.4 – 2025-04-11
 
