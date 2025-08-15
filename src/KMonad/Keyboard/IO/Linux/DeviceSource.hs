@@ -31,6 +31,10 @@ import KMonad.Util
 import qualified Data.Serialize as B (decode)
 import qualified RIO.ByteString as B
 
+import System.INotify
+import RIO.Directory
+import RIO.FilePath
+
 --------------------------------------------------------------------------------
 -- $err
 
@@ -99,14 +103,14 @@ decode64 bs = linuxKeyEvent . fliptup <$> result
 data DeviceSourceCfg = DeviceSourceCfg
   { _pth     :: !FilePath        -- ^ Path to the event-file
   , _parser  :: !KeyEventParser  -- ^ The method used to decode events
+  , _ignmis  :: !Bool            -- ^ Whether to wait for keyboard to (re-)appear
   }
 makeClassy ''DeviceSourceCfg
 
 -- | Collection of data used to read from linux input.h event stream
 data DeviceFile = DeviceFile
   { _cfg :: !DeviceSourceCfg -- ^ Configuration settings
-  , _fd  :: !Fd              -- ^ Posix filedescriptor to the device file
-  , _hdl :: !Handle          -- ^ Haskell handle to the device file
+  , _dev :: !(IORef (Fd, Handle)) -- ^ Posix and Haskell filedescriptor to the device file
   }
 makeClassy ''DeviceFile
 
@@ -117,12 +121,14 @@ instance HasKeyEventParser  DeviceFile where keyEventParser  = cfg.parser
 deviceSource :: HasLogFunc e
   => KeyEventParser -- ^ The method by which to read and decode events
   -> FilePath    -- ^ The filepath to the device file
+  -> Bool           -- ^ Whether to wait for keyboard to (re-)appear
   -> RIO e (Acquire KeySource)
-deviceSource pr pt = mkKeySource (lsOpen pr pt) lsClose lsRead
+deviceSource pr pt im = mkKeySource (lsOpen pr pt im) lsClose lsRead
 
 -- | Open a device file on a standard linux 64 bit architecture
 deviceSource64 :: HasLogFunc e
   => FilePath  -- ^ The filepath to the device file
+  -> Bool           -- ^ Whether to wait for keyboard to (re-)appear
   -> RIO e (Acquire KeySource)
 deviceSource64 = deviceSource defEventParser
 
@@ -130,42 +136,79 @@ deviceSource64 = deviceSource defEventParser
 --------------------------------------------------------------------------------
 -- $io
 
--- | Open the keyboard, perform an ioctl grab and return a 'DeviceFile'. This
+-- | Open the keyboard, perform an ioctl grab and return the device handles. This
 -- can throw an 'IOException' if the file cannot be opened for reading, or an
 -- 'IOCtlGrabError' if an ioctl grab could not be properly performed.
-lsOpen :: (HasLogFunc e)
-  => KeyEventParser   -- ^ The method by which to decode events
-  -> FilePath      -- ^ The path to the device file
-  -> RIO e DeviceFile
-lsOpen pr pt = do
-  h  <- liftIO $ openFd pt
+lsOpen' :: HasLogFunc e => FilePath -> Bool -> RIO e (Fd, Handle)
+lsOpen' pt im = do
+  when im waitForDeviceToExists
+
+  fd <- liftIO $ openFd pt
     ReadOnly
 #if !MIN_VERSION_unix(2,8,0)
     Nothing
 #endif
     defaultFileFlags
-  hd <- liftIO $ fdToHandle h
+  hd <- liftIO $ fdToHandle fd
   logInfo "Initiating ioctl grab"
-  ioctl_keyboard h pt True `catch` (throwIO . IOCtlGrabError)
-  return $ DeviceFile (DeviceSourceCfg pt pr) h hd
+  ioctl_keyboard fd pt True `catch` (throwIO . IOCtlGrabError)
+  return (fd, hd)
+ where
+  waitForDeviceToExists = do
+    lf <- view logFuncL
+    devExists <- doesFileExist pt
+    unless devExists . liftIO . withINotify $ \inot -> do
+      runRIO lf $ logInfo "Listening for device"
+      rpt <- B.fromFilePath $ takeFileName  pt
+      dir <- B.fromFilePath $ takeDirectory pt
+      block <- newEmptyMVar
+      _ <- addWatch inot [Create] dir $ \case
+        Created _ rpt' | rpt == rpt' -> putMVar block ()
+        _ -> pure ()
+      takeMVar block
+
+-- | Like `lsOpen'` but wrap it in a full 'DeviceFile'.
+lsOpen :: (HasLogFunc e)
+  => KeyEventParser   -- ^ The method by which to decode events
+  -> FilePath      -- ^ The path to the device file
+  -> Bool             -- ^ Whether to wait for keyboard to (re-)appear
+  -> RIO e DeviceFile
+lsOpen pr pt im = DeviceFile (DeviceSourceCfg pt pr im) <$> (newIORef =<< lsOpen' pt im)
 
 -- | Release the ioctl grab and close the device file. This can throw an
 -- 'IOException' if the handle to the device cannot be properly closed, or an
 -- 'IOCtlReleaseError' if the ioctl release could not be properly performed.
 lsClose :: (HasLogFunc e) => DeviceFile -> RIO e ()
 lsClose src = do
+  (fd, _) <- readIORef (src^.dev)
   logInfo "Releasing ioctl grab"
-  ioctl_keyboard (src^.fd) (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
-  liftIO . closeFd $ src^.fd
+  ioctl_keyboard fd (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
+  liftIO $ closeFd fd
 
 -- | Read a bytestring from an open filehandle and return a parsed event. This
 -- can throw a 'KeyIODecodeError' if reading from the 'DeviceFile' fails to
 -- yield a parseable sequence of bytes.
 lsRead :: (HasLogFunc e) => DeviceFile -> RIO e KeyEvent
 lsRead src = do
-  bts <- B.hGet (src^.hdl) (src^.nbytes)
+  bts <- lsRead' =<< readIORef (src^.dev)
   case src^.prs $ bts of
     Right p -> case fromLinuxKeyEvent p of
       Just e  -> return e
       Nothing -> lsRead src
     Left s -> throwIO $ KeyIODecodeError s
+ where
+  lsRead' (fd, hdl) =
+    tryJust retriable (B.hGet hdl (src^.nbytes)) >>= \case
+      Right bts -> pure bts
+      Left e -> do
+        devExists <- doesFileExist (src^.cfg.pth)
+        liftIO $ closeFd fd
+        when devExists $ logRethrow "Device still exists, but reading failed" (toException e)
+        logInfo "Device disconnected"
+        h <- lsOpen' (src^.cfg.pth) (src^.ignmis)
+        writeIORef (src^.dev) h
+        logInfo "Device reconnected"
+        lsRead' h
+  retriable e = if src^.ignmis && isIllegalOperation e
+    then Just e
+    else Nothing

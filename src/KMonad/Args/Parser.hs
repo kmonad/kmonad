@@ -339,10 +339,12 @@ itokenP = mkTokenP itokens
 -- | Input tokens to parse; the format is @(keyword, how to parse the token)@
 itokens :: [(Text, Parser IToken)]
 itokens =
-  [ ("device-file"   , KDeviceSource . unpack <$> textP)
+  [ ("device-file"   , KDeviceSource . unpack <$> textP <*> ignoreMissingP)
   , ("low-level-hook", pure KLowLevelHookSource)
   , ("iokit-name"    , KIOKitSource <$> optional textP)
   ]
+ where
+  ignoreMissingP = option False $ optargP "ignore-missing" boolP
 
 -- | Parse an output token
 otokenP :: Parser OToken

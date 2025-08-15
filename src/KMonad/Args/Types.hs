@@ -170,7 +170,7 @@ data DefLayer = DefLayer
 
 -- | All different input-tokens KMonad can take
 data IToken
-  = KDeviceSource FilePath
+  = KDeviceSource FilePath Bool
   | KLowLevelHookSource
   | KIOKitSource (Maybe Text)
   deriving (Show)
