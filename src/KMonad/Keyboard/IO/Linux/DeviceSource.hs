@@ -41,12 +41,16 @@ import RIO.FilePath
 data DeviceSourceError
   = IOCtlGrabError    IOError
   | IOCtlReleaseError IOError
+  | PathTypeMismatch  Bool FilePath
+  | RootDirDoesNotExist FilePath
   | KeyIODecodeError  String
   deriving Exception
 
 instance Show DeviceSourceError where
   show (IOCtlGrabError e)      = show e
   show (IOCtlReleaseError e)   = show e
+  show (PathTypeMismatch d pt) = "Path exists but is not a " <> (if d then "directory" else "file") <> ": " <> pt
+  show (RootDirDoesNotExist dev) = "Root directory for device '" <> dev <> "' does not exist"
   show (KeyIODecodeError msg)  = "KeyEvent decode failed with msg: "    <> msg
 
 makeClassyPrisms ''DeviceSourceError
@@ -156,16 +160,33 @@ lsOpen' pt im = do
  where
   waitForDeviceToExists = do
     lf <- view logFuncL
-    devExists <- doesFileExist pt
-    unless devExists . liftIO . withINotify $ \inot -> do
-      runRIO lf $ logInfo "Listening for device"
-      rpt <- B.fromFilePath $ takeFileName  pt
-      dir <- B.fromFilePath $ takeDirectory pt
-      block <- newEmptyMVar
-      _ <- addWatch inot [Create] dir $ \case
-        Created _ rpt' | rpt == rpt' -> putMVar block ()
-        _ -> pure ()
-      takeMVar block
+    liftIO $ waitForPath lf False pt Nothing
+  waitForPath lf isDir pt' inot = do
+    ptExists <- doesPathExist pt'
+    unless ptExists $ case inot of
+      Just inot' -> waitForPath' lf isDir pt' inot'
+      Nothing -> withINotify $ \inot' -> do
+        runRIO lf $ logInfo "Listening for device"
+        waitForPath' lf isDir pt' inot'
+    let doesExistWithType = if isDir then doesDirectoryExist else doesFileExist
+    foundWithType <- doesExistWithType pt'
+    unless foundWithType . throwIO $ PathTypeMismatch isDir pt'
+  waitForPath' lf isDir pt' inot = do
+    let parent = takeDirectory pt'
+    when (parent == pt') . throwIO $ RootDirDoesNotExist pt
+    waitForPath lf True parent $ Just inot
+    fn <- B.fromFilePath $ takeFileName pt'
+    dir <- B.fromFilePath parent
+    block <- newEmptyMVar
+    runRIO lf $ logDebug $ "Waiting for path: " <> fromString pt'
+    watch <- addWatch inot [Create] dir $ \case
+      Created isDir' fn' | fn' == fn -> do
+        unless (isDir == isDir') . throwIO $ PathTypeMismatch isDir pt'
+        putMVar block ()
+      _ -> pure ()
+    takeMVar block
+    removeWatch watch
+
 
 -- | Like `lsOpen'` but wrap it in a full 'DeviceFile'.
 lsOpen :: (HasLogFunc e)
