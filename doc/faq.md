@@ -40,7 +40,7 @@ If the `uinput` group does not exist, create a new group with:
 1. Make sure the `uinput` group exists
 
 ``` shell
-sudo groupadd uinput
+sudo groupadd --system uinput
 ```
 
 2. Add your user to the `input` and the `uinput` group:
