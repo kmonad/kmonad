@@ -175,11 +175,11 @@ winCodeKeyCodeMapping =
   , (0x15, KeyKatakana)
   , (0x15, KeyKatakanaHiragana)
   , (0x15, KeyHangeul)
-  -- , (0x16, ???)            -- Defined as VK_IME_ON
+  , (0x16, KeyHangeul)            -- Defined as VK_IME_ON
   -- , (0x17, ???)            -- Defined as VK_JUNJA
   -- , (0x18, ???)            -- Defined as VK_FINAL
   , (0x19, KeyHanja)
-  -- , (0x1A, ???)            -- Defined as VK_IME_OFF
+  , (0x1A, KeyHanja)          -- Defined as VK_IME_OFF
   , (0x1B, KeyEsc)
   , (0x1C, KeyHenkan)         -- Defined as VK_CONVERT
   , (0x1D, KeyMuhenkan)       -- Defined as VK_NONCONVERT
@@ -338,9 +338,9 @@ winCodeKeyCodeMapping =
   -- , (0xED, ???)             -- Defined as `OEM specific`
   -- , (0xEE, ???)             -- Defined as `OEM specific`
   -- , (0xEF, ???)             -- Defined as `OEM specific`
-  -- , (0xF0, ???)             -- Defined as `OEM specific`
+  , (0xF0, KeyKatakanaHiragana)             -- up
   -- , (0xF1, ???)             -- Defined as `OEM specific`
-  -- , (0xF2, ???)             -- Defined as `OEM specific`
+  , (0xF2, KeyKatakanaHiragana)             -- down
   , (0xF3, KeyZenkakuHankaku)             -- up
   , (0xF4, KeyZenkakuHankaku)             -- down
   -- , (0xF5, ???)             -- Defined as `OEM specific`
