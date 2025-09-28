@@ -35,6 +35,8 @@ import System.INotify
 import RIO.Directory
 import RIO.FilePath
 
+import GHC.IO.Exception (IOException(IOError, ioe_errno))
+
 --------------------------------------------------------------------------------
 -- $err
 
@@ -219,7 +221,7 @@ lsRead src = do
     Left s -> throwIO $ KeyIODecodeError s
  where
   lsRead' (fd, hdl) =
-    tryJust retriable (B.hGet hdl (src^.nbytes)) >>= \case
+    tryJust isENODEV (B.hGet hdl (src^.nbytes)) >>= \case
       Right bts -> pure bts
       Left e -> do
         devExists <- doesFileExist (src^.cfg.pth)
@@ -230,6 +232,6 @@ lsRead src = do
         writeIORef (src^.dev) h
         logInfo "Device reconnected"
         lsRead' h
-  retriable e = if src^.ignmis && isIllegalOperation e
-    then Just e
-    else Nothing
+  isENODEV e@IOError{ioe_errno = Just errno}
+    | src^.ignmis && Errno errno == eNODEV = Just e
+  isENODEV _ = Nothing
