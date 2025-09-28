@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ## Unreleased
 
+### Breaking
+
+- With systemd v258 udevd ignores `GROUP=` setting with a non-system group.
+  If you followed the [FAQ entry: How do I get Uinput permissions?](doc/faq.md#q-how-do-i-get-uinput-permissions)
+  and created the `uinput` group delete the group (`sudo groupdel uinput`)
+  and create a new group with the user added to it (see FAQ entry).
+
+
 ### Added
 
 - `XX` may be used in `defsrc` as a placeholder button.
