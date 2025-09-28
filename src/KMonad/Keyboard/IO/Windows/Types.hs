@@ -341,8 +341,8 @@ winCodeKeyCodeMapping =
   -- , (0xF0, ???)             -- Defined as `OEM specific`
   -- , (0xF1, ???)             -- Defined as `OEM specific`
   -- , (0xF2, ???)             -- Defined as `OEM specific`
-  -- , (0xF3, ???)             -- Defined as `OEM specific`
-  -- , (0xF4, ???)             -- Defined as `OEM specific`
+  , (0xF3, KeyZenkakuHankaku)             -- up
+  , (0xF4, KeyZenkakuHankaku)             -- down
   -- , (0xF5, ???)             -- Defined as `OEM specific`
   -- , (0xF6, ???)             -- Defined as VK_ATTN
   -- , (0xF7, ???)             -- Defined as VK_CRSEL
