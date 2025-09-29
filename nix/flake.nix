@@ -85,6 +85,9 @@
           default = pkgs.haskell.lib.justStaticExecutables
             (derivation pkgs pkgs.haskellPackages);
         } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+	  darwinDriver = pkgs.karabiner-dk.override {
+		driver-version = "5.0.0";
+          };
           list-keyboards = pkgs.stdenv.mkDerivation {
             name = "list-keyboards";
             version = self.shortRev;
