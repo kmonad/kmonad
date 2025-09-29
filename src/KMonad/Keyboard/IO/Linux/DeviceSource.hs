@@ -170,6 +170,7 @@ lsOpen' pt im = do
       Nothing -> withINotify $ \inot' -> do
         runRIO lf $ logInfo "Listening for device"
         waitForPath' lf isDir pt' inot'
+        runRIO lf $ logInfo "Found device"
     let doesExistWithType = if isDir then doesDirectoryExist else doesFileExist
     foundWithType <- doesExistWithType pt'
     unless foundWithType . throwIO $ PathTypeMismatch isDir pt'
@@ -181,13 +182,19 @@ lsOpen' pt im = do
     dir <- B.fromFilePath parent
     block <- newEmptyMVar
     runRIO lf $ logDebug $ "Waiting for path: " <> fromString pt'
-    watch <- addWatch inot [Create] dir $ \case
+
+    watch <- addWatch inot [Create, DeleteSelf] dir $ \case
       Created isDir' fn' | fn' == fn -> do
+        runRIO lf . logDebug $ "Found path: " <> fromString pt'
         unless (isDir == isDir') . throwIO $ PathTypeMismatch isDir pt'
-        putMVar block ()
+        putMVar block True
+      DeletedSelf -> do
+        runRIO lf . logDebug $ "Parent directory deleted: " <> fromString parent
+        putMVar block False
       _ -> pure ()
-    takeMVar block
+    found <- takeMVar block
     removeWatch watch
+    unless found $ waitForPath lf isDir pt' $ Just inot
 
 
 -- | Like `lsOpen'` but wrap it in a full 'DeviceFile'.
