@@ -196,9 +196,16 @@ lsOpen' pt im = do
         runRIO lf . logDebug $ "Parent directory deleted: " <> fromString parent
         putMVar block False
       _ -> pure ()
-    found <- takeMVar block
-    removeWatch watch
-    unless found $ waitForPath lf isDir pt' $ Just inot
+
+    -- When creating symlinks in `by-id` or `by-path` the folder and symlink are
+    -- created in quick succession
+    pathCreatedDuringWatchInit <- doesPathExist pt'
+    found <- if pathCreatedDuringWatchInit
+      then pure True
+      else takeMVar block
+    if found
+      then removeWatch watch
+      else waitForPath lf isDir pt' $ Just inot
 
 
 -- | Like `lsOpen'` but wrap it in a full 'DeviceFile'.
