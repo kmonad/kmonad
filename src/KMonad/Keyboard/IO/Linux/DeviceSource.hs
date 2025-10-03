@@ -187,11 +187,15 @@ lsOpen' pt im = do
     block <- newEmptyMVar
     runRIO lf $ logDebug $ "Waiting for path: " <> fromString pt'
 
-    watch <- addWatch inot [Create, DeleteSelf] dir $ \case
-      Created isDir' fn' | fn' == fn -> do
-        runRIO lf . logDebug $ "Found path: " <> fromString pt'
-        unless (isDir == isDir') . throwIO $ PathTypeMismatch isDir pt'
-        putMVar block True
+    let onFound isDir' = do
+          runRIO lf . logDebug $ "Found path: " <> fromString pt'
+          unless (isDir == isDir') . throwIO $ PathTypeMismatch isDir pt'
+          putMVar block True
+
+    watch <- addWatch inot [Create, MoveIn, DeleteSelf] dir $ \case
+      Created isDir' fn'   | fn' == fn -> onFound isDir'
+      -- Some symlinks are created then renamed
+      MovedIn isDir' fn' _ | fn' == fn -> onFound isDir'
       DeletedSelf -> do
         runRIO lf . logDebug $ "Parent directory deleted: " <> fromString parent
         putMVar block False
