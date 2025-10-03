@@ -163,6 +163,8 @@ lsOpen' pt im = do
   waitForDeviceToExists = do
     lf <- view logFuncL
     liftIO $ waitForPath lf False pt Nothing
+
+  -- Test for existence followed by a inotify_add_watch
   waitForPath lf isDir pt' inot = do
     ptExists <- doesPathExist pt'
     unless ptExists $ case inot of
@@ -174,6 +176,8 @@ lsOpen' pt im = do
     let doesExistWithType = if isDir then doesDirectoryExist else doesFileExist
     foundWithType <- doesExistWithType pt'
     unless foundWithType . throwIO $ PathTypeMismatch isDir pt'
+
+  -- Wait for parent path and add INotify watch
   waitForPath' lf isDir pt' inot = do
     let parent = takeDirectory pt'
     when (parent == pt') . throwIO $ RootDirDoesNotExist pt
