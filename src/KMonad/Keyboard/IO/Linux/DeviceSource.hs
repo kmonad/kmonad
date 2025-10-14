@@ -225,10 +225,10 @@ lsOpen pr pt im = DeviceFile (DeviceSourceCfg pt pr im) <$> (newIORef =<< lsOpen
 -- 'IOCtlReleaseError' if the ioctl release could not be properly performed.
 lsClose :: (HasLogFunc e) => DeviceFile -> RIO e ()
 lsClose src = do
-  (fd, _) <- readIORef (src^.dev)
+  (fd, hdl) <- readIORef (src^.dev)
   logInfo "Releasing ioctl grab"
   ioctl_keyboard fd (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
-  liftIO $ closeFd fd
+  hClose hdl
 
 -- | Read a bytestring from an open filehandle and return a parsed event. This
 -- can throw a 'KeyIODecodeError' if reading from the 'DeviceFile' fails to
@@ -242,12 +242,12 @@ lsRead src = do
       Nothing -> lsRead src
     Left s -> throwIO $ KeyIODecodeError s
  where
-  lsRead' (fd, hdl) =
+  lsRead' (_, hdl) =
     tryJust isENODEV (B.hGet hdl (src^.nbytes)) >>= \case
       Right bts -> pure bts
       Left e -> do
         devExists <- doesFileExist (src^.cfg.pth)
-        liftIO $ closeFd fd
+        hClose hdl
         when devExists $ logRethrow "Device still exists, but reading failed" (toException e)
         logInfo "Device disconnected"
         h <- lsOpen' (src^.cfg.pth) (src^.ignmis)
