@@ -49,6 +49,7 @@ sudo usermod -aG input,uinput username
 ```
 
 Make sure that it's effective by running `groups`. You might have to logout and login.
+In some cases a reboot may also be required.
 
 3. Make sure the uinput device file has the right permissions:
 Add a udev rule (in either `/etc/udev/rules.d` or `/lib/udev/rules.d`) with the
@@ -56,6 +57,12 @@ following content:
 ```shell
 KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
 ```
+
+You will need to restart `udevd` via
+```shell
+sudo systemctl restart systemd-udevd.service
+```
+to get the new permissions.
 
 4. Make sure the `uinput` drivers are loaded.
 You will probably have to run this command whenever you start `kmonad` for the first time.
