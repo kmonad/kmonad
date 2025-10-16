@@ -134,6 +134,11 @@
   NOTE: Any valid path to a device-file will work, but it is recommended to use
   the 'by-id' directory, since these names will not change if you replug the
   device.
+  Specifying `:ignore-missing true` relaxes the requirement for the device to exist.
+  KMonad will then wait for it to connect and on disconnect will wait for it again
+  to reconnect. Without this or with `:ignore-missing false` KMonad will not start
+  if the device is not connected and will close as soon as it is disconnected.
+
   If the '/dev/input' directory does for any reason not exists (i.e. maybe in the
   initramfs) it could be due to the 'evdev' kernel module not being loaded.
 
@@ -191,7 +196,7 @@
 
 (defcfg
   ;; For Linux
-  input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
+  input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd" :ignore-missing true)
   output (uinput-sink "My KMonad output"
     ;; To understand the importance of the following line, see the section on
     ;; Compose-key sequences at the near-bottom of this file.
