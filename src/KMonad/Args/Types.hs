@@ -68,8 +68,8 @@ data DefButton
   | KTapHold Int DefButton DefButton       -- ^ Do 2 things based on behavior and delay
   | KTapHoldNext Int DefButton DefButton (Maybe DefButton)
     -- ^ Mixture between KTapNext and KTapHold
-  | KTapNextRelease DefButton DefButton    -- ^ Do 2 things based on behavior
-  | KTapHoldNextRelease Int DefButton DefButton (Maybe DefButton)
+  | KTapNextRelease (Maybe Int) DefButton DefButton    -- ^ Do 2 things based on behavior
+  | KTapHoldNextRelease Int (Maybe Int) DefButton DefButton (Maybe DefButton)
     -- ^ Like KTapNextRelease but with a timeout
   | KTapNextPress DefButton DefButton      -- ^ Like KTapNextRelease but also hold on presses
   | KTapHoldNextPress Int DefButton DefButton (Maybe DefButton)
