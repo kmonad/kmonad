@@ -304,7 +304,7 @@
   these buttons, to keep the actual `deflayer` statements orderly.
 
   A `defalias` can contain any number of aliases, and it can refer backwards or
-  forwards to layers or other aliases without issue. Thoug you may not create
+  forwards to layers or other aliases without issue. Though you may not create
   cyclic aliases.
 
   Here we define a few aliases, but we will define more later. Notice that we
