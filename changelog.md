@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   If you followed the [FAQ entry: How do I get Uinput permissions?](doc/faq.md#q-how-do-i-get-uinput-permissions)
   and created the `uinput` group delete the group (`sudo groupdel uinput`)
   and create a new group with the user added to it (see FAQ entry).
-
+- Update Karabiner-DriverKit to 6.3.0 (#1026)
+  You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 
 ### Added
 
