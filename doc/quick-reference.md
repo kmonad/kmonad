@@ -44,7 +44,7 @@ supported systems:
   - GNU/Linux:
 
     ```clojure
-    input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd")
+    input  (device-file "/dev/input/by-id/usb-04d9_daskeyboard-event-kbd" :ignore-missing true)
     output (uinput-sink "My KMonad output")
     ```
 

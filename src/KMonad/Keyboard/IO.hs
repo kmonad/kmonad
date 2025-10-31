@@ -40,7 +40,7 @@ newtype KeySink = KeySink { emitKeyWith :: KeyEvent -> IO () }
 mkKeySink :: HasLogFunc e
   => RIO e snk                      -- ^ Action to acquire the keysink
   -> (snk -> RIO e ())              -- ^ Action to close the keysink
-  -> (snk -> KeyEvent -> RIO e ()) -- ^ Action to write with the keysink
+  -> (snk -> KeyEvent -> RIO e ())  -- ^ Action to write to the keysink
   -> RIO e (Acquire KeySink)
 mkKeySink o c w = do
   u     <- askUnliftIO
@@ -67,7 +67,7 @@ newtype KeySource = KeySource { awaitKeyWith :: IO KeyEvent}
 mkKeySource :: HasLogFunc e
   => RIO e src               -- ^ Action to acquire the keysource
   -> (src -> RIO e ())       -- ^ Action to close the keysource
-  -> (src -> RIO e KeyEvent) -- ^ Action to write with the keysource
+  -> (src -> RIO e KeyEvent) -- ^ Action to read from the keysource
   -> RIO e (Acquire KeySource)
 mkKeySource o c r = do
   u <- askUnliftIO
