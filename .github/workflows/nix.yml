@@ -19,7 +19,7 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install Nix
         uses: cachix/install-nix-action@v30
