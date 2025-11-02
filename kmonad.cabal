@@ -123,7 +123,8 @@ library
     c-sources:
       c_src/keyio.c
     build-depends:
-      unix
+      , unix
+      , hinotify
 
   if os(windows)
     exposed-modules:
