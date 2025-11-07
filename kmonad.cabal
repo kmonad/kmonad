@@ -152,8 +152,8 @@ library
       cxx-options:
         -std=c++2a
       include-dirs:
+        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/vendor/vendor/include/
         c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include/pqrs/karabiner/driverkit
-        c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/src/Daemon/vendor/include
     extra-libraries:
       c++
     build-depends:
