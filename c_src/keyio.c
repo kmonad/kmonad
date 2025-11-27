@@ -3,8 +3,13 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
+#if __linux__
 #include <linux/input.h>
 #include <linux/uinput.h>
+#elif __FreeBSD__
+#include <dev/evdev/input.h>
+#include <dev/evdev/uinput.h>
+#endif
 #include <fcntl.h>
 
 // Perform an IOCTL grab or release on an open keyboard handle
