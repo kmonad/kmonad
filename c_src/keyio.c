@@ -9,8 +9,50 @@
 #elif __FreeBSD__
 #include <dev/evdev/input.h>
 #include <dev/evdev/uinput.h>
+#include <sys/consio.h>
 #endif
 #include <fcntl.h>
+
+#if __FreeBSD__
+static int console_fd = -1;
+static int vt = -1;
+
+int init_vt_monitor(void) {
+  console_fd = open("/dev/ttyv0", O_RDWR);
+  if (console_fd < 0) {
+    console_fd = open("/dev/console", O_RDWR);
+  }
+  if (console_fd < 0) {
+    return -1;
+  }
+  if (ioctl(console_fd, VT_GETACTIVE, &vt) < 0) {
+    close(console_fd);
+    console_fd = -1;
+    return -1;
+  }
+  return 0;
+}
+
+int is_on_vt(void) {
+  if (console_fd < 0) return 1;
+  int current;
+  if (ioctl(console_fd, VT_GETACTIVE, &current) < 0) {
+    return 1;
+  }
+  return current == vt;
+}
+
+void cleanup_vt_monitor(void) {
+  if (console_fd >= 0) {
+    close(console_fd);
+    console_fd = -1;
+  }
+}
+#else
+int init_vt_monitor(void) { return 0; }
+int is_on_vt(void) { return 1; }
+void cleanup_vt_monitor(void) {}
+#endif
 
 // Perform an IOCTL grab or release on an open keyboard handle
 int ioctl_keyboard(int fd, int grab) {
