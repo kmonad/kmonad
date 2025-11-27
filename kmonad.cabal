@@ -116,7 +116,7 @@ library
       KMonad.Util.MultiMap
       Paths_kmonad
 
-  if os(linux)
+  if os(linux) || os(freebsd)
     exposed-modules:
       KMonad.Keyboard.IO.Linux.DeviceSource
       KMonad.Keyboard.IO.Linux.UinputSink

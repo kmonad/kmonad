@@ -24,6 +24,7 @@ import Foreign.C.Types
 import Foreign.C.Error
 import System.Posix
 import System.IO.Error
+import System.Timeout
 
 import KMonad.Keyboard.IO.Linux.Types
 import KMonad.Util
@@ -61,6 +62,15 @@ makeClassyPrisms ''DeviceSourceError
 -- $ffi
 foreign import ccall "ioctl_keyboard"
   c_ioctl_keyboard :: Fd -> CInt -> IO CInt
+
+foreign import ccall "init_vt_monitor"
+  c_init_vt_monitor :: IO CInt
+
+foreign import ccall "is_on_vt"
+  c_is_on_vt :: IO CInt
+
+foreign import ccall "cleanup_vt_monitor"
+  c_cleanup_vt_monitor :: IO ()
 
 -- | Perform an IOCTL operation on an open keyboard handle
 ioctl_keyboard :: MonadIO m
@@ -117,6 +127,7 @@ makeClassy ''DeviceSourceCfg
 data DeviceFile = DeviceFile
   { _cfg :: !DeviceSourceCfg -- ^ Configuration settings
   , _dev :: !(IORef (Fd, Handle)) -- ^ Posix and Haskell filedescriptor to the device file
+  , _grabbed :: !(IORef Bool)     -- ^ Whether we currently hold the grab
   }
 makeClassy ''DeviceFile
 
@@ -218,7 +229,10 @@ lsOpen :: (HasLogFunc e)
   -> FilePath      -- ^ The path to the device file
   -> Bool             -- ^ Whether to wait for keyboard to (re-)appear
   -> RIO e DeviceFile
-lsOpen pr pt im = DeviceFile (DeviceSourceCfg pt pr im) <$> (newIORef =<< lsOpen' pt im)
+lsOpen pr pt im = do
+  liftIO $ void c_init_vt_monitor
+  devRef <- newIORef =<< lsOpen' pt im
+  DeviceFile (DeviceSourceCfg pt pr im) devRef <$> newIORef True
 
 -- | Release the ioctl grab and close the device file. This can throw an
 -- 'IOException' if the handle to the device cannot be properly closed, or an
@@ -226,8 +240,11 @@ lsOpen pr pt im = DeviceFile (DeviceSourceCfg pt pr im) <$> (newIORef =<< lsOpen
 lsClose :: (HasLogFunc e) => DeviceFile -> RIO e ()
 lsClose src = do
   (fd, hdl) <- readIORef (src^.dev)
-  logInfo "Releasing ioctl grab"
-  ioctl_keyboard fd (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
+  isGrabbed <- readIORef (src^.grabbed)
+  when isGrabbed $ do
+    logInfo "Releasing ioctl grab"
+    ioctl_keyboard fd (src^.cfg.pth) False `catch` (throwIO . IOCtlReleaseError)
+  liftIO c_cleanup_vt_monitor
   hClose hdl
 
 -- | Read a bytestring from an open filehandle and return a parsed event. This
@@ -242,18 +259,50 @@ lsRead src = do
       Nothing -> lsRead src
     Left s -> throwIO $ KeyIODecodeError s
  where
-  lsRead' (_, hdl) =
-    tryJust isENODEV (B.hGet hdl (src^.nbytes)) >>= \case
-      Right bts -> pure bts
-      Left e -> do
-        devExists <- doesFileExist (src^.cfg.pth)
-        hClose hdl
-        when devExists $ logRethrow "Device still exists, but reading failed" (toException e)
-        logInfo "Device disconnected"
+  lsRead' (fd, hdl) = do
+    isGrabbed <- readIORef (src^.grabbed)
+    if not isGrabbed
+      then do
+        liftIO $ threadDelay 100000
+        checkVtGrab fd  
+        (fd', hdl') <- readIORef (src^.dev)
+        lsRead' (fd', hdl')
+      else do
+        mbts <- liftIO $ System.Timeout.timeout 100000 $ tryJust isENODEV (B.hGet hdl (src^.nbytes))
+        case mbts of
+          Just (Right bts) -> pure bts
+          Nothing -> do
+            checkVtGrab fd
+            (fd', hdl') <- readIORef (src^.dev)
+            lsRead' (fd', hdl')
+          Just (Left e) -> do
+            devExists <- doesFileExist (src^.cfg.pth)
+            hClose hdl
+            when devExists $ logRethrow "Device still exists, but reading failed" (toException e)
+            logInfo "Device disconnected"
+            h <- lsOpen' (src^.cfg.pth) (src^.ignmis)
+            writeIORef (src^.dev) h
+            writeIORef (src^.grabbed) True
+            logInfo "Device reconnected"
+            lsRead' h
+
+  checkVtGrab fd = do
+    onVT <- liftIO $ (== 1) <$> c_is_on_vt
+    isGrabbed <- readIORef (src^.grabbed)
+    case (onVT, isGrabbed) of
+      (True, False) -> do
+        logInfo "Back on VT, reopening device"
         h <- lsOpen' (src^.cfg.pth) (src^.ignmis)
         writeIORef (src^.dev) h
-        logInfo "Device reconnected"
-        lsRead' h
+        writeIORef (src^.grabbed) True
+      (False, True) -> do
+        logInfo "Left VT, closing device"
+        (_, hdl) <- readIORef (src^.dev)
+        liftIO $ void $ c_ioctl_keyboard fd 0
+        hClose hdl
+        writeIORef (src^.grabbed) False
+      _ -> pure ()
+      
   isENODEV e@IOError{ioe_errno = Just errno}
     | src^.ignmis && Errno errno == eNODEV = Just e
   isENODEV _ = Nothing

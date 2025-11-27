@@ -34,7 +34,7 @@ import KMonad.Model.Button
 import KMonad.Keyboard
 import KMonad.Keyboard.IO
 
-#ifdef linux_HOST_OS
+#if defined(linux_HOST_OS) || defined(freebsd_HOST_OS)
 import KMonad.Keyboard.IO.Linux.DeviceSource
 import KMonad.Keyboard.IO.Linux.UinputSink
 #endif
@@ -286,7 +286,7 @@ getKeySeqDelay = do
     Left None      -> pure (Just 1)
     Left Duplicate -> throwError $ DuplicateSetting "key-seq-delay"
 
-#ifdef linux_HOST_OS
+#if defined(linux_HOST_OS) || defined(freebsd_HOST_OS)
 
 -- | The Linux correspondence between IToken and actual code
 pickInput :: IToken -> J (LogFunc -> IO (Acquire KeySource))
