@@ -11,6 +11,10 @@
   `defcfg` block (see below) you should be able to try out all the examples
   interactively.
 
+  Be careful. This document may be for a different version of KMonad than you
+  are using. All newer features are annotated with '(since x.y.z)' or
+  '(unreleased)'.
+
   -------------------------------------------------------------------------- |#
 
 
@@ -86,7 +90,7 @@
     is a thing. For more information on the `cmd-button' function, see the
     section on Command buttons below.
 
-  - implicit-around: `around` (default), `around-only`, `around-when-alone` or `disabled`
+  - implicit-around (since 0.4.3): `around` (default), `around-only`, `around-when-alone` or `disabled`
 
     An implicit around may be in `A` or `_` but also in modded buttons (`S-a`).
     This changes how implicit arounds are handled, for more details see `around`
@@ -134,10 +138,12 @@
   NOTE: Any valid path to a device-file will work, but it is recommended to use
   the 'by-id' directory, since these names will not change if you replug the
   device.
+
   Specifying `:ignore-missing true` relaxes the requirement for the device to exist.
   KMonad will then wait for it to connect and on disconnect will wait for it again
   to reconnect. Without this or with `:ignore-missing false` KMonad will not start
   if the device is not connected and will close as soon as it is disconnected.
+  (unreleased)
 
   If the '/dev/input' directory does for any reason not exists (i.e. maybe in the
   initramfs) it could be due to the 'evdev' kernel module not being loaded.
@@ -247,7 +253,7 @@
   `defcfg` block though.
 
   There is also support for named `defsrc` blocks. They contain `:name <my-source>`
-  as the first argument in their definition.
+  as the first argument in their definition. (since 0.4.3)
 
   The layouting in the `defsrc` block is completely free, whitespace simply gets
   ignored. We strive to provide a name for every keycode that is no longer than
@@ -261,12 +267,12 @@
   keycode or have the same keycode multiple times on the same keyboard. In such
   cases large chunks of whitespace may be more confusing then a placeholder
   button. If you further want to specify which button this placeholder refers
-  to, you can use an alias (see below).
+  to, you can use an alias (see below). (unreleased)
 
   Instead of keycodes directly you can also use an alias (see `defalias`).
   The syntax for aliases is the same as described in `deflayer`. Keep in mind
   that buttons, which won't work if you place them in `defsrc` directly, will
-  also not work if you use them via an alias.
+  also not work if you use them via an alias. (unreleased)
 
   Most keycodes should be obvious. If you are unsure, check
   './src/KMonad/Keyboard/Keycode.hs'. Every Keycode has a name corresponding to
@@ -309,7 +315,7 @@
   these buttons, to keep the actual `deflayer` statements orderly.
 
   A `defalias` can contain any number of aliases, and it can refer backwards or
-  forwards to layers or other aliases without issue. Though you may not create
+  forwards (unreleased) to layers or other aliases without issue. Though you may not create
   cyclic aliases.
 
   Here we define a few aliases, but we will define more later. Notice that we
@@ -344,7 +350,7 @@
   exactly how many entries are defined in the `defsrc` statement.
 
   Optionally you can add a `:source <my-source>` parameter after the name to map
-  a layer using a named `defsrc` block.
+  a layer using a named `defsrc` block. (since 0.4.3)
 
   You can also overwrite the option `implicit-around` for a layer by adding
   `:implicit-around <setting>`.
@@ -476,13 +482,14 @@
   There also exists some variants like `around-only` or `around-when-alone`.
   `around-only` also releases the outer button just before another button is
   pressed. If no other button has been pressed prior to it's release it releases
-  the inner than the outer button similarly to `around`.
+  the inner than the outer button similarly to `around`. (since 0.4.3)
 
   `around-when-alone` is another variant which works like `around-only` but
   represses the outer button when all other which have been pressed after
-  itself have been released.
+  itself have been released. (since 0.4.3)
 
   `around-implicit` is one of the above variants and is specified `defcfg` block.
+  (since 0.4.3)
 
   We have already seen other examples of modded buttons, \(, \), *, and +. There
   are no keycodes for these buttons in KMonad, but they are buttons. They simply
@@ -560,7 +567,7 @@
   sr (sticky-key 300 rsft))
 
 #| --------------------------------------------------------------------------
-                           Optional: stepped buttons
+                           Optional: stepped buttons (since 0.4.3)
 
   Stepped buttons are a bit out there. They allow you to define a button
   which does something different depending on how often you have pressed it
@@ -645,6 +652,7 @@
   `:delay` is while handling the button) If you use really long
   `tap-macro`s (like storing your email), you may experiment with a
   delay of `0` to have a more "paste-like" experience.
+  (since 0.4.4; previous versions had `0` as default)
 
   The `tap-macro-release` is like `tap-macro`, except that it
   waits to press the last button when the `tap-macro-release`
@@ -946,6 +954,7 @@
   It works just like `tap-next-press` except that after the timeout it will
   jump into holding-mode. The holding button for the timeout case can be swapped
   out just like `tap-hold-next` via a `:timeout-button ...` as the last argument.
+  (since 0.4.4)
 
   These increasingly stranger buttons are, I think, coming from the stubborn
   drive of some of my more eccentric (and I mean that in the most positive way)
