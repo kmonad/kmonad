@@ -531,6 +531,11 @@ data Keycode
   | KeyFnF17
   | KeyFnF18
   | KeyFnF19
+  | KeyFnF20
+  | KeyFnF21
+  | KeyFnF22
+  | KeyFnF23
+  | KeyFnF24
   | KeyFn1
   | KeyFn2
   | KeyFnD
