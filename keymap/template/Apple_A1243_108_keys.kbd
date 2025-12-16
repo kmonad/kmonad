@@ -1,0 +1,35 @@
+#| --------------------------------------------------------------------------
+
+                     KMonad: Apple A1243 Aluminium 108 Keys
+
+  This file contains the `defsrc' configuration for an 'Apple A1243 Aluminium 108 Keys
+  keyboard' edited out of the iso_100kbd, I only have added the additional keys
+  of this Model which has 108 keys on it.
+
+  Copy out the `defsrc' layer to start your own keyboard configuration. Copy
+  out the `deflayer' template to easily start a new layer with matching
+  `transparent' buttons. `102d', the key on the right of the left shift key,
+  which is named this way because it used to be the 102nd key on a 100% board,
+  is the so called "iso" key. `nubs', short for "Non-US backslash", can also be
+  used in place of `102d'. `lsgt', which stands for "less (<) / greater (>)",
+  is yet another valid name for that key.
+
+(deflayer name
+  _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _                         _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _               _         _    _    _    _
+  _    _    _              _                   _    _    _    _          _    _    _    _    _
+)
+
+  -------------------------------------------------------------------------- |#
+
+(defsrc
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  ej    	f13  f14  f15	 	    f16  f17  f18  f19 
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  	fn   home pgup  		clr  kp=  kp/  kp*
+  tab   q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn  		kp7  kp8  kp9  kp-
+  caps 	  a    s    d    f    g    h    j    k    l    ;    '    	ret                     		kp4  kp5  kp6  kp+
+  lsft       z    x    c    v    b    n    m    ,    .    /    	  rsft       	  up         	  kp1  kp2  kp3  ret
+  lctl lalt lmet           	    spc                 	  rmet ralt rctl    left down rght  		kp0  kp.
+)
