@@ -524,6 +524,13 @@ data Keycode
   | KeyFnF10
   | KeyFnF11
   | KeyFnF12
+  | KeyFnF13
+  | KeyFnF14
+  | KeyFnF15
+  | KeyFnF16
+  | KeyFnF17
+  | KeyFnF18
+  | KeyFnF19
   | KeyFn1
   | KeyFn2
   | KeyFnD
@@ -910,6 +917,7 @@ aliases = Q.mkMultiMap
   , (KeyComma,            ["comm", ","])
   , (KeyDot,              ["."])
   , (KeySlash,            ["/"])
+  , (KeyClear,            ["Clear", "clr"])
   , (KeyNumLock,          ["nlck"])
   , (KeyKpSlash,          ["kp/"])
   , (KeyKpEnter,          ["kprt"])
@@ -976,7 +984,7 @@ aliases = Q.mkMultiMap
   , (KeyNextSong,         ["nexttrack"])
   , (KeyPreviousSong,     ["previoustrack"])
   -- , (KeyStopCd,           ["stop"]) -- conflict with KeyStop
-  , (KeyEjectCd,          ["eject"])
+  , (KeyEjectCd,          ["eject", "ej"])
   , (KeyVolumeUp,         ["volumeincrement"])
   , (KeyVolumeDown,       ["volumedecrement"])
   , (KeyMail,             ["emailreader"])
