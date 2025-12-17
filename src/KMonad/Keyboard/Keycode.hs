@@ -922,7 +922,7 @@ aliases = Q.mkMultiMap
   , (KeyComma,            ["comm", ","])
   , (KeyDot,              ["."])
   , (KeySlash,            ["/"])
-  , (KeyClear,            ["clear", "clr"])
+  , (KeyClear,            ["clr"])
   , (KeyNumLock,          ["nlck"])
   , (KeyKpEqual,          ["kp="])
   , (KeyKpSlash,          ["kp/"])
