@@ -524,6 +524,18 @@ data Keycode
   | KeyFnF10
   | KeyFnF11
   | KeyFnF12
+  | KeyFnF13
+  | KeyFnF14
+  | KeyFnF15
+  | KeyFnF16
+  | KeyFnF17
+  | KeyFnF18
+  | KeyFnF19
+  | KeyFnF20
+  | KeyFnF21
+  | KeyFnF22
+  | KeyFnF23
+  | KeyFnF24
   | KeyFn1
   | KeyFn2
   | KeyFnD
@@ -869,6 +881,7 @@ keyNames = mconcat
 aliases :: Q.MultiMap Keycode Text
 aliases = Q.mkMultiMap
   [ (KeyEnter,            ["ret", "return", "ent"])
+  , (KeyKpEqual,          ["kp="])
   , (KeyMinus,            ["min", "-"])
   , (KeyEqual,            ["eql", "="])
   , (KeySleep,            ["zzz"])
@@ -910,6 +923,7 @@ aliases = Q.mkMultiMap
   , (KeyComma,            ["comm", ","])
   , (KeyDot,              ["."])
   , (KeySlash,            ["/"])
+  , (KeyClear,            ["clr"])
   , (KeyNumLock,          ["nlck"])
   , (KeyKpSlash,          ["kp/"])
   , (KeyKpEnter,          ["kprt"])
@@ -976,7 +990,7 @@ aliases = Q.mkMultiMap
   , (KeyNextSong,         ["nexttrack"])
   , (KeyPreviousSong,     ["previoustrack"])
   -- , (KeyStopCd,           ["stop"]) -- conflict with KeyStop
-  , (KeyEjectCd,          ["eject"])
+  , (KeyEjectCd,          ["eject", "ej"])
   , (KeyVolumeUp,         ["volumeincrement"])
   , (KeyVolumeDown,       ["volumedecrement"])
   , (KeyMail,             ["emailreader"])
