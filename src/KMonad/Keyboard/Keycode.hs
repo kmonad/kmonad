@@ -881,6 +881,7 @@ keyNames = mconcat
 aliases :: Q.MultiMap Keycode Text
 aliases = Q.mkMultiMap
   [ (KeyEnter,            ["ret", "return", "ent"])
+  , (KeyKpEqual,          ["kp="])
   , (KeyMinus,            ["min", "-"])
   , (KeyEqual,            ["eql", "="])
   , (KeySleep,            ["zzz"])
@@ -924,7 +925,6 @@ aliases = Q.mkMultiMap
   , (KeySlash,            ["/"])
   , (KeyClear,            ["clr"])
   , (KeyNumLock,          ["nlck"])
-  , (KeyKpEqual,          ["kp="])
   , (KeyKpSlash,          ["kp/"])
   , (KeyKpEnter,          ["kprt"])
   , (KeyKpPlus,           ["kp+"])
