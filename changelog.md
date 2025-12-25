@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   If you followed the [FAQ entry: How do I get Uinput permissions?](doc/faq.md#q-how-do-i-get-uinput-permissions)
   and created the `uinput` group delete the group (`sudo groupdel uinput`)
   and create a new group with the user added to it (see FAQ entry).
+- Update Karabiner-DriverKit to 5.0.0 (#937)
+  You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 
 
 ### Added
@@ -23,8 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Changed
 
-- Update Karabiner-DriverKit to 5.0.0 (#937)
-  You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 - Aliases can now refer to later aliases instead of just earlier ones. (#992)
 - Aliases can now be used in `defsrc` if they are a keycode (#992)
 - Failure to grab or release the keyboard are now accompanied with the os error on Linux (#1017)
