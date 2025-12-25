@@ -8,20 +8,13 @@ talk with the community first.  Currently the best way to do that is to create
 an issue on GitHub.  There, you can talk through the problems you are having,
 as well as the proposed solution.
 
-## Where to Make Pull Requests
-
-  * Pull requests for new features should be made against the `develop` branch.
-
-  * Pull requests for improvements to the documentation, as well as bug fixes,
-    of existing features should be made against the `master` branch.
-
 ## Making the Change
 
 It's best to create a separate branch in your clone of the [KMonad
 repo](https://github.com/kmonad/kmonad/) and then push this branch to
 your fork.
 
-Please also **never** merge `master` (or `develop`) into the branch you have
+Please also **never** merge `master` into the branch you have
 created.  `git` offers the very neat option of rebasing your changes on top of
 another branch; use that instead.
 
