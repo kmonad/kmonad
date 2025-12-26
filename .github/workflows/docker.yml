@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ '*' ]
+  pull_request:
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       matrix:
         target:
           - linux
-          #- windows # Too flaky
+          - windows # Too flaky
     steps:
 
       - name: Clone project
