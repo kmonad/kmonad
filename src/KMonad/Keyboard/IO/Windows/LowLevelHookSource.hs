@@ -97,4 +97,11 @@ llRead :: HasLogFunc e => LLHook -> RIO e KeyEvent
 llRead ll = do
   wait_key $ ll^.buffer
   we <- liftIO $ peek (ll^.buffer)
-  either throwIO pure $ fromWinKeyEvent we
+  case fromWinKeyEvent we of
+    Left e -> do
+      -- Windows keycode support is currently subpar
+      -- Only warn user about this, do not error.
+      -- See #1039.
+      logWarn $ "Ignoring Keyevent: " <> display (toException e)
+      llRead ll
+    Right k -> pure k
