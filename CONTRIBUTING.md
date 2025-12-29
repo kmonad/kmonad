@@ -47,4 +47,4 @@ request:
 Please also remember to update the `CHANGELOG.md` file, as well as any other
 documentation that your pull request touches upon.  For example, when
 implementing a new feature, you should update the `tutorial.kbd` file
-accordingly.
+accordingly. Please also add a `(unreleased)` after the documentation.
