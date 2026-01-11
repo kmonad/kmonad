@@ -153,6 +153,9 @@ keyCodeToWinCode = M.fromList $ swap . NE.maximumBy (compare `on` fst) <$> NE.gr
 -- and also may have the same KMonad KeyCode multiple times.
 --
 -- It is essentially a merge of 'winCodeToKeyCode' and 'keyCodeToWinCode'.
+--
+-- Also note that the OEM Specific keys without name are not accessible
+-- since they fallthrough at the low level hook layer (c_src/keyio_win.c)
 winCodeKeyCodeMapping :: [(WinKeycode, Keycode)]
 winCodeKeyCodeMapping =
   [ (0x00, Missing254)     -- Not documented, but happens often. Why??

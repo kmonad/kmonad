@@ -41,6 +41,17 @@ void last_error()
   exit(dw);
 }
 
+// OEM Specific keys should probably not be captured as it's unclear wether
+// they have the same effect if we reemit them.
+bool isOEMSpecific(int nCode) {
+	return 0x92 <= nCode && nCode <= 0x96 // OEM specific
+		|| 0xE1 == nCode                  // OEM Specific
+		|| 0xE3 <= nCode && nCode <= 0xE4 // OEM Specific
+		|| 0xE6 == nCode                  // OEM Specific
+		|| 0xE9 <= nCode && nCode <= 0xF5 // OEM Specific
+		;
+}
+
 // Callback we insert into windows that writes events to pipe
 LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -48,7 +59,8 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   KBDLLHOOKSTRUCT* e = (KBDLLHOOKSTRUCT*)(lParam);
 
   // Skip processing if nCode is 0 or this is an injected event
-  if (nCode < 0 || e->flags & LLKHF_INJECTED) {
+  // Also skip OEM specific keys (see comment on 'isOEMSpecific').
+  if (nCode < 0 || e->flags & LLKHF_INJECTED || isOEMSpecific(nCode)) {
     return CallNextHookEx(hookHandle, nCode, wParam, lParam);
   };
 
