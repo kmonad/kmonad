@@ -49,7 +49,7 @@ instance Exception WinError
 instance Show WinError where
   show e = case e of
     NoWinKeycodeTo   c -> "Cannot translate to windows keycode: "   <> show c
-    NoWinKeycodeFrom i -> "Cannot translate from windows keycode: " <> show i
+    NoWinKeycodeFrom i -> "Cannot translate from windows keycode: " <> showHex i ""
     UnexpetedNumberOfBytesRead read ->
       "Unexpeted bytes read from low-level hook. Read "
       <> show read <> " bytes should be exactly "
