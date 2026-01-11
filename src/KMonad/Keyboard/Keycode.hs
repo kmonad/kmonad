@@ -818,6 +818,11 @@ data Keycode
   | KeyMissionCtrl
   | KeySpotlight
   | KeyDictation
+  -- Low level hook (Windows)
+  -- (The VK prefix makes it obvious those are "broken" windows keycodes)
+  | VKXButton1
+  | VKXButton2
+  | VKOEM8 -- Does not exist on US keyboards
   deriving (Eq, Show, Bounded, Enum, Ord, Typeable, Data)
 
 -- We manually define the Hashable instance, since we would need a `Generic`
