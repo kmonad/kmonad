@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 - Fixed nested `implicit-around`s in `tap-macro`s are inconsistent. (#1012)
 - Fixed `sticky-key` as tap in `tap-hold` style buttons. (#1014)
 - Fixed nix system variable renamed deprecation warning. (#1046)
+- Fixed incorrect karabiner version on Nix on Darwin (#1026)
 
 ## 0.4.4 – 2025-04-11
 
