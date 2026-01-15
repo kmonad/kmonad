@@ -35,7 +35,7 @@ jobs:
           submodules: true
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v30
+        uses: cachix/install-nix-action@v31
 
       - name: Build flake
         run: nix build --print-build-logs 'git+file:///${{ github.workspace }}?dir=nix&submodules=1' ${{ matrix.nix-build-flags }}
