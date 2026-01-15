@@ -32,7 +32,7 @@ let
 
   };
 in
-pkgs.nixosTest {
+pkgs.testers.nixosTest {
   name = "kmonad-test";
 
   nodes = {
