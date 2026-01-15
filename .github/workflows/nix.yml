@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Nix Flake CI - ${{ matrix.os }}
+    name: Nix Flake CI - ${{ matrix.os }} - ${{ matrix.variant }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -14,6 +14,19 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+        variant:
+          - flake.lock
+          - unstable
+          - stable
+        include:
+          - variant: unstable
+            nix-build-flags: --override-input nixpkgs "github:NixOS/nixpkgs/nixpkgs-unstable"
+          - variant: stable
+            os: macos-latest
+            nix-build-flags: --override-input nixpkgs "github:NixOS/nixpkgs/nixpkgs-25.11-darwin"
+          - variant: stable
+            os: ubuntu-latest
+            nix-build-flags: --override-input nixpkgs "github:NixOS/nixpkgs/nixos-25.11"
     steps:
 
       - name: Clone project
@@ -25,7 +38,7 @@ jobs:
         uses: cachix/install-nix-action@v30
 
       - name: Build flake
-        run: nix build --print-build-logs 'git+file:///${{ github.workspace }}?dir=nix&submodules=1'
+        run: nix build --print-build-logs 'git+file:///${{ github.workspace }}?dir=nix&submodules=1' ${{ matrix.nix-build-flags }}
 
       - name: Check flake
-        run: nix flake check 'git+file:///${{ github.workspace }}?dir=nix&submodules=1'
+        run: nix flake check 'git+file:///${{ github.workspace }}?dir=nix&submodules=1' ${{ matrix.nix-build-flags }}
