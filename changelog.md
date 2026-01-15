@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ### Breaking
 
-- Update Karabiner-DriverKit to 6.3.0 (#937, #1025)
+- Update Karabiner-DriverKit to 6.8.0 (#937, #1025)
   You will now need to [start the server yourself](doc/installation.md#starting-the-dext-daemon).
 - With systemd v258 udevd ignores `GROUP=` setting with a non-system group.
   If you followed the [FAQ entry: How do I get Uinput permissions?](doc/faq.md#q-how-do-i-get-uinput-permissions)
