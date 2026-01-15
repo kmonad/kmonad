@@ -17,11 +17,11 @@
 
       # List of supported compilers:
       supportedCompilers = [
-        "ghc928"
-        "ghc948"
-        "ghc966"
-        "ghc984"
-        "ghc9101"
+        # "ghc92" # No longer exists in nixpkgs
+        # "ghc94" # Breaks hls
+        "ghc96"
+        "ghc98"
+        "ghc910"
       ];
 
       # Function to generate a set based on supported systems:
