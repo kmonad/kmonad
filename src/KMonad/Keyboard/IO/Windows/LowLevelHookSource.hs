@@ -78,7 +78,7 @@ llOpen = do
   liftIO $ do
     c_init_pipe
     tid <- async grab_kb
-    buf <- mallocBytes $ sizeOf (undefined :: WinKeyEvent)
+    buf <- malloc @WinKeyEvent
     pure $ LLHook tid buf
 
 -- | Ask windows to unregister the hook and free the data-buffer

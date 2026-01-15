@@ -28,7 +28,7 @@ kextSink = mkKeySink skOpen skClose skSend
 skOpen :: HasLogFunc e => RIO e EvBuf
 skOpen = do
   logInfo "Initializing Mac key sink"
-  liftIO $ EvBuf <$> mallocBytes (sizeOf (undefined :: MacKeyEvent))
+  liftIO $ EvBuf <$> malloc @MacKeyEvent
 
 -- | Close the 'EvBuf' environment
 skClose :: HasLogFunc e => EvBuf -> RIO e ()

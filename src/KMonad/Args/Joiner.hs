@@ -106,7 +106,7 @@ instance Show JoinError where
     DuplicateLayerSetting t s -> "Duplicate setting in 'deflayer '"  <> T.unpack t <> "': " <> T.unpack s
     InvalidOS         t   -> "Not available under this OS: "         <> T.unpack t
     ImplArndDisabled      -> "Implicit around via `A` or `S-a` are disabled in your config"
-    NestedTrans           -> "Encountered 'Transparent' ouside of top-level layer"
+    NestedTrans           -> "Encountered 'Transparent' outside of top-level layer"
     InvalidComposeKey     -> "Encountered invalid button as Compose key"
     LengthMismatch t l s  -> mconcat
       [ "Mismatch between length of 'defsrc' and deflayer <", T.unpack t, ">\n"
