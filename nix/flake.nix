@@ -48,7 +48,7 @@
       # embed the current revision into the binary despite the .git
       # directory not being available:
       fakeGit = pkgs: pkgs.writeShellScriptBin "git" ''
-        echo ${self.rev or "dirty"}
+        echo ${self.dirtyRev or "unknown"}
       '';
 
       # The package derivation:
@@ -83,7 +83,7 @@
         } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
           list-keyboards = pkgs.stdenv.mkDerivation {
             name = "list-keyboards";
-            version = self.shortRev;
+            version = self.dirtyShortRev or "unknown";
             src = ../c_src/mac;
             installFlags = [ "DESTDIR=$(out)" ];
           };
