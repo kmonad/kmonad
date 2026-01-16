@@ -54,12 +54,9 @@ iokitOpen m = do
 
     case m of
       Nothing -> void $ grab_kb nullPtr
-      Just s  -> do
-        str <- newCString s
-        void $ grab_kb str
-        free str
+      Just s  -> void $ withCString s grab_kb
 
-    buf <- mallocBytes $ sizeOf (undefined :: MacKeyEvent)
+    buf <- malloc @MacKeyEvent
     pure $ EvBuf buf
 
 -- | Ask Mac to close the queue
