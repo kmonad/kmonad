@@ -49,7 +49,7 @@ instance Exception WinError
 instance Show WinError where
   show e = case e of
     NoWinKeycodeTo   c -> "Cannot translate to windows keycode: "   <> show c
-    NoWinKeycodeFrom i -> "Cannot translate from windows keycode: " <> show i
+    NoWinKeycodeFrom i -> "Cannot translate from windows keycode: " <> showHex i ""
     UnexpetedNumberOfBytesRead read ->
       "Unexpeted bytes read from low-level hook. Read "
       <> show read <> " bytes should be exactly "
@@ -153,15 +153,18 @@ keyCodeToWinCode = M.fromList $ swap . NE.maximumBy (compare `on` fst) <$> NE.gr
 -- and also may have the same KMonad KeyCode multiple times.
 --
 -- It is essentially a merge of 'winCodeToKeyCode' and 'keyCodeToWinCode'.
+--
+-- Also note that the OEM Specific keys without name are not accessible
+-- since they fallthrough at the low level hook layer (c_src/keyio_win.c)
 winCodeKeyCodeMapping :: [(WinKeycode, Keycode)]
 winCodeKeyCodeMapping =
   [ (0x00, Missing254)     -- Not documented, but happens often. Why??
-  -- , (0x01, ???)         -- Defined as VK_LBUTTON
-  -- , (0x02, ???)         -- Defined as VK_RBUTTON
+  , (0x01, BtnLeft)        -- Defined as VK_LBUTTON
+  , (0x02, BtnRight)       -- Defined as VK_RBUTTON
   , (0x03, KeyCancel)
-  -- , (0x04, ???)         -- Defined as VK_MBUTTON
-  -- , (0x05, ???)         -- Defined as VK_XBUTTON1
-  -- , (0x06, ???)         -- Defined as VK_XBUTTON2
+  , (0x04, BtnMiddle)      -- Defined as VK_MBUTTON
+  , (0x05, VKXButton1)     -- Defined as VK_XBUTTON1
+  , (0x06, VKXButton2)     -- Defined as VK_XBUTTON2
   , (0x08, KeyBackspace)
   , (0x09, KeyTab)
   , (0x0C, KeyDelete)      -- Defined as VK_CLEAR
@@ -323,7 +326,7 @@ winCodeKeyCodeMapping =
   , (0xDC, KeyBackslash)    -- Defined as VK_OEM_5
   , (0xDD, KeyRightBrace)   -- Defined as VK_OEM_6
   , (0xDE, KeyApostrophe)   -- Defined as VK_OEM_7
-  -- , (0xDF, ???)             -- Defined ask VK_OEM_8
+  , (0xDF, VKOEM8)          -- Defined ask VK_OEM_8
   -- , (0xE1, ???)             -- Defined as `OEM specific`
   , (0xE2, Key102nd)
   -- , (0xE3, ???)             -- Defined as `OEM specific`
