@@ -59,8 +59,12 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   KBDLLHOOKSTRUCT* e = (KBDLLHOOKSTRUCT*)(lParam);
 
   // Skip processing if nCode is 0 or this is an injected event
-  // Also skip OEM specific keys (see comment on 'isOEMSpecific').
   if (nCode < 0 || e->flags & LLKHF_INJECTED || isOEMSpecific(nCode)) {
+    return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+  };
+  // Also skip OEM specific keys (see comment on 'isOEMSpecific').
+  if (isOEMSpecific(nCode)) {
+    fprintf(stderr, "Skipping unnamed OEM key\n");
     return CallNextHookEx(hookHandle, nCode, wParam, lParam);
   };
 
