@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
   Buttons binded to it will never trigger. (#992)
 - Using `:ignore-missing` in `device-file` you can wait for the device to be
   connected before starting and allow reconnecting in case of disconnect. (#1017)
+- Windows OEM Specific keycodes without name are now ignored. (#1043)
+- Added Windows only key `VKOEM8`. (#1043)
 
 ### Changed
 - Aliases can now refer to later aliases instead of just earlier ones. (#992)
