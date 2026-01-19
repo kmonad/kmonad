@@ -17,11 +17,11 @@
 
       # List of supported compilers:
       supportedCompilers = [
-        "ghc928"
-        "ghc948"
-        "ghc966"
-        "ghc984"
-        "ghc9101"
+        # "ghc92" # No longer exists in nixpkgs
+        # "ghc94" # Breaks hls
+        "ghc96"
+        "ghc98"
+        "ghc910"
       ];
 
       # Function to generate a set based on supported systems:
@@ -48,7 +48,7 @@
       # embed the current revision into the binary despite the .git
       # directory not being available:
       fakeGit = pkgs: pkgs.writeShellScriptBin "git" ''
-        echo ${self.rev or "dirty"}
+        echo ${self.dirtyRev or "unknown"}
       '';
 
       # The package derivation:
@@ -59,11 +59,7 @@
             "--flag=dext")
           { }
       ).overrideAttrs (orig: {
-        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ] ++
-          (pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
-            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
-            pkgs.darwin.IOKit
-          ]);
+        buildInputs = orig.buildInputs ++ [ (fakeGit pkgs) ];
       } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
         statSubmodulePhase = ''
           stat c_src/mac/Karabiner-DriverKit-VirtualHIDDevice/include || (
@@ -87,12 +83,8 @@
         } // (pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
           list-keyboards = pkgs.stdenv.mkDerivation {
             name = "list-keyboards";
-            version = self.shortRev;
+            version = self.dirtyShortRev or "unknown";
             src = ../c_src/mac;
-            buildInputs = [
-              pkgs.darwin.apple_sdk.frameworks.CoreFoundation
-              pkgs.darwin.IOKit
-            ];
             installFlags = [ "DESTDIR=$(out)" ];
           };
         }) // builtins.listToAttrs (map
