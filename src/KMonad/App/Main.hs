@@ -98,6 +98,9 @@ initAppEnv cfg = do
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
+    -- FIXME: should take output of outHooks
+    -- but since 'OutputHook's are never used this doesn't matter.
+    -- Furthermore calling 'pull' on outHooks to cause stepping is needed.
     e <- atomically . takeTMVar $ otv
     emitKey snk e
     -- If delay is specified, wait for it
