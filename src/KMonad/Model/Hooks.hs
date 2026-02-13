@@ -112,18 +112,19 @@ register hs h = do
   -- If the hook has a timeout, start a thread that will signal timeout
   case h^.hTimeout of
     Nothing -> logDebug $ "Registering untimed hook: " <> display (hashUnique tag)
-    Just t' -> void . async $ do
+    Just t' -> do
       logDebug $ "Registering " <> display (t'^.delay)
               <> "ms hook: " <> display (hashUnique tag)
-      threadDelay $ 1000 * fromIntegral (t'^.delay)
-      atomically $ putTMVar (hs^.injectTmr) tag
+      void . async $ do
+        threadDelay $ 1000 * fromIntegral (t'^.delay)
+        atomically $ putTMVar (hs^.injectTmr) tag
 
--- | Cancel a hook by removing it from the store
-cancelHook :: (HasLogFunc e)
+-- | Run timeout action of hook and remove it from the store
+runTimeout :: (HasLogFunc e)
   => Hooks
   -> Unique
   -> RIO e ()
-cancelHook hs tag = do
+runTimeout hs tag = do
   e <- atomically $ do
     m <- readTVar $ hs^.hooks
     let v = M.lookup tag m
@@ -131,9 +132,9 @@ cancelHook hs tag = do
     pure v
   case e of
     Nothing ->
-      logDebug $ "Tried cancelling expired hook: " <> display (hashUnique tag)
+      logDebug $ "Hook timeout ignored (already triggered): " <> display (hashUnique tag)
     Just e' -> do
-      logDebug $ "Cancelling hook: " <> display (hashUnique tag)
+      logDebug $ "Handeling timeout of hook: " <> display (hashUnique tag)
       liftIO $ e' ^. hTimeout . to fromJust . action
 
 
@@ -144,9 +145,10 @@ cancelHook hs tag = do
 -- how this updates the 'Hooks' environment.
 
 -- | Run the function stored in a Hook on the event and the elapsed time
-runEntry :: MonadIO m => SystemTime -> KeyEvent -> Entry -> m Catch
-runEntry t e v = liftIO $ do
-  (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
+runEntry :: HasLogFunc e => SystemTime -> KeyEvent -> (Unique, Entry) -> RIO e Catch
+runEntry t e (k, v) = do
+  logDebug $ "Hook " <> display (hashUnique k) <> ":"
+  liftIO $ (v^.keyH) $ Trigger ((v^.time) `tDiff` t) e
 
 -- | Run all hooks on the current event and reset the store
 runHooks :: (HasLogFunc e)
@@ -154,12 +156,13 @@ runHooks :: (HasLogFunc e)
   -> KeyEvent
   -> RIO e (Maybe KeyEvent)
 runHooks hs e = do
-  logDebug "Running hooks"
+  logDebug $ "Running hooks for event: " <> display e
   m   <- atomically $ swapTVar (hs^.hooks) M.empty
   now <- liftIO getSystemTime
-  foldMapM (runEntry now e) (M.elems m) >>= \case
+  foldMapM (runEntry now e) (M.toList m) >>= \case
     Catch   -> pure Nothing
     NoCatch -> pure $ Just e
+  <* logDebug "Done running Hooks"
 
 
 --------------------------------------------------------------------------------
@@ -188,7 +191,7 @@ step h = do
   -- Keep taking and cancelling timers until we encounter a key event, then run
   -- the hooks on that event.
   let read = atomically next >>= \case
-        Left  t -> cancelHook h t >> read -- We caught a cancellation
+        Left  t -> runTimeout h t >> read -- We caught a hook timeout
         Right e -> runHooks h e           -- We caught a real event
   read
 
