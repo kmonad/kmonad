@@ -169,6 +169,11 @@ pressKey c =
 loop :: RIO AppEnv ()
 loop = forever $ view sluice >>= Sl.pull >>= \case
   e | e^.switch == Press -> pressKey $ e^.keycode
+    | e^.switch == Release -> do
+      view keymap >>= flip Km.lookupKey (e^.keycode) >>= \case
+        Nothing -> pure () -- happens frequently with `fallthrough false`
+        -- Not perfect, since a layer change might have happened but better than nothing
+        Just _ -> logWarn "Unhandled release of mapped key"
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration
