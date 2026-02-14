@@ -43,6 +43,7 @@ where
 
 import KMonad.Prelude
 import KMonad.Keyboard
+import KMonad.Model.EventSrc
 
 import RIO.Seq (Seq(..), (><))
 import qualified RIO.Seq  as Seq
@@ -56,21 +57,19 @@ import qualified RIO.Text as T
 
 -- | The 'Dispatch' environment
 data Dispatch = Dispatch
-  { _eventSrc :: IO KeyEvent            -- ^ How to read 1 event
-  , _readProc :: TMVar (Async KeyEvent) -- ^ Store for reading process
+  { eventSrc  :: EventSrc IO            -- ^ How to read 1 event
   , _rerunBuf :: TVar (Seq KeyEvent)    -- ^ Buffer for rerunning events
   }
 makeLenses ''Dispatch
 
 -- | Create a new 'Dispatch' environment
-mkDispatch' :: MonadUnliftIO m => m KeyEvent -> m Dispatch
+mkDispatch' :: MonadUnliftIO m => EventSrc m -> m Dispatch
 mkDispatch' s = withRunInIO $ \u -> do
-  rpc <- newEmptyTMVarIO
   rrb <- newTVarIO Seq.empty
-  pure $ Dispatch (u s) rpc rrb
+  pure $ Dispatch (unliftESrc u s) rrb
 
 -- | Create a new 'Dispatch' environment in a 'ContT' environment
-mkDispatch :: MonadUnliftIO m => m KeyEvent -> ContT r m Dispatch
+mkDispatch :: MonadUnliftIO m => EventSrc m -> ContT r m Dispatch
 mkDispatch = lift . mkDispatch'
 
 --------------------------------------------------------------------------------
@@ -82,25 +81,16 @@ mkDispatch = lift . mkDispatch'
 -- 1. The next item to be rerun
 -- 2. A new item read from the OS
 -- 3. Pausing until either 1. or 2. triggers
-pull :: (HasLogFunc e) => Dispatch -> RIO e KeyEvent
-pull d = do
-  -- Check for an unfinished read attempt started previously. If it exists,
-  -- fetch it, otherwise, start a new read attempt.
-  a <- atomically (tryTakeTMVar $ d^.readProc) >>= \case
-    Nothing -> async . liftIO $ d^.eventSrc
-    Just a' -> pure a'
-
-  -- First try reading from the rerunBuf, or failing that, from the
-  -- read-process. If both fail we enter an STM race.
-  atomically ((Left <$> popRerun) `orElse` (Right <$> waitSTM a)) >>= \case
-    -- If we take from the rerunBuf, put the running read-process back in place
-    Left e' -> do
+pull :: (HasLogFunc e) => Dispatch -> EventSrc (RIO e)
+pull d@Dispatch{eventSrc = EventSrc{tryESrc, postESrc}} = EventSrc
+  { tryESrc = (Left <$> popRerun) `orElse` (Right <$> tryESrc)
+  , postESrc = \case
+    Left e -> do
       logDebug $ "\n" <> display (T.replicate 80 "-")
-              <> "\nRerunning event: " <> display e'
-      atomically $ putTMVar (d^.readProc) a
-      pure e'
-    Right e' -> pure e'
-
+              <> "\nRerunning event: " <> display e
+      pure $ Just e
+    Right e -> liftIO $ postESrc e
+  }
   where
     -- Pop the head off the rerun-buffer (or 'retrySTM' if empty)
     popRerun = readTVar (d^.rerunBuf) >>= \case

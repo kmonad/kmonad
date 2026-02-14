@@ -29,6 +29,7 @@ import Data.Time.Clock.System
 import Data.Unique
 
 import KMonad.Model.Action hiding (register)
+import KMonad.Model.EventSrc
 import KMonad.Keyboard
 import KMonad.Util
 
@@ -65,21 +66,21 @@ type Store = M.HashMap Unique Entry
 -- | The 'Hooks' environment that is required for keeping track of all the
 -- different targets and callbacks.
 data Hooks = Hooks
-  { _eventSrc   :: IO KeyEvent   -- ^ Where we get our events from
+  { eventSrc    :: EventSrc IO   -- ^ Where we get our events from
   , _injectTmr  :: TMVar Unique  -- ^ Used to signal timeouts
   , _hooks      :: TVar Store    -- ^ Store of hooks
   }
 makeLenses ''Hooks
 
 -- | Create a new 'Hooks' environment which reads events from the provided action
-mkHooks' :: MonadUnliftIO m => m KeyEvent -> m Hooks
+mkHooks' :: MonadUnliftIO m => EventSrc m -> m Hooks
 mkHooks' s = withRunInIO $ \u -> do
   itr <- newEmptyTMVarIO
   hks <- newTVarIO M.empty
-  pure $ Hooks (u s) itr hks
+  pure $ Hooks (unliftESrc u s) itr hks
 
 -- | Create a new 'Hooks' environment, but as a 'ContT' monad to avoid nesting
-mkHooks :: MonadUnliftIO m => m KeyEvent -> ContT r m Hooks
+mkHooks :: MonadUnliftIO m => EventSrc m -> ContT r m Hooks
 mkHooks = lift . mkHooks'
 
 -- | Convert a hook in some UnliftIO monad into an IO version, to store it in Hooks
@@ -177,26 +178,16 @@ runHooks hs e = do
 -- callback, then return it (otherwise return Nothing). At the same time, keep
 -- reading the timer-cancellation inject point and handle any cancellation as it
 -- comes up.
-step :: (HasLogFunc e)
+pull :: (HasLogFunc e)
   => Hooks                  -- ^ The 'Hooks' environment
-  -> RIO e (Maybe KeyEvent) -- ^ An action that returns perhaps the next event
-step h = do
-
-  -- Asynchronously start reading the next event
-  a <- async . liftIO $ h^.eventSrc
-
-  -- Handle any timer event first, and then try to read from the source
-  let next = (Left <$> takeTMVar (h^.injectTmr)) `orElse` (Right <$> waitSTM a)
+  -> EventSrc (RIO e)       -- ^ An action that returns perhaps the next event
+pull h@Hooks{eventSrc = EventSrc{tryESrc, postESrc}} = EventSrc
+  { -- Handle any timer event first, and then try to read from the source
+    tryESrc = (Left <$> takeTMVar (h^.injectTmr)) `orElse` (Right <$> tryESrc)
 
   -- Keep taking and cancelling timers until we encounter a key event, then run
   -- the hooks on that event.
-  let read = atomically next >>= \case
-        Left  t -> runTimeout h t >> read -- We caught a hook timeout
-        Right e -> runHooks h e           -- We caught a real event
-  read
-
--- | Keep stepping until we succesfully get an unhandled 'KeyEvent'
-pull :: HasLogFunc e
-  => Hooks
-  -> RIO e KeyEvent
-pull h = step h >>= maybe (pull h) pure
+  , postESrc = \case
+    Left  t -> runTimeout h t $> Nothing -- We caught a hook timeout
+    Right e -> liftIO (postESrc e) >>= maybe (pure Nothing) (runHooks h) -- We caught a real event
+  }

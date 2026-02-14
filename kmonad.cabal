@@ -59,6 +59,7 @@ library
       DeriveGeneric
       DeriveDataTypeable
       DeriveTraversable
+      ExistentialQuantification
       FlexibleContexts
       FlexibleInstances
       FunctionalDependencies
@@ -93,6 +94,7 @@ library
       KMonad.Model.BEnv
       KMonad.Model.Button
       KMonad.Model.Dispatch
+      KMonad.Model.EventSrc
       KMonad.Model.Hooks
       KMonad.Model.Keymap
       KMonad.Model.Sluice

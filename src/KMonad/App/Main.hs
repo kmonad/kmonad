@@ -25,7 +25,7 @@ import KMonad.Util
 import KMonad.Model
 
 
-
+import KMonad.Model.EventSrc
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
@@ -85,7 +85,7 @@ initAppEnv cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the pull-chain components
-  dsp <- Dp.mkDispatch $ awaitKey src
+  dsp <- Dp.mkDispatch =<< pullToESrc "receiver_proc" (awaitKey src)
   ihk <- Hs.mkHooks    $ Dp.pull  dsp
   slc <- Sl.mkSluice   $ Hs.pull  ihk
 
@@ -94,7 +94,7 @@ initAppEnv cfg = do
 
   -- Initialize output components
   otv <- lift newEmptyTMVarIO
-  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
+  ohk <- Hs.mkHooks $ toESrc otv
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
@@ -167,7 +167,7 @@ pressKey c =
 -- 1. Pull from the pull-chain until an unhandled event reaches us.
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
-loop = forever $ view sluice >>= Sl.pull >>= \case
+loop = forever $ view sluice >>= pullESrc . Sl.pull >>= \case
   e | e^.switch == Press -> pressKey $ e^.keycode
     | e^.switch == Release -> do
       view keymap >>= flip Km.lookupKey (e^.keycode) >>= \case
