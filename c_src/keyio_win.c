@@ -96,7 +96,7 @@ LRESULT CALLBACK keyHandler(int nCode, WPARAM wParam, LPARAM lParam)
   // Write the event to the pipe
   DWORD dwWritten;
   WriteFile(writePipe, &ev, sizeof(ev), &dwWritten, NULL);
-  return 1; // Block others from handeling. Since they should only use KMonad output
+  return 1; // Block others from handling. Since they should only use KMonad output
 }
 
 // Read an event from the pipe and write it to the provided pointer

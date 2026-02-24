@@ -135,7 +135,7 @@ runTimeout hs tag = do
     Nothing ->
       logDebug $ "Hook timeout ignored (already triggered): " <> display (hashUnique tag)
     Just e' -> do
-      logDebug $ "Handeling timeout of hook: " <> display (hashUnique tag)
+      logDebug $ "Handling timeout of hook: " <> display (hashUnique tag)
       liftIO $ e' ^. hTimeout . to fromJust . action
 
 
