@@ -25,7 +25,7 @@ import KMonad.Util
 import KMonad.Model
 
 
-
+import KMonad.Model.EventSrc
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
@@ -85,7 +85,7 @@ initAppEnv cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the pull-chain components
-  dsp <- Dp.mkDispatch $ awaitKey src
+  dsp <- Dp.mkDispatch =<< pullToESrc "receiver_proc" (awaitKey src)
   ihk <- Hs.mkHooks    $ Dp.pull  dsp
   slc <- Sl.mkSluice   $ Hs.pull  ihk
 
@@ -94,10 +94,13 @@ initAppEnv cfg = do
 
   -- Initialize output components
   otv <- lift newEmptyTMVarIO
-  ohk <- Hs.mkHooks . atomically . takeTMVar $ otv
+  ohk <- Hs.mkHooks $ toESrc otv
 
   -- Setup thread to read from outHooks and emit to keysink
   launch_ "emitter_proc" $ do
+    -- FIXME: should take output of outHooks
+    -- but since 'OutputHook's are never used this doesn't matter.
+    -- Furthermore calling 'pull' on outHooks to cause stepping is needed.
     e <- atomically . takeTMVar $ otv
     emitKey snk e
     -- If delay is specified, wait for it
@@ -164,8 +167,13 @@ pressKey c =
 -- 1. Pull from the pull-chain until an unhandled event reaches us.
 -- 2. If that event is a 'Press' we use our keymap to trigger an action.
 loop :: RIO AppEnv ()
-loop = forever $ view sluice >>= Sl.pull >>= \case
+loop = forever $ view sluice >>= pullESrc . Sl.pull >>= \case
   e | e^.switch == Press -> pressKey $ e^.keycode
+    | e^.switch == Release -> do
+      view keymap >>= flip Km.lookupKey (e^.keycode) >>= \case
+        Nothing -> pure () -- happens frequently with `fallthrough false`
+        -- Not perfect, since a layer change might have happened but better than nothing
+        Just _ -> logWarn "Unhandled release of mapped key"
   _                      -> pure ()
 
 -- | Run KMonad using the provided configuration

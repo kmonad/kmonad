@@ -104,7 +104,9 @@ instance MonadK (RIO KEnv) where
 
 instance (HasAppEnv e, HasAppCfg e, HasLogFunc e) => MonadKIO (RIO e) where
   -- Emitting with the keysink
-  emit e = view outVar >>= atomically . flip putTMVar e
+  emit e = do
+    logDebug $ "Scheduling emit: " <> display e
+    view outVar >>= atomically . flip putTMVar e
   -- emit e = view keySink >>= flip emitKey e
 
   -- Pausing is a simple IO action
