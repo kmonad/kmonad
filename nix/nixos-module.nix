@@ -130,7 +130,8 @@ let
       value = {
         description = "KMonad for ${keyboard.device}";
         script = lib.escapeShellArgs cmd;
-        serviceConfig.Restart = "always";
+        # Service gets restarted automatically by path unit
+        #serviceConfig.Restart = "always";
         serviceConfig.User = if in-initrd then null else "kmonad";
         serviceConfig.SupplementaryGroups = if in-initrd then null else groups;
         serviceConfig.Nice = -20;
