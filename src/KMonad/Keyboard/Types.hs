@@ -2,7 +2,7 @@
 module KMonad.Keyboard.Types
   (
     Switch(..)
-  , KeyEvent
+  , KeyEvent(..)
   , mkKeyEvent
   , HasKeyEvent(..)
   , KeyPred

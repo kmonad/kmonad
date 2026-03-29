@@ -823,6 +823,8 @@ data Keycode
   | VKXButton1
   | VKXButton2
   | VKOEM8 -- Does not exist on US keyboards
+  -- Weird keys implemented via hardware around
+  | KeyCopilot
   deriving (Eq, Show, Bounded, Enum, Ord, Typeable, Data)
 
 -- We manually define the Hashable instance, since we would need a `Generic`

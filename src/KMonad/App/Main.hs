@@ -26,6 +26,7 @@ import KMonad.Model
 
 
 import KMonad.Model.EventSrc
+import qualified KMonad.Model.Coaround as Ca
 import qualified KMonad.Model.Dispatch as Dp
 import qualified KMonad.Model.Hooks    as Hs
 import qualified KMonad.Model.Sluice   as Sl
@@ -85,7 +86,9 @@ initAppEnv cfg = do
   src <- using $ cfg^.keySourceDev
 
   -- Initialize the pull-chain components
-  dsp <- Dp.mkDispatch =<< pullToESrc "receiver_proc" (awaitKey src)
+  let cas = [Ca.CoaroundKey KeyCopilot $ KeyLeftMeta :| [KeyLeftShift, KeyF23]]
+  ca  <- Ca.mkCoaround 2 cas =<< pullToESrc "receiver_proc" (awaitKey src)
+  dsp <- Dp.mkDispatch $ Ca.pull  ca
   ihk <- Hs.mkHooks    $ Dp.pull  dsp
   slc <- Sl.mkSluice   $ Hs.pull  ihk
 

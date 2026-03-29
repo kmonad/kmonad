@@ -54,6 +54,7 @@ library
     , unliftio
     , template-haskell
   default-extensions:
+      BangPatterns
       ConstraintKinds
       DeriveFunctor
       DeriveGeneric
@@ -70,6 +71,7 @@ library
       NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
+      PatternSynonyms
       RankNTypes
       TemplateHaskell
       TupleSections
@@ -93,6 +95,7 @@ library
       KMonad.Model.Action
       KMonad.Model.BEnv
       KMonad.Model.Button
+      KMonad.Model.Coaround
       KMonad.Model.Dispatch
       KMonad.Model.EventSrc
       KMonad.Model.Hooks
