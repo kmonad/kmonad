@@ -245,8 +245,8 @@ getO = do
   cfg <- oneBlock "defcfg" _KDefCfg
   case onlyOne . extract _SOToken $ cfg of
     Right o         -> pickOutput o
-    Left  None      -> throwError $ MissingSetting "input"
-    Left  Duplicate -> throwError $ DuplicateSetting "input"
+    Left  None      -> throwError $ MissingSetting "output"
+    Left  Duplicate -> throwError $ DuplicateSetting "output"
 
 -- | Extract the fallthrough setting
 getFT :: J Bool
