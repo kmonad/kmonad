@@ -16,6 +16,7 @@
     - [Q: How to use the special features printed on Apple function keys?](#q-how-to-use-the-special-features-printed-on-apple-function-keys)
 - [General](#general)
     - [Q: Why can't I remap certain (non US) buttons?](#q-why-cant-i-remap-certain-non-us-buttons)
+    - [Q: How can I remap the Copilot key / other hardware macro keys?](#q-how-can-i-remap-the-copilot-key--other-hardware-macro-keys)
     - [Q: Why don't shifted symbols work (sometimes)?](#q-why-dont-shifted-symbols-work-sometimes)
     - [Q: What does `Ta`, `Pa` and `Ra` stand for?](#q-what-does-ta-pa-and-ra-stand-for)
     - [Q: Why doesn't the 'Print' keycode work for my print screen button?](#q-why-doesnt-the-print-keycode-work-for-my-print-screen-button)
@@ -227,6 +228,13 @@ you would specify the letter that would be there in qwerty (`[`).
 This is of course also true for buttons which are in a different place.
 On the german layout the `+` is reached without shift, while on US qwerty it's
 on `S-=`. This means it's also not a valid keycode to specify in your `defsrc`.
+
+### Q: How can I remap the Copilot key / other hardware macro keys?
+
+By mapping the corresponding primary key (e.g. `f23`) and optionally
+dropping modifiers with `(tap-hold-next 1 XX XX :timeout ...)`.
+
+For a detailed explanation, see [Hardware Macro Keys](hardware-macro-keys.md).
 
 ### Q: Why don't shifted symbols work (sometimes)?
 

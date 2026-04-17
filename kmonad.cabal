@@ -18,6 +18,8 @@ description:
 
 extra-doc-files:
     changelog.md
+    doc/faq.md
+    doc/hardware-macro-keys.md
     doc/quick-reference.md
     keymap/tutorial.kbd
 
