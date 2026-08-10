@@ -875,7 +875,7 @@ aliases :: Q.MultiMap Keycode Text
 aliases = Q.mkMultiMap
   [ (KeyEnter,            ["ret", "return", "ent"])
   , (KeyMinus,            ["min", "-"])
-  , (KeyEqual,            ["eql", "="])
+  , (KeyEqual,            ["eql", "=", "asciicircum", "asciitilde"])
   , (KeySleep,            ["zzz"])
   , (KeySpace,            ["spc"])
   , (KeyPageUp,           ["pgup"])
