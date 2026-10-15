@@ -13,6 +13,7 @@
             - [nixpkgs](#nixpkgs)
             - [flake.nix](#flakenix)
             - [Configuration.nix](#configurationnix)
+        - [Windows](#windows)
     - [Compilation](#compilation)
         - [Using `stack`](#using-stack)
         - [Using `nix`](#using-nix)
@@ -189,6 +190,43 @@ All that's left is to rebuild your system!
 ``` console
 $ sudo nixos-rebuild switch --flake /path/to/flake
 ```
+
+### Windows
+
+KMonad executable is available on scoop in the `extras` repo.
+
+``` console
+scoop install kmonad
+```
+
+The downloaded executable will be found at `~\scoop\apps\kmonad\current\kmonad.exe`.
+
+You can create your config anywhere you'd like to, but I recommend creating it in `~\.config\kmonad\config.kbd`.
+
+>If scoop is not already installed, you can install [scoop](https://scoop.sh/) by running the following command in a PowerShell Terminal:
+>``` console
+>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+>Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+>```
+
+#### Run KMonad at starup
+
+You can auto-run KMonad by creating a small VBScript and a shortcut to the script in the windows startup folder.
+
+1. Create the file `~\.config\kmonad\start-kmonad.vbs` and save the script bellow to it.
+    >  Don't forget to replace `YOUR_USERNAME` with your windows username.
+    ``` vba
+    Set WshShell = CreateObject("WScript.Shell")
+    WshShell.Run """C:\Users\YOUR_USERNAME\scoop\apps\kmonad\current\kmonad.exe"" ""C:\Users\YOUR_USERNAME\.config\kmonad\config.kbd""", 0, False
+    ```
+3. Create a shortcut in the startup folder that links to VBScript you just created:
+    - Press `Win` + `R`.
+    - Type `shell:startup` and press Enter.
+    - In the folder that opens, right-click an empty area and choose *New* → *Shortcut*.
+    - For the shortcut's location, enter the path to `start-kmonad.vbs`:
+        ``` console
+        "C:\Users\YOUR_USERNAME\.config\kmonad\start-kmonad.vbs"
+        ```
 
 ## Compilation
 
