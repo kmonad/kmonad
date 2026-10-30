@@ -171,6 +171,12 @@ executable kmonad
       -threaded
       -rtsopts
       -with-rtsopts=-N
+
+  if os(windows)
+    -- Do not open the terminal on windows.
+    -- This will cause issues with printing to stdout / stderr.
+    ld-options: -mwindows
+
   main-is:
       Main.hs
   default-language:
